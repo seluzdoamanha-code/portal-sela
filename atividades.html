@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal SELA - Atividades</title>
     <link rel="stylesheet" href="style.css">
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Bloqueio de Acesso -->
     <script src="auth_guard.js"></script>
     <link rel="icon" type="image/png" href="logo_sela.png">
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar -->
@@ -40,23 +42,28 @@
             </header>
 
             <div class="content-body" id="mainBody">
-                
+
                 <!-- Vitrine de Eventos Globais -->
-                <div id="vitrineEventos" style="display: none; margin-bottom: 24px; display: flex; flex-direction: column; gap: 12px;">
-                    <div style="font-size: 14px; font-weight: 600; color: #ef4444; display: flex; align-items: center; gap: 8px;">
+                <div id="vitrineEventos"
+                    style="display: none; margin-bottom: 24px; display: flex; flex-direction: column; gap: 12px;">
+                    <div
+                        style="font-size: 14px; font-weight: 600; color: #ef4444; display: flex; align-items: center; gap: 8px;">
                         <span>🚨</span> Próximos Eventos da Casa
                     </div>
-                    <div id="listaEventosGlobais" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+                    <div id="listaEventosGlobais"
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
                         <!-- Eventos injetados aqui via JS -->
                     </div>
                 </div>
 
                 <div class="loading-state" id="loadingState">Aguardando Conexão...</div>
-                
+
                 <div class="table-container" style="display: none;" id="tableContainer">
                     <div class="search-bar" style="display: flex; gap: 12px; margin-bottom: 24px; padding: 16px;">
-                        <input type="text" id="searchEstrutura" class="input-field" placeholder="Buscar por Nome do Departamento ou Atividade..." style="flex: 1;">
-                        <select id="filterTipoEstrutura" class="input-field" style="width: 200px; background-color: var(--bg-dark);">
+                        <input type="text" id="searchEstrutura" class="input-field"
+                            placeholder="Buscar por Nome do Departamento ou Atividade..." style="flex: 1;">
+                        <select id="filterTipoEstrutura" class="input-field"
+                            style="width: 200px; background-color: var(--bg-dark);">
                             <option value="">Todos os Tipos</option>
                             <option value="Departamento">Departamentos</option>
                             <option value="Atividade">Atividades (Palestras/Passes)</option>
@@ -95,7 +102,7 @@
                     <label>Tipo de Estrutura</label>
                     <select id="inTipoEstrutura" required>
                         <option value="Departamento">Departamento (Ex: Assistência Social, Diretoria)</option>
-                        <option value="Atividade">Atividade (Ex: Palestra Pública, Atendimento)</option>
+                        <option value="Atividade">Atividade (Ex: Palestra Pública, Passe)</option>
                         <option value="Família">Família Assistida</option>
                         <option value="Turma">Turma de Estudo/Evangelização</option>
                     </select>
@@ -104,7 +111,7 @@
                     <label>Nome / Título</label>
                     <input type="text" id="inNomeEstrutura" required placeholder="Ex: Diretoria Executiva">
                 </div>
-                
+
                 <footer class="modal-footer" style="margin-top: 24px;">
                     <button type="button" class="btn" id="btnCancelModal">Cancelar</button>
                     <button type="submit" class="btn btn-primary" id="btnSaveModal">Salvar Estrutura</button>
@@ -116,4 +123,5 @@
     <script src="atividades.js"></script>
     <script src="sidebar.js"></script>
 </body>
+
 </html>
