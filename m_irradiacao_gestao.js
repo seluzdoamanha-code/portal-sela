@@ -20,7 +20,21 @@ function mudarAba(aba) {
     document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
     document.getElementById(`tab_${aba}`).classList.add('active');
     
-    carregarLista();
+    const filters = document.getElementById('filtersContainer');
+    const lista = document.getElementById('listaGestaoIrradiacoes');
+    const estatisticas = document.getElementById('estatisticasContainer');
+    
+    if (aba === 'estatisticas') {
+        if(filters) filters.style.display = 'none';
+        if(lista) lista.style.display = 'none';
+        if(estatisticas) estatisticas.style.display = 'block';
+        carregarEstatisticasIrradiacaoMobile();
+    } else {
+        if(filters) filters.style.display = 'flex';
+        if(lista) lista.style.display = 'block';
+        if(estatisticas) estatisticas.style.display = 'none';
+        carregarLista();
+    }
 }
 
 function setDia(dia) {
@@ -440,5 +454,165 @@ window.marcarLeituraIrrMobile = async function(btnElement, id, leituras_atuais, 
             card.style.opacity = '1';
             card.style.borderColor = 'var(--border)';
         }
+    }
+};
+
+// ----------------------------------------------------
+// ESTATÍSTICAS MOBILE
+// ----------------------------------------------------
+window.carregarEstatisticasIrradiacaoMobile = async function() {
+    try {
+        const { data, error } = await db.from('app_irradiacao_solicitacoes').select('*');
+        if (error) throw error;
+        
+        let totalAtivos = 0;
+        let totalLidas = 0;
+        
+        const leiturasPorSemana = {};
+        const leiturasPorSemanaPorDia = {};
+        
+        data.forEach(item => {
+            if (item.status === 'ativo') {
+                totalAtivos++;
+            }
+            
+            // Processar as leituras reais
+            let logs = item.log_datas_leituras;
+            if (typeof logs === 'string') {
+                try { logs = JSON.parse(logs); } catch(e) { logs = []; }
+            }
+            if (Array.isArray(logs) && logs.length > 0) {
+                const diaDaIrradiacao = item.dias_semana || 'Outros';
+                logs.forEach(dateStr => {
+                    const date = new Date(dateStr);
+                    if (!isNaN(date)) {
+                        totalLidas++;
+                        const dCopy = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+                        const dayNum = dCopy.getUTCDay() || 7;
+                        dCopy.setUTCDate(dCopy.getUTCDate() + 4 - dayNum);
+                        const yearStart = new Date(Date.UTC(dCopy.getUTCFullYear(),0,1));
+                        const weekNo = Math.ceil((((dCopy - yearStart) / 86400000) + 1)/7);
+                        const weekKey = `Semana ${weekNo}`;
+                        
+                        leiturasPorSemana[weekKey] = (leiturasPorSemana[weekKey] || 0) + 1;
+                        if (!leiturasPorSemanaPorDia[weekKey]) leiturasPorSemanaPorDia[weekKey] = {};
+                        leiturasPorSemanaPorDia[weekKey][diaDaIrradiacao] = (leiturasPorSemanaPorDia[weekKey][diaDaIrradiacao] || 0) + 1;
+                    }
+                });
+            }
+        });
+        
+        document.getElementById('statTotalLeituras').innerText = totalLidas;
+        document.getElementById('statAtivos').innerText = totalAtivos;
+
+        // Renderização dos Gráficos via Chart.js
+        if (window.Chart) {
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = 'Inter';
+            
+            // --- GRÁFICO SEMANAL (LINHA) ---
+            if (window.irrSemanalChartMobile) window.irrSemanalChartMobile.destroy();
+            const ctxSemanal = document.getElementById('irradiacaoSemanalChart').getContext('2d');
+            
+            const sortedWeeks = Object.keys(leiturasPorSemana).sort((a,b) => {
+                const getVal = (s) => parseInt(s.replace('Semana ', '')) || 0;
+                return getVal(a) - getVal(b);
+            });
+            
+            const colorMap = {
+                'Segunda-feira': '#3b82f6',
+                'Terça-feira': '#10b981',
+                'Quarta-feira (Desobsessão)': '#f59e0b',
+                'Quarta-feira (Desencarnado)': '#ec4899',
+                'Quinta-feira': '#8b5cf6',
+                'Outros': '#94a3b8'
+            };
+            
+            const datasetsSemanal = Object.keys(colorMap).map(dia => {
+                return {
+                    label: dia.replace('Quarta-feira (Desobsessão)', 'Qua(Desob)').replace('Quarta-feira (Desencarnado)', 'Qua(Desenc)'),
+                    data: sortedWeeks.map(w => (leiturasPorSemanaPorDia[w] && leiturasPorSemanaPorDia[w][dia]) ? leiturasPorSemanaPorDia[w][dia] : 0),
+                    borderColor: colorMap[dia],
+                    backgroundColor: colorMap[dia],
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointRadius: 2
+                };
+            }).filter(ds => ds.data.some(v => v > 0));
+            
+            datasetsSemanal.push({
+                label: 'Total da Semana',
+                data: sortedWeeks.map(w => leiturasPorSemana[w] || 0),
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                tension: 0.3,
+                fill: true,
+                pointRadius: 3
+            });
+            
+            window.irrSemanalChartMobile = new Chart(ctxSemanal, {
+                type: 'line',
+                data: {
+                    labels: sortedWeeks,
+                    datasets: datasetsSemanal
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'bottom',
+                            labels: { boxWidth: 10, font: { size: 10 } }
+                        } 
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+            
+            // --- GRÁFICO TOTAL POR DIA (BARRA) ---
+            if (window.irrTotalChartMobile) window.irrTotalChartMobile.destroy();
+            const ctxTotal = document.getElementById('irradiacaoChart').getContext('2d');
+            
+            const diasDisponiveis = Object.keys(colorMap);
+            const totalReadsPerDay = {};
+            sortedWeeks.forEach(w => {
+                diasDisponiveis.forEach(d => {
+                    totalReadsPerDay[d] = (totalReadsPerDay[d] || 0) + ((leiturasPorSemanaPorDia[w] && leiturasPorSemanaPorDia[w][d]) ? leiturasPorSemanaPorDia[w][d] : 0);
+                });
+            });
+            
+            window.irrTotalChartMobile = new Chart(ctxTotal, {
+                type: 'bar',
+                data: {
+                    labels: diasDisponiveis.map(d => d.substring(0, 3)),
+                    datasets: [{
+                        label: 'Total Lidas',
+                        data: diasDisponiveis.map(d => totalReadsPerDay[d] || 0),
+                        backgroundColor: diasDisponiveis.map(d => colorMap[d]),
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Erro ao carregar estatísticas: ' + err.message);
     }
 };

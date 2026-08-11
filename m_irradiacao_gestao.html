@@ -8,6 +8,9 @@
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -297,6 +300,7 @@
         <div class="m-tab active" onclick="mudarAba('pendentes')" id="tab_pendentes">📥 Pendentes</div>
         <div class="m-tab" onclick="mudarAba('ativos')" id="tab_ativos">📋 Leitura</div>
         <div class="m-tab" onclick="mudarAba('historico')" id="tab_historico">🗄️ Histórico</div>
+        <div class="m-tab" onclick="mudarAba('estatisticas')" id="tab_estatisticas">📊 Estatísticas</div>
     </div>
 
     <!-- Filtros de Dia -->
@@ -312,6 +316,33 @@
     <!-- Lista de Cards -->
     <div class="m-content" id="listaGestaoIrradiacoes">
         <!-- Preenchido via JS -->
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="m-content" id="estatisticasContainer" style="display: none;">
+        <div class="m-card">
+            <div class="m-card-title" style="margin-bottom: 16px;">Evolução de Leituras (Semanas)</div>
+            <div style="height: 250px; width: 100%;">
+                <canvas id="irradiacaoSemanalChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="m-card">
+            <div class="m-card-title" style="margin-bottom: 16px;">Total de Leituras por Dia da Semana</div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
+                <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: #10b981;" id="statTotalLeituras">0</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Total Geral (Lidas)</div>
+                </div>
+                <div style="background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: #38bdf8;" id="statAtivos">0</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Nomes Ativos</div>
+                </div>
+            </div>
+            <div style="height: 250px; width: 100%;">
+                <canvas id="irradiacaoChart"></canvas>
+            </div>
+        </div>
     </div>
 
     <!-- Bottom Sheet de Edição -->
