@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Imprimir - Leituras de Irradiação</title>
-    
+
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
@@ -28,6 +29,7 @@
             .no-print {
                 display: none !important;
             }
+
             body {
                 padding: 0;
             }
@@ -117,7 +119,7 @@
             font-weight: bold;
             text-transform: uppercase;
         }
-        
+
         .endereco {
             margin-left: 4px;
         }
@@ -130,6 +132,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="controls no-print">
@@ -147,7 +150,7 @@
     </div>
 
     <div class="header">
-        <h1>SELA - Sociedade Espírita Luz do Amanhecer</h1>
+        <h1>SELA - Sociedade Espírita Luz do Amanhã</h1>
         <h2>Leituras para Irradiação</h2>
         <h3 id="lblData">Data: </h3>
     </div>
@@ -158,4 +161,5 @@
 
     <script src="irradiacao_imprimir.js"></script>
 </body>
+
 </html>
