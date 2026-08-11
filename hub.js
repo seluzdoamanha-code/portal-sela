@@ -1978,6 +1978,8 @@ window.carregarEstatisticasIrradiacao = async function() {
         const historicoPorDia = {};
         const leiturasPorMes = {};
         const leiturasPorMesPorDia = {};
+        const leiturasPorSemana = {};
+        const leiturasPorSemanaPorDia = {};
         
         const pessoasUnicasAtivas = new Set();
         const pessoasUnicasHistorico = new Set();
@@ -2011,6 +2013,17 @@ window.carregarEstatisticasIrradiacao = async function() {
                         leiturasPorMes[monthKey] = (leiturasPorMes[monthKey] || 0) + 1;
                         if (!leiturasPorMesPorDia[monthKey]) leiturasPorMesPorDia[monthKey] = {};
                         leiturasPorMesPorDia[monthKey][diaDaIrradiacao] = (leiturasPorMesPorDia[monthKey][diaDaIrradiacao] || 0) + 1;
+                        
+                        const dCopy = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+                        const dayNum = dCopy.getUTCDay() || 7;
+                        dCopy.setUTCDate(dCopy.getUTCDate() + 4 - dayNum);
+                        const yearStart = new Date(Date.UTC(dCopy.getUTCFullYear(),0,1));
+                        const weekNo = Math.ceil((((dCopy - yearStart) / 86400000) + 1)/7);
+                        const weekKey = `Semana ${weekNo} (${dCopy.getUTCFullYear()})`;
+                        
+                        leiturasPorSemana[weekKey] = (leiturasPorSemana[weekKey] || 0) + 1;
+                        if (!leiturasPorSemanaPorDia[weekKey]) leiturasPorSemanaPorDia[weekKey] = {};
+                        leiturasPorSemanaPorDia[weekKey][diaDaIrradiacao] = (leiturasPorSemanaPorDia[weekKey][diaDaIrradiacao] || 0) + 1;
                     }
                 });
             }
@@ -2088,6 +2101,13 @@ window.carregarEstatisticasIrradiacao = async function() {
                 <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px;">
                     <h4 style="color: #f59e0b; font-size: 14px; margin: 0 0 16px 0;">Histórico por Dia / Necessidade</h4>
                     ${formatTable(historicoPorDia)}
+                </div>
+            </div>
+
+            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-top: 16px;">
+                <h4 style="color: var(--text-main); font-size: 14px; margin: 0 0 16px 0;">Evolução de Leituras por Semana (Eixo do Tempo)</h4>
+                <div style="position: relative; height: 350px; width: 100%;">
+                    <canvas id="chartLeiturasSemanais"></canvas>
                 </div>
             </div>
 
@@ -2180,6 +2200,93 @@ window.carregarEstatisticasIrradiacao = async function() {
                     }
                 }
             });
+                }
+            });
+            
+            // --- INÍCIO DO GRÁFICO SEMANAL ---
+            if (window.irradiacaoSemanalChartInstance) window.irradiacaoSemanalChartInstance.destroy();
+            const canvasSemanal = document.getElementById('chartLeiturasSemanais');
+            
+            if (Object.keys(leiturasPorSemana).length === 0) {
+                if (canvasSemanal) canvasSemanal.outerHTML = "<p style='color:var(--text-muted); text-align:center; padding: 24px;'>Nenhum dado encontrado para gerar gráfico semanal.</p>";
+            } else if (canvasSemanal) {
+                const ctxSemanal = canvasSemanal.getContext('2d');
+                
+                // Ordenar as semanas
+                const sortedWeeks = Object.keys(leiturasPorSemana).sort((a,b) => {
+                    const getVal = (s) => {
+                        const m = s.match(/Semana (\d+) \((\d+)\)/);
+                        if (m) return parseInt(m[2])*100 + parseInt(m[1]);
+                        return 0;
+                    };
+                    return getVal(a) - getVal(b);
+                });
+                
+                const labelsSemanal = sortedWeeks;
+                
+                const colorMap = {
+                    'Segunda-feira': '#3b82f6',
+                    'Terça-feira': '#10b981',
+                    'Quarta-feira (Desobsessão)': '#f59e0b',
+                    'Quarta-feira (Desencarnado)': '#ec4899',
+                    'Quinta-feira': '#8b5cf6',
+                    'Outros': '#94a3b8'
+                };
+                
+                const bgMap = {
+                    'Segunda-feira': 'rgba(59, 130, 246, 0.1)',
+                    'Terça-feira': 'rgba(16, 185, 129, 0.1)',
+                    'Quarta-feira (Desobsessão)': 'rgba(245, 158, 11, 0.1)',
+                    'Quarta-feira (Desencarnado)': 'rgba(236, 72, 153, 0.1)',
+                    'Quinta-feira': 'rgba(139, 92, 246, 0.1)',
+                    'Outros': 'rgba(148, 163, 184, 0.1)'
+                };
+
+                const datasetsSemanal = diasDisponiveis.map(dia => {
+                    return {
+                        label: dia,
+                        data: sortedWeeks.map(w => (leiturasPorSemanaPorDia[w] && leiturasPorSemanaPorDia[w][dia]) ? leiturasPorSemanaPorDia[w][dia] : 0),
+                        borderColor: colorMap[dia] || '#94a3b8',
+                        backgroundColor: bgMap[dia] || 'rgba(148, 163, 184, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: colorMap[dia] || '#94a3b8',
+                        tension: 0.3,
+                        fill: false
+                    };
+                }).filter(dataset => dataset.data.some(val => val > 0)); // Remove os dias vazios
+                
+                window.irradiacaoSemanalChartInstance = new window.Chart(ctxSemanal, {
+                    type: 'line',
+                    data: {
+                        labels: labelsSemanal,
+                        datasets: datasetsSemanal
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                display: true, 
+                                labels: { color: '#94a3b8', font: { size: 11 } }
+                            },
+                            tooltip: { mode: 'index', intersect: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(255,255,255,0.05)' }
+                            },
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(255,255,255,0.05)' }
+                            }
+                        }
+                    }
+                });
+            }
+            // --- FIM DO GRÁFICO SEMANAL ---
+
         } else {
             console.error("Chart.js is undefined.");
             chartContainer.outerHTML = "<p style='color:#ef4444; text-align:center; padding: 24px;'>Erro: Biblioteca Chart.js não foi carregada no navegador.</p>";

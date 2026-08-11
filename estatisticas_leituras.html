@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estatísticas de Leituras - Irradiação</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --accent: #10b981;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 24px;
+            color: var(--accent);
+            text-align: center;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📊 Estatísticas de Leituras</h1>
+        
+        <div class="card">
+            <h2 style="font-size: 16px; margin-top: 0; color: var(--text-main);">Gráfico de Evolução (por Semana)</h2>
+            <div class="chart-container">
+                <canvas id="leiturasChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size: 16px; margin-top: 0; margin-bottom: 8px; color: var(--text-main);">Tabela de Dados (Semanas do Ano)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Semana ISO</th>
+                        <th>Segunda-feira</th>
+                        <th>Terça-feira</th>
+                        <th>Quarta-feira</th>
+                        <th>Quinta-feira</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Semana 28 (Julho)</td>
+                        <td>4</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Semana 29 (Julho)</td>
+                        <td>10</td>
+                        <td>11</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Semana 30 (Julho)</td>
+                        <td>20</td>
+                        <td>18</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Semana 31 (Jul/Ago)</td>
+                        <td>24</td>
+                        <td>26</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Semana 32 (Agosto)</td>
+                        <td>8</td>
+                        <td>35</td>
+                        <td>-</td>
+                        <td>32</td>
+                    </tr>
+                    <tr>
+                        <td>Semana 33 (Agosto)</td>
+                        <td>13</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('leiturasChart').getContext('2d');
+        
+        // Dados extraídos diretamente do Supabase
+        const labels = ['Semana 28', 'Semana 29', 'Semana 30', 'Semana 31', 'Semana 32', 'Semana 33'];
+        
+        const dataSegunda = [4, 10, 20, 24, 8, 13];
+        const dataTerca = [0, 11, 18, 26, 35, 0];
+        const dataQuinta = [0, 0, 0, 0, 32, 0]; // Os nulos ou zeros de acordo com os dados
+
+        // Configuração do Chart.js
+        const leiturasChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Segunda-feira',
+                        data: dataSegunda,
+                        borderColor: '#3b82f6', // Azul
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#3b82f6',
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'Terça-feira',
+                        data: dataTerca,
+                        borderColor: '#10b981', // Verde
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#10b981',
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'Quinta-feira',
+                        data: dataQuinta,
+                        borderColor: '#f59e0b', // Laranja
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#f59e0b',
+                        tension: 0.3,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#cbd5e1'
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
