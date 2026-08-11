@@ -13,6 +13,15 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarLista();
 });
 
+function voltarParaHub() {
+    const estruturaId = localStorage.getItem('estrutura_atual');
+    if (estruturaId) {
+        window.location.href = `m_hub.html?id=${estruturaId}&tipo=irradiacao`;
+    } else {
+        window.location.href = 'm_atividades.html';
+    }
+}
+
 function mudarAba(aba) {
     currentTab = aba;
     
