@@ -59,6 +59,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Bloqueio de Acesso -->
     <script src="auth_guard.js"></script>
+    <!-- QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="icon" type="image/png" href="logo_sela.png">
 </head>
 <body>
@@ -176,6 +178,13 @@
                 <h3 class="secao-titulo" style="margin-top: 24px;">Papéis / Tags</h3>
                 <div id="infoPapeis" style="margin-bottom: 24px; min-height: 28px;">-</div>
                 
+                <!-- Hook Financeiro (se existir) -->
+                <script>
+                    if (typeof initFinanceiro === 'function') {
+                        // Aguarda carregar para chamar
+                    }
+                </script>
+                
                 <button id="btnEditarCadastro" class="btn-primary" style="width: 100%; margin-top: 24px; padding: 10px;">Editar Cadastro</button>
             </div>
 
@@ -191,14 +200,8 @@
                     </p>
                 </div>
 
-                <div class="card-perfil" style="border-left: 4px solid #3b82f6;">
-                    <h3 class="secao-titulo">Financeiro & Pendências (Em Breve)</h3>
-                    <p style="color: var(--text-muted); font-size: 14px; line-height: 1.5;">
-                        A aba da Secretaria e Tesouraria. <br>
-                        Aqui estarão listadas as mensalidades (para associados), recibos, 
-                        e o checklist de documentos pendentes que precisam ser assinados.
-                    </p>
-                </div>
+                <!-- Módulo Financeiro -->
+                <div id="financeiroContainer" style="display: none;"></div>
 
                 <div class="card-perfil" style="border-left: 4px solid #8b5cf6;">
                     <h3 class="secao-titulo">Biblioteca (Em Breve)</h3>
@@ -215,6 +218,7 @@
 
     <!-- Supabase JS -->
     
+    <script src="financeiro_app.js"></script>
     <script src="perfil.js"></script>
     <script src="sidebar.js"></script>
 </body>

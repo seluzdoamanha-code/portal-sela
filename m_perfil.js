@@ -300,6 +300,11 @@
         } else {
             document.getElementById('lblEnderecoCompleto').innerText = 'Endereço não cadastrado';
         }
+        
+        // --- HOOK FINANCEIRO ---
+        if (typeof window.initFinanceiro === 'function') {
+            window.initFinanceiro(pessoaAtual, true);
+        }
     }
 
     function preencherFormulario() {

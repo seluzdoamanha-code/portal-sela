@@ -162,6 +162,11 @@ async function carregarPerfil() {
             containerPapeis.textContent = 'Nenhum papel atribuído';
         }
 
+        // --- HOOK FINANCEIRO ---
+        if (typeof window.initFinanceiro === 'function') {
+            window.initFinanceiro(pessoa);
+        }
+
     } catch (err) {
         console.error("Erro ao carregar perfil:", err);
         document.getElementById('nomePessoa').textContent = "Erro ao carregar perfil";
