@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (errorType === 'nao_autorizado') {
             const rejectedEmail = urlParams.get('email') || 'Desconhecido';
-            mostrarErro(`Acesso Negado: O e-mail "${rejectedEmail}" não está cadastrado na lista de trabalhadores autorizados do Portal.`);
+            mostrarErro(`Acesso Negado: O e-mail "${rejectedEmail}" não está cadastrado em nosso sistema. Por favor, verifique se você selecionou a conta correta (a mesma informada à Secretaria). Se o problema persistir, solicite o cadastro do seu e-mail à administração.`);
             await supabaseClient.auth.signOut();
             return;
         } else if (errorType === 'sem_email') {
