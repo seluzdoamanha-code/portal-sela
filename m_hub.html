@@ -12,6 +12,10 @@
     <script src="auth_guard.js"></script>
     <link rel="icon" type="image/png" href="logo_sela.png">
     <style>
+        body {
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
         .m-header-nav {
             display: flex;
             align-items: center;
@@ -238,7 +242,6 @@
         <div class="m-hub-title" id="mHubTitle">Carregando...</div>
         <button id="btnEditAtividade" class="m-edit-btn" style="display: none;">Editar</button>
     </header>
-
     <main class="m-viewport" style="padding-bottom: 80px;">
         <div class="m-hub-hero">
             <div class="m-hub-icon" id="mHubIcon">?</div>
