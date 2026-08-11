@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Biblioteca SELA - Mobile</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="m_style.css">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Meta tags nativas -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="logo_sela.png">
+    
+    <style>
+        body {
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .m-header {
+            background: var(--bg-panel);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .m-btn-back {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            padding: 8px;
+            margin-right: 12px;
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .m-header-title {
+            color: var(--text-main);
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        /* Tabs Deslizantes */
+        .m-tabs-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 12px 16px;
+            background: var(--bg-dark);
+            position: sticky;
+            top: 61px;
+            z-index: 99;
+            border-bottom: 1px solid var(--border);
+            scrollbar-width: none; /* Firefox */
+        }
+        .m-tabs-scroll::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        .m-tab-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .m-tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Barra de Busca */
+        .m-search-container {
+            padding: 12px 16px;
+            background: var(--bg-dark);
+        }
+
+        .m-search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-panel);
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+        }
+
+        .m-search-input:focus {
+            border-color: var(--primary);
+        }
+
+        /* Grid de Livros (2 colunas) */
+        .m-books-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 16px;
+        }
+
+        .m-book-card {
+            background: var(--bg-panel);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .m-book-cover {
+            width: 100%;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+            background: #2a2a2a;
+        }
+
+        .m-book-info {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .m-book-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.3;
+        }
+
+        .m-book-author {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .m-book-codigo {
+            font-size: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            align-self: flex-start;
+            margin-top: auto;
+            color: #aaa;
+        }
+
+        .btn-load-more {
+            display: none;
+            width: calc(100% - 32px);
+            margin: 0 16px 24px 16px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 14px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* Bottom Sheet Modal */
+        .m-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            align-items: flex-end;
+        }
+        .m-modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .m-modal-sheet {
+            background: var(--bg-panel);
+            width: 100%;
+            border-radius: 24px 24px 0 0;
+            padding: 24px 16px 40px 16px;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid var(--border);
+        }
+        .m-modal-sheet.active {
+            transform: translateY(0);
+        }
+        .m-bs-handle {
+            width: 40px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin: 0 auto 20px auto;
+        }
+
+        .sheet-cover {
+            width: 120px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin: 0 auto 16px auto;
+            display: block;
+            background: #2a2a2a;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        .sheet-title {
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .sheet-author {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .sheet-sinopse {
+            font-size: 13px;
+            color: #ccc;
+            line-height: 1.5;
+            background: rgba(0,0,0,0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .sheet-form-input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(0,0,0,0.2);
+            color: white;
+            font-size: 15px;
+        }
+
+        .btn-confirm {
+            width: 100%;
+            padding: 16px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="m-header">
+        <button class="m-btn-back" onclick="window.history.back()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="m-header-title">Biblioteca</div>
+    </header>
+
+    <div class="m-tabs-scroll">
+        <div class="m-tab-btn active" data-categoria="DISPONÍVEL">📖 Acervo <span id="countDisp"></span></div>
+        <div class="m-tab-btn" data-categoria="PERMUTA">♻️ Permutas <span id="countPerm"></span></div>
+        <div class="m-tab-btn" data-categoria="DESIDERATUM">🌠 Desiderata <span id="countDesi"></span></div>
+    </div>
+
+    <div class="m-search-container">
+        <input type="text" id="searchInput" class="m-search-input" placeholder="Buscar por Título ou Autor...">
+    </div>
+
+    <div class="m-books-grid" id="booksGrid">
+        <!-- Injetado via JS -->
+    </div>
+    
+    <div id="loadingState" class="empty-state">Buscando livros...</div>
+    <div id="emptyState" class="empty-state" style="display: none;">Nenhum livro encontrado.</div>
+
+    <button id="btnCarregarMais" class="btn-load-more">Carregar Mais</button>
+
+    <!-- Bottom Sheet Modal -->
+    <div class="m-modal-overlay" id="modalOverlay" onclick="fecharModal(event)">
+        <div class="m-modal-sheet" id="modalSheet" onclick="event.stopPropagation()">
+            <div class="m-bs-handle"></div>
+            
+            <img id="modalImg" src="" class="sheet-cover" alt="Capa">
+            <div class="sheet-title" id="modalTitle">Título</div>
+            <div class="sheet-author" id="modalAuthor">Autor</div>
+            <div style="text-align: center; margin-bottom: 16px;">
+                <span class="m-book-codigo" id="modalCodigo">#CODIGO</span>
+            </div>
+
+            <div class="sheet-sinopse" id="modalSinopse">Sinopse do livro...</div>
+
+            <div id="formContainer">
+                <h4 id="formTitle" style="margin-bottom: 12px; font-size: 15px;">Solicitar Empréstimo</h4>
+                
+                <div id="desiderataForm" style="display: none; margin-bottom: 16px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                    <div style="display: flex; gap: 16px; margin-bottom: 12px;">
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="radio" name="desiderataAcao" value="Doar" checked> Doar
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="radio" name="desiderataAcao" value="Permutar"> Permutar
+                        </label>
+                    </div>
+                    <input type="text" id="desiderataCodigo" class="sheet-form-input" placeholder="Código do seu livro para permuta" style="display: none; padding: 10px; font-size: 13px;">
+                </div>
+
+                <input type="text" id="reservaNome" class="sheet-form-input" placeholder="Seu Nome Completo">
+                <input type="text" id="reservaContato" class="sheet-form-input" placeholder="Seu Telefone / WhatsApp">
+
+                <button class="btn-confirm" id="btnConfirmarReserva">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="m_biblioteca.js"></script>
+</body>
+</html>
