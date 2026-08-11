@@ -130,7 +130,7 @@
                     </div>
                     <div class="m-app-name">Irradiação Espiritual</div>
                 </a>
-                <a href="m_irradiacao_gestao.html" class="m-app-card">
+                <a href="m_irradiacao_gestao.html?id=${estruturaAtual.id}" class="m-app-card">
                     <div class="m-app-icon" style="background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center;">
                         <span style="font-size: 28px;">⚙️</span>
                     </div>

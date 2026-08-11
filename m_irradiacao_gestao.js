@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function voltarParaHub() {
-    const estruturaId = localStorage.getItem('estrutura_atual');
+    const urlParams = new URLSearchParams(window.location.search);
+    const estruturaId = urlParams.get('id') || localStorage.getItem('estrutura_atual');
     if (estruturaId) {
         window.location.href = `m_hub.html?id=${estruturaId}&tipo=irradiacao`;
     } else {
