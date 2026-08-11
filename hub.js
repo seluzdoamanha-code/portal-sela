@@ -1450,7 +1450,27 @@ async function carregarListaIrradiacao() {
                     </label>
                 `;
                 
-                progressHtml = `<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">${checkboxRepetir}Leituras: ${leituras}/${semanas_alvo}<br><div style="margin-top:4px; display:flex; flex-wrap:wrap; max-width: 250px;">${caixinhas}</div></div>`;
+                let lastDateHtml = '';
+                let logs = item.log_datas_leituras;
+                if (typeof logs === 'string') {
+                    try { logs = JSON.parse(logs); } catch(e) { logs = []; }
+                }
+                if (Array.isArray(logs) && logs.length > 0) {
+                    const lastLog = logs[logs.length - 1];
+                    const d = new Date(lastLog);
+                    if (!isNaN(d)) {
+                        const lastDateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                        const today = new Date();
+                        const isToday = (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear());
+                        if (isToday) {
+                            lastDateHtml = `<span style="margin-left: 8px; font-size: 11px; font-weight: 600; background: rgba(16,185,129,0.15); color: #10b981; padding: 2px 6px; border-radius: 4px; border: 1px solid #10b981;">(Hoje)</span>`;
+                        } else {
+                            lastDateHtml = `<span style="margin-left: 8px; font-size: 11px; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">Última: ${lastDateStr}</span>`;
+                        }
+                    }
+                }
+                
+                progressHtml = `<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">${checkboxRepetir}<div style="display:flex; align-items:center; margin-bottom:4px;">Leituras: <strong style="margin-left: 4px; margin-right: 2px; color: var(--accent);">${leituras}/${semanas_alvo}</strong> ${lastDateHtml}</div><div style="display:flex; flex-wrap:wrap; max-width: 250px;">${caixinhas}</div></div>`;
                 
                 actionsHtml = `
                     <button id="btn_ler_${item.id}" onclick="marcarLeituraIrr(this, '${item.id}', ${leituras}, ${semanas_alvo}, ${item.renovacao_automatica ? 'true' : 'false'})" class="btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; transition: all 0.3s ease;">✅ Registrar Leitura</button>
