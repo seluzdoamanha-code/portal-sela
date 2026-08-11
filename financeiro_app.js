@@ -10,6 +10,10 @@ const DICIONARIO_PIX = {
     250: "00020101021126650014br.gov.bcb.pix0114070321760001740225mensalidade associado 2505204000053039865406250.005802BR5925Sociedade Espirita Luz Do6008BRASILIA62180514mensalidade25063045CA1"
 };
 
+const FIN_SUPABASE_URL = 'https://aymdooyafimliiggxeqs.supabase.co';
+const FIN_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5bWRvb3lhZmltbGlpZ2d4ZXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDUxNDksImV4cCI6MjEwMDY4MTE0OX0.-NBhiyGDlrWq4QKNLx9Ll5GlIk0mV_rBWnr0vdbUCOU';
+const finDb = window.supabase.createClient(FIN_SUPABASE_URL, FIN_SUPABASE_KEY);
+
 window.initFinanceiro = async function(pessoa, isMobile = false) {
     const containerId = isMobile ? 'mFinanceiroContainer' : 'financeiroContainer';
     const container = document.getElementById(containerId);
@@ -44,7 +48,7 @@ window.initFinanceiro = async function(pessoa, isMobile = false) {
 
     try {
         // Busca Configuração
-        const { data: config, error: configError } = await window.db
+        const { data: config, error: configError } = await finDb
             .from('fin_config_mensalidades')
             .select('*')
             .eq('cpf_cnpj', cpfLimpo)
@@ -63,7 +67,7 @@ window.initFinanceiro = async function(pessoa, isMobile = false) {
 
         // Busca Histórico de Mensalidades (tipo Saída? Entrada? No caso, é pagamento do associado para a casa, entao é receita/mensalidade)
         // O usuário disse: "identificamos que uma transação é especificamente uma MENSALIDADE e não... Usamos a coluna categoria = 'mensalidade'"
-        const { data: transacoes, error: transError } = await window.db
+        const { data: transacoes, error: transError } = await finDb
             .from('fin_transacoes')
             .select('*')
             .eq('cpf', cpfLimpo)
