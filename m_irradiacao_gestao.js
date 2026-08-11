@@ -132,6 +132,8 @@ function renderLista() {
         const semanasAlvoStr = item.semanas_alvo || 4;
         
         let actions = '';
+        let progressHtml = '';
+        
         if (currentTab === 'pendentes') {
             actions = `
                 <button class="btn-action btn-primary" onclick="aprovar('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}')">Triagem ✔️</button>
@@ -139,7 +141,21 @@ function renderLista() {
                 <button class="btn-action btn-danger" onclick="excluir('${item.id}')">Excluir</button>
             `;
         } else if (currentTab === 'ativos') {
+            const leituras = item.leituras || 0;
+            const semanas_alvo = item.semanas_alvo || 4; 
+            let caixinhas = '';
+            for(let i=1; i<=semanas_alvo; i++) {
+                if (i <= leituras) {
+                    caixinhas += `<span class="bola-irradiacao preenchida" style="display:inline-block; width:16px; height:16px; background:#10b981; border-radius:50%; margin-right:4px; margin-bottom:4px; transition: all 0.3s ease;"></span>`;
+                } else {
+                    caixinhas += `<span class="bola-irradiacao vazia" style="display:inline-block; width:16px; height:16px; border:2px solid #334155; border-radius:50%; margin-right:4px; margin-bottom:4px; transition: all 0.3s ease;"></span>`;
+                }
+            }
+            
+            progressHtml = `<div style="margin-top: 8px; font-size: 13px; color: var(--text-muted);">Leituras: <strong style="color:var(--accent);">${leituras}/${semanas_alvo}</strong><br><div style="margin-top:4px; display:flex; flex-wrap:wrap;">${caixinhas}</div></div>`;
+            
             actions = `
+                <button id="btn_ler_${item.id}" onclick="marcarLeituraIrrMobile(this, '${item.id}', ${leituras}, ${semanas_alvo})" class="btn-action" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; transition: all 0.3s ease;">✅ Registrar Leitura</button>
                 <button class="btn-action btn-secondary" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})">Editar ✏️</button>
                 <button class="btn-action btn-danger" onclick="arquivar('${item.id}')">Forçar Arquivamento</button>
             `;
@@ -151,13 +167,8 @@ function renderLista() {
             `;
         }
         
-        let progressText = '';
-        if (currentTab === 'ativos' && item.semanas_alvo) {
-            progressText = ` .... <strong style="font-size: 13px; color: var(--accent);">${item.leituras || 0}/${item.semanas_alvo}</strong>`;
-        }
-        
         html += `
-            <div class="m-card">
+            <div class="m-card" id="card_irr_${item.id}">
                 <div class="m-card-header">
                     <div style="width: 100%;">
                         <div class="m-card-title">${item.nome_solicitado}</div>
@@ -165,7 +176,8 @@ function renderLista() {
                     </div>
                 </div>
                 <div class="m-card-meta">
-                    Em: ${dataPed} | Dias: <span style="color: var(--text-main);">${item.dias_semana}</span>${progressText}
+                    Em: ${dataPed} | Dias: <span style="color: var(--text-main);">${item.dias_semana}</span>
+                    ${progressHtml}
                 </div>
                 <div class="m-card-actions">
                     ${actions}
@@ -293,3 +305,107 @@ async function arquivar(id) {
         alert('Erro ao arquivar: ' + err.message);
     }
 }
+
+// ----------------------------------------------------
+// MARCAR LEITURA (IGUAL AO DESKTOP)
+// ----------------------------------------------------
+window.marcarLeituraIrrMobile = async function(btnElement, id, leituras_atuais, semanas_alvo) {
+    try {
+        const novaLeitura = leituras_atuais + 1;
+        const card = document.getElementById(`card_irr_${id}`);
+        
+        // --- EFEITO VISUAL IMEDIATO (Optimistic UI) ---
+        if (btnElement && btnElement.nodeType) { 
+            btnElement.disabled = true;
+            btnElement.innerHTML = '✔️ Lido';
+            btnElement.style.background = '#059669';
+            btnElement.style.color = '#ffffff';
+        }
+
+        if (card) {
+            // 1. Esmaece o card
+            card.style.opacity = '0.5';
+            card.style.borderColor = '#10b981';
+
+            // 2. Anima a próxima bolinha vazia
+            const proxBola = card.querySelector('.bola-irradiacao.vazia');
+            if (proxBola) {
+                proxBola.classList.remove('vazia');
+                proxBola.classList.add('preenchida');
+                proxBola.style.border = 'none';
+                proxBola.style.background = '#10b981';
+                proxBola.style.transform = 'scale(1.3)';
+                setTimeout(() => {
+                    proxBola.style.transform = 'scale(1)';
+                }, 300);
+            }
+        }
+        // ----------------------------------------------
+        
+        // Buscar log_datas_leituras atual
+        const { data: rowData, error: fetchErr } = await db.from('app_irradiacao_solicitacoes').select('log_datas_leituras, renovacao_automatica').eq('id', id).single();
+        if (fetchErr) throw fetchErr;
+        
+        let logs = rowData.log_datas_leituras || [];
+        if (!Array.isArray(logs)) logs = [];
+        logs.push(new Date().toISOString());
+        
+        const autoRenovar = rowData.renovacao_automatica === true;
+        
+        if (novaLeitura >= semanas_alvo) {
+            if (autoRenovar) {
+                // Reinicia ciclo automaticamente
+                const { error } = await db.from('app_irradiacao_solicitacoes').update({ 
+                    leituras: 0, 
+                    status: 'ativo',
+                    log_datas_leituras: logs
+                }).eq('id', id);
+                if (error) throw error;
+            } else {
+                // Como na versão mobile não temos o modal HTML, usamos um confirm nativo
+                if (confirm(`O ciclo de ${semanas_alvo} semanas desta irradiação chegou ao fim.\nDeseja reiniciar o ciclo (Renovar) para mais ${semanas_alvo} semanas?\n\n[OK] para Renovar\n[Cancelar] para Arquivar`)) {
+                    // Renovar
+                    const { error } = await db.from('app_irradiacao_solicitacoes').update({ 
+                        leituras: 0, 
+                        status: 'ativo',
+                        log_datas_leituras: logs
+                    }).eq('id', id);
+                    if (error) throw error;
+                } else {
+                    // Arquivar
+                    const { error } = await db.from('app_irradiacao_solicitacoes').update({ 
+                        leituras: novaLeitura, 
+                        status: 'historico',
+                        log_datas_leituras: logs
+                    }).eq('id', id);
+                    if (error) throw error;
+                    // Se arquivou, remove da tela
+                    if (card) card.style.display = 'none';
+                }
+            }
+        } else {
+            // Apenas atualiza a contagem
+            const { error } = await db.from('app_irradiacao_solicitacoes').update({ 
+                leituras: novaLeitura,
+                log_datas_leituras: logs
+            }).eq('id', id);
+            
+            if (error) throw error;
+        }
+
+    } catch (err) {
+        console.error(err);
+        alert('Erro ao marcar leitura: ' + err.message);
+        if (btnElement && btnElement.nodeType) {
+            btnElement.disabled = false;
+            btnElement.innerHTML = '✅ Registrar Leitura';
+            btnElement.style.background = 'rgba(16,185,129,0.1)';
+            btnElement.style.color = '#10b981';
+        }
+        const card = document.getElementById(`card_irr_${id}`);
+        if (card) {
+            card.style.opacity = '1';
+            card.style.borderColor = 'var(--border)';
+        }
+    }
+};
