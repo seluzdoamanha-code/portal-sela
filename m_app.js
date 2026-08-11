@@ -7,10 +7,17 @@
         
         await carregarMural();
         
-        // Logoff action
+        // Acessar Meu Perfil
         document.getElementById('btnPerfil').addEventListener('click', async () => {
-            const { error } = await db.auth.signOut();
-            if(!error) window.location.href = 'login.html';
+            const { data: { session } } = await db.auth.getSession();
+            if (session && session.user && session.user.email) {
+                const { data } = await db.from('pessoas').select('id').eq('email', session.user.email).single();
+                if (data) {
+                    window.location.href = 'm_perfil.html?id=' + data.id;
+                } else {
+                    alert("O seu e-mail não está associado a nenhum perfil na lista de Pessoas.");
+                }
+            }
         });
     });
 

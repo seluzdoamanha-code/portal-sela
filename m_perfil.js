@@ -62,6 +62,18 @@
 
         btnSaveEdit.addEventListener('click', salvarEdicao);
 
+        // Ação de Sair do Sistema
+        const btnSairApp = document.getElementById('btnSairApp');
+        if (btnSairApp) {
+            btnSairApp.addEventListener('click', async () => {
+                const conf = confirm('Deseja realmente sair do sistema?');
+                if (conf) {
+                    await db.auth.signOut();
+                    window.location.href = 'login.html';
+                }
+            });
+        }
+
         // Máscaras de Input
         const inpCep = document.getElementById('inpCep');
         if (inpCep) {
