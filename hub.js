@@ -2200,8 +2200,6 @@ window.carregarEstatisticasIrradiacao = async function() {
                     }
                 }
             });
-                }
-            });
             
             // --- INÍCIO DO GRÁFICO SEMANAL ---
             if (window.irradiacaoSemanalChartInstance) window.irradiacaoSemanalChartInstance.destroy();
