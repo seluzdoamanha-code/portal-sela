@@ -17,7 +17,7 @@ window.voltarParaHub = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id') || localStorage.getItem('estrutura_atual');
     if (id) {
-        window.location.href = `m_hub.html?id=${id}`;
+        window.location.href = `m_hub.html?id=${id}&tipo=irradiacao`;
     } else {
         window.location.href = 'm_index.html';
     }
