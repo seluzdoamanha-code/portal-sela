@@ -1437,9 +1437,9 @@ async function carregarListaIrradiacao() {
                 let caixinhas = '';
                 for(let i=1; i<=semanas_alvo; i++) {
                     if (i <= leituras) {
-                        caixinhas += `<span style="display:inline-block; width:16px; height:16px; background:#10b981; border-radius:50%; margin-right:4px; margin-bottom:4px;"></span>`;
+                        caixinhas += `<span class="bola-irradiacao preenchida" style="display:inline-block; width:16px; height:16px; background:#10b981; border-radius:50%; margin-right:4px; margin-bottom:4px; transition: all 0.3s ease;"></span>`;
                     } else {
-                        caixinhas += `<span style="display:inline-block; width:16px; height:16px; border:2px solid #334155; border-radius:50%; margin-right:4px; margin-bottom:4px;"></span>`;
+                        caixinhas += `<span class="bola-irradiacao vazia" style="display:inline-block; width:16px; height:16px; border:2px solid #334155; border-radius:50%; margin-right:4px; margin-bottom:4px; transition: all 0.3s ease;"></span>`;
                     }
                 }
                 
@@ -1453,7 +1453,7 @@ async function carregarListaIrradiacao() {
                 progressHtml = `<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">${checkboxRepetir}Leituras: ${leituras}/${semanas_alvo}<br><div style="margin-top:4px; display:flex; flex-wrap:wrap; max-width: 250px;">${caixinhas}</div></div>`;
                 
                 actionsHtml = `
-                    <button onclick="marcarLeituraIrr('${item.id}', ${leituras}, ${semanas_alvo}, ${item.renovacao_automatica ? 'true' : 'false'})" class="btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; padding: 6px 12px;">✅ Registrar Leitura</button>
+                    <button id="btn_ler_${item.id}" onclick="marcarLeituraIrr(this, '${item.id}', ${leituras}, ${semanas_alvo}, ${item.renovacao_automatica ? 'true' : 'false'})" class="btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; transition: all 0.3s ease;">✅ Registrar Leitura</button>
                     <button onclick="abrirModalEdicaoIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}', ${semanasAlvoStr})" class="btn btn-secondary" style="padding: 6px 12px;">✏️ Editar</button>
                     <button onclick="arquivarIrradiacao('${item.id}')" class="btn btn-secondary" style="padding: 6px 12px;">Forçar Arquivamento</button>
                 `;
@@ -1466,7 +1466,7 @@ async function carregarListaIrradiacao() {
             }
             
             html += `
-                <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                <div id="card_irr_${item.id}" style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; transition: all 0.5s ease;">
                     <div style="display: flex; justify-content: space-between;">
                         <div style="flex: 1;">
                             <h4 style="color: var(--text-main); margin: 0 0 4px 0; font-size: 16px;">${item.nome_solicitado}</h4>
@@ -1794,9 +1794,38 @@ window.confirmarTriagem = async function(id) {
     }
 }
 
-window.marcarLeituraIrr = async function(id, leituras_atuais, semanas_alvo, autoRenovar = false) {
+window.marcarLeituraIrr = async function(btnElement, id, leituras_atuais, semanas_alvo, autoRenovar = false) {
     try {
         const novaLeitura = leituras_atuais + 1;
+        const card = document.getElementById(`card_irr_${id}`);
+        
+        // --- EFEITO VISUAL IMEDIATO (Optimistic UI) ---
+        if (btnElement && btnElement.nodeType) { 
+            btnElement.disabled = true;
+            btnElement.innerHTML = '✔️ Lido';
+            btnElement.style.background = '#059669';
+            btnElement.style.color = '#ffffff';
+        }
+
+        if (card) {
+            // 1. Esmaece o card
+            card.style.opacity = '0.5';
+            card.style.borderColor = '#10b981';
+
+            // 2. Anima a próxima bolinha vazia
+            const proxBola = card.querySelector('.bola-irradiacao.vazia');
+            if (proxBola) {
+                proxBola.classList.remove('vazia');
+                proxBola.classList.add('preenchida');
+                proxBola.style.border = 'none';
+                proxBola.style.background = '#10b981';
+                proxBola.style.transform = 'scale(1.3)';
+                setTimeout(() => {
+                    proxBola.style.transform = 'scale(1)';
+                }, 300);
+            }
+        }
+        // ----------------------------------------------
         
         // Buscar log_datas_leituras atual
         const { data: rowData, error: fetchErr } = await db.from('app_irradiacao_solicitacoes').select('log_datas_leituras').eq('id', id).single();
@@ -1815,8 +1844,7 @@ window.marcarLeituraIrr = async function(id, leituras_atuais, semanas_alvo, auto
                     log_datas_leituras: logs
                 }).eq('id', id);
                 if (error) throw error;
-                await carregarListaIrradiacao();
-                alert('Leitura registrada! O ciclo desta irradiação foi concluído e reiniciado automaticamente.');
+                // Não chamamos carregarListaIrradiacao(); aqui para não perder o efeito visual
             } else {
                 const modal = document.getElementById('modalFimLeitura');
                 const msg = document.getElementById('msgFimLeitura');
@@ -1832,7 +1860,7 @@ window.marcarLeituraIrr = async function(id, leituras_atuais, semanas_alvo, auto
                         log_datas_leituras: logs
                     }).eq('id', id);
                     if (error) throw error;
-                    await carregarListaIrradiacao();
+                    // Fica esmaecido, não recarrega a lista
                 } catch(e) { console.error(e); alert('Erro ao renovar'); }
             };
             
@@ -1845,7 +1873,7 @@ window.marcarLeituraIrr = async function(id, leituras_atuais, semanas_alvo, auto
                         log_datas_leituras: logs
                     }).eq('id', id);
                     if (error) throw error;
-                    await carregarListaIrradiacao();
+                    if (card) card.style.display = 'none'; // Esconde o card pois foi pro histórico
                 } catch(e) { console.error(e); alert('Erro ao arquivar'); }
             };
             }
@@ -1856,11 +1884,25 @@ window.marcarLeituraIrr = async function(id, leituras_atuais, semanas_alvo, auto
                 log_datas_leituras: logs
             }).eq('id', id);
             if (error) throw error;
-            
-            await carregarListaIrradiacao();
+            // Não chamamos carregarListaIrradiacao(); aqui para não perder o efeito visual
         }
         
-    } catch (err) { console.error(err); alert('Erro ao marcar leitura'); }
+    } catch (err) { 
+        console.error(err); 
+        alert('Erro ao marcar leitura');
+        // Reverte o visual em caso de erro
+        if (btnElement && btnElement.nodeType) {
+            btnElement.disabled = false;
+            btnElement.innerHTML = '✅ Registrar Leitura';
+            btnElement.style.background = 'rgba(16,185,129,0.1)';
+            btnElement.style.color = '#10b981';
+        }
+        const card = document.getElementById(`card_irr_${id}`);
+        if (card) {
+            card.style.opacity = '1';
+            card.style.borderColor = 'var(--border)';
+        }
+    }
 }
 
 window.arquivarIrradiacao = async function(id) {
