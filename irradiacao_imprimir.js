@@ -3,12 +3,6 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
-    const lblData = document.getElementById('lblData');
-    
-    // Configura data de hoje por padrão
-    const hoje = new Date();
-    lblData.innerText = 'Data: ' + hoje.toLocaleDateString('pt-BR');
-
     const selDia = document.getElementById('selDia');
     selDia.addEventListener('change', carregarLeituras);
 
@@ -21,6 +15,10 @@ async function carregarLeituras() {
     
     const estruturaId = localStorage.getItem('estrutura_atual');
     const diaSelecionado = document.getElementById('selDia').value;
+    
+    const lblData = document.getElementById('lblData');
+    const nomeDia = diaSelecionado ? diaSelecionado : 'Todos os dias';
+    lblData.innerText = 'Atividade de Irradiação - Leituras para Irradiação para o dia ' + nomeDia;
 
     try {
         let query = db.from('app_irradiacao_solicitacoes')
