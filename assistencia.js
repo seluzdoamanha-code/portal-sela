@@ -348,7 +348,8 @@ async function carregarListaEntregas() {
                 </div>
                 <div style="display: flex; gap: 12px;">
                     <button class="btn" onclick="abrirModalNovaMetaAss()">🎯 Definir Metas do Mês</button>
-                    <button class="btn btn-primary" onclick="abrirModalNovaEntrega()">🚚 Registrar Entrega</button>
+                    <button class="btn btn-primary" onclick="abrirModalEntregaColetiva()">📦 Entrega Coletiva</button>
+                    <button class="btn btn-primary" onclick="abrirModalNovaEntrega()">🚚 Entrega Individual</button>
                 </div>
             </div>
 
@@ -931,4 +932,219 @@ window.excluirEntregaAss = async function(id) {
         console.error(err);
         alert('Erro ao excluir entrega.');
     }
+};
+
+// --- ENTREGA COLETIVA ---
+window.assColetivaFamilias = [];
+window.assColetivaCestas = [];
+window.assColetivaEntregas = [];
+window.assColetivaMes = window.assFiltroMes;
+window.assColetivaAno = window.assFiltroAno;
+
+window.abrirModalEntregaColetiva = async function() {
+    window.assColetivaMes = window.assFiltroMes;
+    window.assColetivaAno = window.assFiltroAno;
+    
+    if (!document.getElementById('modalEntregaColetivaAss')) {
+        document.body.insertAdjacentHTML('beforeend', `
+            <div id="modalEntregaColetivaAss" class="modal-overlay" style="display: none;">
+                <div class="modal-content" style="width: 800px; max-width: 95%; max-height: 90vh; display: flex; flex-direction: column;">
+                    <h2 style="margin-top: 0; color: var(--text-main);">Entrega Coletiva de Cestas</h2>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-top: 0; margin-bottom: 20px;">
+                        Lançamento rápido para múltiplas famílias ativas de uma só vez.
+                    </p>
+                    
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: var(--bg-body); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                        <button class="btn" onclick="mudarMesColetiva(-1)">◀ Anterior</button>
+                        <strong id="assColetivaDateDisplay" style="color: var(--primary); font-size: 16px;">...</strong>
+                        <button class="btn" onclick="mudarMesColetiva(1)">Próximo ▶</button>
+                    </div>
+
+                    <div id="assColetivaListContainer" style="flex: 1; overflow-y: auto; background: var(--bg-body); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                        Carregando famílias...
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                        <button type="button" class="btn" onclick="document.getElementById('modalEntregaColetivaAss').style.display='none'">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="salvarEntregaColetivaLote(this)">Salvar Entregas em Lote</button>
+                    </div>
+                </div>
+            </div>
+        `);
+    }
+
+    document.getElementById('modalEntregaColetivaAss').style.display = 'flex';
+    await carregarDadosColetiva();
+};
+
+window.mudarMesColetiva = async function(delta) {
+    let d = new Date(window.assColetivaAno, window.assColetivaMes - 1, 1);
+    d.setMonth(d.getMonth() + delta);
+    window.assColetivaAno = d.getFullYear();
+    window.assColetivaMes = d.getMonth() + 1;
+    await carregarDadosColetiva();
+};
+
+window.carregarDadosColetiva = async function() {
+    const container = document.getElementById('assColetivaListContainer');
+    container.innerHTML = '<p style="text-align:center; color: var(--text-muted);">Carregando dados, aguarde...</p>';
+    
+    const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    document.getElementById('assColetivaDateDisplay').textContent = `${meses[window.assColetivaMes - 1]} ${window.assColetivaAno}`;
+
+    try {
+        // Fetch Familias
+        const { data: fams } = await db.from('ass_familias').select('id, codigo, nome_familia').eq('status', 'Ativa').order('nome_familia');
+        window.assColetivaFamilias = fams || [];
+
+        // Fetch Cestas
+        const { data: cestas } = await db.from('ass_cestas_modelos').select('id, codigo, tipo').order('tipo');
+        window.assColetivaCestas = cestas || [];
+
+        // Fetch Entregas do Mês
+        const { data: entregas } = await db.from('ass_entregas')
+            .select('id, familia_id, cesta_id, quantidade_entregue')
+            .eq('ano_ref', window.assColetivaAno)
+            .eq('mes_ref', window.assColetivaMes);
+        window.assColetivaEntregas = entregas || [];
+
+        renderListColetiva();
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="text-align:center; color: #ef4444;">Erro ao carregar os dados.</p>';
+    }
+};
+
+window.renderListColetiva = function() {
+    const container = document.getElementById('assColetivaListContainer');
+    
+    if (window.assColetivaFamilias.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color: var(--text-muted);">Nenhuma família ativa encontrada.</p>';
+        return;
+    }
+
+    let html = `<table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--border);">
+                <th style="text-align: left; padding: 8px; color: var(--text-muted);">Código</th>
+                <th style="text-align: left; padding: 8px; color: var(--text-muted);">Família</th>
+                <th style="text-align: left; padding: 8px; color: var(--text-muted); width: 250px;">Cesta Entregue</th>
+                <th style="text-align: center; padding: 8px; color: var(--text-muted); width: 80px;">Qtd</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    window.assColetivaFamilias.forEach(f => {
+        const entregue = window.assColetivaEntregas.find(e => e.familia_id === f.id);
+        const defQtd = entregue ? entregue.quantidade_entregue : 0;
+        const defCesta = entregue ? entregue.cesta_id : '';
+        const entId = entregue ? entregue.id : '';
+
+        let opts = '<option value="">-- Não recebeu --</option>';
+        window.assColetivaCestas.forEach(c => {
+            opts += `<option value="${c.id}" ${c.id === defCesta ? 'selected' : ''}>${c.tipo}</option>`;
+        });
+
+        html += `
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" class="row-coletiva" data-fam-id="${f.id}" data-ent-id="${entId}">
+                <td style="padding: 12px 8px; color: #10b981; font-weight: 500;">${f.codigo || '-'}</td>
+                <td style="padding: 12px 8px; color: var(--text-main); font-weight: 500;">${f.nome_familia}</td>
+                <td style="padding: 12px 8px;">
+                    <select class="form-control col-cesta" style="width: 100%; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main); padding: 6px; border-radius: 4px;">
+                        ${opts}
+                    </select>
+                </td>
+                <td style="padding: 12px 8px;">
+                    <input type="number" class="form-control col-qtd" value="${defQtd}" min="0" style="width: 100%; text-align: center; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main); padding: 6px; border-radius: 4px;">
+                </td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+};
+
+window.salvarEntregaColetivaLote = async function(btn) {
+    btn.disabled = true;
+    btn.textContent = 'Processando...';
+
+    try {
+        const rows = document.querySelectorAll('.row-coletiva');
+        let successCount = 0;
+        
+        // Formatar data da entrega (dia 01 do mes ref, ou hoje se for mês atual)
+        let dataEntrega = new Date().toISOString().split('T')[0];
+        const hoje = new Date();
+        if (hoje.getFullYear() !== window.assColetivaAno || (hoje.getMonth() + 1) !== window.assColetivaMes) {
+            const mesStr = window.assColetivaMes.toString().padStart(2, '0');
+            dataEntrega = `${window.assColetivaAno}-${mesStr}-01`;
+        }
+
+        for (const row of rows) {
+            const famId = row.getAttribute('data-fam-id');
+            const entId = row.getAttribute('data-ent-id');
+            const cestaId = row.querySelector('.col-cesta').value;
+            const qtd = parseInt(row.querySelector('.col-qtd').value) || 0;
+
+            if (qtd > 0 && !entId && cestaId) {
+                // Inserir novo
+                const payload = {
+                    data_entrega: dataEntrega,
+                    ano_ref: window.assColetivaAno,
+                    mes_ref: window.assColetivaMes,
+                    familia_id: famId,
+                    cesta_id: cestaId,
+                    quantidade_entregue: qtd
+                };
+                const { error: err1 } = await db.from('ass_entregas').insert(payload);
+                if (!err1) {
+                    await descontarEstoqueColetiva(cestaId, qtd);
+                    successCount++;
+                }
+            } 
+            else if (qtd > 0 && entId && cestaId) {
+                // Update
+                const existing = window.assColetivaEntregas.find(e => e.id === entId);
+                if (existing && (existing.cesta_id !== cestaId || existing.quantidade_entregue !== qtd)) {
+                    const { error: err2 } = await db.from('ass_entregas').update({
+                        cesta_id: cestaId,
+                        quantidade_entregue: qtd
+                    }).eq('id', entId);
+                    if (!err2) successCount++;
+                }
+            } 
+            else if (qtd === 0 && entId) {
+                // Delete
+                const { error: err3 } = await db.from('ass_entregas').delete().eq('id', entId);
+                if (!err3) successCount++;
+            }
+        }
+
+        alert(`Lote salvo com sucesso! ${successCount} atualizações realizadas.`);
+        document.getElementById('modalEntregaColetivaAss').style.display = 'none';
+        carregarListaEntregas();
+
+    } catch (e) {
+        console.error(e);
+        alert('Erro ao salvar entregas em lote.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Salvar Entregas em Lote';
+    }
+};
+
+window.descontarEstoqueColetiva = async function(cestaId, qtdEntrega) {
+    try {
+        const { data: comp } = await db.from('ass_cesta_composicao').select('item_id, quantidade').eq('cesta_id', cestaId);
+        if (comp && comp.length > 0) {
+            for (const c of comp) {
+                const sub = c.quantidade * qtdEntrega;
+                const { data: iData } = await db.from('ass_itens_cesta').select('estoque_atual').eq('id', c.item_id).single();
+                if (iData) {
+                    await db.from('ass_itens_cesta').update({ estoque_atual: iData.estoque_atual - sub }).eq('id', c.item_id);
+                }
+            }
+        }
+    } catch(e) { console.error('Erro estoque coletiva:', e); }
 };
