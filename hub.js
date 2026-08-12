@@ -2733,18 +2733,7 @@ async function carregarAutocompleteAtendimento() {
         }
     } catch(e) { console.error("Erro no autocomplete:", e); }
 }
- = await db.from('pessoas').select('nome_completo').order('nome_completo');
-        if (data) {
-            const datalist = document.getElementById('listaNomesAten');
-            datalist.innerHTML = '';
-            data.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p.nome_completo.toUpperCase();
-                datalist.appendChild(opt);
-            });
-        }
-    } catch(e) { console.error("Erro no autocomplete:", e); }
-}
+
 
 async function salvarFormularioAtendimento(e) {
     e.preventDefault();
