@@ -36,9 +36,6 @@
                     </div>
                     
                     <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 8px 16px;" class="desktop-only"></div>
-                    <a href="luz_gestao.html" class="nav-item ${currentPage === 'luz_gestao.html' ? 'active' : ''}" title="Mensagem & Página Luz">💡 <span class="nav-text">Mensagem & Página Luz</span></a>
-
-                    <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 8px 16px;" class="desktop-only"></div>
                     <a href="config.html" class="nav-item ${currentPage === 'config.html' ? 'active' : ''}" title="Configurações">⚙️ <span class="nav-text">Configurações</span></a>
                 </nav>
                 
