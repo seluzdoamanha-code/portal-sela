@@ -209,7 +209,7 @@ function abrirModalLivro(id) {
         try {
             const pessoa = JSON.parse(pessoaStr);
             document.getElementById('reservaNome').value = pessoa.nome || '';
-            document.getElementById('reservaContato').value = pessoa.telefone || pessoa.email || '';
+            document.getElementById('reservaContato').value = pessoa.telefone || ''; // Evita usar o e-mail
         } catch(e){}
     }
 
