@@ -53,6 +53,7 @@ async function carregarDadosEstrutura() {
             const nomeEstrutura = (data.nome || '').toLowerCase();
             const isIrradiacao = nomeEstrutura.includes('irradia') || nomeEstrutura.includes('sela');
             const isAssistencia = nomeEstrutura.includes('assist') && nomeEstrutura.includes('social');
+    const isAtendimento = nomeEstrutura.includes('atendimento');
             
             // Lógica de exibir Abas com base na configuração do DB
             let config = data.abas_config || {
@@ -932,6 +933,7 @@ window.carregarAppMiniApps = async function() {
     const nomeEstrutura = nomeHub.toLowerCase();
     const isIrradiacao = nomeEstrutura.includes('irradia') || nomeEstrutura.includes('sela');
     const isAssistencia = nomeEstrutura.includes('assist') && nomeEstrutura.includes('social');
+    const isAtendimento = nomeEstrutura.includes('atendimento');
     
     let cards = '';
     
@@ -963,6 +965,21 @@ window.carregarAppMiniApps = async function() {
                 <div style="font-size: 32px; margin-bottom: 12px;">📦</div>
                 <h3 style="color: #10b981; margin-bottom: 8px;">Logística de Cestas</h3>
                 <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Gestão do Almoxarifado, Cestas Básicas, Campanhas e Metas de Entrega.</p>
+            </div>
+        `;
+    }
+    if (isAtendimento) {
+        cards += `
+            <div onclick="window.location.href='atendimento/m_pedido.html?id=${estruturaAtual.id}'" style="background: rgba(59, 130, 246, 0.05); border: 1px solid #3b82f6; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.05)'; this.style.transform='none'">
+                <div style="font-size: 32px; margin-bottom: 12px;">🤝</div>
+                <h3 style="color: #3b82f6; margin-bottom: 8px;">Lançar Pedido</h3>
+                <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Registrar novo pedido de Atendimento Fraterno.</p>
+            </div>
+            
+            <div onclick="window.location.href='atendimento/m_gestao.html?id=${estruturaAtual.id}'" style="background: rgba(245, 158, 11, 0.05); border: 1px solid #f59e0b; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(245, 158, 11, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(245, 158, 11, 0.05)'; this.style.transform='none'">
+                <div style="font-size: 32px; margin-bottom: 12px;">⚙️</div>
+                <h3 style="color: #f59e0b; margin-bottom: 8px;">Gestão de Atendimentos</h3>
+                <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Gerenciar fila de atendimentos pendentes e concluídos.</p>
             </div>
         `;
     }
