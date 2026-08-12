@@ -439,47 +439,57 @@
         </header>
         <div class="m-modal-content">
             <input type="hidden" id="fId">
-            <div class="m-form-group">
-                <label class="m-form-label">Nome da Família / Responsável *</label>
-                <input type="text" id="fNome" class="m-form-input" placeholder="Ex: Maria da Silva">
+            <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+                <div style="color: #eab308; font-weight: 600; font-size: 14px; margin-bottom: 4px;">⚠️ Importante:</div>
+                <div style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">
+                    O Responsável e os Membros devem estar previamente cadastrados no sistema (Tabela Pessoas) com o perfil "Membro da Família". Sem isso, eles não aparecerão na lista de buscas abaixo.
+                </div>
             </div>
-            <div class="m-form-group">
-                <label class="m-form-label">Código</label>
-                <input type="text" id="fCodigo" class="m-form-input" placeholder="Ex: F101">
+
+            <div style="display: flex; gap: 12px;">
+                <div class="m-form-group" style="flex: 1;">
+                    <label class="m-form-label">Código (Ex: A01)</label>
+                    <input type="text" id="fCodigo" class="m-form-input">
+                </div>
+                <div class="m-form-group" style="flex: 2;">
+                    <label class="m-form-label">Nome de Identificação (Ex: Família Souza)</label>
+                    <input type="text" id="fNome" class="m-form-input" required>
+                </div>
             </div>
-            <div class="m-form-group">
-                <label class="m-form-label">Telefone (Apenas números)</label>
-                <input type="tel" id="fTel" class="m-form-input" placeholder="42999999999">
+
+            <div style="display: flex; gap: 12px;">
+                <div class="m-form-group" style="flex: 1;">
+                    <label class="m-form-label">Tipo de Assistência</label>
+                    <select id="fTipo" class="m-form-input">
+                        <option value="Fixa/Assistida">Fixa / Assistida</option>
+                        <option value="Extra">Extra</option>
+                    </select>
+                </div>
+                <div class="m-form-group" style="flex: 1;">
+                    <label class="m-form-label">Status</label>
+                    <select id="fStatus" class="m-form-input">
+                        <option value="Ativa">Ativa</option>
+                        <option value="Triagem">Triagem</option>
+                        <option value="Inativa">Inativa</option>
+                    </select>
+                </div>
             </div>
-            <div class="m-form-group">
-                <label class="m-form-label">Status</label>
-                <select id="fStatus" class="m-form-input">
-                    <option value="Ativa">Ativa</option>
-                    <option value="Triagem">Triagem</option>
-                    <option value="Inativa">Inativa</option>
+
+            <div class="m-form-group" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                <label class="m-form-label" style="color: var(--primary);">Responsável Legal</label>
+                <select id="fResponsavel" class="m-form-input" required>
+                    <option value="">Carregando pessoas...</option>
                 </select>
             </div>
-            
-            <div class="m-det-block" style="margin-top: 24px; padding: 16px;">
-                <div class="m-det-title" style="margin-bottom: 16px;">Endereço Principal</div>
-                <div class="m-form-group">
-                    <label class="m-form-label">Logradouro (Rua, Av.)</label>
-                    <input type="text" id="fRua" class="m-form-input">
+
+            <div style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <label class="m-form-label" style="margin: 0;">Membros da Família</label>
+                    <button type="button" onclick="adicionarLinhaMembroAss()" style="background: var(--surface); border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">+ Adicionar Membro</button>
                 </div>
-                <div style="display:flex; gap:12px;">
-                    <div class="m-form-group" style="flex:1;">
-                        <label class="m-form-label">Número</label>
-                        <input type="text" id="fNum" class="m-form-input">
-                    </div>
-                    <div class="m-form-group" style="flex:2;">
-                        <label class="m-form-label">Bairro</label>
-                        <input type="text" id="fBairro" class="m-form-input">
-                    </div>
+                <div id="mMembrosContainer" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 50px;">
+                    <!-- Linhas injetadas via JS -->
                 </div>
-            </div>
-            
-            <div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">
-                Para gerenciar membros (crianças, adultos) acesse o Portal no Computador.
             </div>
         </div>
     </div>

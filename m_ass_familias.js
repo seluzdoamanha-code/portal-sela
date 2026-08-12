@@ -436,92 +436,199 @@
     }
 
     // --- FORMULÁRIO CRUD ---
-    function abrirFormularioNova() {
-        document.getElementById('mFormTitle').innerText = 'Nova Família';
-        document.getElementById('fId').value = '';
-        document.getElementById('fNome').value = '';
-        document.getElementById('fCodigo').value = '';
-        document.getElementById('fTel').value = '';
-        document.getElementById('fStatus').value = 'Ativa';
-        document.getElementById('fRua').value = '';
-        document.getElementById('fNum').value = '';
-        document.getElementById('fBairro').value = '';
-        
-        document.getElementById('mFormModal').classList.add('active');
+window.assPessoasGlobais = [];
+
+window.gerarOpcoesPessoasAss = function(selecionadoId = '') {
+    const pessoas = window.assPessoasGlobais || [];
+    const comPerfil = pessoas.filter(p => p.papeis && p.papeis.includes('Membro da Família'));
+    const semPerfil = pessoas.filter(p => !p.papeis || !p.papeis.includes('Membro da Família'));
+    
+    let html = '<option value="">-- Selecione --</option>';
+    
+    if (comPerfil.length > 0) {
+        html += '<optgroup label="Com perfil: Membro da Família">';
+        html += comPerfil.map(p => `<option value="${p.id}" ${p.id === selecionadoId ? 'selected' : ''}>${p.nome_completo}</option>`).join('');
+        html += '</optgroup>';
     }
     
-    function abrirFormularioEdicao(f) {
-        if (!f) return;
-        document.getElementById('mFormTitle').innerText = 'Editar Família';
-        document.getElementById('fId').value = f.id;
-        document.getElementById('fNome').value = f.nome_familia || '';
-        document.getElementById('fCodigo').value = f.codigo || '';
-        document.getElementById('fTel').value = f.telefone || '';
-        document.getElementById('fStatus').value = f.status || 'Ativa';
-        document.getElementById('fRua').value = f.endereco_logradouro || '';
-        document.getElementById('fNum').value = f.endereco_numero || '';
-        document.getElementById('fBairro').value = f.endereco_bairro || '';
-        
-        document.getElementById('mFormModal').classList.add('active');
+    if (semPerfil.length > 0) {
+        html += '<optgroup label="Demais Cadastros (Sem perfil)">';
+        html += semPerfil.map(p => `<option value="${p.id}" ${p.id === selecionadoId ? 'selected' : ''}>${p.nome_completo}</option>`).join('');
+        html += '</optgroup>';
     }
     
-    window.fecharFormulario = function() {
-        document.getElementById('mFormModal').classList.remove('active');
+    return html;
+};
+
+window.adicionarLinhaMembroAss = function(pessoaId = '', parentesco = '') {
+    const container = document.getElementById('mMembrosContainer');
+    
+    const div = document.createElement('div');
+    div.className = 'ass-membro-linha';
+    div.style = 'display: flex; gap: 8px; margin-bottom: 8px; align-items: center;';
+    
+    const pessoasOptions = window.gerarOpcoesPessoasAss(pessoaId);
+
+    div.innerHTML = `
+        <select class="m-form-input mem-pessoa" required style="flex: 2;">
+            ${pessoasOptions}
+        </select>
+        <input type="text" class="m-form-input mem-parentesco" required placeholder="Parentesco (Ex: Filho)" value="${parentesco}" style="flex: 1;">
+        <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color: #ef4444; padding:8px; cursor:pointer;" title="Remover">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    `;
+    container.appendChild(div);
+};
+
+async function carregarPessoasParaForm() {
+    if (window.assPessoasGlobais && window.assPessoasGlobais.length > 0) return; // Already loaded
+    try {
+        const { data: pessoas, error } = await db.from('pessoas').select('id, nome_completo, papeis').order('nome_completo');
+        if (error) throw error;
+        window.assPessoasGlobais = pessoas || [];
+    } catch(err) {
+        console.error("Erro ao carregar pessoas:", err);
+    }
+}
+
+async function abrirFormularioNova() {
+    document.getElementById('mFormTitle').innerText = 'Nova Família';
+    document.getElementById('fId').value = '';
+    document.getElementById('fCodigo').value = '';
+    document.getElementById('fNome').value = '';
+    document.getElementById('fTipo').value = 'Fixa/Assistida';
+    document.getElementById('fStatus').value = 'Ativa';
+    document.getElementById('mMembrosContainer').innerHTML = '';
+    
+    const btnSalvar = document.getElementById('btnSalvarFamilia');
+    btnSalvar.disabled = true;
+    btnSalvar.innerText = 'Carregando...';
+    
+    document.getElementById('mFormModal').classList.add('active');
+    
+    await carregarPessoasParaForm();
+    document.getElementById('fResponsavel').innerHTML = window.gerarOpcoesPessoasAss('');
+    
+    btnSalvar.disabled = false;
+    btnSalvar.innerText = 'Salvar';
+}
+    
+async function abrirFormularioEdicao(f) {
+    if (!f) return;
+    document.getElementById('mFormTitle').innerText = 'Editar Família';
+    document.getElementById('fId').value = f.id;
+    document.getElementById('fCodigo').value = f.codigo || '';
+    document.getElementById('fNome').value = f.nome_familia || '';
+    document.getElementById('fTipo').value = f.tipo || 'Fixa/Assistida';
+    document.getElementById('fStatus').value = f.status || 'Ativa';
+    document.getElementById('mMembrosContainer').innerHTML = '';
+    
+    const btnSalvar = document.getElementById('btnSalvarFamilia');
+    btnSalvar.disabled = true;
+    btnSalvar.innerText = 'Carregando...';
+    
+    document.getElementById('mFormModal').classList.add('active');
+    
+    await carregarPessoasParaForm();
+    document.getElementById('fResponsavel').innerHTML = window.gerarOpcoesPessoasAss(f.responsavel_id);
+    
+    // Fetch members for this family
+    try {
+        const { data: familiaDetalhe, error } = await db.from('ass_familias').select('*, ass_membros_familia(*)').eq('id', f.id).single();
+        if (error) throw error;
+        
+        if (familiaDetalhe && familiaDetalhe.ass_membros_familia) {
+            familiaDetalhe.ass_membros_familia.forEach(m => {
+                window.adicionarLinhaMembroAss(m.pessoa_id, m.parentesco);
+            });
+        }
+    } catch (e) {
+        console.error("Erro ao carregar membros:", e);
+    }
+    
+    btnSalvar.disabled = false;
+    btnSalvar.innerText = 'Salvar';
+}
+
+window.fecharFormulario = function() {
+    document.getElementById('mFormModal').classList.remove('active');
+};
+
+async function salvarFamilia() {
+    const id = document.getElementById('fId').value;
+    const payload = {
+        codigo: document.getElementById('fCodigo').value.trim() || null,
+        nome_familia: document.getElementById('fNome').value.trim(),
+        tipo: document.getElementById('fTipo').value,
+        status: document.getElementById('fStatus').value,
+        responsavel_id: document.getElementById('fResponsavel').value || null
     };
     
-    async function salvarFamilia() {
-        const id = document.getElementById('fId').value;
-        const payload = {
-            nome_familia: document.getElementById('fNome').value.trim(),
-            codigo: document.getElementById('fCodigo').value.trim() || null,
-            telefone: document.getElementById('fTel').value.trim() || null,
-            status: document.getElementById('fStatus').value,
-            endereco_logradouro: document.getElementById('fRua').value.trim() || null,
-            endereco_numero: document.getElementById('fNum').value.trim() || null,
-            endereco_bairro: document.getElementById('fBairro').value.trim() || null
-        };
+    if (!payload.nome_familia) {
+        alert('O Nome de Identificação é obrigatório.');
+        return;
+    }
+    if (!payload.responsavel_id) {
+        alert('Selecione um Responsável Legal.');
+        return;
+    }
+    
+    const btn = document.getElementById('btnSalvarFamilia');
+    btn.innerText = 'Salvando...';
+    btn.disabled = true;
+    
+    try {
+        let famId = id;
         
-        if (!payload.nome_familia) {
-            alert('O nome do responsável é obrigatório.');
-            return;
+        if (id) {
+            // Update
+            const { error } = await db.from('ass_familias').update(payload).eq('id', id);
+            if (error) throw error;
+            
+            // Delete old members
+            await db.from('ass_membros_familia').delete().eq('familia_id', id);
+        } else {
+            // Insert
+            const { data, error } = await db.from('ass_familias').insert([payload]).select('id').single();
+            if (error) throw error;
+            famId = data.id;
         }
         
-        const btn = document.getElementById('btnSalvarFamilia');
-        btn.innerText = '...';
-        btn.disabled = true;
-        
-        try {
-            if (id) {
-                // Update
-                const { error } = await db.from('ass_familias').update(payload).eq('id', id);
-                if (error) throw error;
-            } else {
-                // Insert
-                const { error } = await db.from('ass_familias').insert([payload]);
-                if (error) throw error;
-            }
-            
-            window.fecharFormulario();
-            // Se estava editando, fecha o painel de detalhes tbm pra forçar refresh
-            if (id) document.getElementById('mDetModal').classList.remove('active');
-            
-            
-        document.getElementById('btnIrParaOcorrencia').addEventListener('click', () => {
-            if (selectedFamilia && selectedFamilia.id) {
-                let url = 'm_ass_ocorrencias.html?f_id=' + selectedFamilia.id + '&f_nome=' + encodeURIComponent(selectedFamilia.codigo + ' - ' + selectedFamilia.nome_familia);
-                window.location.href = url;
+        // Insert new members
+        const linhas = document.querySelectorAll('.ass-membro-linha');
+        const membros = [];
+        linhas.forEach(l => {
+            const pid = l.querySelector('.mem-pessoa').value;
+            const par = l.querySelector('.mem-parentesco').value.trim();
+            if (pid && par) {
+                membros.push({
+                    familia_id: famId,
+                    pessoa_id: pid,
+                    parentesco: par
+                });
             }
         });
 
-        await carregarFamilias();
-        } catch(e) {
-            console.error(e);
-            alert('Erro ao salvar família.');
-        } finally {
-            btn.innerText = 'Salvar';
-            btn.disabled = false;
+        if (membros.length > 0) {
+            const { error: memError } = await db.from('ass_membros_familia').insert(membros);
+            if (memError) throw memError;
         }
+        
+        window.fecharFormulario();
+        // Se estava editando, fecha o painel de detalhes tbm pra forçar refresh
+        if (id) document.getElementById('mDetModal').classList.remove('active');
+        
+        await carregarFamilias();
+    } catch(e) {
+        console.error(e);
+        alert('Erro ao salvar família. Verifique se o código não está duplicado.');
+    } finally {
+        btn.innerText = 'Salvar';
+        btn.disabled = false;
     }
+}
+
 
 })();
 
