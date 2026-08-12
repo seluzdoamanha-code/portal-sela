@@ -57,9 +57,23 @@
 
     <div class="m-container">
         
-        <!-- Action Card -->
+        <!-- Action Card: Entrega Coletiva -->
+        <div class="m-action-card" style="margin-bottom: 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 16px;" onclick="window.location.href='m_ass_entrega_coletiva.html'">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: rgba(16, 185, 129, 0.15); padding: 10px; border-radius: 12px; color: #10b981;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+                <div>
+                    <div style="color: var(--text-main); font-weight: 600; font-size: 16px;">Entrega Coletiva</div>
+                    <div style="color: var(--text-muted); font-size: 13px;">Registrar em lote</div>
+                </div>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+
+        <!-- Action Card: Entrega Individual -->
         <div class="m-action-card">
-            <div class="m-action-title">Nova Entrega</div>
+            <div class="m-action-title">Nova Entrega Individual</div>
             <select id="selFamilia" class="m-select">
                 <option value="">Carregando famílias...</option>
             </select>
