@@ -57,13 +57,13 @@
         listEl.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding-top: 40px;">Carregando...</p>';
 
         try {
+            const hojeIso = new Date().toISOString();
             const { data, error } = await db
                 .from('agenda')
                 .select('*')
-                .eq('estrutura_id', estruturaId)
-                .gte('data_evento', new Date().toISOString().split('T')[0])
-                .order('data_evento', { ascending: true })
-                .order('hora_evento', { ascending: true });
+                .or(`estrutura_id.eq.${estruturaId},visibilidade.eq.Global`)
+                .gte('data_hora_inicio', hojeIso)
+                .order('data_hora_inicio', { ascending: true });
 
             if (error) throw error;
 
@@ -74,19 +74,23 @@
 
             let html = '';
             data.forEach(ev => {
-                const [ano, mes, dia] = ev.data_evento.split('-');
-                const dataFormatada = `${dia}/${mes}/${ano}`;
+                const dataInicio = new Date(ev.data_hora_inicio);
+                const dataFormatada = dataInicio.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase();
+                const horaFormatada = dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                 
                 const textoGcal = encodeURIComponent(ev.titulo || '');
-                const dtGcal = ev.data_evento.replace(/-/g, '');
-                let hrIni = '090000';
-                let hrFim = '100000';
-                if (ev.hora_evento) {
-                    const limpo = ev.hora_evento.replace(/:/g, '');
-                    hrIni = limpo.substring(0,6).padEnd(6, '0');
-                    hrFim = (parseInt(hrIni.substring(0,2)) + 1).toString().padStart(2, '0') + hrIni.substring(2);
+                const dtGcal = dataInicio.toISOString().replace(/-|:|\.\d\d\d/g, '');
+                
+                let dataFimStr = dtGcal;
+                if (ev.data_hora_fim) {
+                    const dataFim = new Date(ev.data_hora_fim);
+                    dataFimStr = dataFim.toISOString().replace(/-|:|\.\d\d\d/g, '');
+                } else {
+                    const dataFim = new Date(dataInicio.getTime() + 60*60*1000); // +1 hour
+                    dataFimStr = dataFim.toISOString().replace(/-|:|\.\d\d\d/g, '');
                 }
-                const datesGcal = `${dtGcal}T${hrIni}Z/${dtGcal}T${hrFim}Z`;
+                
+                const datesGcal = `${dtGcal}/${dataFimStr}`;
                 const locGcal = encodeURIComponent(ev.local || '');
                 const descGcal = encodeURIComponent(ev.descricao || '');
                 const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${textoGcal}&dates=${datesGcal}&details=${descGcal}&location=${locGcal}&sf=true&output=xml`;
@@ -99,11 +103,10 @@
                         <div class="agenda-date-badge">${dataFormatada}</div>
                         <div class="agenda-title">${ev.titulo}</div>
                         
-                        ${ev.hora_evento ? `
                         <div class="agenda-detail">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            ${ev.hora_evento.substring(0,5)}
-                        </div>` : ''}
+                            ${horaFormatada}
+                        </div>
                         
                         ${ev.local ? `
                         <div class="agenda-detail">
@@ -147,12 +150,22 @@
         btnSave.disabled = true;
 
         try {
+            // Combinar data e hora
+            let inicioStr = data + 'T';
+            if (hora) {
+                inicioStr += hora + ':00';
+            } else {
+                inicioStr += '09:00:00';
+            }
+            
+            const dataHoraInicioIso = new Date(inicioStr).toISOString();
+
             const { error } = await db.from('agenda').insert([{
                 estrutura_id: estruturaId,
                 titulo: titulo,
-                data_evento: data,
-                hora_evento: hora ? hora + ":00" : null,
+                data_hora_inicio: dataHoraInicioIso,
                 local: local,
+                visibilidade: 'Departamento',
                 descricao: desc
             }]);
 
