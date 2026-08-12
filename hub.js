@@ -970,7 +970,7 @@ window.carregarAppMiniApps = async function() {
     }
     if (isAtendimento) {
         cards += `
-            <div onclick="window.location.href='atendimento_pedido.html?id=${estruturaId}'" style="background: rgba(59, 130, 246, 0.05); border: 1px solid #3b82f6; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.05)'; this.style.transform='none'">
+            <div onclick="abrirFormularioAtendimento()" style="background: rgba(59, 130, 246, 0.05); border: 1px solid #3b82f6; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.05)'; this.style.transform='none'">
                 <div style="font-size: 32px; margin-bottom: 12px;">🤝</div>
                 <h3 style="color: #3b82f6; margin-bottom: 8px;">Lançar Pedido</h3>
                 <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Registrar novo pedido de Atendimento Fraterno.</p>
@@ -2588,3 +2588,123 @@ window.excluirAtendimento = async function(id) {
         } catch(e) { alert('Erro ao excluir: ' + e.message); }
     }
 };
+
+
+window.abrirFormularioAtendimento = function() {
+    const container = document.getElementById('containerApps');
+    
+    container.innerHTML = `
+        <div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <button onclick="carregarAppMiniApps()" class="btn btn-secondary" style="margin-bottom: 16px; font-size: 13px;">← Voltar aos Mini-Apps</button>
+                <h2 style="font-size: 20px; color: #3b82f6; margin-bottom: 8px;">🤝 Atendimento Fraterno</h2>
+                <p style="color: var(--text-muted); font-size: 14px;">Novo pedido de Atendimento Fraterno.</p>
+            </div>
+        </div>
+
+        <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 600px;">
+            <h3 style="color: var(--primary); margin-bottom: 16px;">📝 Novo Pedido - via Portal</h3>
+            <form id="formAtendimentoWeb" style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                    <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Nome Completo *</label>
+                    <input type="text" id="inAtenNome" required class="input-field" placeholder="DIGITE O NOME COMPLETO" style="width: 100%; text-transform: uppercase;" list="listaNomesAten">
+                    <datalist id="listaNomesAten"></datalist>
+                </div>
+                <div>
+                    <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Endereço Completo</label>
+                    <input type="text" id="inAtenEndereco" class="input-field" placeholder="RUA, NÚMERO, BAIRRO, CIDADE" style="width: 100%; text-transform: uppercase;">
+                </div>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Data de Nascimento</label>
+                        <input type="date" id="inAtenNasc" class="input-field" style="width: 100%; color: white;">
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">WhatsApp / Celular</label>
+                        <input type="text" id="inAtenWhats" class="input-field" placeholder="(XX) XXXXX-XXXX" style="width: 100%;">
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+                    <button type="submit" class="btn btn-primary" id="btnSaveAtenWeb">Enviar Solicitação</button>
+                </div>
+            </form>
+
+            <!-- Painel de Sucesso -->
+            <div id="panelSuccessAten" style="display: none; text-align: center;">
+                <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+                <h3 style="color: #10b981; margin-bottom: 12px; font-size: 20px;">Pedido Registrado!</h3>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">O pedido de atendimento fraterno foi incluído na fila de gestão com sucesso.</p>
+                <button onclick="abrirFormularioAtendimento()" class="btn btn-secondary">Registrar Outro</button>
+            </div>
+        </div>
+    `;
+
+    // Apply color pick styling locally if needed
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #formAtendimentoWeb input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            opacity: 0.7;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Mask for Phone
+    const whatsInput = document.getElementById('inAtenWhats');
+    whatsInput.addEventListener('input', function (e) {
+        var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+        e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+    });
+
+    // Populate autocomplete
+    carregarAutocompleteAtendimento();
+
+    // Form Submit Handler
+    document.getElementById('formAtendimentoWeb').addEventListener('submit', salvarFormularioAtendimento);
+};
+
+async function carregarAutocompleteAtendimento() {
+    try {
+        const { data, error } = await db.from('pessoas').select('nome_completo').order('nome_completo');
+        if (data) {
+            const datalist = document.getElementById('listaNomesAten');
+            datalist.innerHTML = '';
+            data.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.nome_completo.toUpperCase();
+                datalist.appendChild(opt);
+            });
+        }
+    } catch(e) { console.error("Erro no autocomplete:", e); }
+}
+
+async function salvarFormularioAtendimento(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSaveAtenWeb');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    const nome = document.getElementById('inAtenNome').value;
+    const endereco = document.getElementById('inAtenEndereco').value;
+    const nascimento = document.getElementById('inAtenNasc').value || null;
+    const whats = document.getElementById('inAtenWhats').value;
+
+    try {
+        const { error } = await db.from('app_atendimento_fraterno').insert([{
+            nome_completo: nome,
+            endereco_completo: endereco,
+            data_nascimento: nascimento,
+            telefone: whats,
+            status: 'Pendente'
+        }]);
+
+        if (error) throw error;
+
+        document.getElementById('formAtendimentoWeb').style.display = 'none';
+        document.getElementById('panelSuccessAten').style.display = 'block';
+    } catch(err) {
+        alert("Erro ao enviar: " + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Enviar Solicitação';
+    }
+}
