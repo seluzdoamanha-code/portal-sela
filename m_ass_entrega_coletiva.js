@@ -1,7 +1,7 @@
 (function() {
-    const supabaseUrl = window.SUPABASE_URL;
-    const supabaseKey = window.SUPABASE_ANON_KEY;
-    const db = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const SUPABASE_URL = 'https://aymdooyafimliiggxeqs.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5bWRvb3lhZmltbGlpZ2d4ZXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDUxNDksImV4cCI6MjEwMDY4MTE0OX0.-NBhiyGDlrWq4QKNLx9Ll5GlIk0mV_rBWnr0vdbUCOU';
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
     let currentDate = new Date();
     // Default to the current month/year, but we can navigate
