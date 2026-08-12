@@ -63,7 +63,7 @@
                 <td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.texto}</td>
                 <td>${item.autor}</td>
                 <td class="luz-actions" style="justify-content: center;">
-                    <button class="btn-action" onclick="abrirModalMsg('${item.id}', \`${item.texto.replace(/`/g, '\\`').replace(/\${/g, '\\${')}\`, '${item.autor}')}">✏️</button>
+                    <button class="btn-action" onclick="abrirEdicaoMsg('${item.id}')">✏️</button>
                     <button class="btn-action btn-delete" onclick="excluirMensagem('${item.id}')">🗑️</button>
                 </td>
             `;
@@ -72,6 +72,13 @@
         
         document.getElementById('tableMsg').style.display = 'table';
     }
+
+    window.abrirEdicaoMsg = function(id) {
+        const item = listMensagens.find(x => x.id === id);
+        if (item) {
+            abrirModalMsg(item.id, item.texto, item.autor);
+        }
+    };
 
     window.abrirModalMsg = function(id = '', texto = '', autor = '') {
         document.getElementById('inMsgId').value = id;
@@ -159,7 +166,7 @@
                 <td>pág. ${item.pagina || '-'}</td>
                 <td>${item.autor}</td>
                 <td class="luz-actions" style="justify-content: center;">
-                    <button class="btn-action" onclick="abrirModalPag('${item.id}', '${item.livro_codigo}', \`${item.trecho.replace(/`/g, '\\`').replace(/\${/g, '\\${')}\`, '${item.pagina || ''}', '${item.autor}')}">✏️</button>
+                    <button class="btn-action" onclick="abrirEdicaoPag('${item.id}')">✏️</button>
                     <button class="btn-action btn-delete" onclick="excluirPagina('${item.id}')">🗑️</button>
                 </td>
             `;
@@ -168,6 +175,13 @@
         
         document.getElementById('tablePag').style.display = 'table';
     }
+
+    window.abrirEdicaoPag = function(id) {
+        const item = listPaginas.find(x => x.id === id);
+        if (item) {
+            abrirModalPag(item.id, item.livro_codigo, item.trecho, item.pagina || '', item.autor);
+        }
+    };
 
     window.abrirModalPag = function(id = '', livro_codigo = '', trecho = '', pagina = '', autor = '') {
         document.getElementById('inPagId').value = id;
