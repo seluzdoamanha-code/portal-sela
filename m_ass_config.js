@@ -164,8 +164,7 @@ async function loadItens() {
             <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
                 <thead>
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); font-size: 11px;">
-                        <th style="padding: 8px 4px;">Cód</th>
-                        <th style="padding: 8px 4px;">Descrição</th>
+                        <th style="padding: 8px 4px;">Cód./Descrição</th>
                         <th style="padding: 8px 4px;">Estoque</th>
                         <th style="padding: 8px 4px;">Und</th>
                         <th style="padding: 8px 4px;">St</th>
@@ -177,8 +176,10 @@ async function loadItens() {
                         const isAtivo = (i.status === 'Ativo' || i.status === 'Ativa');
                         return `
                         <tr style="border-bottom: 1px solid var(--border);">
-                            <td style="padding: 10px 4px; color: #60a5fa;">${i.codigo}</td>
-                            <td style="padding: 10px 4px; color: var(--text-main); font-weight: 500; white-space: nowrap;">${i.descricao}</td>
+                            <td style="padding: 10px 4px;">
+                                <div style="color: #60a5fa; font-weight: 500;">${i.codigo}</div>
+                                <div style="color: var(--text-muted); font-size: 11px; white-space: normal; line-height: 1.2; margin-top: 2px;">${i.descricao}</div>
+                            </td>
                             <td style="padding: 10px 4px; color: #10b981; font-weight: bold;">${i.estoque_atual || 0}</td>
                             <td style="padding: 10px 4px; color: var(--text-muted);">${i.unidade || '-'}</td>
                             <td style="padding: 10px 4px;">
