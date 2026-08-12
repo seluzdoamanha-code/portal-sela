@@ -976,7 +976,7 @@ window.carregarAppMiniApps = async function() {
                 <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Registrar novo pedido de Atendimento Fraterno.</p>
             </div>
             
-            <div onclick="window.location.href='atendimento/m_gestao.html?id=${estruturaAtual.id}'" style="background: rgba(245, 158, 11, 0.05); border: 1px solid #f59e0b; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(245, 158, 11, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(245, 158, 11, 0.05)'; this.style.transform='none'">
+            <div onclick="carregarPainelGestaoAtendimento()" style="background: rgba(245, 158, 11, 0.05); border: 1px solid #f59e0b; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(245, 158, 11, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(245, 158, 11, 0.05)'; this.style.transform='none'">
                 <div style="font-size: 32px; margin-bottom: 12px;">⚙️</div>
                 <h3 style="color: #f59e0b; margin-bottom: 8px;">Gestão de Atendimentos</h3>
                 <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Gerenciar fila de atendimentos pendentes e concluídos.</p>
@@ -2372,3 +2372,219 @@ window.salvarEdicaoIrradiacao = async function(event) {
     }
 };
 
+
+
+// ==========================================
+// MÓDULO WEB: ATENDIMENTO FRATERNO
+// ==========================================
+let currentAtendimentoTab = 'pendentes';
+
+window.mudarAbaAtendimento = function(aba) {
+    currentAtendimentoTab = aba;
+    document.getElementById('btnAtenPendentes').style.background = aba === 'pendentes' ? 'var(--primary)' : 'transparent';
+    document.getElementById('btnAtenPendentes').style.color = aba === 'pendentes' ? 'white' : 'var(--text-main)';
+    document.getElementById('btnAtenAtendidos').style.background = aba === 'atendidos' ? 'var(--primary)' : 'transparent';
+    document.getElementById('btnAtenAtendidos').style.color = aba === 'atendidos' ? 'white' : 'var(--text-main)';
+    carregarListaAtendimento();
+};
+
+window.carregarPainelGestaoAtendimento = function() {
+    const container = document.getElementById('containerApps');
+    
+    container.innerHTML = `
+        <div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <button onclick="carregarAppMiniApps()" class="btn btn-secondary" style="margin-bottom: 16px; font-size: 13px;">← Voltar aos Mini-Apps</button>
+                <h2 style="font-size: 20px; color: #f59e0b; margin-bottom: 8px;">⚙️ Gestão de Atendimentos</h2>
+                <p style="color: var(--text-muted); font-size: 14px;">Gerenciamento da fila de atendimento fraterno.</p>
+            </div>
+        </div>
+        
+        <div>
+            <div style="display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; overflow-x: auto;">
+                <button onclick="mudarAbaAtendimento('pendentes')" id="btnAtenPendentes" class="btn" style="white-space: nowrap; border-radius: 8px; background: var(--primary); color: white;">📥 Pendentes</button>
+                <button onclick="mudarAbaAtendimento('atendidos')" id="btnAtenAtendidos" class="btn" style="white-space: nowrap; border-radius: 8px;">✅ Atendidos</button>
+            </div>
+            
+            <div id="loadingAten" style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">Carregando lista...</div>
+            
+            <div id="listaAten" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Cards Injetados -->
+            </div>
+            
+            <!-- Modal de Edição de Atendimento -->
+            <div id="modalEdicaoAtendimento" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%;">
+                    <h3 style="color: var(--primary); margin-top: 0; font-size: 18px;">✏️ Editar Solicitação</h3>
+                    
+                    <form id="formEdicaoAtendimento" onsubmit="salvarEdicaoAtendimento(event)">
+                        <input type="hidden" id="editAtenId">
+                        
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="color: var(--text-muted); font-size: 13px;">Nome Completo</label>
+                            <input type="text" id="editAtenNome" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;">
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="color: var(--text-muted); font-size: 13px;">Endereço</label>
+                            <textarea id="editAtenEndereco" class="input" rows="2" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;"></textarea>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="color: var(--text-muted); font-size: 13px;">WhatsApp</label>
+                            <input type="text" id="editAtenWhats" class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;">
+                        </div>
+
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button type="submit" class="btn btn-primary" style="flex:1;">Salvar</button>
+                            <button type="button" onclick="document.getElementById('modalEdicaoAtendimento').style.display='none'" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Mask for phone edit
+    document.getElementById('editAtenWhats').addEventListener('input', function (e) {
+        var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+        e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+    });
+
+    carregarListaAtendimento();
+};
+
+window.carregarListaAtendimento = async function() {
+    const lista = document.getElementById('listaAten');
+    if (!lista) return;
+    
+    document.getElementById('loadingAten').style.display = 'block';
+    lista.innerHTML = '';
+    
+    try {
+        let query = db.from('app_atendimento_fraterno').select('*');
+        if (currentAtendimentoTab === 'pendentes') {
+            query = query.neq('status', 'Atendido').order('created_at', {ascending: true});
+        } else {
+            query = query.eq('status', 'Atendido').order('created_at', {ascending: false});
+        }
+        
+        const { data, error } = await query;
+        if (error) throw error;
+        
+        document.getElementById('loadingAten').style.display = 'none';
+        
+        if (!data || data.length === 0) {
+            lista.innerHTML = `<div style="padding: 24px; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);">Nenhum registro encontrado.</div>`;
+            return;
+        }
+        
+        data.forEach(item => {
+            const dateStr = new Date(item.created_at).toLocaleString('pt-BR', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+            
+            // Calc age
+            let ageInfo = '';
+            if (item.data_nascimento) {
+                const anoNasc = item.data_nascimento.split('-')[0];
+                const age = new Date().getFullYear() - parseInt(anoNasc);
+                ageInfo = ` (${age} anos)`;
+            }
+            
+            // Whatsapp link
+            let whatsLink = '';
+            if (item.telefone) {
+                const nums = item.telefone.replace(/\D/g, '');
+                whatsLink = `
+                    <a href="https://web.whatsapp.com/send?phone=55${nums}" target="_blank" class="btn" style="padding: 4px 8px; font-size: 12px; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); text-decoration: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                        WhatsApp
+                    </a>
+                `;
+            }
+
+            const card = document.createElement('div');
+            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; transition: all 0.2s;';
+            card.onmouseover = () => card.style.background = 'rgba(255,255,255,0.05)';
+            card.onmouseout = () => card.style.background = 'rgba(255,255,255,0.03)';
+            
+            card.innerHTML = `
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <strong style="font-size: 16px; color: var(--text-main);">${item.nome_completo.toUpperCase()}</strong>
+                        <span style="font-size: 11px; padding: 2px 6px; background: rgba(255,255,255,0.1); border-radius: 12px; color: var(--text-muted);">${dateStr}</span>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-muted);">
+                        <div>📍 ${item.endereco_completo || 'Sem endereço'}</div>
+                        <div>🎂 ${item.data_nascimento ? item.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">📱 ${item.telefone || 'Sem telefone'} ${whatsLink}</div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px; min-width: 140px;">
+                    <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo}', '${item.endereco_completo || ''}', '${item.telefone || ''}')" style="font-size: 12px; padding: 6px 12px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">✏️ Editar</button>
+                    ${currentAtendimentoTab === 'pendentes' ? `
+                        <button class="btn" onclick="marcarAtendimentoStatus('${item.id}', 'Atendido')" style="font-size: 12px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">✅ Atendido</button>
+                    ` : ''}
+                    <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">🗑️ Excluir</button>
+                </div>
+            `;
+            
+            lista.appendChild(card);
+        });
+        
+    } catch(e) {
+        console.error(e);
+        document.getElementById('loadingAten').innerHTML = '<span style="color:#ef4444;">Erro ao carregar lista.</span>';
+    }
+};
+
+window.abrirEdicaoAtendimento = function(id, nome, endereco, fone) {
+    document.getElementById('editAtenId').value = id;
+    document.getElementById('editAtenNome').value = nome;
+    document.getElementById('editAtenEndereco').value = endereco;
+    document.getElementById('editAtenWhats').value = fone;
+    document.getElementById('modalEdicaoAtendimento').style.display = 'flex';
+};
+
+window.salvarEdicaoAtendimento = async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('editAtenId').value;
+    const nome = document.getElementById('editAtenNome').value;
+    const end = document.getElementById('editAtenEndereco').value;
+    const fone = document.getElementById('editAtenWhats').value;
+    
+    try {
+        const { error } = await db.from('app_atendimento_fraterno').update({
+            nome_completo: nome,
+            endereco_completo: end,
+            telefone: fone
+        }).eq('id', id);
+        
+        if (error) throw error;
+        document.getElementById('modalEdicaoAtendimento').style.display = 'none';
+        carregarListaAtendimento();
+    } catch(err) {
+        alert('Erro ao salvar edição: ' + err.message);
+    }
+};
+
+window.marcarAtendimentoStatus = async function(id, status) {
+    if (confirm('Marcar este pedido como ' + status + '?')) {
+        try {
+            const { error } = await db.from('app_atendimento_fraterno').update({ status: status }).eq('id', id);
+            if (error) throw error;
+            carregarListaAtendimento();
+        } catch(e) { alert('Erro ao atualizar: ' + e.message); }
+    }
+};
+
+window.excluirAtendimento = async function(id) {
+    if (confirm('Tem certeza que deseja apagar este pedido definitivamente?')) {
+        try {
+            const { error } = await db.from('app_atendimento_fraterno').delete().eq('id', id);
+            if (error) throw error;
+            carregarListaAtendimento();
+        } catch(e) { alert('Erro ao excluir: ' + e.message); }
+    }
+};
