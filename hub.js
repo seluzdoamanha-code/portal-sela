@@ -72,6 +72,10 @@ async function carregarDadosEstrutura() {
             if (!config.agenda) document.querySelector('[data-target="abaAgenda"]').style.display = 'none';
             if (!config.projetos) document.querySelector('[data-target="abaProjetosProcessos"]').style.display = 'none';
             if (!config.documentos) document.querySelector('[data-target="abaDocumentos"]').style.display = 'none';
+            if (!config.tesouraria) {
+                const btnTes = document.querySelector('[data-target="abaTesouraria"]');
+                if(btnTes) btnTes.style.display = 'none';
+            }
             
             if (config.apps) {
                 const btnApps = document.querySelector('[data-target="abaApps"]');
