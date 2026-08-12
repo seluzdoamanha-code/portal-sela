@@ -153,13 +153,13 @@
             document.getElementById('dynamicActivityIconContainer').innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>';
         } else if (nome.includes('atendimento')) {
             html += `
-                <a href="atendimento/m_pedido.html?id=${estruturaAtual.id}" class="m-app-card">
+                <a href="m_atendimento_pedido.html?id=${estruturaAtual.id}" class="m-app-card">
                     <div class="m-app-icon" style="background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center;">
                         <span style="font-size: 28px;">🤝</span>
                     </div>
                     <div class="m-app-name">Atendimento Fraterno</div>
                 </a>
-                <a href="atendimento/m_gestao.html?id=${estruturaAtual.id}" class="m-app-card">
+                <a href="m_atendimento_gestao.html?id=${estruturaAtual.id}" class="m-app-card">
                     <div class="m-app-icon" style="background: rgba(245, 158, 11, 0.1); display: flex; align-items: center; justify-content: center;">
                         <span style="font-size: 28px;">⚙️</span>
                     </div>

@@ -12,7 +12,7 @@
 
         document.getElementById('btnVoltar').addEventListener('click', () => {
             if (estruturaId) {
-                window.location.href = `../m_hub.html?id=${estruturaId}&tipo=atendimento`;
+                window.location.href = `m_hub.html?id=${estruturaId}&tipo=atendimento`;
             } else {
                 window.history.back();
             }
