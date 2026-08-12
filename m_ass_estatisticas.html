@@ -12,7 +12,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="auth_guard.js"></script>
     <style>
-        body { padding-bottom: env(safe-area-inset-bottom, 0px); }
+        body { 
+            padding-bottom: env(safe-area-inset-bottom, 0px); 
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
         .m-header-nav {
             display: flex; align-items: center; height: 60px; padding: 0 16px;
             background: var(--bg-panel); border-bottom: 1px solid var(--border);
