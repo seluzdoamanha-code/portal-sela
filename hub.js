@@ -2656,16 +2656,84 @@ window.abrirFormularioAtendimento = function() {
         e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
     });
 
+
     // Populate autocomplete
     carregarAutocompleteAtendimento();
+
+    // Autofill listener
+    const inputNome = document.getElementById('inAtenNome');
+    inputNome.addEventListener('input', function() {
+        const val = this.value.toUpperCase();
+        if (window.pessoasSugestoesAten && window.pessoasSugestoesAten[val] !== undefined) {
+            const dados = window.pessoasSugestoesAten[val];
+            const end = document.getElementById('inAtenEndereco');
+            const nasc = document.getElementById('inAtenNasc');
+            const whats = document.getElementById('inAtenWhats');
+            
+            if (!end.value && dados.endereco) {
+                end.value = dados.endereco.toUpperCase();
+            }
+            if (!nasc.value && dados.nascimento) {
+                nasc.value = dados.nascimento;
+            }
+            if (!whats.value && dados.telefone) {
+                var phoneVal = dados.telefone.replace(/\D/g, '');
+                var x = phoneVal.match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+                whats.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+            }
+        }
+    });
+
 
     // Form Submit Handler
     document.getElementById('formAtendimentoWeb').addEventListener('submit', salvarFormularioAtendimento);
 };
 
+
+window.pessoasSugestoesAten = {};
+
 async function carregarAutocompleteAtendimento() {
     try {
-        const { data, error } = await db.from('pessoas').select('nome_completo').order('nome_completo');
+        const { data, error } = await db.from('pessoas')
+            .select('nome_completo, data_nascimento, celular, endereco, bairro, cidade, estado')
+            .eq('tipo_pessoa', 'Física')
+            .order('nome_completo');
+            
+        if (data) {
+            window.pessoasSugestoesAten = {};
+            const datalist = document.getElementById('listaNomesAten');
+            datalist.innerHTML = '';
+            
+            data.forEach(p => {
+                if (p.nome_completo) {
+                    const n = p.nome_completo.toUpperCase();
+                    
+                    // Format Address: endereco - bairro - cidade/estado
+                    let endCompleto = p.endereco || '';
+                    if (p.bairro) endCompleto += (endCompleto ? ' - ' : '') + p.bairro;
+                    
+                    let cidEst = '';
+                    if (p.cidade && p.estado) cidEst = p.cidade + '/' + p.estado;
+                    else if (p.cidade) cidEst = p.cidade;
+                    else if (p.estado) cidEst = p.estado;
+                    
+                    if (cidEst) endCompleto += (endCompleto ? ' - ' : '') + cidEst;
+                    
+                    window.pessoasSugestoesAten[n] = {
+                        endereco: endCompleto,
+                        nascimento: p.data_nascimento || '',
+                        telefone: p.celular || ''
+                    };
+                    
+                    const opt = document.createElement('option');
+                    opt.value = n;
+                    datalist.appendChild(opt);
+                }
+            });
+        }
+    } catch(e) { console.error("Erro no autocomplete:", e); }
+}
+ = await db.from('pessoas').select('nome_completo').order('nome_completo');
         if (data) {
             const datalist = document.getElementById('listaNomesAten');
             datalist.innerHTML = '';
