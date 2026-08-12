@@ -60,7 +60,7 @@
             const hojeIso = new Date().toISOString();
             const { data, error } = await db
                 .from('agenda')
-                .select('*')
+                .select('*, estruturas(nome)')
                 .or(`estrutura_id.eq.${estruturaId},visibilidade.eq.Global`)
                 .gte('data_hora_inicio', hojeIso)
                 .order('data_hora_inicio', { ascending: true });
@@ -95,8 +95,29 @@
                 const descGcal = encodeURIComponent(ev.descricao || '');
                 const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${textoGcal}&dates=${datesGcal}&details=${descGcal}&location=${locGcal}&sf=true&output=xml`;
 
+                // ICS for iOS / Outlook
+                const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+SUMMARY:${ev.titulo || 'Evento SELA'}
+DTSTART:${dtGcal}
+DTEND:${dataFimStr}
+LOCATION:${ev.local || ''}
+DESCRIPTION:${ev.descricao || ''}
+END:VEVENT
+END:VCALENDAR`;
+                const iosUrl = `data:text/calendar;charset=utf-8,${encodeURIComponent(icsContent)}`;
+                
+                // Etiqueta de Departamento/Global
+                let labelDepto = '';
+                if (ev.visibilidade === 'Global') {
+                    const nomeStr = ev.estruturas?.nome ? ev.estruturas.nome : 'Geral';
+                    labelDepto = `<div style="position:absolute; top:16px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:700; background:rgba(234, 179, 8, 0.2); color:#eab308; padding:2px 8px; border-radius:12px; letter-spacing:0.5px; text-transform:uppercase; max-width:40%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">GLOBAL: ${nomeStr}</div>`;
+                }
+
                 html += `
                     <div class="agenda-card">
+                        ${labelDepto}
                         <button class="btn-delete" onclick="excluirEvento('${ev.id}')">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
@@ -120,10 +141,14 @@
                             <span style="flex:1;">${ev.descricao}</span>
                         </div>` : ''}
                         
-                        <div class="agenda-actions">
+                        <div class="agenda-actions" style="flex-wrap: wrap;">
                             <a href="${gcalUrl}" target="_blank" class="btn-google">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                + Google Agenda
+                                Google
+                            </a>
+                            <a href="${iosUrl}" download="evento.ics" class="btn-google" style="color: #3b82f6;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                iPhone / Apple
                             </a>
                         </div>
                     </div>
