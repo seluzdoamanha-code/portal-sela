@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitação de Atendimento Fraterno | Portal SELA</title>
+    
+    <!-- Metatags para WhatsApp e Redes Sociais -->
+    <meta property="og:title" content="Atendimento Fraterno | Portal SELA">
+    <meta property="og:description" content="Agende seu Atendimento Fraterno. Um espaço de acolhimento e escuta consoladora.">
+    
+    <!-- Fonte Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS Principal (Caminho Relativo à raiz) -->
+    <link rel="stylesheet" href="../style.css">
+    
+    <!-- Supabase CDN e SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background-color: var(--bg-dark);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            box-sizing: border-box;
+        }
+        
+        .container-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .logo-area {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .logo-area img {
+            width: 80px;
+            margin-bottom: 16px;
+            border-radius: 50%;
+        }
+        .logo-area h1 {
+            font-size: 24px;
+            margin: 0;
+            color: var(--text-main);
+        }
+        .logo-area p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .btn-submit:hover {
+            background-color: var(--primary-hover);
+        }
+        .btn-submit:disabled {
+            background-color: #475569;
+            cursor: not-allowed;
+        }
+        
+        .success-box {
+            display: none;
+            text-align: center;
+            padding: 20px 0;
+        }
+        .success-box svg {
+            color: #10b981;
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container-box">
+        <div class="logo-area">
+            <img src="../logo_sela.png" alt="Logo SELA" onerror="this.src='https://ui-avatars.com/api/?name=SELA&background=3b82f6&color=fff'">
+            <h1>Atendimento Fraterno</h1>
+            <p>Um espaço de acolhimento e escuta.</p>
+        </div>
+
+        <form id="formAtendimento">
+            <div class="form-group">
+                <label>Nome Completo</label>
+                <input type="text" id="inNome" class="form-control" required placeholder="Digite o nome completo">
+            </div>
+
+            <div class="form-group">
+                <label>Endereço Completo</label>
+                <input type="text" id="inEndereco" class="form-control" required placeholder="Rua, Número, Bairro, Cidade">
+            </div>
+
+            <div class="form-group">
+                <label>Data de Nascimento</label>
+                <input type="date" id="inNascimento" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label>Celular / WhatsApp</label>
+                <input type="tel" id="inTelefone" class="form-control" required placeholder="(XX) 9XXXX-XXXX">
+            </div>
+
+            <button type="submit" class="btn-submit" id="btnSalvar">Solicitar Atendimento</button>
+        </form>
+
+        <div class="success-box" id="successBox">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <h2 style="margin:0 0 10px 0; color:var(--text-main);">Solicitação Recebida!</h2>
+            <p style="color:var(--text-muted); font-size:15px;">Nossa equipe entrará em contato em breve através do número informado para confirmar o atendimento.</p>
+            <button onclick="novaSolicitacao()" class="btn-submit" style="margin-top:20px; background:transparent; border:1px solid var(--border); color:var(--text-main);">Nova Solicitação</button>
+        </div>
+    </div>
+
+    <script src="pedido.js"></script>
+</body>
+</html>
