@@ -970,7 +970,7 @@ window.carregarAppMiniApps = async function() {
     }
     if (isAtendimento) {
         cards += `
-            <div onclick="window.location.href='m_atendimento_pedido.html?id=${estruturaId}'" style="background: rgba(59, 130, 246, 0.05); border: 1px solid #3b82f6; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.05)'; this.style.transform='none'">
+            <div onclick="window.location.href='atendimento_pedido.html?id=${estruturaId}'" style="background: rgba(59, 130, 246, 0.05); border: 1px solid #3b82f6; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.05)'; this.style.transform='none'">
                 <div style="font-size: 32px; margin-bottom: 12px;">🤝</div>
                 <h3 style="color: #3b82f6; margin-bottom: 8px;">Lançar Pedido</h3>
                 <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Registrar novo pedido de Atendimento Fraterno.</p>
