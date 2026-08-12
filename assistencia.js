@@ -102,72 +102,184 @@ window.mudarAbaAssistencia = function(aba) {
 };
 
 // ==========================================
-// FUNÇÕES DE CARREGAMENTO (STUBS)
+
+// ==========================================
+// FUNÇÕES DE CARREGAMENTO (ESTATÍSTICAS)
 // ==========================================
 
 async function carregarDashboardAssistencia() {
     const container = document.getElementById('assDashboardContainer');
-    container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">Carregando indicadores do almoxarifado...</div>';
+    container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">Carregando indicadores...</div>';
     
     try {
-        // 1. Termômetro do Estoque (Itens zerados ou negativos)
-        const resEstoque = await db.from('ass_itens_cesta').select('descricao, estoque_atual');
-        if (resEstoque.error) throw resEstoque.error;
-        
-        let itensCriticos = 0;
-        if (resEstoque.data) {
-            itensCriticos = resEstoque.data.filter(i => i.estoque_atual <= 0).length;
-        }
-        
-        // 2. Entregas do Mês Vigente
         const dataAtual = new Date();
-        const anoMesAtual = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}`;
+        const anoAtual = dataAtual.getFullYear();
+        const mesAtual = dataAtual.getMonth() + 1;
+        const dataInicioMes = new Date(anoAtual, mesAtual - 1, 1).toISOString();
+
+        // 1. Famílias Atendidas
+        const { count: countFam } = await db.from('ass_familias').select('*', { count: 'exact', head: true }).eq('status', 'Ativa');
         
-        const resEntregas = await db.from('ass_entregas')
-            .select('id, data_entrega')
-            .gte('data_entrega', `${anoMesAtual}-01`)
-            .lte('data_entrega', `${anoMesAtual}-31`);
-            
-        const totalEntregasMes = resEntregas.data ? resEntregas.data.length : 0;
-        
+        // 2. Entregas do Mês
+        const { count: countEnt } = await db.from('ass_entregas').select('*', { count: 'exact', head: true })
+            .eq('ano_ref', anoAtual).eq('mes_ref', mesAtual);
+
+        // 3. Novos Cadastros
+        const { count: countNovos } = await db.from('ass_familias').select('*', { count: 'exact', head: true })
+            .gte('created_at', dataInicioMes);
+
+        // 4. Ocorrências (opcional)
+        const { count: countOco } = await db.from('ass_ocorrencias').select('*', { count: 'exact', head: true })
+            .gte('data_ocorrencia', dataInicioMes.split('T')[0]);
+
         container.innerHTML = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
-                <!-- Termômetro do Estoque -->
-                <div style="background: var(--bg-panel); border: 1px solid ${itensCriticos > 0 ? 'rgba(245, 158, 11, 0.3)' : 'var(--border)'}; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                        <div style="font-size: 32px;">🥫</div>
+            <!-- Título Opcional -->
+            <div style="margin-bottom: 24px;">
+                <h2 style="margin: 0; color: var(--text-main); font-size: 24px;">Estatísticas e Relatórios</h2>
+                <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 14px;">Visão geral da Assistência Social</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 24px; position: relative;">
+                    <div style="position: absolute; right: 24px; top: 24px; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 12px; border-radius: 12px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     </div>
-                    <div style="font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px;">Termômetro do Estoque</div>
-                    <div style="font-size: 42px; font-weight: 700; color: ${itensCriticos > 0 ? '#f59e0b' : 'var(--text-main)'}; margin-bottom: 12px; line-height: 1;">${itensCriticos}</div>
-                    
-                    <div style="font-size: 13px; color: var(--text-muted);">
-                        ${itensCriticos > 0 
-                            ? 'Itens com estoque zerado ou negativo. Necessário reposição ou campanha de arrecadação urgente.' 
-                            : 'Todos os itens cadastrados possuem estoque positivo.'}
+                    <div style="color: var(--text-muted); font-size: 14px; font-weight: 500; margin-bottom: 8px;">Famílias Ativas</div>
+                    <div style="font-size: 32px; font-weight: 700; color: var(--text-main);">${countFam || 0}</div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 24px; position: relative;">
+                    <div style="position: absolute; right: 24px; top: 24px; background: rgba(6, 182, 212, 0.1); color: #06b6d4; padding: 12px; border-radius: 12px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 14px; font-weight: 500; margin-bottom: 8px;">Cestas (Mês)</div>
+                    <div style="font-size: 32px; font-weight: 700; color: var(--text-main);">${countEnt || 0}</div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 24px; position: relative;">
+                    <div style="position: absolute; right: 24px; top: 24px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; padding: 12px; border-radius: 12px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 14px; font-weight: 500; margin-bottom: 8px;">Novos Cadastros</div>
+                    <div style="font-size: 32px; font-weight: 700; color: var(--text-main);">${countNovos || 0}</div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 24px; position: relative;">
+                    <div style="position: absolute; right: 24px; top: 24px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 12px; border-radius: 12px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 14px; font-weight: 500; margin-bottom: 8px;">Ocorrências (Mês)</div>
+                    <div style="font-size: 32px; font-weight: 700; color: var(--text-main);">${countOco || 0}</div>
+                </div>
+
+            </div>
+
+            <!-- Gráficos -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 24px;">
+                    <h3 style="margin: 0 0 24px 0; font-size: 16px; color: var(--text-main);">Entregas por Mês (Ano Atual)</h3>
+                    <div style="height: 300px; position: relative; width: 100%;">
+                        <canvas id="chartAssEntregasWeb"></canvas>
                     </div>
                 </div>
 
-                <!-- Entregas do Mês -->
-                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                        <div style="font-size: 32px;">📦</div>
-                    </div>
-                    <div style="font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px;">Cestas Entregues (Mês Atual)</div>
-                    <div style="font-size: 42px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; line-height: 1;">${totalEntregasMes}</div>
-                    
-                    <div style="font-size: 13px; color: var(--text-muted);">
-                        Total de entregas registradas no sistema durante o mês vigente.
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 24px;">
+                    <h3 style="margin: 0 0 24px 0; font-size: 16px; color: var(--text-main);">Status das Famílias</h3>
+                    <div style="height: 300px; position: relative; width: 100%;">
+                        <canvas id="chartAssStatusWeb"></canvas>
                     </div>
                 </div>
             </div>
         `;
-        
-    } catch (err) {
-        console.error(err);
-        container.innerHTML = '<div style="padding: 40px; text-align: center; color: #ef4444;">Erro ao carregar dashboard.</div>';
+
+        // Renderizar gráficos
+        await renderizarGraficoEntregasWeb(anoAtual);
+        await renderizarGraficoStatusWeb();
+
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<div style="padding: 40px; text-align: center; color: #ef4444;">Erro ao carregar os dados.</div>';
     }
 }
 
+async function renderizarGraficoEntregasWeb(ano) {
+    const { data } = await db.from('ass_entregas').select('mes_ref').eq('ano_ref', ano);
+    const contagem = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0};
+    
+    if (data) {
+        data.forEach(d => contagem[d.mes_ref]++);
+    }
+
+    const ctx = document.getElementById('chartAssEntregasWeb').getContext('2d');
+    
+    // Criar gradiente
+    let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(6, 182, 212, 0.8)');   
+    gradient.addColorStop(1, 'rgba(139, 92, 246, 0.8)');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+            datasets: [{
+                label: 'Entregas',
+                data: Object.values(contagem),
+                backgroundColor: gradient,
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+async function renderizarGraficoStatusWeb() {
+    const { data } = await db.from('ass_familias').select('status');
+    let ativa = 0, inativa = 0, suspensa = 0;
+    
+    if (data) {
+        data.forEach(f => {
+            if(f.status === 'Ativa') ativa++;
+            else if(f.status === 'Inativa') inativa++;
+            else suspensa++;
+        });
+    }
+
+    const ctx = document.getElementById('chartAssStatusWeb').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Ativa', 'Inativa', 'Suspensa'],
+            datasets: [{
+                data: [ativa, inativa, suspensa],
+                backgroundColor: ['#10b981', '#6b7280', '#f59e0b'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '75%',
+            plugins: {
+                legend: { position: 'right', labels: { color: 'rgba(255,255,255,0.7)', padding: 20 } }
+            }
+        }
+    });
+}
+
+// -------------------------------------------
 async function carregarListaCestas() {
     const container = document.getElementById('assCestasLista');
     container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Carregando catálogo...</div>';
