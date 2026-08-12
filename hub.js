@@ -59,10 +59,10 @@ async function carregarDadosEstrutura() {
             let config = data.abas_config || {
                 equipe: true, agenda: true, projetos: true, documentos: true,
                 tesouraria: false,
-                apps: isIrradiacao || isAssistencia
+                apps: isIrradiacao || isAssistencia || isAtendimento
             };
             
-            if (isIrradiacao || isAssistencia) {
+            if (isIrradiacao || isAssistencia || isAtendimento) {
                 // Forçar habilitar apps se for módulo nativo
                 config.apps = true;
             }
@@ -76,7 +76,7 @@ async function carregarDadosEstrutura() {
             if (config.apps) {
                 const btnApps = document.querySelector('[data-target="abaApps"]');
                 if(btnApps) btnApps.style.display = 'block';
-                if (isIrradiacao || isAssistencia) {
+                if (isIrradiacao || isAssistencia || isAtendimento) {
                     carregarAppMiniApps();
                 }
             }
