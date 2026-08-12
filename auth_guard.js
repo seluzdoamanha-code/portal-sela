@@ -90,3 +90,15 @@ window.podeEditarPessoas = function() {
         return false;
     }
 };
+
+window.podeEditarAssistidas = function() {
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (!profStr) return false;
+        const prof = JSON.parse(profStr);
+        // Permite admin, secretaria e se precisarem adicionar grupo assistencia depois
+        return (prof.nivel_acesso === 'admin' || prof.nivel_acesso === 'secretaria' || prof.nivel_acesso === 'assistencia');
+    } catch(e) {
+        return false;
+    }
+};
