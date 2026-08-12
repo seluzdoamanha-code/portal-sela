@@ -220,7 +220,14 @@ async function enviarReserva() {
     let contato = document.getElementById('reservaContato').value.trim();
 
     if (!nome || !contato) {
-        alert("Por favor, preencha seu nome e contato.");
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campos Vazios',
+            text: 'Por favor, preencha seu nome e contato.',
+            background: 'var(--card-bg)',
+            color: 'white',
+            confirmButtonColor: '#10b981'
+        });
         return;
     }
     
@@ -229,7 +236,14 @@ async function enviarReserva() {
         if (isPermutar) {
             const cod = document.getElementById('desiderataCodigo').value.trim();
             if (!cod) {
-                alert("Por favor, informe o código do seu livro para permuta.");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Código Ausente',
+                    text: 'Por favor, informe o código do seu livro para permuta.',
+                    background: 'var(--card-bg)',
+                    color: 'white',
+                    confirmButtonColor: '#10b981'
+                });
                 return;
             }
             contato = `[PERMUTA: ${cod}] ` + contato;
@@ -254,11 +268,25 @@ async function enviarReserva() {
 
         if (error) throw error;
 
-        alert(`Sucesso! Sua solicitação para "${currentLivroTitulo}" foi enviada para a biblioteca.`);
+        Swal.fire({
+            icon: 'success',
+            title: 'Tudo Certo!',
+            text: `Sua solicitação para "${currentLivroTitulo}" foi enviada para a biblioteca.`,
+            background: 'var(--card-bg)',
+            color: 'white',
+            confirmButtonColor: '#10b981'
+        });
         fecharModal();
     } catch (err) {
         console.error("Erro ao reservar:", err);
-        alert("Ocorreu um erro ao enviar sua reserva. Tente novamente mais tarde.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: 'Ocorreu um erro ao enviar sua reserva. Tente novamente mais tarde.',
+            background: 'var(--card-bg)',
+            color: 'white',
+            confirmButtonColor: '#10b981'
+        });
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
