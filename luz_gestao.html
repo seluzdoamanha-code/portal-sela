@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal SELA - Gestão de Mensagem & Página Luz</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        .tabs-header {
+            display: flex; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 24px;
+        }
+        .tab-btn {
+            background: transparent; border: none; color: var(--text-muted); font-size: 16px; font-weight: 500; cursor: pointer; padding: 8px 16px; border-radius: 6px; transition: all 0.2s;
+        }
+        .tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.03); }
+        .tab-btn.active { color: white; background: var(--primary); }
+        
+        .luz-section {
+            background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px;
+        }
+        
+        .table-luz {
+            width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; text-align: left;
+        }
+        .table-luz th {
+            border-bottom: 2px solid var(--border); padding: 12px; color: var(--text-muted); font-weight: 600;
+        }
+        .table-luz td {
+            border-bottom: 1px solid rgba(255,255,255,0.05); padding: 12px; color: var(--text-main);
+        }
+        
+        .luz-actions {
+            display: flex; gap: 8px;
+        }
+        .btn-action {
+            background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; font-size: 16px;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+        }
+        .modal-box {
+            background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px;
+            width: 90%; max-width: 500px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .modal-title { font-weight: 600; font-size: 18px; color: var(--text-main); margin-bottom: 16px; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+        .form-group label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+        
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+    </style>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth_guard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="icon" type="image/png" href="logo_sela.png">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar injetada pelo sidebar.js -->
+
+        <main class="content-area">
+            <header class="topbar">
+                <h1>💡 Mensagem & Página Luz</h1>
+            </header>
+
+            <div class="content-body">
+                <div class="tabs-header">
+                    <button class="tab-btn active" id="tabMsg" onclick="switchLuzTab('mensagem')">Mensagem-Luz</button>
+                    <button class="tab-btn" id="tabPag" onclick="switchLuzTab('pagina')">Página-Luz</button>
+                </div>
+                
+                <!-- Secao Mensagem-Luz -->
+                <div id="sectionMensagem" class="luz-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2 style="font-size: 18px; color: var(--text-main); margin: 0;">Lista de Mensagens</h2>
+                        <button class="btn btn-primary" onclick="abrirModalMsg()">+ Nova Mensagem</button>
+                    </div>
+                    
+                    <div id="loadingMsg" style="color: var(--text-muted);">Carregando mensagens...</div>
+                    <table class="table-luz" id="tableMsg" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Mensagem</th>
+                                <th style="width: 200px;">Autor</th>
+                                <th style="width: 120px; text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyMsg"></tbody>
+                    </table>
+                </div>
+
+                <!-- Secao Pagina-Luz -->
+                <div id="sectionPagina" class="luz-section" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2 style="font-size: 18px; color: var(--text-main); margin: 0;">Lista de Páginas</h2>
+                        <button class="btn btn-primary" onclick="abrirModalPag()">+ Nova Página</button>
+                    </div>
+                    
+                    <div id="loadingPag" style="color: var(--text-muted);">Carregando páginas...</div>
+                    <table class="table-luz" id="tablePag" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th style="width: 250px;">Livro / Código</th>
+                                <th>Trecho</th>
+                                <th style="width: 100px;">Página</th>
+                                <th style="width: 150px;">Autor</th>
+                                <th style="width: 120px; text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyPag"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Mensagem -->
+    <div class="modal" id="modalMsg">
+        <div class="modal-box">
+            <h3 class="modal-title" id="modalMsgTitle">Nova Mensagem-Luz</h3>
+            <form id="formMsg" onsubmit="salvarMensagem(event)">
+                <input type="hidden" id="inMsgId">
+                <div class="form-group">
+                    <label>Texto da Mensagem *</label>
+                    <textarea id="inMsgTexto" required class="input-field" rows="5" placeholder="Digite o texto da mensagem..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Autor / Espírito *</label>
+                    <input type="text" id="inMsgAutor" required class="input-field" placeholder="Ex: Emmanuel, André Luiz...">
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="fecharModalMsg()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Pagina -->
+    <div class="modal" id="modalPag">
+        <div class="modal-box">
+            <h3 class="modal-title" id="modalPagTitle">Nova Página-Luz</h3>
+            <form id="formPag" onsubmit="salvarPagina(event)">
+                <input type="hidden" id="inPagId">
+                
+                <div class="form-group">
+                    <label>Livro *</label>
+                    <select id="inPagLivro" required class="input-field"></select>
+                </div>
+                <div class="form-group">
+                    <label>Trecho / Mensagem *</label>
+                    <textarea id="inPagTrecho" required class="input-field" rows="4" placeholder="Insira o trecho do livro..."></textarea>
+                </div>
+                <div class="form-group" style="flex-direction: row; gap: 16px;">
+                    <div style="flex: 1;" class="form-group">
+                        <label>Página *</label>
+                        <input type="number" id="inPagNumero" required class="input-field">
+                    </div>
+                    <div style="flex: 2;" class="form-group">
+                        <label>Autor / Espírito *</label>
+                        <input type="text" id="inPagAutor" required class="input-field" placeholder="Ex: Emmanuel, André Luiz...">
+                    </div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="fecharModalPag()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="sidebar.js"></script>
+    <script src="luz_gestao.js"></script>
+</body>
+</html>
