@@ -65,11 +65,13 @@
     async function carregarPessoas() {
         const { data, error } = await db.from('pessoas').select('id, nome_curto, nome_completo, cpf_cnpj, tipo_pessoa, papeis').order('nome_completo');
         if (data) {
-            pessoasParaSelect = data;
-            const selPessoa = document.getElementById('inPessoa');
+            // Filtrar apenas associados efetivos
+            const efetivos = data.filter(p => p.papeis && p.papeis.includes('Associado Efetivo'));
+            pessoasParaSelect = efetivos;
             
+            const selPessoa = document.getElementById('inPessoa');
             let html = '<option value="">-- Selecione um membro --</option>';
-            data.forEach(p => {
+            efetivos.forEach(p => {
                 const name = p.nome_curto || p.nome_completo || 'Sem Nome';
                 html += `<option value="${p.id}">${name}</option>`;
             });

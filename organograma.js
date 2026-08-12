@@ -50,13 +50,15 @@ async function carregarEstrutura() {
 async function carregarPessoasParaSelect() {
     const { data, error } = await db.from('pessoas').select('id, nome_curto, nome_completo, cpf_cnpj, tipo_pessoa, papeis').order('nome_completo');
     if (data) {
-        pessoasParaSelect = data;
+        // Filtrar apenas associados efetivos
+        const efetivos = data.filter(p => p.papeis && p.papeis.includes('Associado Efetivo'));
+        pessoasParaSelect = efetivos;
         const selPessoa = document.getElementById('inPessoa');
         
         let fisicas = [];
         let juridicas = [];
         
-        data.forEach(p => {
+        efetivos.forEach(p => {
             p.displayName = p.nome_curto ? p.nome_curto.trim() : (p.nome_completo ? p.nome_completo.trim() : "Sem Nome");
             
             if (p.tipo_pessoa === 'Jurídica') {
