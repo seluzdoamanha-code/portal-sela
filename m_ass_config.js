@@ -13,16 +13,28 @@ function switchTab(tabId) {
     document.querySelectorAll('.m-tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.m-config-section').forEach(s => s.classList.remove('active'));
     
+    // Hide all FABs first
+    const fabMetas = document.getElementById('fab-metas');
+    const fabItens = document.getElementById('fab-itens');
+    const fabCestas = document.getElementById('fab-cestas');
+    if (fabMetas) fabMetas.style.display = 'none';
+    if (fabItens) fabItens.style.display = 'none';
+    if (fabCestas) fabCestas.style.display = 'none';
+    
     if (tabId === 'metas') {
         document.querySelectorAll('.m-tab-btn')[0].classList.add('active');
         document.getElementById('sec-metas').classList.add('active');
+        if (fabMetas) fabMetas.style.display = 'flex';
     } else if (tabId === 'itens') {
         document.querySelectorAll('.m-tab-btn')[1].classList.add('active');
         document.getElementById('sec-itens').classList.add('active');
+        if (fabItens) fabItens.style.display = 'flex';
         loadItens();
-    } else {
+    } else if (tabId === 'cestas') {
         document.querySelectorAll('.m-tab-btn')[2].classList.add('active');
         document.getElementById('sec-cestas').classList.add('active');
+        if (fabCestas) fabCestas.style.display = 'flex';
+        loadCestas();
     }
 }
 

@@ -30,7 +30,7 @@
         });
         
         // Permissões
-        if (typeof window.podeEditarAssistidas === 'function' && window.podeEditarAssistidas()) {
+        if (typeof window.podeEditarPessoas === 'function' && window.podeEditarPessoas()) {
             document.getElementById('btnNovaFamilia').style.display = 'flex';
             document.getElementById('btnEditFamilia').style.display = 'block';
             
