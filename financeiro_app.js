@@ -71,7 +71,7 @@ window.initFinanceiro = async function(pessoa, isMobile = false) {
             .from('fin_transacoes')
             .select('*')
             .eq('cpf', cpfLimpo)
-            .eq('categoria', 'mensalidade')
+            .ilike('categoria', 'mensalidade')
             .order('data_registro', { ascending: false });
 
         renderUI(container, config, transacoes || [], isMobile);
