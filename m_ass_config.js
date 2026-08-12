@@ -175,19 +175,21 @@ async function loadItens() {
                     ${data.map(i => {
                         const isAtivo = (i.status === 'Ativo' || i.status === 'Ativa');
                         return `
-                        <tr style="border-bottom: 1px solid var(--border);">
-                            <td style="padding: 10px 4px;">
-                                <div style="color: #60a5fa; font-weight: 500;">${i.codigo}</div>
-                                <div style="color: var(--text-muted); font-size: 11px; white-space: normal; line-height: 1.2; margin-top: 2px;">${i.descricao}</div>
-                            </td>
-                            <td style="padding: 10px 4px; color: #10b981; font-weight: bold;">${i.estoque_atual || 0}</td>
-                            <td style="padding: 10px 4px; color: var(--text-muted);">${i.unidade || '-'}</td>
-                            <td style="padding: 10px 4px;">
+                        <tr style="border-bottom: none;">
+                            <td style="padding: 10px 4px 2px 4px; color: #60a5fa;">${i.codigo}</td>
+                            <td style="padding: 10px 4px 2px 4px; color: #10b981; font-weight: bold;">${i.estoque_atual || 0}</td>
+                            <td style="padding: 10px 4px 2px 4px; color: var(--text-muted);">${i.unidade || '-'}</td>
+                            <td style="padding: 10px 4px 2px 4px;">
                                 <span style="background: ${isAtivo ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}; color: ${isAtivo ? '#10b981' : '#ef4444'}; padding: 2px 6px; border-radius: 4px; font-size: 10px;">${isAtivo ? 'A' : 'I'}</span>
                             </td>
-                            <td style="padding: 10px 4px; white-space: nowrap;">
+                            <td style="padding: 10px 4px 2px 4px; white-space: nowrap;">
                                 <button onclick="editarItem('${i.id}')" style="background:none; border:none; color: #60a5fa; padding:4px;">✏️</button>
                                 <button onclick="excluirItem('${i.id}')" style="background:none; border:none; color: #ef4444; padding:4px;">🗑️</button>
+                            </td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td colspan="5" style="padding: 2px 4px 10px 4px; color: var(--text-main); font-weight: 500; font-size: 13px; white-space: normal;">
+                                ${i.descricao}
                             </td>
                         </tr>
                         `;
