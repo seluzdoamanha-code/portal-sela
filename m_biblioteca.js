@@ -23,10 +23,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const button = e.currentTarget;
             tabBtns.forEach(b => b.classList.remove('active'));
             button.classList.add('active');
+            
             currentCategoria = button.getAttribute('data-categoria');
             
-            // Centralizar aba ao clicar
-            button.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            // Centralizar aba ao clicar apenas horizontalmente
+            const container = document.querySelector('.m-tabs-scroll');
+            const scrollLeft = button.offsetLeft - (container.offsetWidth / 2) + (button.offsetWidth / 2);
+            container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
             
             fetchLivros(true);
         });
@@ -255,22 +258,31 @@ async function enviarReserva() {
         return;
     }
 
-    let status = 'Pendente';
+    let contatoFinal = contato;
     let msgSuccess = 'Sua solicitação de empréstimo foi registrada! Procure o responsável da Biblioteca no próximo encontro.';
 
-    let tipoReserva = 'Empréstimo';
-    let codPermutaFornecido = null;
-
     if (currentLivroCategoria === 'PERMUTA') {
-        tipoReserva = 'Permuta';
         msgSuccess = 'Sua solicitação de permuta foi registrada! Leve seu livro para troca.';
     } else if (currentLivroCategoria === 'DESIDERATUM') {
         const acaoDesid = document.querySelector('input[name="desiderataAcao"]:checked').value;
-        tipoReserva = 'Oferta de ' + acaoDesid;
         msgSuccess = 'Agradecemos sua oferta! Nossa equipe entrará em contato.';
         
         if (acaoDesid === 'Permutar') {
-            codPermutaFornecido = document.getElementById('desiderataCodigo').value.trim();
+            const cod = document.getElementById('desiderataCodigo').value.trim();
+            if (!cod) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Código Faltando',
+                    text: 'Por favor, informe o código do seu livro para permuta.',
+                    background: 'var(--bg-panel)',
+                    color: 'white',
+                    confirmButtonColor: 'var(--primary)'
+                });
+                return;
+            }
+            contatoFinal = `[PERMUTA: ${cod}] ` + contato;
+        } else {
+            contatoFinal = `[DOAÇÃO] ` + contato;
         }
     }
 
@@ -280,17 +292,13 @@ async function enviarReserva() {
     btn.disabled = true;
 
     try {
-        const { data, error } = await db.from('livros_reservas').insert([
-            {
-                livro_id: currentLivroId,
-                livro_titulo: currentLivroTitulo,
-                solicitante_nome: nome,
-                solicitante_contato: contato,
-                status: status,
-                tipo_reserva: tipoReserva,
-                codigo_permuta_ofertado: codPermutaFornecido
-            }
-        ]);
+        const { error } = await db.from('reservas_site').insert([{
+            livro_id: currentLivroId,
+            livro_titulo: currentLivroTitulo,
+            leitor_nome: nome,
+            leitor_contato: contatoFinal,
+            status: 'PENDENTE'
+        }]);
 
         if (error) throw error;
 

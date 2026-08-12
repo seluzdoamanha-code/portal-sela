@@ -329,8 +329,9 @@
 
     <!-- Bottom Sheet Modal -->
     <div class="m-modal-overlay" id="modalOverlay" onclick="fecharModal(event)">
-        <div class="m-modal-sheet" id="modalSheet" onclick="event.stopPropagation()">
-            <div class="m-bs-handle"></div>
+        <div class="m-modal-sheet" id="modalSheet" onclick="event.stopPropagation()" style="position: relative;">
+            <div class="m-bs-handle" onclick="fecharModal({target: {id: 'modalOverlay'}})"></div>
+            <button onclick="fecharModal({target: {id: 'modalOverlay'}})" style="position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
             
             <img id="modalImg" src="" class="sheet-cover" alt="Capa">
             <div class="sheet-title" id="modalTitle">Título</div>
