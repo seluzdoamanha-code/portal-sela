@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await carregarPerfis();
     await carregarSociais();
     await inicializarLuzGestao();
+    await carregarMatrizAbas();
     
     document.getElementById('btnSalvarSociais').addEventListener('click', salvarSociais);
     
@@ -493,4 +494,101 @@ window.excluirPagina = function(id) {
             }
         }
     });
+};
+
+
+// ==========================================
+// MÓDULO MATRIZ DE ABAS POR ESTRUTURA
+// ==========================================
+let estruturasMatriz = [];
+
+async function carregarMatrizAbas() {
+    const loader = document.getElementById('loadingMatrix');
+    const container = document.getElementById('matrixContainer');
+    const tbody = document.getElementById('tbodyMatrix');
+    
+    if (!loader || !container || !tbody) return;
+    
+    loader.style.display = 'block';
+    container.style.display = 'none';
+    
+    try {
+        const { data, error } = await db.from('estruturas').select('*').order('nome');
+        if (error) throw error;
+        
+        estruturasMatriz = data || [];
+        tbody.innerHTML = '';
+        
+        estruturasMatriz.forEach(est => {
+            const isIrradiacao = (est.nome || '').toLowerCase().includes('irradia') || (est.nome || '').toLowerCase().includes('sela');
+            const isAssistencia = (est.nome || '').toLowerCase().includes('assist') && (est.nome || '').toLowerCase().includes('social');
+            const isAtendimento = (est.nome || '').toLowerCase().includes('atendimento');
+
+            const config = est.abas_config || {
+                equipe: true, agenda: true, projetos: true, documentos: true,
+                tesouraria: false,
+                apps: isIrradiacao || isAssistencia || isAtendimento
+            };
+            
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-id', est.id);
+            tr.innerHTML = `
+                <td style="font-weight: 500; padding: 12px;">${est.nome} <br><small style="color:var(--text-muted);">${est.tipo}</small></td>
+                <td style="text-align: center;"><input type="checkbox" class="chk-equipe" ${config.equipe ? 'checked' : ''} style="width: 18px; height: 18px;"></td>
+                <td style="text-align: center;"><input type="checkbox" class="chk-agenda" ${config.agenda ? 'checked' : ''} style="width: 18px; height: 18px;"></td>
+                <td style="text-align: center;"><input type="checkbox" class="chk-projetos" ${config.projetos ? 'checked' : ''} style="width: 18px; height: 18px;"></td>
+                <td style="text-align: center;"><input type="checkbox" class="chk-documentos" ${config.documentos ? 'checked' : ''} style="width: 18px; height: 18px;"></td>
+                <td style="text-align: center;"><input type="checkbox" class="chk-tesouraria" ${config.tesouraria ? 'checked' : ''} style="width: 18px; height: 18px;"></td>
+                <td style="text-align: center;"><input type="checkbox" class="chk-apps" ${config.apps ? 'checked' : ''} style="width: 18px; height: 18px;"></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        loader.style.display = 'none';
+        container.style.display = 'block';
+    } catch(err) {
+        console.error(err);
+        loader.textContent = 'Erro ao carregar matriz: ' + err.message;
+    }
+}
+
+window.salvarMatrizAbas = async function() {
+    const btn = document.getElementById('btnSaveMatrix');
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+    
+    const rows = document.querySelectorAll('#tbodyMatrix tr');
+    let hasError = false;
+    
+    try {
+        for (let row of rows) {
+            const id = row.getAttribute('data-id');
+            const abas_config = {
+                equipe: row.querySelector('.chk-equipe').checked,
+                agenda: row.querySelector('.chk-agenda').checked,
+                projetos: row.querySelector('.chk-projetos').checked,
+                documentos: row.querySelector('.chk-documentos').checked,
+                tesouraria: row.querySelector('.chk-tesouraria').checked,
+                apps: row.querySelector('.chk-apps').checked
+            };
+            
+            const { error } = await db.from('estruturas').update({ abas_config }).eq('id', id);
+            if (error) {
+                console.error("Erro ao salvar estrutura " + id, error);
+                hasError = true;
+            }
+        }
+        
+        if (hasError) {
+            Swal.fire('Atenção', 'Algumas configurações de abas não puderam ser salvas. Verifique o console.', 'warning');
+        } else {
+            Swal.fire('Salvo!', 'Configurações de abas atualizadas com sucesso.', 'success');
+        }
+    } catch(e) {
+        Swal.fire('Erro', 'Erro ao salvar matriz: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Salvar Configuração de Abas';
+        carregarMatrizAbas();
+    }
 };

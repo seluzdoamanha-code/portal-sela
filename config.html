@@ -297,6 +297,36 @@
                     </div>
                 </div>
 
+                
+                <!-- Seção Matriz de Abas por Objeto -->
+                <div class="config-section">
+                    <div class="config-header">
+                        <h2 class="config-title">🛠️ Matriz de Abas (Visibilidade)</h2>
+                        <p class="config-desc">Defina quais abas de trabalho estarão ativas para cada Atividade, Departamento ou Família.</p>
+                    </div>
+                    
+                    <div id="loadingMatrix" style="color: var(--text-muted); padding: 16px 0;">Carregando matriz de abas...</div>
+                    <div id="matrixContainer" style="display: none; overflow-x: auto;">
+                        <table class="table-luz" style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+                            <thead>
+                                <tr>
+                                    <th>Objeto (Nome)</th>
+                                    <th style="text-align: center;">👥 Equipe</th>
+                                    <th style="text-align: center;">📅 Agenda</th>
+                                    <th style="text-align: center;">📈 Projetos</th>
+                                    <th style="text-align: center;">📂 Documentos</th>
+                                    <th style="text-align: center;">🪙 Tesouraria</th>
+                                    <th style="text-align: center;">📱 Mini-Apps</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyMatrix"></tbody>
+                        </table>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                            <button type="button" onclick="salvarMatrizAbas()" class="btn btn-primary" id="btnSaveMatrix">Salvar Configuração de Abas</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Seção de Redes Sociais -->
                 <div class="config-section">
                     <div class="config-header">

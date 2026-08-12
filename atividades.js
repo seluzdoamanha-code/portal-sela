@@ -124,7 +124,13 @@ function setupModal() {
     
     const fecharModal = () => { 
         modal.classList.remove('show'); 
-        form.reset(); 
+        form.reset();
+        document.getElementById('inTabEquipe').checked = true;
+        document.getElementById('inTabAgenda').checked = true;
+        document.getElementById('inTabProjetos').checked = true;
+        document.getElementById('inTabDocumentos').checked = true;
+        document.getElementById('inTabTesouraria').checked = false;
+        document.getElementById('inTabApps').checked = false; 
         estruturaEditandoId = null;
     };
     
@@ -139,13 +145,24 @@ function setupModal() {
         btnSave.disabled = true;
         btnSave.textContent = 'Salvando...';
         
+
         const tipo = document.getElementById('inTipoEstrutura').value;
         const nome = document.getElementById('inNomeEstrutura').value;
+        const abas_config = {
+            equipe: document.getElementById('inTabEquipe').checked,
+            agenda: document.getElementById('inTabAgenda').checked,
+            projetos: document.getElementById('inTabProjetos').checked,
+            documentos: document.getElementById('inTabDocumentos').checked,
+            tesouraria: document.getElementById('inTabTesouraria').checked,
+            apps: document.getElementById('inTabApps').checked
+        };
         
         const dados = {
             tipo: tipo,
-            nome: nome
+            nome: nome,
+            abas_config: abas_config
         };
+
         
         try {
             if (estruturaEditandoId) {
@@ -174,8 +191,28 @@ window.editarEstrutura = async (id) => {
     
     estruturaEditandoId = id;
     
+
     document.getElementById('inTipoEstrutura').value = estr.tipo;
     document.getElementById('inNomeEstrutura').value = estr.nome;
+    
+    // Config abas
+    const isIrradiacao = (estr.nome || '').toLowerCase().includes('irradia') || (estr.nome || '').toLowerCase().includes('sela');
+    const isAssistencia = (estr.nome || '').toLowerCase().includes('assist') && (estr.nome || '').toLowerCase().includes('social');
+    const isAtendimento = (estr.nome || '').toLowerCase().includes('atendimento');
+    
+    const config = estr.abas_config || {
+        equipe: true, agenda: true, projetos: true, documentos: true,
+        tesouraria: false,
+        apps: isIrradiacao || isAssistencia || isAtendimento
+    };
+    
+    document.getElementById('inTabEquipe').checked = !!config.equipe;
+    document.getElementById('inTabAgenda').checked = !!config.agenda;
+    document.getElementById('inTabProjetos').checked = !!config.projetos;
+    document.getElementById('inTabDocumentos').checked = !!config.documentos;
+    document.getElementById('inTabTesouraria').checked = !!config.tesouraria;
+    document.getElementById('inTabApps').checked = !!config.apps;
+
     
     document.getElementById('modalEstrutura').classList.add('show');
 };
