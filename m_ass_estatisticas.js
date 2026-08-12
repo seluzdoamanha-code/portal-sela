@@ -88,13 +88,13 @@
 
     async function renderChartDemografia() {
         const { data } = await db.from('ass_familias').select('status');
-        let ativa = 0, inativa = 0, suspensa = 0;
+        let ativa = 0, inativa = 0, triagem = 0;
         
         if (data) {
             data.forEach(f => {
                 if(f.status === 'Ativa') ativa++;
                 else if(f.status === 'Inativa') inativa++;
-                else suspensa++;
+                else if(f.status === 'Triagem') triagem++;
             });
         }
 
@@ -102,10 +102,10 @@
         new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Ativa', 'Inativa', 'Suspensa'],
+                labels: ['Ativa', 'Inativa', 'Triagem'],
                 datasets: [{
-                    data: [ativa, inativa, suspensa],
-                    backgroundColor: ['#10b981', '#6b7280', '#f59e0b'],
+                    data: [ativa, inativa, triagem],
+                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
                     borderWidth: 0,
                     hoverOffset: 4
                 }]
@@ -115,7 +115,7 @@
                 maintainAspectRatio: false,
                 cutout: '75%',
                 plugins: {
-                    legend: { position: 'right', labels: { color: 'rgba(255,255,255,0.7)', padding: 20 } }
+                    legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.7)', padding: 20 } }
                 }
             }
         });
