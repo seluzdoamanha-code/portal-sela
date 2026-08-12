@@ -74,7 +74,7 @@
     }
 
     window.abrirEdicaoMsg = function(id) {
-        const item = listMensagens.find(x => x.id === id);
+        const item = listMensagens.find(x => x.id == id);
         if (item) {
             abrirModalMsg(item.id, item.texto, item.autor);
         }
@@ -177,7 +177,7 @@
     }
 
     window.abrirEdicaoPag = function(id) {
-        const item = listPaginas.find(x => x.id === id);
+        const item = listPaginas.find(x => x.id == id);
         if (item) {
             abrirModalPag(item.id, item.livro_codigo, item.trecho, item.pagina || '', item.autor);
         }
