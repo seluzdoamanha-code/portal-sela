@@ -213,6 +213,15 @@
         }
         return v;
     }
+
+    function formatarCelular(v) {
+        if (!v) return '';
+        v = v.replace(/\D/g, '');
+        if (v.length <= 10) {
+            return v.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+        }
+        return v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
     async function carregarPerfil() {
         try {
             const { data, error } = await db.from('pessoas').select('*').eq('id', currentId).single();
@@ -269,7 +278,7 @@
 
         // Info
         const celularLimpo = (p.celular || '').replace(/\D/g, '');
-        document.getElementById('lblCelular').innerText = p.celular || '-';
+        document.getElementById('lblCelular').innerText = formatarCelular(p.celular) || '-';
         const btnZap = document.getElementById('btnWhatsapp');
         if (celularLimpo) {
             btnZap.style.display = 'block';
@@ -378,10 +387,10 @@
             cpf_cnpj: document.getElementById('inpCpfCnpj').value.replace(/\D/g, '') || null,
             nome_completo: document.getElementById('inpNome').value.trim() || null,
             nome_curto: document.getElementById('inpNomeCurto').value.trim() || null,
-            celular: document.getElementById('inpCelular').value.trim(),
+            celular: document.getElementById('inpCelular').value.replace(/\D/g, '') || null,
             email: document.getElementById('inpEmail').value.trim(),
             data_nascimento: document.getElementById('inpNascimento').value || null,
-            cep: document.getElementById('inpCep').value.trim(),
+            cep: document.getElementById('inpCep').value.replace(/\D/g, '') || null,
             endereco: document.getElementById('inpEndereco').value.trim(),
             bairro: document.getElementById('inpBairro').value.trim(),
             cidade: document.getElementById('inpCidade').value.trim(),

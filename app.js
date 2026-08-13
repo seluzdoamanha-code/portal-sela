@@ -449,7 +449,7 @@ function setupModal() {
         const nome_completo = document.getElementById('inNome').value.trim();
         const nome_curto = document.getElementById('inNomeCurto').value.trim();
         const tipo_pessoa = document.getElementById('inTipo').value;
-        const celular = document.getElementById('inCelular').value.replace(/\D/g, '');
+        const celular = document.getElementById('inCelular').value.replace(/\D/g, '') || null;
         const email = document.getElementById('inEmail').value.trim();
         
         const status = document.getElementById('inStatus').value || 'Ativo';
@@ -462,7 +462,7 @@ function setupModal() {
         const estado_civil = document.getElementById('inEstadoCivil').value || null;
         const profissao = document.getElementById('inProfissao').value || null;
         
-        const cep = document.getElementById('inCep').value || null;
+        const cep = document.getElementById('inCep').value.replace(/\D/g, '') || null;
         const endereco = document.getElementById('inEndereco').value || null;
         const bairro = document.getElementById('inBairro').value || null;
         const cidade = document.getElementById('inCidade').value || null;
