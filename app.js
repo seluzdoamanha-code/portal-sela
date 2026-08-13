@@ -6,7 +6,10 @@ let pessoasGlobais = [];
 let pessoaEditandoId = null;
 let cameFromProfileEdit = false;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Configura as Tags Dinâmicas primeiro
+    await window.renderizarTagsDisponiveis();
+
     carregarPessoas();
     setupModal();
     
@@ -23,9 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(sortOrder) sortOrder.addEventListener('change', window.aplicarFiltros);
     
     if(chkOutros) chkOutros.addEventListener('change', window.aplicarFiltros);
-    
-    // Configura as Tags Dinâmicas
-    window.renderizarTagsDisponiveis();
     
     // ==========================================
     // VITRINE DE EVENTOS GLOBAIS
