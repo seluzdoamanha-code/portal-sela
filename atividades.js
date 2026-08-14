@@ -10,6 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarEstruturas();
     setupModal();
     
+    // Esconder o botão de criar nova estrutura para não-admins
+    const isAdmin = (typeof window.isAdmin === 'function' && window.isAdmin());
+    const btnNovo = document.getElementById('btnNovaEstrutura');
+    if (btnNovo && !isAdmin) {
+        btnNovo.style.display = 'none';
+    }
+    
     const inputSearch = document.getElementById('searchEstrutura');
     const filterTipo = document.getElementById('filterTipoEstrutura');
 
@@ -111,7 +118,7 @@ function renderizarTabela(dados) {
                 </td>
                 <td style="text-align: right;">
                     <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
-                        ${(typeof window.podeEditarPessoas === 'function' && window.podeEditarPessoas()) ? `
+                        ${(typeof window.isAdmin === 'function' && window.isAdmin()) ? `
                         <button onclick="editarEstrutura('${estrutura.id}')" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
                             Editar
                         </button>
@@ -223,6 +230,10 @@ window.alternarFavorito = async function(id) {
 };
 
 window.editarEstrutura = async (id) => {
+    if (typeof window.isAdmin === 'function' && !window.isAdmin()) {
+        alert("Ação não autorizada.");
+        return;
+    }
     const estr = estruturasGlobais.find(e => e.id === id);
     if (!estr) return;
     
@@ -255,6 +266,10 @@ window.editarEstrutura = async (id) => {
 };
 
 window.excluirEstrutura = async (id) => {
+    if (typeof window.isAdmin === 'function' && !window.isAdmin()) {
+        alert("Ação não autorizada.");
+        return;
+    }
     if (!confirm("Tem certeza que deseja excluir esta estrutura? Todas as permissões e vínculos abaixo dela poderão ser afetados.")) return;
     
     try {
