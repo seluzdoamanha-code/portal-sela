@@ -167,18 +167,40 @@
                     </div>
                 </div>
 
-                <!-- Aba 2: Agenda -->
+                <!-- Aba 2: Agenda e Atividades Regulares -->
                 <div class="tab-content" id="abaAgenda">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px;">
+                        
+                        <!-- Coluna 1: Agenda e Eventos (Pontuais) -->
                         <div>
-                            <h2>Agenda e Eventos</h2>
-                            <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">Cronograma de reuniões, ensaios e confraternizações.</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <div>
+                                    <h2 style="font-size: 18px; margin: 0;">🗓️ Agenda e Eventos</h2>
+                                    <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Atividades pontuais, reuniões e palestras.</p>
+                                </div>
+                                <button class="btn btn-primary" onclick="abrirModalEvento()" style="padding: 6px 12px; font-size: 12px;">+ Novo Evento</button>
+                            </div>
+                            
+                            <div id="listAgenda" style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="color: var(--text-muted); font-size: 13px;">Carregando agenda...</div>
+                            </div>
                         </div>
-                        <button class="btn btn-primary" onclick="abrirModalEvento()">+ Novo Evento</button>
-                    </div>
-                    
-                    <div id="listAgenda" style="display: flex; flex-direction: column; gap: 16px;">
-                        <div style="color: var(--text-muted); font-size: 13px;">Carregando agenda...</div>
+
+                        <!-- Coluna 2: Atividades Regulares & Funcionamento (Recorrentes) -->
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <div>
+                                    <h2 style="font-size: 18px; margin: 0;">🔁 Atividades Regulares</h2>
+                                    <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Dias e horários recorrentes de funcionamento.</p>
+                                </div>
+                                <button class="btn btn-primary" onclick="abrirModalAtividadeRegular()" style="padding: 6px 12px; font-size: 12px;">+ Nova Atividade</button>
+                            </div>
+                            
+                            <div id="listAtividadesRegulares" style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="color: var(--text-muted); font-size: 13px;">Carregando atividades regulares...</div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -404,6 +426,36 @@
         </div>
     </div>
     
+    <!-- Modal Adicionar Atividade Regular -->
+    <div class="modal-overlay" id="modalAtividadeRegular">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2 id="modalAtividadeRegularTitle" style="margin-bottom: 16px;">Nova Atividade Regular</h2>
+            <form id="formAtividadeRegular" onsubmit="salvarAtividadeRegular(event)">
+                <input type="hidden" id="inAtRegId">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Título da Atividade *</label>
+                    <input type="text" id="inAtRegTitulo" required placeholder="Ex: Plantão de Atendimento Fraterno" style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Dia(s) da Semana *</label>
+                    <input type="text" id="inAtRegDiaSemana" required placeholder="Ex: Terças e Quintas, Sábados, etc." style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Horário *</label>
+                    <input type="text" id="inAtRegHorario" required placeholder="Ex: 19:30, 17:00, etc." style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Descrição / Observações</label>
+                    <textarea id="inAtRegDescricao" placeholder="Ex: Entrada por ordem de chegada até as 20h." rows="3" style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModalAtividadeRegular()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveAtReg">Salvar Atividade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal Visualizador Markdown -->
     <div class="modal-overlay" id="modalViewer" style="align-items: center; justify-content: center; padding: 20px;">
         <div class="modal-content" style="max-width: 900px; width: 100%; height: 90vh; display: flex; flex-direction: column; background: var(--bg-panel); padding: 32px;">

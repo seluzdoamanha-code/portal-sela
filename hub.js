@@ -46,8 +46,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formProj = document.getElementById('formProjeto');
     if(formProj) formProj.addEventListener('submit', salvarProjeto);
     
-    // Iniciar Aba de Agenda
+    // Iniciar Aba de Agenda e Atividades Regulares
     await carregarAgenda();
+    await carregarAtividadesRegulares();
     document.getElementById('formEvento').addEventListener('submit', salvarEvento);
 });
 
@@ -802,6 +803,127 @@ window.excluirEventoAgenda = async (id) => {
     } catch (err) {
         console.error("Erro ao excluir evento:", err);
         alert("Erro ao excluir evento.");
+    }
+};
+
+window.abrirModalAtividadeRegular = function() {
+    document.getElementById('inAtRegId').value = '';
+    document.getElementById('inAtRegTitulo').value = '';
+    document.getElementById('inAtRegDiaSemana').value = '';
+    document.getElementById('inAtRegHorario').value = '';
+    document.getElementById('inAtRegDescricao').value = '';
+    document.getElementById('modalAtividadeRegularTitle').textContent = 'Nova Atividade Regular';
+    document.getElementById('modalAtividadeRegular').style.display = 'flex';
+};
+
+window.fecharModalAtividadeRegular = function() {
+    document.getElementById('modalAtividadeRegular').style.display = 'none';
+};
+
+window.carregarAtividadesRegulares = async function() {
+    const list = document.getElementById('listAtividadesRegulares');
+    if (!list) return;
+    list.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Carregando...</div>';
+
+    try {
+        const { data, error } = await db
+            .from('atividades_regulares')
+            .select('*')
+            .eq('estrutura_id', estruturaId)
+            .order('titulo');
+
+        if (error) {
+            if (error.code === 'PGRST116' || error.message.includes('relation "atividades_regulares" does not exist')) {
+                list.innerHTML = `
+                    <div style="padding: 16px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; color: #f87171; font-size: 13px;">
+                        ⚠️ Tabela 'atividades_regulares' não encontrada no banco de dados. 
+                        Por favor, execute o script SQL aprovado no console do Supabase para ativar este recurso.
+                    </div>`;
+                return;
+            }
+            throw error;
+        }
+
+        if (!data || data.length === 0) {
+            list.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 24px; border: 1px dashed var(--border); border-radius: 8px;">Nenhuma atividade regular cadastrada.</div>';
+            return;
+        }
+
+        let html = '';
+        data.forEach(at => {
+            html += `
+                <div class="card-agenda" style="position: relative; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: all 0.2s;">
+                    <div style="font-weight: 600; color: var(--text-main); font-size: 15px; margin-bottom: 6px; padding-right: 32px;">${at.titulo.toUpperCase()}</div>
+                    <div style="display: flex; gap: 16px; font-size: 13px; color: var(--primary); font-weight: 500; margin-bottom: 8px;">
+                        <span>📅 ${at.dia_semana}</span>
+                        <span>⏰ ${at.horario}</span>
+                    </div>
+                    ${at.descricao ? `<div style="font-size: 13px; color: var(--text-muted); white-space: pre-line;">${at.descricao}</div>` : ''}
+                    
+                    <button onclick="excluirAtividadeRegular('${at.id}')" style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 14px; cursor: pointer; color: var(--text-muted);" title="Excluir Atividade">🗑️</button>
+                </div>
+            `;
+        });
+        list.innerHTML = html;
+
+    } catch (err) {
+        console.error("Erro ao carregar atividades regulares:", err);
+        list.innerHTML = '<div style="color: #ef4444; font-size: 13px;">Erro ao carregar atividades regulares.</div>';
+    }
+};
+
+window.salvarAtividadeRegular = async function(event) {
+    event.preventDefault();
+    const btn = document.getElementById('btnSaveAtReg');
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    const id = document.getElementById('inAtRegId').value;
+    const titulo = document.getElementById('inAtRegTitulo').value;
+    const diaSemana = document.getElementById('inAtRegDiaSemana').value;
+    const horario = document.getElementById('inAtRegHorario').value;
+    const descricao = document.getElementById('inAtRegDescricao').value;
+
+    try {
+        if (id) {
+            const { error } = await db.from('atividades_regulares').update({
+                titulo,
+                dia_semana: diaSemana,
+                horario,
+                descricao
+            }).eq('id', id);
+            if (error) throw error;
+        } else {
+            const { error } = await db.from('atividades_regulares').insert([{
+                estrutura_id: estruturaId,
+                titulo,
+                dia_semana: diaSemana,
+                horario,
+                descricao
+            }]);
+            if (error) throw error;
+        }
+
+        fecharModalAtividadeRegular();
+        await carregarAtividadesRegulares();
+    } catch (err) {
+        console.error("Erro ao salvar atividade regular:", err);
+        alert("Erro ao salvar atividade regular: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Salvar Atividade';
+    }
+};
+
+window.excluirAtividadeRegular = async function(id) {
+    if (!confirm("Tem certeza que deseja apagar esta atividade regular?")) return;
+    try {
+        const { error } = await db.from('atividades_regulares').delete().eq('id', id);
+        if (error) throw error;
+        await carregarAtividadesRegulares();
+    } catch (err) {
+        console.error("Erro ao excluir atividade regular:", err);
+        alert("Erro ao excluir atividade regular: " + err.message);
     }
 };
 
