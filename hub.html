@@ -134,7 +134,8 @@
                 <!-- Sistema de Abas -->
                 <div class="tabs-nav">
                     <button class="tab-btn mobile-only" onclick="window.location.href='index.html'" style="color: #60a5fa; font-weight: bold;">🏠 Início / Mural</button>
-                    <button class="tab-btn active" data-target="abaEquipe">👥 Equipe & Organograma</button>
+                    <button class="tab-btn active" data-target="abaInicio">🏠 Início</button>
+                    <button class="tab-btn" data-target="abaEquipe">👥 Equipe & Organograma</button>
                     <button class="tab-btn" data-target="abaAgenda">📅 Agenda & Atividades</button>
                     <button class="tab-btn" data-target="abaProjetosProcessos" id="btnAbaProjetos">🚀 Projetos & Processos</button>
                     <button class="tab-btn" data-target="abaDocumentos" id="btnAbaDocumentos">📁 Documentos Gerais</button>
@@ -144,8 +145,62 @@
                 
                 <!-- Conteúdo das Abas -->
                 
+                <!-- Aba Início (Apresentação Geral) -->
+                <div class="tab-content active" id="abaInicio">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+                        <div>
+                            <h2>Apresentação Geral</h2>
+                            <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">Informações essenciais sobre o funcionamento e ferramentas deste setor.</p>
+                        </div>
+                        <button class="btn btn-secondary" id="btnEditarHome" onclick="abrirModalEditarHome()" style="display: none; padding: 6px 12px; font-size: 13px;">✏️ Editar Informações</button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; flex-wrap: wrap;" id="homeLayoutGrid">
+                        <!-- Coluna Principal (Apresentação, Vinculos, Apps) -->
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <!-- Apresentação text card -->
+                            <div class="card-agenda" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 24px;">
+                                <h3 style="margin-top: 0; color: var(--primary); font-size: 15px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">📝 Sobre o Setor</h3>
+                                <div id="homeDescricaoText" style="color: var(--text-main); font-size: 14px; line-height: 1.6; white-space: pre-line;">Nenhuma descrição cadastrada ainda.</div>
+                            </div>
+
+                            <!-- Vinculos (Pai/Filho) -->
+                            <div id="homeVinculosContainer" style="display: none; flex-direction: column; gap: 16px;">
+                                <!-- Dinâmico via JS -->
+                            </div>
+
+                            <!-- Mini-Apps direct shortcuts -->
+                            <div>
+                                <h3 style="color: var(--text-main); font-size: 15px; margin-bottom: 16px;">🚀 Ferramentas & Mini-Apps Rápidos</h3>
+                                <div id="homeAppsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                                    <!-- Dinâmico via JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Coluna Lateral (Links Úteis e Atividades Principais) -->
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <!-- Links Rápidos -->
+                            <div class="card-agenda" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                                <h3 style="margin-top: 0; color: var(--text-main); font-size: 14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">🔗 Links & Recursos Úteis</h3>
+                                <div id="homeLinksRapidosList" style="display: flex; flex-direction: column; gap: 10px;">
+                                    <!-- Dinâmico via JS -->
+                                </div>
+                            </div>
+
+                            <!-- Próximos Eventos/Atividades -->
+                            <div class="card-agenda" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                                <h3 style="margin-top: 0; color: var(--text-main); font-size: 14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">⏰ Atividades & Funcionamento</h3>
+                                <div id="homeAtividadesPrincipaisList" style="display: flex; flex-direction: column; gap: 10px;">
+                                    <!-- Dinâmico via JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Aba 1: Equipe -->
-                <div class="tab-content active" id="abaEquipe">
+                <div class="tab-content" id="abaEquipe">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                         <div>
                             <h2 id="tituloGestaoPessoas">Gestão de Pessoas</h2>
@@ -457,6 +512,33 @@
                 <div style="display: flex; gap: 12px; justify-content: flex-end;">
                     <button type="button" class="btn btn-secondary" onclick="fecharModalAtividadeRegular()">Cancelar</button>
                     <button type="submit" class="btn btn-primary" id="btnSaveAtReg">Salvar Atividade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Informações Gerais da Home -->
+    <div class="modal-overlay" id="modalEditarHome">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 style="margin-bottom: 16px;">✏️ Editar Informações Gerais</h2>
+            <form id="formEditarHome" onsubmit="salvarInformacoesHome(event)">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Apresentação / Descrição do Setor *</label>
+                    <textarea id="editHomeDescricao" required placeholder="Apresente brevemente este departamento ou atividade..." rows="5" style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Pertence ao Departamento/Colegiado (Pai) - Opcional</label>
+                    <select id="editHomeParentId" style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px;">
+                        <option value="">-- Nenhum --</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Links & Recursos Úteis (Um por linha no formato: Rótulo | URL)</label>
+                    <textarea id="editHomeLinksText" placeholder="Ex: Canal do YouTube | https://youtube.com/sela&#10;Planilha de Escalas | https://docs.google.com/..." rows="4" style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModalEditarHome()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveHomeInfo">Salvar Informações</button>
                 </div>
             </form>
         </div>

@@ -76,7 +76,6 @@ async function carregarDadosEstrutura() {
             };
             
             if (isIrradiacao || isAssistencia || isAtendimento || isBiblioteca) {
-                // Forçar habilitar apps se for módulo nativo
                 config.apps = true;
             }
             
@@ -97,6 +96,9 @@ async function carregarDadosEstrutura() {
                     carregarAppMiniApps();
                 }
             }
+
+            // Renderizar a Página Inicial (Home)
+            await carregarDadosHome(data);
         }
         document.getElementById('loadingState').style.display = 'none';
         document.getElementById('hubContent').style.display = 'block';
@@ -105,6 +107,269 @@ async function carregarDadosEstrutura() {
         document.getElementById('loadingState').textContent = "Erro ao carregar dados. Verifique sua conexão.";
     }
 }
+
+async function carregarDadosHome(estData) {
+    // 1. Apresentação / Descrição
+    document.getElementById('homeDescricaoText').textContent = estData.descricao || 'Nenhuma descrição cadastrada ainda. Use o botão no topo para apresentar o departamento!';
+    
+    // Habilitar botão de edição para Admins
+    const isAdmin = (typeof window.isAdmin === 'function' && window.isAdmin());
+    const btnEdit = document.getElementById('btnEditarHome');
+    if (btnEdit && isAdmin) {
+        btnEdit.style.display = 'block';
+    }
+
+    // 2. Vínculos (Pai/Filho)
+    const vinculosContainer = document.getElementById('homeVinculosContainer');
+    if (vinculosContainer) {
+        vinculosContainer.style.display = 'none';
+        vinculosContainer.innerHTML = '';
+
+        if (estData.tipo === 'Departamento' || estData.tipo === 'Colegiado' || estData.tipo === 'Colegiado Geral') {
+            // Buscar setores/atividades filhas
+            try {
+                const { data: filhas } = await db.from('estruturas').select('id, nome, tipo').eq('parent_id', estData.id).order('nome');
+                if (filhas && filhas.length > 0) {
+                    vinculosContainer.style.display = 'flex';
+                    let html = `<h3 style="margin-top: 0; color: var(--text-main); font-size: 14px; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 12px;">🌱 Atividades e Setores Vinculados</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;">`;
+                    filhas.forEach(sub => {
+                        const icone = window.obterIconeEstrutura ? window.obterIconeEstrutura(sub.nome, sub.tipo) : '🏛️';
+                        html += `
+                            <a href="hub.html?id=${sub.id}" style="display: flex; align-items: center; gap: 12px; text-decoration: none; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--primary)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='var(--border)';">
+                                <span style="font-size: 20px;">${icone}</span>
+                                <div>
+                                    <div style="font-weight: 600; font-size: 12px;">${sub.nome.toUpperCase()}</div>
+                                    <div style="font-size: 10px; color: var(--text-muted);">${sub.tipo}</div>
+                                </div>
+                            </a>
+                        `;
+                    });
+                    html += `</div>`;
+                    vinculosContainer.innerHTML = html;
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        } else if (estData.parent_id) {
+            // Buscar departamento pai
+            try {
+                const { data: pai } = await db.from('estruturas').select('id, nome, tipo').eq('id', estData.parent_id).single();
+                if (pai) {
+                    vinculosContainer.style.display = 'flex';
+                    const icone = window.obterIconeEstrutura ? window.obterIconeEstrutura(pai.nome, pai.tipo) : '🏛️';
+                    vinculosContainer.innerHTML = `
+                        <h3 style="margin-top: 0; color: var(--text-main); font-size: 14px; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 12px;">🏢 Departamento / Colegiado Responsável</h3>
+                        <a href="hub.html?id=${pai.id}" style="display: flex; align-items: center; gap: 12px; text-decoration: none; padding: 10px; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; color: var(--text-main); transition: all 0.2s; width: max-content; min-width: 260px;" onmouseover="this.style.background='rgba(59, 130, 246, 0.1)';" onmouseout="this.style.background='rgba(59, 130, 246, 0.05)';">
+                            <span style="font-size: 20px;">${icone}</span>
+                            <div>
+                                <div style="font-weight: 600; font-size: 12px; color: #3b82f6;">${pai.nome.toUpperCase()}</div>
+                                <div style="font-size: 10px; color: var(--text-muted);">${pai.tipo}</div>
+                            </div>
+                        </a>
+                    `;
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+    }
+
+    // 3. Atalhos de Mini-Apps
+    const appsGrid = document.getElementById('homeAppsGrid');
+    if (appsGrid) {
+        appsGrid.innerHTML = '';
+        const config = estData.abas_config || {};
+        const nomeEstrutura = (estData.nome || '').toLowerCase();
+        const isIrradiacao = nomeEstrutura.includes('irradia') || nomeEstrutura.includes('sela');
+        const isAssistencia = nomeEstrutura.includes('assist') && nomeEstrutura.includes('social');
+        const isAtendimento = nomeEstrutura.includes('atendimento');
+        const isBiblioteca = nomeEstrutura.includes('biblioteca');
+
+        let hasApps = false;
+
+        if (isAtendimento && config.apps) {
+            hasApps = true;
+            appsGrid.innerHTML += `
+                <div class="card-agenda" style="background: rgba(245, 158, 11, 0.02); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="font-weight: 600; color: #f59e0b; font-size: 14px; margin-bottom: 6px;">🤝 ATENDIMENTO FRATERNO</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Gestão de triagem de voluntários, fila de espera, presença física e encerramento de atendimentos.</div>
+                    </div>
+                    <button class="btn" onclick="mudarAbaAtalho('abaApps')" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 12px; padding: 6px 12px;">Abrir Painel ➔</button>
+                </div>
+            `;
+        }
+        if (isIrradiacao && config.apps) {
+            hasApps = true;
+            appsGrid.innerHTML += `
+                <div class="card-agenda" style="background: rgba(16, 185, 129, 0.02); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="font-weight: 600; color: #10b981; font-size: 14px; margin-bottom: 6px;">🌊 IRRADIAÇÃO ESPIRITUAL</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Lançamento de leituras semanais, registro de vibrações à distância e acompanhamento de estatísticas.</div>
+                    </div>
+                    <button class="btn" onclick="mudarAbaAtalho('abaApps')" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 12px; padding: 6px 12px;">Abrir Painel ➔</button>
+                </div>
+            `;
+        }
+        if (isAssistencia && config.apps) {
+            hasApps = true;
+            appsGrid.innerHTML += `
+                <div class="card-agenda" style="background: rgba(96, 165, 250, 0.02); border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="font-weight: 600; color: #60a5fa; font-size: 14px; margin-bottom: 6px;">🧺 ASSISTÊNCIA SOCIAL</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Cadastro socioeconômico de famílias assistidas, registros de entregas e mapas de visitas mensais.</div>
+                    </div>
+                    <button class="btn" onclick="mudarAbaAtalho('abaApps')" style="background: rgba(96, 165, 250, 0.1); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); font-size: 12px; padding: 6px 12px;">Abrir Painel ➔</button>
+                </div>
+            `;
+        }
+        if (isBiblioteca && config.apps) {
+            hasApps = true;
+            appsGrid.innerHTML += `
+                <div class="card-agenda" style="background: rgba(139, 92, 246, 0.02); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="font-weight: 600; color: #8b5cf6; font-size: 14px; margin-bottom: 6px;">📚 BIBLIOTECA</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Consulta e catalogação de acervo literário, controle de empréstimos ativos e históricos de leituras.</div>
+                    </div>
+                    <button class="btn" onclick="mudarAbaAtalho('abaApps')" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); font-size: 12px; padding: 6px 12px;">Abrir Painel ➔</button>
+                </div>
+            `;
+        }
+
+        if (!hasApps) {
+            appsGrid.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; font-style: italic; padding: 12px 0;">Este setor não possui ferramentas ativas no momento.</div>';
+        }
+    }
+
+    // 4. Links Úteis
+    const linksContainer = document.getElementById('homeLinksRapidosList');
+    if (linksContainer) {
+        linksContainer.innerHTML = '';
+        const links = estData.links_rapidos || [];
+        if (links.length === 0) {
+            linksContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; font-style: italic;">Nenhum recurso cadastrado.</div>';
+        } else {
+            links.forEach(lnk => {
+                linksContainer.innerHTML += `
+                    <a href="${lnk.url}" target="_blank" style="display: flex; align-items: center; gap: 8px; color: #3b82f6; text-decoration: none; font-size: 13px; font-weight: 500; padding: 4px 0;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                        🔗 ${lnk.rotulo}
+                    </a>
+                `;
+            });
+        }
+    }
+
+    // 5. Atividades Principais (Rotinas)
+    const atRegContainer = document.getElementById('homeAtividadesPrincipaisList');
+    if (atRegContainer) {
+        atRegContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 12px;">Carregando...</div>';
+        try {
+            const { data } = await db.from('atividades_regulares').select('*').eq('estrutura_id', estruturaId).order('titulo').limit(3);
+            if (!data || data.length === 0) {
+                atRegContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; font-style: italic;">Nenhuma rotina cadastrada.</div>';
+            } else {
+                atRegContainer.innerHTML = '';
+                data.forEach(at => {
+                    let linkTarget = '';
+                    if (at.link_estrutura_id) {
+                        linkTarget = ` <a href="hub.html?id=${at.link_estrutura_id}" style="color:#10b981; font-size:11px; text-decoration:none; font-weight:bold;">(Hub ➔)</a>`;
+                    }
+                    atRegContainer.innerHTML += `
+                        <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+                            <div style="font-weight: 600; font-size: 12px; color: var(--text-main);">${at.titulo.toUpperCase()}${linkTarget}</div>
+                            <div style="font-size: 11px; color: var(--primary); margin-top: 2px;">📅 ${at.dia_semana} às ${at.horario}</div>
+                        </div>
+                    `;
+                });
+            }
+        } catch(e) {
+            console.error("Erro ao carregar rotinas:", e);
+            atRegContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 12px;">Erro ao carregar rotinas.</div>';
+        }
+    }
+}
+
+window.mudarAbaAtalho = function(targetId) {
+    const btn = document.querySelector(`[data-target="${targetId}"]`);
+    if (btn) btn.click();
+};
+
+window.abrirModalEditarHome = async function() {
+    const select = document.getElementById('editHomeParentId');
+    if (select) {
+        select.innerHTML = '<option value="">-- Nenhum --</option>';
+        try {
+            const { data } = await db.from('estruturas').select('id, nome').neq('id', estruturaId).order('nome');
+            if (data) {
+                data.forEach(e => {
+                    select.innerHTML += `<option value="${e.id}">${e.nome}</option>`;
+                });
+            }
+        } catch(e) {
+            console.error("Erro ao carregar estruturas pai:", e);
+        }
+    }
+
+    try {
+        const { data } = await db.from('estruturas').select('*').eq('id', estruturaId).single();
+        if (data) {
+            document.getElementById('editHomeDescricao').value = data.descricao || '';
+            if (select) select.value = data.parent_id || '';
+            
+            const links = data.links_rapidos || [];
+            const textLines = links.map(l => `${l.rotulo} | ${l.url}`);
+            document.getElementById('editHomeLinksText').value = textLines.join('\n');
+        }
+    } catch(e) {
+        console.error("Erro ao carregar informacoes da Home para edicao:", e);
+    }
+
+    document.getElementById('modalEditarHome').style.display = 'flex';
+};
+
+window.fecharModalEditarHome = function() {
+    document.getElementById('modalEditarHome').style.display = 'none';
+};
+
+window.salvarInformacoesHome = async function(event) {
+    event.preventDefault();
+    const btn = document.getElementById('btnSaveHomeInfo');
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    const descricao = document.getElementById('editHomeDescricao').value;
+    const parentId = document.getElementById('editHomeParentId').value || null;
+    const textLinks = document.getElementById('editHomeLinksText').value;
+
+    const lines = textLinks.split('\n');
+    const links = [];
+    lines.forEach(l => {
+        const parts = l.split('|');
+        if (parts.length >= 2) {
+            links.push({ rotulo: parts[0].trim(), url: parts[1].trim() });
+        }
+    });
+
+    try {
+        const { error } = await db.from('estruturas').update({
+            descricao: descricao,
+            parent_id: parentId,
+            links_rapidos: links
+        }).eq('id', estruturaId);
+
+        if (error) throw error;
+
+        fecharModalEditarHome();
+        await carregarDadosEstrutura();
+    } catch(e) {
+        console.error("Erro ao salvar informacoes da Home:", e);
+        alert("Erro ao salvar informacoes da Home: " + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Salvar Informacoes';
+    }
+};
 
 let isFavoritoHubGlobal = false;
 
@@ -875,6 +1140,14 @@ window.carregarAtividadesRegulares = async function() {
                 </div>`;
             }
 
+            const linkify = (text) => {
+                if (!text) return '';
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                return text.replace(urlRegex, function(url) {
+                    return `<a href="${url}" target="_blank" style="color: #3b82f6; text-decoration: underline;">${url}</a>`;
+                });
+            };
+
             html += `
                 <div class="card-agenda" style="position: relative; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: all 0.2s;">
                     <div style="font-weight: 600; color: var(--text-main); font-size: 15px; margin-bottom: 6px; padding-right: 32px;">${at.titulo.toUpperCase()}</div>
@@ -882,7 +1155,7 @@ window.carregarAtividadesRegulares = async function() {
                         <span>📅 ${at.dia_semana}</span>
                         <span>⏰ ${at.horario}</span>
                     </div>
-                    ${at.descricao ? `<div style="font-size: 13px; color: var(--text-muted); white-space: pre-line;">${at.descricao}</div>` : ''}
+                    ${at.descricao ? `<div style="font-size: 13px; color: var(--text-muted); white-space: pre-line;">${linkify(at.descricao)}</div>` : ''}
                     ${linkBtn}
                     
                     <button onclick="excluirAtividadeRegular('${at.id}')" style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 14px; cursor: pointer; color: var(--text-muted);" title="Excluir Atividade">🗑️</button>
