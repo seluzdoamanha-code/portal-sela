@@ -63,16 +63,17 @@ async function carregarDadosEstrutura() {
             const nomeEstrutura = (data.nome || '').toLowerCase();
             const isIrradiacao = nomeEstrutura.includes('irradia') || nomeEstrutura.includes('sela');
             const isAssistencia = nomeEstrutura.includes('assist') && nomeEstrutura.includes('social');
-    const isAtendimento = nomeEstrutura.includes('atendimento');
+            const isAtendimento = nomeEstrutura.includes('atendimento');
+            const isBiblioteca = nomeEstrutura.includes('biblioteca');
             
             // Lógica de exibir Abas com base na configuração do DB
             let config = data.abas_config || {
                 equipe: true, agenda: true, projetos: true, documentos: true,
                 tesouraria: false,
-                apps: isIrradiacao || isAssistencia || isAtendimento
+                apps: isIrradiacao || isAssistencia || isAtendimento || isBiblioteca
             };
             
-            if (isIrradiacao || isAssistencia || isAtendimento) {
+            if (isIrradiacao || isAssistencia || isAtendimento || isBiblioteca) {
                 // Forçar habilitar apps se for módulo nativo
                 config.apps = true;
             }
@@ -90,7 +91,7 @@ async function carregarDadosEstrutura() {
             if (config.apps) {
                 const btnApps = document.querySelector('[data-target="abaApps"]');
                 if(btnApps) btnApps.style.display = 'block';
-                if (isIrradiacao || isAssistencia || isAtendimento) {
+                if (isIrradiacao || isAssistencia || isAtendimento || isBiblioteca) {
                     carregarAppMiniApps();
                 }
             }
@@ -948,6 +949,7 @@ window.carregarAppMiniApps = async function() {
     const isIrradiacao = nomeEstrutura.includes('irradia') || nomeEstrutura.includes('sela');
     const isAssistencia = nomeEstrutura.includes('assist') && nomeEstrutura.includes('social');
     const isAtendimento = nomeEstrutura.includes('atendimento');
+    const isBiblioteca = nomeEstrutura.includes('biblioteca');
     
     let cards = '';
     
@@ -994,6 +996,15 @@ window.carregarAppMiniApps = async function() {
                 <div style="font-size: 32px; margin-bottom: 12px;">⚙️</div>
                 <h3 style="color: #f59e0b; margin-bottom: 8px;">Gestão de Atendimentos</h3>
                 <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Gerenciar fila de atendimentos pendentes e concluídos.</p>
+            </div>
+        `;
+    }
+    if (isBiblioteca) {
+        cards += `
+            <div onclick="window.open('https://luzdoamanha.org.br/biblioteca', '_blank')" style="background: rgba(79, 70, 229, 0.05); border: 1px solid #4f46e5; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(79, 70, 229, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(79, 70, 229, 0.05)'; this.style.transform='none'">
+                <div style="font-size: 32px; margin-bottom: 12px;">📚</div>
+                <h3 style="color: #4f46e5; margin-bottom: 8px;">Acessar Biblioteca SELA</h3>
+                <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Clique aqui para abrir o acervo de livros e solicitar empréstimos no site oficial.</p>
             </div>
         `;
     }
