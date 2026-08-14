@@ -37,35 +37,65 @@
         container.innerHTML = '<div class="empty-state">Carregando...</div>';
 
         try {
-            let query = db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo)');
-
-            if (abaAtual === 'fila') {
-                query = query.neq('status', 'Atendido').order('nome_completo', { ascending: true });
-            } else if (abaAtual === 'espera') {
-                query = query.eq('presente', true).is('atendente_id', null).neq('status', 'Atendido').order('nome_completo', { ascending: true });
-            } else if (abaAtual === 'andamento') {
-                query = query.eq('presente', true).not('atendente_id', 'is', null).neq('status', 'Atendido');
-            } else {
-                query = query.eq('status', 'Atendido');
-            }
-
-            let { data, error } = await query;
+        try {
+            const { data: allData, error } = await db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo)');
             if (error) throw error;
 
-            // Month filtering for month/history tabs
             const now = new Date();
             const curYear = now.getFullYear();
             const curMonth = now.getMonth();
 
-            if (abaAtual === 'mes') {
-                data = data.filter(item => {
-                    if (!item.data_hora_atendimento) return false;
+            // Stats calculations
+            const totalFila = allData.filter(d => d.status !== 'Atendido').length;
+            const espera = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido').length;
+            const andamento = allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido').length;
+            const atendidosMes = allData.filter(item => {
+                if (item.status !== 'Atendido' || !item.data_hora_atendimento) return false;
+                const d = new Date(item.data_hora_atendimento);
+                return d.getFullYear() === curYear && d.getMonth() === curMonth;
+            }).length;
+
+            const statsContainer = document.getElementById('statsDashboardMobile');
+            if (statsContainer) {
+                statsContainer.innerHTML = `
+                    <div style="flex: 0 0 auto; min-width: 80px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; text-align: center;">
+                        <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 2px;">📂 Fila</div>
+                        <div style="font-size: 13px; font-weight: bold; color: var(--primary);">${totalFila}</div>
+                    </div>
+                    <div style="flex: 0 0 auto; min-width: 80px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; text-align: center;">
+                        <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 2px;">🛋️ Espera</div>
+                        <div style="font-size: 13px; font-weight: bold; color: #f59e0b;">${espera}</div>
+                    </div>
+                    <div style="flex: 0 0 auto; min-width: 80px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; text-align: center;">
+                        <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 2px;">🧑‍🤝‍🧑 Atend.</div>
+                        <div style="font-size: 13px; font-weight: bold; color: #3b82f6;">${andamento}</div>
+                    </div>
+                    <div style="flex: 0 0 auto; min-width: 80px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; text-align: center;">
+                        <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 2px;">✨ No Mês</div>
+                        <div style="font-size: 13px; font-weight: bold; color: #10b981;">${atendidosMes}</div>
+                    </div>
+                `;
+            }
+
+            // Filter data locally for active tab list
+            let data = [];
+            if (abaAtual === 'fila') {
+                data = allData.filter(d => d.status !== 'Atendido');
+                data.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
+            } else if (abaAtual === 'espera') {
+                data = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido');
+                data.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
+            } else if (abaAtual === 'andamento') {
+                data = allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido');
+            } else if (abaAtual === 'mes') {
+                data = allData.filter(item => {
+                    if (item.status !== 'Atendido' || !item.data_hora_atendimento) return false;
                     const d = new Date(item.data_hora_atendimento);
                     return d.getFullYear() === curYear && d.getMonth() === curMonth;
                 });
             } else if (abaAtual === 'historico') {
-                data = data.filter(item => {
-                    if (!item.data_hora_atendimento) return true;
+                data = allData.filter(item => {
+                    if (item.status !== 'Atendido' || !item.data_hora_atendimento) return false;
                     const d = new Date(item.data_hora_atendimento);
                     return !(d.getFullYear() === curYear && d.getMonth() === curMonth);
                 });
