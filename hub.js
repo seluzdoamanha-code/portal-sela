@@ -2475,6 +2475,70 @@ window.mudarAbaAtendimento = function(aba) {
     carregarListaAtendimento();
 };
 
+let myAtendimentoChart = null;
+
+function renderizarGraficoHistorico(dadosAtendidos) {
+    const canvas = document.getElementById('atendimentoChart');
+    if (!canvas) return;
+
+    const counts = {};
+    dadosAtendidos.forEach(item => {
+        if (!item.data_hora_atendimento) return;
+        const d = new Date(item.data_hora_atendimento);
+        const label = d.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+        const key = d.getFullYear() * 100 + d.getMonth();
+        if (!counts[key]) {
+            counts[key] = { label: label, count: 0 };
+        }
+        counts[key].count++;
+    });
+
+    const sortedKeys = Object.keys(counts).sort((a, b) => parseInt(a) - parseInt(b));
+    const labels = sortedKeys.map(k => counts[k].label.toUpperCase());
+    const values = sortedKeys.map(k => counts[k].count);
+
+    if (myAtendimentoChart) {
+        myAtendimentoChart.destroy();
+    }
+
+    const ctx = canvas.getContext('2d');
+    myAtendimentoChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Atendimentos Realizados',
+                data: values,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true,
+                pointBackgroundColor: '#10b981',
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: 'var(--text-muted)', font: { size: 11 } }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: 'var(--text-muted)', precision: 0, font: { size: 11 } },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
 window.carregarPainelGestaoAtendimento = function() {
     const container = document.getElementById('containerApps');
     
@@ -2486,6 +2550,9 @@ window.carregarPainelGestaoAtendimento = function() {
                 <p style="color: var(--text-muted); font-size: 14px;">Gerenciamento completo do Atendimento Fraterno (Presença, Triagem e Histórico).</p>
             </div>
         </div>
+
+        <!-- Dashboard de Contadores Rápidos -->
+        <div id="statsDashboard" style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;"></div>
         
         <div>
             <div style="display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; overflow-x: auto;">
@@ -2593,19 +2660,7 @@ window.carregarListaAtendimento = async function() {
     lista.innerHTML = '';
     
     try {
-        let query = db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo)');
-        
-        if (currentAtendimentoTab === 'fila') {
-            query = query.neq('status', 'Atendido').order('nome_completo', {ascending: true});
-        } else if (currentAtendimentoTab === 'espera') {
-            query = query.eq('presente', true).is('atendente_id', null).neq('status', 'Atendido').order('nome_completo', {ascending: true});
-        } else if (currentAtendimentoTab === 'andamento') {
-            query = query.eq('presente', true).not('atendente_id', 'is', null).neq('status', 'Atendido');
-        } else {
-            query = query.eq('status', 'Atendido');
-        }
-        
-        let { data, error } = await query;
+        const { data: allData, error } = await db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo)');
         if (error) throw error;
         
         // Month calculations for current/past filter
@@ -2613,15 +2668,50 @@ window.carregarListaAtendimento = async function() {
         const curYear = now.getFullYear();
         const curMonth = now.getMonth();
 
-        if (currentAtendimentoTab === 'mes') {
-            data = data.filter(item => {
-                if (!item.data_hora_atendimento) return false;
-                const d = new Date(item.data_hora_atendimento);
-                return d.getFullYear() === curYear && d.getMonth() === curMonth;
-            });
+        // Calculate and render stats dashboard
+        const atendidosMesTotal = allData.filter(item => {
+            if (item.status !== 'Atendido' || !item.data_hora_atendimento) return false;
+            const d = new Date(item.data_hora_atendimento);
+            return d.getFullYear() === curYear && d.getMonth() === curMonth;
+        });
+
+        const statsContainer = document.getElementById('statsDashboard');
+        if (statsContainer) {
+            statsContainer.innerHTML = `
+                <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">📂 Fila Ativa</div>
+                    <div style="font-size: 18px; font-weight: bold; color: var(--primary);">${allData.filter(d => d.status !== 'Atendido').length}</div>
+                </div>
+                <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🛋️ Sala de Espera</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #f59e0b;">${allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido').length}</div>
+                </div>
+                <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🧑‍🤝‍🧑 Em Atendimento</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #3b82f6;">${allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido').length}</div>
+                </div>
+                <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">✨ Atendidos no Mês</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #10b981;">${atendidosMesTotal.length}</div>
+                </div>
+            `;
+        }
+
+        // Filter data for list
+        let data = [];
+        if (currentAtendimentoTab === 'fila') {
+            data = allData.filter(d => d.status !== 'Atendido');
+            data.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
+        } else if (currentAtendimentoTab === 'espera') {
+            data = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido');
+            data.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
+        } else if (currentAtendimentoTab === 'andamento') {
+            data = allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido');
+        } else if (currentAtendimentoTab === 'mes') {
+            data = atendidosMesTotal;
         } else if (currentAtendimentoTab === 'historico') {
-            data = data.filter(item => {
-                if (!item.data_hora_atendimento) return true;
+            data = allData.filter(item => {
+                if (item.status !== 'Atendido' || !item.data_hora_atendimento) return false;
                 const d = new Date(item.data_hora_atendimento);
                 return !(d.getFullYear() === curYear && d.getMonth() === curMonth);
             });
@@ -2629,8 +2719,29 @@ window.carregarListaAtendimento = async function() {
 
         document.getElementById('loadingAten').style.display = 'none';
         
+        if (currentAtendimentoTab === 'historico') {
+            // Append accumulation chart container
+            const chartDiv = document.createElement('div');
+            chartDiv.id = 'chartSection';
+            chartDiv.style.cssText = 'background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px;';
+            chartDiv.innerHTML = `
+                <h4 style="margin-top: 0; color: var(--text-main); font-size: 14px; font-weight: 600; margin-bottom: 16px;">📈 Evolução de Atendimentos por Mês</h4>
+                <div style="position: relative; height: 200px; width: 100%;">
+                    <canvas id="atendimentoChart"></canvas>
+                </div>
+            `;
+            lista.appendChild(chartDiv);
+            
+            // Instantiates Chart.js line graph
+            const atendidosTotal = allData.filter(d => d.status === 'Atendido');
+            setTimeout(() => renderizarGraficoHistorico(atendidosTotal), 50);
+        }
+
         if (!data || data.length === 0) {
-            lista.innerHTML = `<div style="padding: 24px; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);">Nenhum registro encontrado.</div>`;
+            const emptyEl = document.createElement('div');
+            emptyEl.style.cssText = 'padding: 24px; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);';
+            emptyEl.textContent = 'Nenhum registro encontrado.';
+            lista.appendChild(emptyEl);
             return;
         }
         

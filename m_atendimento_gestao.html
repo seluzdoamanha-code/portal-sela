@@ -68,16 +68,16 @@
         <div class="m-title">Gestão - Fraterno</div>
     </header>
 
-    <div class="m-tabs">
-        <div class="m-tab active" data-tab="pendentes">Pendentes</div>
-        <div class="m-tab" data-tab="atendidos">Atendidos</div>
+    <div class="m-tabs" style="overflow-x: auto; white-space: nowrap; display: flex; scrollbar-width: none;">
+        <div class="m-tab active" data-tab="fila" style="flex: none; min-width: 100px; padding: 12px 16px;">📂 Fila</div>
+        <div class="m-tab" data-tab="espera" style="flex: none; min-width: 100px; padding: 12px 16px;">🛋️ Espera</div>
+        <div class="m-tab" data-tab="andamento" style="flex: none; min-width: 130px; padding: 12px 16px;">🧑‍🤝‍🧑 Em Atend.</div>
+        <div class="m-tab" data-tab="mes" style="flex: none; min-width: 110px; padding: 12px 16px;">✨ No Mês</div>
+        <div class="m-tab" data-tab="historico" style="flex: none; min-width: 120px; padding: 12px 16px;">📜 Histórico</div>
     </div>
 
-    <main class="m-viewport">
-        <div class="list-container" id="listaPendentes">
-            <div class="empty-state">Carregando...</div>
-        </div>
-        <div class="list-container" id="listaAtendidos" style="display: none;">
+    <main class="m-viewport" style="overflow-y: auto;">
+        <div class="list-container" id="listaAtendimento">
             <div class="empty-state">Carregando...</div>
         </div>
     </main>
