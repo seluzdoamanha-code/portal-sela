@@ -40,9 +40,11 @@ window.aplicarFiltros = () => {
     }
 };
 
-async function carregarEstruturas() {
-    document.getElementById('loadingState').style.display = 'block';
-    document.getElementById('tableContainer').style.display = 'none';
+async function carregarEstruturas(silencioso = false) {
+    if (!silencioso) {
+        document.getElementById('loadingState').style.display = 'block';
+        document.getElementById('tableContainer').style.display = 'none';
+    }
     
     const { data: { session } } = await db.auth.getSession();
     const userEmail = session?.user?.email;
@@ -214,7 +216,7 @@ window.alternarFavorito = async function(id) {
             if (error) throw error;
         }
         
-        await carregarEstruturas();
+        await carregarEstruturas(true);
         if (typeof window.carregarAtalhosDinamicos === 'function') {
             await window.carregarAtalhosDinamicos();
         }

@@ -40,15 +40,15 @@
                 </nav>
                 
                 <div class="sidebar-footer" style="padding: 24px; font-size: 11px; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border);">
-                    <div id="socialLinks" style="display: flex; justify-content: center; gap: 12px; margin-bottom: 12px;">
+                    <div id="socialLinks" class="hide-on-collapse" style="display: flex; justify-content: center; gap: 12px; margin-bottom: 12px;">
                         <!-- Redes sociais injetadas aqui -->
                     </div>
                     <div class="desktop-only">
                         <div>&copy; 2026 Luz do Amanhã</div>
                         <div style="opacity: 0.6; margin-top: 4px;">Dev by Portal SELA</div>
+                    </div>
                     <!-- User Profile Placeholder -->
                     <div id="userProfileArea" style="margin-top: 24px; padding: 16px; background: var(--bg-dark); border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                    </div>
                     </div>
                 </div>
             </aside>
