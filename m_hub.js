@@ -166,6 +166,15 @@
                     <div class="m-app-name">Gestão de Atendimentos</div>
                 </a>
             `;
+        } else if (nome.includes('biblioteca')) {
+            html += `
+                <a href="https://luzdoamanha.org.br/biblioteca" target="_blank" class="m-app-card">
+                    <div class="m-app-icon" style="background: rgba(79, 70, 229, 0.1); display: flex; align-items: center; justify-content: center; color: #818cf8;">
+                        <span style="font-size: 28px;">📚</span>
+                    </div>
+                    <div class="m-app-name">Acessar Biblioteca</div>
+                </a>
+            `;
         } else if (nome.includes('tesouraria') || nome.includes('financeiro')) {
              html += `
                 <a href="#" class="m-app-card" onclick="alert('Lançamentos em breve!'); return false;">
