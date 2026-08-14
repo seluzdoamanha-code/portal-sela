@@ -2460,11 +2460,11 @@ window.salvarEdicaoIrradiacao = async function(event) {
 // ==========================================
 // MÓDULO WEB: ATENDIMENTO FRATERNO
 // ==========================================
-let currentAtendimentoTab = 'pendentes';
+let currentAtendimentoTab = 'fila';
 
 window.mudarAbaAtendimento = function(aba) {
     currentAtendimentoTab = aba;
-    const abas = ['pendentes', 'planejados', 'atendidos'];
+    const abas = ['fila', 'espera', 'andamento', 'mes', 'historico'];
     abas.forEach(a => {
         const btn = document.getElementById('btnAten' + a.charAt(0).toUpperCase() + a.slice(1));
         if (btn) {
@@ -2483,15 +2483,17 @@ window.carregarPainelGestaoAtendimento = function() {
             <div>
                 <button onclick="carregarAppMiniApps()" class="btn btn-secondary" style="margin-bottom: 16px; font-size: 13px;">← Voltar aos Mini-Apps</button>
                 <h2 style="font-size: 20px; color: #f59e0b; margin-bottom: 8px;">⚙️ Gestão de Atendimentos</h2>
-                <p style="color: var(--text-muted); font-size: 14px;">Gerenciamento da fila de atendimento fraterno.</p>
+                <p style="color: var(--text-muted); font-size: 14px;">Gerenciamento completo do Atendimento Fraterno (Presença, Triagem e Histórico).</p>
             </div>
         </div>
         
         <div>
             <div style="display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; overflow-x: auto;">
-                <button onclick="mudarAbaAtendimento('pendentes')" id="btnAtenPendentes" class="btn" style="white-space: nowrap; border-radius: 8px; background: var(--primary); color: white;">📥 Pendentes</button>
-                <button onclick="mudarAbaAtendimento('planejados')" id="btnAtenPlanejados" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">📅 Planejados</button>
-                <button onclick="mudarAbaAtendimento('atendidos')" id="btnAtenAtendidos" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">✅ Atendidos</button>
+                <button onclick="mudarAbaAtendimento('fila')" id="btnAtenFila" class="btn" style="white-space: nowrap; border-radius: 8px; background: var(--primary); color: white;">📂 Fila Geral</button>
+                <button onclick="mudarAbaAtendimento('espera')" id="btnAtenEspera" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🛋️ Sala de Espera</button>
+                <button onclick="mudarAbaAtendimento('andamento')" id="btnAtenAndamento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🧑‍🤝‍🧑 Em Atendimento</button>
+                <button onclick="mudarAbaAtendimento('mes')" id="btnAtenMes" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">✨ Atendidos no Mês</button>
+                <button onclick="mudarAbaAtendimento('historico')" id="btnAtenHistorico" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">📜 Histórico Antigo</button>
             </div>
             
             <div id="loadingAten" style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">Carregando lista...</div>
@@ -2593,17 +2595,38 @@ window.carregarListaAtendimento = async function() {
     try {
         let query = db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo)');
         
-        if (currentAtendimentoTab === 'pendentes') {
-            query = query.eq('status', 'Pendente').order('nome_completo', {ascending: true});
-        } else if (currentAtendimentoTab === 'planejados') {
-            query = query.eq('status', 'Planejado');
+        if (currentAtendimentoTab === 'fila') {
+            query = query.neq('status', 'Atendido').order('nome_completo', {ascending: true});
+        } else if (currentAtendimentoTab === 'espera') {
+            query = query.eq('presente', true).is('atendente_id', null).neq('status', 'Atendido').order('nome_completo', {ascending: true});
+        } else if (currentAtendimentoTab === 'andamento') {
+            query = query.eq('presente', true).not('atendente_id', 'is', null).neq('status', 'Atendido');
         } else {
             query = query.eq('status', 'Atendido');
         }
         
-        const { data, error } = await query;
+        let { data, error } = await query;
         if (error) throw error;
         
+        // Month calculations for current/past filter
+        const now = new Date();
+        const curYear = now.getFullYear();
+        const curMonth = now.getMonth();
+
+        if (currentAtendimentoTab === 'mes') {
+            data = data.filter(item => {
+                if (!item.data_hora_atendimento) return false;
+                const d = new Date(item.data_hora_atendimento);
+                return d.getFullYear() === curYear && d.getMonth() === curMonth;
+            });
+        } else if (currentAtendimentoTab === 'historico') {
+            data = data.filter(item => {
+                if (!item.data_hora_atendimento) return true;
+                const d = new Date(item.data_hora_atendimento);
+                return !(d.getFullYear() === curYear && d.getMonth() === curMonth);
+            });
+        }
+
         document.getElementById('loadingAten').style.display = 'none';
         
         if (!data || data.length === 0) {
@@ -2611,11 +2634,11 @@ window.carregarListaAtendimento = async function() {
             return;
         }
         
-        if (currentAtendimentoTab === 'pendentes') {
+        if (currentAtendimentoTab === 'fila' || currentAtendimentoTab === 'espera') {
             data.forEach(item => {
                 renderizarCardAtendimentoItem(lista, item);
             });
-        } else if (currentAtendimentoTab === 'planejados') {
+        } else if (currentAtendimentoTab === 'andamento') {
             data.sort((a, b) => {
                 const attA = (a.pessoas?.nome_completo || 'Sem Atendente').toLowerCase();
                 const attB = (b.pessoas?.nome_completo || 'Sem Atendente').toLowerCase();
@@ -2636,6 +2659,7 @@ window.carregarListaAtendimento = async function() {
                 renderizarCardAtendimentoItem(lista, item);
             });
         } else {
+            // Completed (Atendidos) Grouped by Year/Month
             data.sort((a, b) => new Date(b.data_hora_atendimento || b.created_at) - new Date(a.data_hora_atendimento || a.created_at));
             
             let currentMonthYear = null;
@@ -2657,6 +2681,16 @@ window.carregarListaAtendimento = async function() {
     } catch(e) {
         console.error(e);
         document.getElementById('loadingAten').innerHTML = '<span style="color:#ef4444;">Erro ao carregar lista.</span>';
+    }
+};
+
+window.alternarPresencaAtendimento = async function(id, presente) {
+    try {
+        const { error } = await db.from('app_atendimento_fraterno').update({ presente: presente }).eq('id', id);
+        if (error) throw error;
+        carregarListaAtendimento();
+    } catch(err) {
+        alert('Erro ao atualizar presença: ' + err.message);
     }
 };
 
@@ -2694,6 +2728,10 @@ function renderizarCardAtendimentoItem(container, item) {
         infoExtra = `<div style="margin-top: 4px; color: var(--primary); font-weight: 500;">📅 Atribuído a: ${item.pessoas.nome_completo}</div>`;
     }
 
+    const btnPresenca = item.presente ? 
+        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', false)" style="font-size: 12px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">🟢 Presente</button>` :
+        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', true)" style="font-size: 12px; padding: 6px 12px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border);">⚪ Confirmar Presença</button>`;
+
     card.innerHTML = `
         <div style="flex: 1;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
@@ -2710,15 +2748,20 @@ function renderizarCardAtendimentoItem(container, item) {
         </div>
         
         <div style="display: flex; flex-direction: column; gap: 8px; min-width: 140px;">
+            ${item.status !== 'Atendido' ? btnPresenca : ''}
+            
             ${item.status !== 'Atendido' ? `
                 <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo}', '${item.endereco_completo || ''}', '${item.telefone || ''}')" style="font-size: 12px; padding: 6px 12px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">✏️ Editar</button>
             ` : ''}
-            ${item.status === 'Pendente' ? `
+            
+            ${(item.status === 'Pendente' || (item.status === 'Planejado' && currentAtendimentoTab !== 'andamento')) ? `
                 <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">🤝 Triagem</button>
             ` : ''}
-            ${item.status === 'Planejado' ? `
+            
+            ${item.status === 'Planejado' && item.presente ? `
                 <button class="btn" onclick="abrirConcluirAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">✅ Concluir</button>
             ` : ''}
+            
             <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">🗑️ Excluir</button>
         </div>
     `;
