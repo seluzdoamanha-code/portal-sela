@@ -90,10 +90,7 @@ function renderizarTabela(dados) {
     tbody.innerHTML = '';
     
     dados.forEach(estrutura => {
-        let icone = '🏛️';
-        if (estrutura.tipo === 'Família') icone = '👨‍👩‍👧‍👦';
-        if (estrutura.tipo === 'Atividade') icone = '📅';
-        if (estrutura.tipo === 'Turma') icone = '🌱';
+        const icone = window.obterIconeEstrutura ? window.obterIconeEstrutura(estrutura.nome, estrutura.tipo) : '🏛️';
         
         const isFavorito = atalhosUsuario.includes(estrutura.id);
         const estrela = isFavorito ? '⭐' : '☆';

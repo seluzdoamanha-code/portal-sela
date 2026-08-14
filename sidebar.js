@@ -35,8 +35,10 @@
                         <div style="padding: 16px; color: var(--text-muted); font-size: 12px; text-align: center;">Carregando Atalhos...</div>
                     </div>
                     
+                    ${window.isAdmin && window.isAdmin() ? `
                     <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 8px 16px;" class="desktop-only"></div>
                     <a href="config.html" class="nav-item ${currentPage === 'config.html' ? 'active' : ''}" title="Configurações">⚙️ <span class="nav-text">Configurações</span></a>
+                    ` : ''}
                 </nav>
                 
                 <div class="sidebar-footer" style="padding: 24px; font-size: 11px; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border);">
@@ -80,10 +82,12 @@
                     <span class="bottom-nav-icon">👥</span>
                     <span class="bottom-nav-text">Pessoas</span>
                 </a>
+                ${window.isAdmin && window.isAdmin() ? `
                 <a href="config.html" class="bottom-nav-item ${currentPage === 'config.html' ? 'active' : ''}">
                     <span class="bottom-nav-icon">⚙️</span>
                     <span class="bottom-nav-text">Config.</span>
                 </a>
+                ` : ''}
             </nav>
         `;
         
@@ -209,11 +213,7 @@
             
             let html = '';
             estruturas.forEach(d => {
-                let icon = '📌';
-                if(d.tipo === 'Departamento') icon = '🏢';
-                if(d.tipo === 'Atividade') icon = '🎯';
-                if(d.tipo === 'Família') icon = '🏠';
-                if(d.tipo === 'Turma') icon = '🌱';
+                const icon = window.obterIconeEstrutura(d.nome, d.tipo);
                 
                 const urlParams = new URLSearchParams(window.location.search);
                 const isActive = (window.location.pathname.includes('hub.html') && urlParams.get('id') == d.id);
@@ -260,6 +260,45 @@
             console.warn("Erro ao carregar redes sociais.", err);
         }
     }
+
+    // Função global de obtenção de ícone
+    window.obterIconeEstrutura = function(nome, tipo) {
+        const n = (nome || '').toLowerCase();
+        
+        // Regras por Nome
+        if (n.includes('atendimento')) return '🤝';
+        if (n.includes('biblioteca')) return '📚';
+        if (n.includes('cesta')) return '📦';
+        if (n.includes('irradia')) return '✨';
+        if (n.includes('macarronada')) return '🍝';
+        if (n.includes('palestra')) return '🎤';
+        if (n.includes('sopa')) return '🍲';
+        if (n.includes('asilo')) return '👵';
+        
+        if (n.includes('assistência') || n.includes('assistencia')) return '💖';
+        if (n.includes('comunicação') || n.includes('comunicacao')) return '📢';
+        if (n.includes('diretoria')) return '👥';
+        if (n.includes('doutrinário') || n.includes('doutrinario')) return '📖';
+        if (n.includes('espiritual')) return '🕯️';
+        if (n.includes('eventos')) return '🎉';
+        if (n.includes('infância') || n.includes('infancia')) return '🧸';
+        if (n.includes('secretaria')) return '📝';
+        if (n.includes('tesouraria') || n.includes('financeiro')) return '💰';
+        
+        if (n.includes('joanna')) return '🌻';
+        if (n.includes('livro dos espíritos') || n.includes('livro dos espiritos')) return '📘';
+        if (n.includes('ciclo 1')) return '🎨';
+        if (n.includes('ciclo 2')) return '🚀';
+        if (n.includes('evangelização') || n.includes('evangelizacao')) return '👶';
+
+        // Regras de fallback por Tipo
+        if (tipo === 'Departamento') return '🏢';
+        if (tipo === 'Atividade') return '🎯';
+        if (tipo === 'Turma') return '🌱';
+        if (tipo === 'Família') return '🏠';
+        
+        return '📌';
+    };
 
     // Exportar funções para o escopo global para que config.js consiga recarregar o menu
     window.carregarAtalhosDinamicos = carregarAtalhosDinamicos;

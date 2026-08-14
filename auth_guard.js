@@ -74,12 +74,35 @@ async function checkAuth() {
         nivel_acesso: whitelist.nivel_acesso || 'comum'
     };
     localStorage.setItem('sela_user_profile', JSON.stringify(userProfile));
+
+    // Bloquear acesso a páginas de configurações para não-admins
+    if (filename === 'config.html' && userProfile.nivel_acesso !== 'admin') {
+        alert("Acesso restrito: Apenas administradores podem acessar as configurações.");
+        window.location.replace('index.html');
+        return;
+    }
+    if (filename === 'm_config.html' && userProfile.nivel_acesso !== 'admin') {
+        alert("Acesso restrito: Apenas administradores podem acessar as configurações.");
+        window.location.replace('m_index.html');
+        return;
+    }
 }
 
 // Executa imediatamente
 checkAuth();
 
 // Funções globais de permissão
+window.isAdmin = function() {
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (!profStr) return false;
+        const prof = JSON.parse(profStr);
+        return prof.nivel_acesso === 'admin';
+    } catch(e) {
+        return false;
+    }
+};
+
 window.podeEditarPessoas = function() {
     try {
         const profStr = localStorage.getItem('sela_user_profile');
