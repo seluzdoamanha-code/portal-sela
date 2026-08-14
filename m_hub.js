@@ -58,9 +58,17 @@
         document.getElementById('mHubType').innerText = estruturaAtual.tipo;
         document.getElementById('mHubIcon').innerText = obterIniciais(estruturaAtual.nome);
         
+        const linkify = (text) => {
+            if (!text) return '';
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlRegex, function(url) {
+                return `<a href="${url}" target="_blank" style="color: #60a5fa; text-decoration: underline;">${url}</a>`;
+            });
+        };
+
         const descEl = document.getElementById('mHubDesc');
         if (estruturaAtual.descricao && estruturaAtual.descricao.trim() !== '') {
-            descEl.innerText = estruturaAtual.descricao;
+            descEl.innerHTML = linkify(estruturaAtual.descricao);
             descEl.style.display = 'block';
         } else {
             descEl.style.display = 'none';
@@ -78,6 +86,93 @@
         const navName = document.getElementById('dynamicActivityName');
         const nomeCurto = estruturaAtual.nome.split(' ')[0];
         if (navName) navName.innerText = (nomeCurto.length > 10 ? nomeCurto.substring(0, 10) + '...' : nomeCurto);
+
+        // Renderizar Links Rápidos
+        const linksSection = document.getElementById('mHubLinksSection');
+        const linksList = document.getElementById('mHubLinksList');
+        if (linksSection && linksList) {
+            const links = estruturaAtual.links_rapidos || [];
+            if (links.length > 0) {
+                linksSection.style.display = 'block';
+                linksList.innerHTML = '';
+                links.forEach(l => {
+                    linksList.innerHTML += `
+                        <a href="${l.url}" target="_blank" style="color: #60a5fa; text-decoration: none; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; padding: 4px 0;">
+                            🔗 ${l.rotulo}
+                        </a>
+                    `;
+                });
+            } else {
+                linksSection.style.display = 'none';
+            }
+        }
+
+        // Renderizar Vínculos Inteligentes (Pai/Filho)
+        const vinculosSection = document.getElementById('mHubVinculosSection');
+        if (vinculosSection) {
+            vinculosSection.style.display = 'none';
+            vinculosSection.innerHTML = '';
+
+            if (estruturaAtual.tipo === 'Departamento' || estruturaAtual.tipo === 'Colegiado' || estruturaAtual.tipo === 'Colegiado Geral') {
+                db.from('estruturas').select('id, nome, tipo').eq('parent_id', estruturaAtual.id).order('nome').then(({ data }) => {
+                    if (data && data.length > 0) {
+                        vinculosSection.style.display = 'block';
+                        let html = `<h3 style="font-size: 13px; margin: 0 0 10px 0; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">🌱 Atividades Vinculadas</h3>
+                        <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 12px;">`;
+                        data.forEach(sub => {
+                            html += `
+                                <a href="m_hub.html?id=${sub.id}" style="display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: var(--text-main); font-size: 13px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                    <span style="font-weight: 600;">${sub.nome.toUpperCase()}</span>
+                                    <span style="font-size: 11px; color: var(--text-muted);">${sub.tipo} ➔</span>
+                                </a>
+                            `;
+                        });
+                        html += `</div>`;
+                        vinculosSection.innerHTML = html;
+                    }
+                });
+            } else if (estruturaAtual.parent_id) {
+                db.from('estruturas').select('id, nome, tipo').eq('id', estruturaAtual.parent_id).single().then(({ data: pai }) => {
+                    if (pai) {
+                        vinculosSection.style.display = 'block';
+                        vinculosSection.innerHTML = `
+                            <h3 style="font-size: 13px; margin: 0 0 10px 0; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">🏢 Departamento Responsável</h3>
+                            <a href="m_hub.html?id=${pai.id}" style="display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: var(--text-main); font-size: 13px; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 12px;">
+                                <span style="font-weight: 600; color: #3b82f6;">${pai.nome.toUpperCase()}</span>
+                                <span style="font-size: 11px; color: var(--text-muted);">${pai.tipo} ➔</span>
+                            </a>
+                        `;
+                    }
+                });
+            }
+        }
+
+        // Renderizar Atividades Regulares / Rotinas
+        const rotinasSection = document.getElementById('mHubRotinasSection');
+        const rotinasList = document.getElementById('mHubRotinasList');
+        if (rotinasSection && rotinasList) {
+            db.from('atividades_regulares').select('*').eq('estrutura_id', estruturaAtual.id).order('titulo').then(({ data }) => {
+                if (data && data.length > 0) {
+                    rotinasSection.style.display = 'block';
+                    rotinasList.innerHTML = '';
+                    data.forEach(at => {
+                        let linkTarget = '';
+                        if (at.link_estrutura_id) {
+                            linkTarget = ` <a href="m_hub.html?id=${at.link_estrutura_id}" style="color:#10b981; text-decoration:none; font-size: 11px; font-weight:bold;">(Hub ➔)</a>`;
+                        }
+                        rotinasList.innerHTML += `
+                            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 8px;">
+                                <div style="font-weight: 600; font-size: 13px; color: var(--text-main);">${at.titulo.toUpperCase()}${linkTarget}</div>
+                                <div style="font-size: 11px; color: var(--primary); margin-top: 4px;">📅 ${at.dia_semana} às ${at.horario}</div>
+                                ${at.descricao ? `<div style="font-size: 12px; color: var(--text-muted); margin-top: 6px; white-space: pre-line;">${linkify(at.descricao)}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                } else {
+                    rotinasSection.style.display = 'none';
+                }
+            });
+        }
     }
 
     function renderizarApps() {
