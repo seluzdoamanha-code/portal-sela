@@ -3,7 +3,6 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await carregarDepartamentos();
     await carregarPerfis();
     await carregarSociais();
     await inicializarLuzGestao();
@@ -53,64 +52,6 @@ function showAviso(msg) {
     alertBox.style.display = 'block';
     setTimeout(() => { alertBox.style.display = 'none'; }, 5000);
 }
-
-// ==========================================
-// MÓDULO: DEPARTAMENTOS NO MENU
-// ==========================================
-async function carregarDepartamentos() {
-    const container = document.getElementById('listaDepartamentos');
-    const loading = document.getElementById('loadingDepartamentos');
-    
-    try {
-        const { data, error } = await db.from('estruturas').select('id, nome, tipo, exibir_no_menu').order('tipo').order('nome');
-        loading.style.display = 'none';
-        
-        if (error) {
-            // Se der erro, provavelmente a coluna 'exibir_no_menu' não existe ainda.
-            container.innerHTML = `<div style="color: #ef4444; padding: 16px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
-                ⚠️ A coluna <b>exibir_no_menu</b> (tipo Boolean) ainda não foi criada na tabela <i>estruturas</i> do Supabase. Crie-a lá pelo painel do Supabase para ativar este recurso.
-            </div>`;
-            return;
-        }
-        
-        let html = '';
-        data.forEach(d => {
-            html += `
-            <div class="toggle-row">
-                <div>
-                    <div style="color: var(--text-main); font-weight: 500;">${d.nome}</div>
-                    <div style="color: var(--text-muted); font-size: 12px; margin-top: 2px;">Tipo: ${d.tipo}</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" onchange="toggleMenu('${d.id}', this.checked)" ${d.exibir_no_menu ? 'checked' : ''}>
-                    <span class="slider"></span>
-                </label>
-            </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-        
-    } catch (err) {
-        console.error("Erro ao carregar estruturas:", err);
-    }
-}
-
-window.toggleMenu = async (id, checked) => {
-    try {
-        const { error } = await db.from('estruturas').update({ exibir_no_menu: checked }).eq('id', id);
-        if (error) throw error;
-        
-        showAviso(checked ? 'Departamento adicionado ao Menu!' : 'Departamento removido do Menu.');
-        // Recarrega o menu lateral sem precisar atualizar a pagina inteira!
-        if(window.carregarAtalhosDinamicos) {
-            window.carregarAtalhosDinamicos();
-        }
-    } catch (err) {
-        console.error("Erro ao atualizar menu:", err);
-        alert("Erro ao atualizar. Veja o console.");
-    }
-};
 
 // ==========================================
 // MÓDULO: REDES SOCIAIS
