@@ -1482,7 +1482,7 @@ window.carregarAppMiniApps = async function() {
     }
     if (isBiblioteca) {
         cards += `
-            <div onclick="window.open('https://luzdoamanha.org.br/biblioteca', '_blank')" style="background: rgba(79, 70, 229, 0.05); border: 1px solid #4f46e5; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(79, 70, 229, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(79, 70, 229, 0.05)'; this.style.transform='none'">
+            <div onclick="window.open('https://luzdoamanha.org.br/biblioteca/', '_blank')" style="background: rgba(79, 70, 229, 0.05); border: 1px solid #4f46e5; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(79, 70, 229, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(79, 70, 229, 0.05)'; this.style.transform='none'">
                 <div style="font-size: 32px; margin-bottom: 12px;">📚</div>
                 <h3 style="color: #4f46e5; margin-bottom: 8px;">Acessar Biblioteca SELA</h3>
                 <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Clique aqui para abrir o acervo de livros e solicitar empréstimos no site oficial.</p>
