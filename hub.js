@@ -2464,7 +2464,7 @@ let currentAtendimentoTab = 'fila';
 
 window.mudarAbaAtendimento = function(aba) {
     currentAtendimentoTab = aba;
-    const abas = ['fila', 'espera', 'andamento', 'mes', 'historico'];
+    const abas = ['fila', 'espera', 'andamento', 'mes', 'estatisticas', 'historico'];
     abas.forEach(a => {
         const btn = document.getElementById('btnAten' + a.charAt(0).toUpperCase() + a.slice(1));
         if (btn) {
@@ -2475,68 +2475,133 @@ window.mudarAbaAtendimento = function(aba) {
     carregarListaAtendimento();
 };
 
-let myAtendimentoChart = null;
+let chartAtenMensalInstance = null;
+let chartAtenSemanalInstance = null;
+let chartAtenAtendentesInstance = null;
 
-function renderizarGraficoHistorico(dadosAtendidos) {
-    const canvas = document.getElementById('atendimentoChart');
-    if (!canvas) return;
-
-    const counts = {};
-    dadosAtendidos.forEach(item => {
-        if (!item.data_hora_atendimento) return;
+function renderizarGraficosAtendimento(allData) {
+    const atendidos = allData.filter(d => d.status === 'Atendido' && d.data_hora_atendimento);
+    
+    // 1. Mensal
+    const countsMensal = {};
+    atendidos.forEach(item => {
         const d = new Date(item.data_hora_atendimento);
         const label = d.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
         const key = d.getFullYear() * 100 + d.getMonth();
-        if (!counts[key]) {
-            counts[key] = { label: label, count: 0 };
-        }
-        counts[key].count++;
+        if (!countsMensal[key]) countsMensal[key] = { label: label, count: 0 };
+        countsMensal[key].count++;
     });
+    const sortedKeys = Object.keys(countsMensal).sort((a, b) => parseInt(a) - parseInt(b));
+    const labelsMensal = sortedKeys.map(k => countsMensal[k].label.toUpperCase());
+    const dataMensal = sortedKeys.map(k => countsMensal[k].count);
 
-    const sortedKeys = Object.keys(counts).sort((a, b) => parseInt(a) - parseInt(b));
-    const labels = sortedKeys.map(k => counts[k].label.toUpperCase());
-    const values = sortedKeys.map(k => counts[k].count);
+    // 2. Semanal (Dia da Semana)
+    const countsSemanal = [0, 0, 0, 0, 0, 0, 0];
+    atendidos.forEach(item => {
+        const d = new Date(item.data_hora_atendimento);
+        countsSemanal[d.getDay()]++;
+    });
+    const labelsSemanal = ['SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO', 'DOMINGO'];
+    const dataSemanal = [countsSemanal[1], countsSemanal[2], countsSemanal[3], countsSemanal[4], countsSemanal[5], countsSemanal[6], countsSemanal[0]];
 
-    if (myAtendimentoChart) {
-        myAtendimentoChart.destroy();
-    }
+    // 3. Atendentes
+    const countsAtendentes = {};
+    atendidos.forEach(item => {
+        const name = item.pessoas?.nome_completo || 'Sem Atendente';
+        if (!countsAtendentes[name]) countsAtendentes[name] = 0;
+        countsAtendentes[name]++;
+    });
+    const sortedAtendentes = Object.keys(countsAtendentes)
+        .map(name => ({ name: name.toUpperCase(), count: countsAtendentes[name] }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+    const labelsAtendentes = sortedAtendentes.map(x => x.name);
+    const dataAtendentes = sortedAtendentes.map(x => x.count);
 
-    const ctx = canvas.getContext('2d');
-    myAtendimentoChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Atendimentos Realizados',
-                data: values,
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                borderWidth: 2,
-                tension: 0.3,
-                fill: true,
-                pointBackgroundColor: '#10b981',
-                pointRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
+    // Render 1. Mensal
+    const canvasMensal = document.getElementById('chartAtenMensal');
+    if (canvasMensal) {
+        if (chartAtenMensalInstance) chartAtenMensalInstance.destroy();
+        chartAtenMensalInstance = new Chart(canvasMensal.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labelsMensal,
+                datasets: [{
+                    label: 'Atendimentos',
+                    data: dataMensal,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: '#10b981',
+                    pointRadius: 4
+                }]
             },
-            scales: {
-                x: {
-                    grid: { color: 'rgba(255,255,255,0.05)' },
-                    ticks: { color: 'var(--text-muted)', font: { size: 11 } }
-                },
-                y: {
-                    grid: { color: 'rgba(255,255,255,0.05)' },
-                    ticks: { color: 'var(--text-muted)', precision: 0, font: { size: 11 } },
-                    beginAtZero: true
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'var(--text-muted)', font: { size: 10 } } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'var(--text-muted)', precision: 0, font: { size: 10 } }, beginAtZero: true }
                 }
             }
-        }
-    });
+        });
+    }
+
+    // Render 2. Semanal
+    const canvasSemanal = document.getElementById('chartAtenSemanal');
+    if (canvasSemanal) {
+        if (chartAtenSemanalInstance) chartAtenSemanalInstance.destroy();
+        chartAtenSemanalInstance = new Chart(canvasSemanal.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: labelsSemanal,
+                datasets: [{
+                    data: dataSemanal,
+                    backgroundColor: labelsSemanal.map(day => (day === 'TERÇA' || day === 'QUINTA') ? '#f59e0b' : '#3b82f6'),
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'var(--text-muted)', font: { size: 10 } } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'var(--text-muted)', precision: 0, font: { size: 10 } }, beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // Render 3. Atendentes
+    const canvasAtendentes = document.getElementById('chartAtenAtendentes');
+    if (canvasAtendentes) {
+        if (chartAtenAtendentesInstance) chartAtenAtendentesInstance.destroy();
+        chartAtenAtendentesInstance = new Chart(canvasAtendentes.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: labelsAtendentes,
+                datasets: [{
+                    data: dataAtendentes,
+                    backgroundColor: '#8b5cf6',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'var(--text-muted)', precision: 0, font: { size: 10 } }, beginAtZero: true },
+                    y: { grid: { display: false }, ticks: { color: 'var(--text-muted)', font: { size: 10 } } }
+                }
+            }
+        });
+    }
 }
 
 window.carregarPainelGestaoAtendimento = function() {
@@ -2560,6 +2625,7 @@ window.carregarPainelGestaoAtendimento = function() {
                 <button onclick="mudarAbaAtendimento('espera')" id="btnAtenEspera" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🛋️ Sala de Espera</button>
                 <button onclick="mudarAbaAtendimento('andamento')" id="btnAtenAndamento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🧑‍🤝‍🧑 Em Atendimento</button>
                 <button onclick="mudarAbaAtendimento('mes')" id="btnAtenMes" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">✨ Atendidos no Mês</button>
+                <button onclick="mudarAbaAtendimento('estatisticas')" id="btnAtenEstatisticas" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">📈 Estatísticas</button>
                 <button onclick="mudarAbaAtendimento('historico')" id="btnAtenHistorico" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">📜 Histórico Antigo</button>
             </div>
             
@@ -2697,6 +2763,34 @@ window.carregarListaAtendimento = async function() {
             `;
         }
 
+        if (currentAtendimentoTab === 'estatisticas') {
+            lista.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 20px; min-height: 280px;">
+                        <h4 style="margin-top: 0; color: var(--text-main); font-size: 14px; font-weight: 600; margin-bottom: 16px;">📈 Evolução Mensal</h4>
+                        <div style="position: relative; height: 220px; width: 100%;">
+                            <canvas id="chartAtenMensal"></canvas>
+                        </div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 20px; min-height: 280px;">
+                        <h4 style="margin-top: 0; color: var(--text-main); font-size: 14px; font-weight: 600; margin-bottom: 16px;">📊 Atendimentos por Dia da Semana</h4>
+                        <div style="position: relative; height: 220px; width: 100%;">
+                            <canvas id="chartAtenSemanal"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 20px; min-height: 320px;">
+                    <h4 style="margin-top: 0; color: var(--text-main); font-size: 14px; font-weight: 600; margin-bottom: 16px;">🏆 Ranking de Atendimentos por Atendente (Top 10)</h4>
+                    <div style="position: relative; height: 260px; width: 100%;">
+                        <canvas id="chartAtenAtendentes"></canvas>
+                    </div>
+                </div>
+            `;
+            document.getElementById('loadingAten').style.display = 'none';
+            setTimeout(() => renderizarGraficosAtendimento(allData), 50);
+            return;
+        }
+
         // Filter data for list
         let data = [];
         if (currentAtendimentoTab === 'fila') {
@@ -2718,24 +2812,6 @@ window.carregarListaAtendimento = async function() {
         }
 
         document.getElementById('loadingAten').style.display = 'none';
-        
-        if (currentAtendimentoTab === 'historico') {
-            // Append accumulation chart container
-            const chartDiv = document.createElement('div');
-            chartDiv.id = 'chartSection';
-            chartDiv.style.cssText = 'background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px;';
-            chartDiv.innerHTML = `
-                <h4 style="margin-top: 0; color: var(--text-main); font-size: 14px; font-weight: 600; margin-bottom: 16px;">📈 Evolução de Atendimentos por Mês</h4>
-                <div style="position: relative; height: 200px; width: 100%;">
-                    <canvas id="atendimentoChart"></canvas>
-                </div>
-            `;
-            lista.appendChild(chartDiv);
-            
-            // Instantiates Chart.js line graph
-            const atendidosTotal = allData.filter(d => d.status === 'Atendido');
-            setTimeout(() => renderizarGraficoHistorico(atendidosTotal), 50);
-        }
 
         if (!data || data.length === 0) {
             const emptyEl = document.createElement('div');
