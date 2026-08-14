@@ -2464,10 +2464,14 @@ let currentAtendimentoTab = 'pendentes';
 
 window.mudarAbaAtendimento = function(aba) {
     currentAtendimentoTab = aba;
-    document.getElementById('btnAtenPendentes').style.background = aba === 'pendentes' ? 'var(--primary)' : 'transparent';
-    document.getElementById('btnAtenPendentes').style.color = aba === 'pendentes' ? 'white' : 'var(--text-main)';
-    document.getElementById('btnAtenAtendidos').style.background = aba === 'atendidos' ? 'var(--primary)' : 'transparent';
-    document.getElementById('btnAtenAtendidos').style.color = aba === 'atendidos' ? 'white' : 'var(--text-main)';
+    const abas = ['pendentes', 'planejados', 'atendidos'];
+    abas.forEach(a => {
+        const btn = document.getElementById('btnAten' + a.charAt(0).toUpperCase() + a.slice(1));
+        if (btn) {
+            btn.style.background = a === aba ? 'var(--primary)' : 'transparent';
+            btn.style.color = a === aba ? 'white' : 'var(--text-main)';
+        }
+    });
     carregarListaAtendimento();
 };
 
@@ -2486,7 +2490,8 @@ window.carregarPainelGestaoAtendimento = function() {
         <div>
             <div style="display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; overflow-x: auto;">
                 <button onclick="mudarAbaAtendimento('pendentes')" id="btnAtenPendentes" class="btn" style="white-space: nowrap; border-radius: 8px; background: var(--primary); color: white;">📥 Pendentes</button>
-                <button onclick="mudarAbaAtendimento('atendidos')" id="btnAtenAtendidos" class="btn" style="white-space: nowrap; border-radius: 8px;">✅ Atendidos</button>
+                <button onclick="mudarAbaAtendimento('planejados')" id="btnAtenPlanejados" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">📅 Planejados</button>
+                <button onclick="mudarAbaAtendimento('atendidos')" id="btnAtenAtendidos" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">✅ Atendidos</button>
             </div>
             
             <div id="loadingAten" style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">Carregando lista...</div>
@@ -2525,10 +2530,51 @@ window.carregarPainelGestaoAtendimento = function() {
                     </form>
                 </div>
             </div>
+
+            <!-- Modal de Triagem -->
+            <div id="modalTriagemAtendimento" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%;">
+                    <h3 style="color: var(--primary); margin-top: 0; font-size: 18px;">🤝 Selecionar Atendente</h3>
+                    
+                    <form id="formTriagemAtendimento" onsubmit="salvarTriagemAtendimento(event)">
+                        <input type="hidden" id="triagemAtenId">
+                        
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="color: var(--text-muted); font-size: 13px;">Atendente Fraterno</label>
+                            <select id="selectAtendenteAtendimento" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;"></select>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button type="submit" class="btn btn-primary" style="flex:1;">Atribuir</button>
+                            <button type="button" onclick="document.getElementById('modalTriagemAtendimento').style.display='none'" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal de Conclusão -->
+            <div id="modalConcluirAtendimento" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%;">
+                    <h3 style="color: var(--primary); margin-top: 0; font-size: 18px;">✅ Concluir Atendimento</h3>
+                    
+                    <form id="formConcluirAtendimento" onsubmit="salvarConcluirAtendimento(event)">
+                        <input type="hidden" id="concluirAtenId">
+                        
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="color: var(--text-muted); font-size: 13px;">Data e Hora do Atendimento</label>
+                            <input type="datetime-local" id="concluirAtenDataHora" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;">
+                        </div>
+
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button type="submit" class="btn btn-primary" style="flex:1;">Confirmar Conclusão</button>
+                            <button type="button" onclick="document.getElementById('modalConcluirAtendimento').style.display='none'" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     `;
     
-    // Mask for phone edit
     document.getElementById('editAtenWhats').addEventListener('input', function (e) {
         var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
         e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
@@ -2545,11 +2591,14 @@ window.carregarListaAtendimento = async function() {
     lista.innerHTML = '';
     
     try {
-        let query = db.from('app_atendimento_fraterno').select('*');
+        let query = db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo)');
+        
         if (currentAtendimentoTab === 'pendentes') {
-            query = query.neq('status', 'Atendido').order('created_at', {ascending: true});
+            query = query.eq('status', 'Pendente').order('nome_completo', {ascending: true});
+        } else if (currentAtendimentoTab === 'planejados') {
+            query = query.eq('status', 'Planejado');
         } else {
-            query = query.eq('status', 'Atendido').order('created_at', {ascending: false});
+            query = query.eq('status', 'Atendido');
         }
         
         const { data, error } = await query;
@@ -2562,65 +2611,120 @@ window.carregarListaAtendimento = async function() {
             return;
         }
         
-        data.forEach(item => {
-            const dateStr = new Date(item.created_at).toLocaleString('pt-BR', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+        if (currentAtendimentoTab === 'pendentes') {
+            data.forEach(item => {
+                renderizarCardAtendimentoItem(lista, item);
+            });
+        } else if (currentAtendimentoTab === 'planejados') {
+            data.sort((a, b) => {
+                const attA = (a.pessoas?.nome_completo || 'Sem Atendente').toLowerCase();
+                const attB = (b.pessoas?.nome_completo || 'Sem Atendente').toLowerCase();
+                if (attA !== attB) return attA.localeCompare(attB);
+                return (a.nome_completo || '').toLowerCase().localeCompare((b.nome_completo || '').toLowerCase());
+            });
             
-            // Calc age
-            let ageInfo = '';
-            if (item.data_nascimento) {
-                const anoNasc = item.data_nascimento.split('-')[0];
-                const age = new Date().getFullYear() - parseInt(anoNasc);
-                ageInfo = ` (${age} anos)`;
-            }
+            let currentAttendant = null;
+            data.forEach(item => {
+                const attendantName = item.pessoas?.nome_completo || 'Atendente não definido';
+                if (attendantName !== currentAttendant) {
+                    currentAttendant = attendantName;
+                    const header = document.createElement('div');
+                    header.style.cssText = 'margin-top: 16px; margin-bottom: 8px; font-weight: bold; color: var(--primary); font-size: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;';
+                    header.innerHTML = `👨‍💼 Atendente: ${currentAttendant.toUpperCase()}`;
+                    lista.appendChild(header);
+                }
+                renderizarCardAtendimentoItem(lista, item);
+            });
+        } else {
+            data.sort((a, b) => new Date(b.data_hora_atendimento || b.created_at) - new Date(a.data_hora_atendimento || a.created_at));
             
-            // Whatsapp link
-            let whatsLink = '';
-            if (item.telefone) {
-                const nums = item.telefone.replace(/\D/g, '');
-                whatsLink = `
-                    <a href="https://web.whatsapp.com/send?phone=55${nums}" target="_blank" class="btn" style="padding: 4px 8px; font-size: 12px; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); text-decoration: none;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                        WhatsApp
-                    </a>
-                `;
-            }
-
-            const card = document.createElement('div');
-            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; transition: all 0.2s;';
-            card.onmouseover = () => card.style.background = 'rgba(255,255,255,0.05)';
-            card.onmouseout = () => card.style.background = 'rgba(255,255,255,0.03)';
-            
-            card.innerHTML = `
-                <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <strong style="font-size: 16px; color: var(--text-main);">${item.nome_completo.toUpperCase()}</strong>
-                        <span style="font-size: 11px; padding: 2px 6px; background: rgba(255,255,255,0.1); border-radius: 12px; color: var(--text-muted);">${dateStr}</span>
-                    </div>
-                    
-                    <div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-muted);">
-                        <div>📍 ${item.endereco_completo || 'Sem endereço'}</div>
-                        <div>🎂 ${item.data_nascimento ? item.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
-                        <div style="display: flex; align-items: center; gap: 8px;">📱 ${item.telefone || 'Sem telefone'} ${whatsLink}</div>
-                    </div>
-                </div>
+            let currentMonthYear = null;
+            data.forEach(item => {
+                const dateVal = new Date(item.data_hora_atendimento || item.created_at);
+                const monthYearStr = dateVal.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
                 
-                <div style="display: flex; flex-direction: column; gap: 8px; min-width: 140px;">
-                    <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo}', '${item.endereco_completo || ''}', '${item.telefone || ''}')" style="font-size: 12px; padding: 6px 12px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">✏️ Editar</button>
-                    ${currentAtendimentoTab === 'pendentes' ? `
-                        <button class="btn" onclick="marcarAtendimentoStatus('${item.id}', 'Atendido')" style="font-size: 12px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">✅ Atendido</button>
-                    ` : ''}
-                    <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">🗑️ Excluir</button>
-                </div>
-            `;
-            
-            lista.appendChild(card);
-        });
+                if (monthYearStr !== currentMonthYear) {
+                    currentMonthYear = monthYearStr;
+                    const header = document.createElement('div');
+                    header.style.cssText = 'margin-top: 16px; margin-bottom: 8px; font-weight: bold; color: #10b981; font-size: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;';
+                    header.innerHTML = `📅 ${currentMonthYear}`;
+                    lista.appendChild(header);
+                }
+                renderizarCardAtendimentoItem(lista, item);
+            });
+        }
         
     } catch(e) {
         console.error(e);
         document.getElementById('loadingAten').innerHTML = '<span style="color:#ef4444;">Erro ao carregar lista.</span>';
     }
 };
+
+function renderizarCardAtendimentoItem(container, item) {
+    const dateStr = new Date(item.created_at).toLocaleString('pt-BR', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+    
+    let ageInfo = '';
+    if (item.data_nascimento) {
+        const anoNasc = item.data_nascimento.split('-')[0];
+        const age = new Date().getFullYear() - parseInt(anoNasc);
+        ageInfo = ` (${age} anos)`;
+    }
+    
+    let whatsLink = '';
+    if (item.telefone) {
+        const nums = item.telefone.replace(/\D/g, '');
+        whatsLink = `
+            <a href="https://web.whatsapp.com/send?phone=55${nums}" target="_blank" class="btn" style="padding: 4px 8px; font-size: 12px; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); text-decoration: none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                WhatsApp
+            </a>
+        `;
+    }
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; transition: all 0.2s;';
+    card.onmouseover = () => card.style.background = 'rgba(255,255,255,0.05)';
+    card.onmouseout = () => card.style.background = 'rgba(255,255,255,0.03)';
+    
+    let infoExtra = '';
+    if (item.status === 'Atendido' && item.data_hora_atendimento) {
+        const dtAtendido = new Date(item.data_hora_atendimento).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'});
+        infoExtra = `<div style="margin-top: 4px; color: #10b981; font-weight: 500;">✓ Atendido em: ${dtAtendido} por ${item.pessoas?.nome_completo || 'Atendente'}</div>`;
+    } else if (item.status === 'Planejado' && item.pessoas?.nome_completo) {
+        infoExtra = `<div style="margin-top: 4px; color: var(--primary); font-weight: 500;">📅 Atribuído a: ${item.pessoas.nome_completo}</div>`;
+    }
+
+    card.innerHTML = `
+        <div style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <strong style="font-size: 16px; color: var(--text-main);">${item.nome_completo.toUpperCase()}</strong>
+                <span style="font-size: 11px; padding: 2px 6px; background: rgba(255,255,255,0.1); border-radius: 12px; color: var(--text-muted);">${dateStr}</span>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-muted);">
+                <div>📍 ${item.endereco_completo || 'Sem endereço'}</div>
+                <div>🎂 ${item.data_nascimento ? item.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
+                <div style="display: flex; align-items: center; gap: 8px;">📱 ${item.telefone || 'Sem telefone'} ${whatsLink}</div>
+                ${infoExtra}
+            </div>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px; min-width: 140px;">
+            ${item.status !== 'Atendido' ? `
+                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo}', '${item.endereco_completo || ''}', '${item.telefone || ''}')" style="font-size: 12px; padding: 6px 12px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">✏️ Editar</button>
+            ` : ''}
+            ${item.status === 'Pendente' ? `
+                <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">🤝 Triagem</button>
+            ` : ''}
+            ${item.status === 'Planejado' ? `
+                <button class="btn" onclick="abrirConcluirAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">✅ Concluir</button>
+            ` : ''}
+            <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">🗑️ Excluir</button>
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
 
 window.abrirEdicaoAtendimento = function(id, nome, endereco, fone) {
     document.getElementById('editAtenId').value = id;
@@ -2652,13 +2756,96 @@ window.salvarEdicaoAtendimento = async function(e) {
     }
 };
 
-window.marcarAtendimentoStatus = async function(id, status) {
-    if (confirm('Marcar este pedido como ' + status + '?')) {
-        try {
-            const { error } = await db.from('app_atendimento_fraterno').update({ status: status }).eq('id', id);
-            if (error) throw error;
-            carregarListaAtendimento();
-        } catch(e) { alert('Erro ao atualizar: ' + e.message); }
+window.abrirTriagemAtendimento = async function(id) {
+    document.getElementById('triagemAtenId').value = id;
+    const select = document.getElementById('selectAtendenteAtendimento');
+    select.innerHTML = '<option value="">Carregando atendentes...</option>';
+    document.getElementById('modalTriagemAtendimento').style.display = 'flex';
+    
+    try {
+        const { data, error } = await db
+            .from('pessoas')
+            .select('id, nome_completo')
+            .contains('papeis', ['Atendente Fraterno']);
+            
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            select.innerHTML = '<option value="">Nenhum Atendente Fraterno cadastrado</option>';
+            return;
+        }
+        
+        data.sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
+        
+        select.innerHTML = '<option value="">Selecione um atendente...</option>' + 
+            data.map(p => `<option value="${p.id}">${p.nome_completo}</option>`).join('');
+    } catch(err) {
+        console.error(err);
+        select.innerHTML = '<option value="">Erro ao carregar atendentes</option>';
+    }
+};
+
+window.salvarTriagemAtendimento = async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('triagemAtenId').value;
+    const atendenteId = document.getElementById('selectAtendenteAtendimento').value;
+    
+    if (!atendenteId) {
+        alert('Por favor, selecione um atendente.');
+        return;
+    }
+    
+    try {
+        const { error } = await db
+            .from('app_atendimento_fraterno')
+            .update({
+                atendente_id: atendenteId,
+                status: 'Planejado'
+            })
+            .eq('id', id);
+            
+        if (error) throw error;
+        document.getElementById('modalTriagemAtendimento').style.display = 'none';
+        carregarListaAtendimento();
+    } catch(err) {
+        alert('Erro ao salvar triagem: ' + err.message);
+    }
+};
+
+window.abrirConcluirAtendimento = function(id) {
+    document.getElementById('concluirAtenId').value = id;
+    
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('concluirAtenDataHora').value = now.toISOString().slice(0, 16);
+    
+    document.getElementById('modalConcluirAtendimento').style.display = 'flex';
+};
+
+window.salvarConcluirAtendimento = async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('concluirAtenId').value;
+    const dataHora = document.getElementById('concluirAtenDataHora').value;
+    
+    if (!dataHora) {
+        alert('Por favor, informe a data/hora.');
+        return;
+    }
+    
+    try {
+        const { error } = await db
+            .from('app_atendimento_fraterno')
+            .update({
+                status: 'Atendido',
+                data_hora_atendimento: new Date(dataHora).toISOString()
+            })
+            .eq('id', id);
+            
+        if (error) throw error;
+        document.getElementById('modalConcluirAtendimento').style.display = 'none';
+        carregarListaAtendimento();
+    } catch(err) {
+        alert('Erro ao concluir atendimento: ' + err.message);
     }
 };
 
