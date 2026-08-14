@@ -37,7 +37,6 @@
         container.innerHTML = '<div class="empty-state">Carregando...</div>';
 
         try {
-        try {
             const { data: allData, error } = await db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo)');
             if (error) throw error;
 
