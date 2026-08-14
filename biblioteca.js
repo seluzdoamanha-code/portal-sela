@@ -1,7 +1,14 @@
 const SUPABASE_URL = 'https://aymdooyafimliiggxeqs.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5bWRvb3lhZmltbGlpZ2d4ZXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDUxNDksImV4cCI6MjEwMDY4MTE0OX0.-NBhiyGDlrWq4QKNLx9Ll5GlIk0mV_rBWnr0vdbUCOU';
 
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+if (!window.supabase) {
+    console.error("Supabase library not loaded!");
+    document.addEventListener('DOMContentLoaded', () => {
+        const loading = document.getElementById('loading');
+        if (loading) loading.textContent = "Erro: A biblioteca de conexão (Supabase) não foi carregada. Verifique sua conexão de internet.";
+    });
+}
+const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 let currentCategoria = 'DISPONÍVEL';
 let currentLivroId = null;
@@ -50,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function carregarContadores() {
+    if (!db) return;
     try {
         const fetchCount = async (catName) => {
             const { count, error } = await db
@@ -74,6 +82,7 @@ async function carregarContadores() {
 }
 
 async function fetchLivros(reset = false) {
+    if (!db) return;
     const loading = document.getElementById('loading');
     const grid = document.getElementById('booksGrid');
     const emptyState = document.getElementById('emptyState');
@@ -127,11 +136,11 @@ async function fetchLivros(reset = false) {
             card.className = 'book-card';
             card.onclick = () => abrirModal(livro.id);
             
-            const noCacheUrl = `${livro.capa_url}?t=${new Date().getTime()}`;
+            const coverUrl = livro.capa_url || 'https://via.placeholder.com/300x450/2a2a2a/cccccc?text=Sem+Capa';
             const codigoHtml = livro.codigo ? `<div class="book-codigo">${livro.codigo}</div>` : '';
 
             card.innerHTML = `
-                <img src="${noCacheUrl}" class="book-cover" alt="Capa" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'%23333\\'/><text x=\\'50%\\' y=\\'50%\\' font-family=\\'Arial\\' font-size=\\'14\\' fill=\\'%23777\\' text-anchor=\\'middle\\' dominant-baseline=\\'middle\\'>Sem Capa</text></svg>'">
+                <img src="${coverUrl}" class="book-cover" alt="Capa" onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450/2a2a2a/cccccc?text=Sem+Capa';">
                 <div class="book-info">
                     <div class="book-title">${livro.titulo}</div>
                     <div class="book-author">${livro.autor || 'Autor desconhecido'}</div>

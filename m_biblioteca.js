@@ -1,7 +1,14 @@
 const SUPABASE_URL = 'https://aymdooyafimliiggxeqs.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5bWRvb3lhZmltbGlpZ2d4ZXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDUxNDksImV4cCI6MjEwMDY4MTE0OX0.-NBhiyGDlrWq4QKNLx9Ll5GlIk0mV_rBWnr0vdbUCOU';
 
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+if (!window.supabase) {
+    console.error("Supabase library not loaded!");
+    document.addEventListener('DOMContentLoaded', () => {
+        const loadingState = document.getElementById('loadingState');
+        if (loadingState) loadingState.textContent = "Erro: A biblioteca de conexão (Supabase) não foi carregada. Verifique sua conexão de internet.";
+    });
+}
+const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 let currentCategoria = 'DISPONÍVEL';
 let currentLivroId = null;
@@ -70,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function carregarContadores() {
+    if (!db) return;
     try {
         const fetchCount = async (catName) => {
             const { count, error } = await db
@@ -96,6 +104,7 @@ async function carregarContadores() {
 }
 
 async function fetchLivros(reset = false) {
+    if (!db) return;
     if (reset) {
         currentPage = 0;
         allLoadedBooks = {};
