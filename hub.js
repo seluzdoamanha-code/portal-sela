@@ -806,12 +806,29 @@ window.excluirEventoAgenda = async (id) => {
     }
 };
 
-window.abrirModalAtividadeRegular = function() {
+window.abrirModalAtividadeRegular = async function() {
+    const select = document.getElementById('inAtRegLinkEstruturaId');
+    if (select) {
+        select.innerHTML = '<option value="">-- Nenhum --</option>';
+        try {
+            const { data } = await db.from('estruturas').select('id, nome').order('nome');
+            if (data) {
+                data.forEach(e => {
+                    select.innerHTML += `<option value="${e.id}">${e.nome}</option>`;
+                });
+            }
+        } catch(e) {
+            console.error("Erro ao carregar estruturas para vinculo:", e);
+        }
+    }
+
     document.getElementById('inAtRegId').value = '';
     document.getElementById('inAtRegTitulo').value = '';
     document.getElementById('inAtRegDiaSemana').value = '';
     document.getElementById('inAtRegHorario').value = '';
     document.getElementById('inAtRegDescricao').value = '';
+    if (select) select.value = '';
+    
     document.getElementById('modalAtividadeRegularTitle').textContent = 'Nova Atividade Regular';
     document.getElementById('modalAtividadeRegular').style.display = 'flex';
 };
@@ -851,6 +868,13 @@ window.carregarAtividadesRegulares = async function() {
 
         let html = '';
         data.forEach(at => {
+            let linkBtn = '';
+            if (at.link_estrutura_id) {
+                linkBtn = `<div style="margin-top: 10px;">
+                    <a href="hub.html?id=${at.link_estrutura_id}" class="btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; font-size: 11px; text-decoration: none; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">Ir para o Hub ➔</a>
+                </div>`;
+            }
+
             html += `
                 <div class="card-agenda" style="position: relative; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: all 0.2s;">
                     <div style="font-weight: 600; color: var(--text-main); font-size: 15px; margin-bottom: 6px; padding-right: 32px;">${at.titulo.toUpperCase()}</div>
@@ -859,6 +883,7 @@ window.carregarAtividadesRegulares = async function() {
                         <span>⏰ ${at.horario}</span>
                     </div>
                     ${at.descricao ? `<div style="font-size: 13px; color: var(--text-muted); white-space: pre-line;">${at.descricao}</div>` : ''}
+                    ${linkBtn}
                     
                     <button onclick="excluirAtividadeRegular('${at.id}')" style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 14px; cursor: pointer; color: var(--text-muted);" title="Excluir Atividade">🗑️</button>
                 </div>
@@ -882,6 +907,7 @@ window.salvarAtividadeRegular = async function(event) {
     const titulo = document.getElementById('inAtRegTitulo').value;
     const diaSemana = document.getElementById('inAtRegDiaSemana').value;
     const horario = document.getElementById('inAtRegHorario').value;
+    const linkEstruturaId = document.getElementById('inAtRegLinkEstruturaId').value || null;
     const descricao = document.getElementById('inAtRegDescricao').value;
 
     try {
@@ -890,6 +916,7 @@ window.salvarAtividadeRegular = async function(event) {
                 titulo,
                 dia_semana: diaSemana,
                 horario,
+                link_estrutura_id: linkEstruturaId,
                 descricao
             }).eq('id', id);
             if (error) throw error;
@@ -899,6 +926,7 @@ window.salvarAtividadeRegular = async function(event) {
                 titulo,
                 dia_semana: diaSemana,
                 horario,
+                link_estrutura_id: linkEstruturaId,
                 descricao
             }]);
             if (error) throw error;
