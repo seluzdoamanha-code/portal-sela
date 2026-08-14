@@ -2729,8 +2729,8 @@ function renderizarCardAtendimentoItem(container, item) {
     }
 
     const btnPresenca = item.presente ? 
-        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', false)" style="font-size: 12px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">🟢 Presente</button>` :
-        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', true)" style="font-size: 12px; padding: 6px 12px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border);">⚪ Confirmar Presença</button>`;
+        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', false)" style="font-size: 12px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Não Presente';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
+        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', true)" style="font-size: 12px; padding: 6px 12px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); transition: all 0.2s;">⚪ Confirmar Presença</button>`;
 
     card.innerHTML = `
         <div style="flex: 1;">
@@ -2762,12 +2762,32 @@ function renderizarCardAtendimentoItem(container, item) {
                 <button class="btn" onclick="abrirConcluirAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">✅ Concluir</button>
             ` : ''}
             
+            ${item.status === 'Planejado' ? `
+                <button class="btn" onclick="desatribuirAtendenteAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">👤✕ Desatribuir</button>
+            ` : ''}
+            
             <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">🗑️ Excluir</button>
         </div>
     `;
     
     container.appendChild(card);
 }
+
+window.desatribuirAtendenteAtendimento = async function(id) {
+    if (confirm("Tem certeza que deseja remover o atendente atribuído a este paciente? Ele voltará para a fila de espera.")) {
+        try {
+            const { error } = await db.from('app_atendimento_fraterno').update({
+                atendente_id: null,
+                status: 'Pendente'
+            }).eq('id', id);
+            
+            if (error) throw error;
+            carregarListaAtendimento();
+        } catch(err) {
+            alert('Erro ao remover atribuição: ' + err.message);
+        }
+    }
+};
 
 window.abrirEdicaoAtendimento = function(id, nome, endereco, fone) {
     document.getElementById('editAtenId').value = id;
