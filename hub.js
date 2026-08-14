@@ -59,6 +59,7 @@ async function carregarDadosEstrutura() {
         if (data) {
             document.getElementById('hubName').textContent = data.nome;
             document.getElementById('hubType').textContent = data.tipo;
+            await inicializarBotaoFavorito();
             
             const nomeEstrutura = (data.nome || '').toLowerCase();
             const isIrradiacao = nomeEstrutura.includes('irradia') || nomeEstrutura.includes('sela');
@@ -101,6 +102,63 @@ async function carregarDadosEstrutura() {
     } catch (err) {
         console.error("Erro ao carregar estrutura:", err);
         document.getElementById('loadingState').textContent = "Erro ao carregar dados. Verifique sua conexão.";
+    }
+}
+
+let isFavoritoHubGlobal = false;
+
+async function inicializarBotaoFavorito() {
+    const btn = document.getElementById('btnFavoritarHub');
+    if (!btn) return;
+    
+    try {
+        const { data: { session } } = await db.auth.getSession();
+        const userEmail = session?.user?.email;
+        if (!userEmail) return;
+        
+        const { data, error } = await db
+            .from('usuario_atalhos')
+            .select('*')
+            .eq('email', userEmail)
+            .eq('estrutura_id', estruturaId)
+            .maybeSingle();
+            
+        if (error) throw error;
+        
+        isFavoritoHubGlobal = !!data;
+        btn.textContent = isFavoritoHubGlobal ? '⭐' : '☆';
+        
+        btn.onclick = async () => {
+            btn.style.pointerEvents = 'none';
+            try {
+                if (isFavoritoHubGlobal) {
+                    const { error: delErr } = await db
+                        .from('usuario_atalhos')
+                        .delete()
+                        .eq('email', userEmail)
+                        .eq('estrutura_id', estruturaId);
+                    if (delErr) throw delErr;
+                    isFavoritoHubGlobal = false;
+                } else {
+                    const { error: insErr } = await db
+                        .from('usuario_atalhos')
+                        .insert([{ email: userEmail, estrutura_id: estruturaId }]);
+                    if (insErr) throw insErr;
+                    isFavoritoHubGlobal = true;
+                }
+                btn.textContent = isFavoritoHubGlobal ? '⭐' : '☆';
+                
+                if (typeof window.carregarAtalhosDinamicos === 'function') {
+                    await window.carregarAtalhosDinamicos();
+                }
+            } catch (err) {
+                console.error("Erro ao alternar favorito no Hub:", err);
+            } finally {
+                btn.style.pointerEvents = 'auto';
+            }
+        };
+    } catch (err) {
+        console.error("Erro ao inicializar favorito no Hub:", err);
     }
 }
 

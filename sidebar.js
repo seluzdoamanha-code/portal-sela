@@ -182,11 +182,17 @@
         if (!sidebarDb) return;
         
         try {
+            const { data: { session } } = await sidebarDb.auth.getSession();
+            if (!session || !session.user) {
+                container.innerHTML = '';
+                return;
+            }
+            const userEmail = session.user.email;
+
             const { data, error } = await sidebarDb
-                .from('estruturas')
-                .select('id, nome, tipo')
-                .eq('exibir_no_menu', true)
-                .order('nome');
+                .from('usuario_atalhos')
+                .select('estrutura_id, estruturas(id, nome, tipo)')
+                .eq('email', userEmail);
                 
             if (error) throw error;
             
@@ -195,12 +201,19 @@
                 return;
             }
             
+            const estruturas = data
+                .map(d => d.estruturas)
+                .filter(Boolean);
+                
+            estruturas.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+            
             let html = '';
-            data.forEach(d => {
+            estruturas.forEach(d => {
                 let icon = '📌';
                 if(d.tipo === 'Departamento') icon = '🏢';
                 if(d.tipo === 'Atividade') icon = '🎯';
                 if(d.tipo === 'Família') icon = '🏠';
+                if(d.tipo === 'Turma') icon = '🌱';
                 
                 const urlParams = new URLSearchParams(window.location.search);
                 const isActive = (window.location.pathname.includes('hub.html') && urlParams.get('id') == d.id);

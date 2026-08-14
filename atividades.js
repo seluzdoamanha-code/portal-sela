@@ -4,6 +4,7 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let estruturasGlobais = [];
 let estruturaEditandoId = null;
+let atalhosUsuario = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     carregarEstruturas();
@@ -43,6 +44,15 @@ async function carregarEstruturas() {
     document.getElementById('loadingState').style.display = 'block';
     document.getElementById('tableContainer').style.display = 'none';
     
+    const { data: { session } } = await db.auth.getSession();
+    const userEmail = session?.user?.email;
+    let atalhos = [];
+    if (userEmail) {
+        const { data: atalhosData } = await db.from('usuario_atalhos').select('estrutura_id').eq('email', userEmail);
+        atalhos = (atalhosData || []).map(a => a.estrutura_id);
+    }
+    atalhosUsuario = atalhos;
+
     // Na tabela 'estruturas', queremos saber quantas pessoas tem, mas isso está na vinculos_estrutura.
     // Por enquanto, faremos o select básico. Depois adicionamos as contagens.
     const { data, error } = await db.from('estruturas').select('*').order('nome');
@@ -83,9 +93,13 @@ function renderizarTabela(dados) {
         if (estrutura.tipo === 'Atividade') icone = '📅';
         if (estrutura.tipo === 'Turma') icone = '🌱';
         
+        const isFavorito = atalhosUsuario.includes(estrutura.id);
+        const estrela = isFavorito ? '⭐' : '☆';
+        
         tbody.innerHTML += `
             <tr>
                 <td style="font-weight: 500; font-size: 16px;">
+                    <span onclick="alternarFavorito('${estrutura.id}')" style="cursor: pointer; font-size: 18px; margin-right: 8px; user-select: none;" title="Fixar no menu lateral">${estrela}</span>
                     ${icone} ${estrutura.nome}
                 </td>
                 <td>
@@ -184,6 +198,30 @@ function setupModal() {
         }
     });
 }
+
+window.alternarFavorito = async function(id) {
+    const { data: { session } } = await db.auth.getSession();
+    const userEmail = session?.user?.email;
+    if (!userEmail) return;
+    
+    const isFavorito = atalhosUsuario.includes(id);
+    try {
+        if (isFavorito) {
+            const { error } = await db.from('usuario_atalhos').delete().eq('email', userEmail).eq('estrutura_id', id);
+            if (error) throw error;
+        } else {
+            const { error } = await db.from('usuario_atalhos').insert([{ email: userEmail, estrutura_id: id }]);
+            if (error) throw error;
+        }
+        
+        await carregarEstruturas();
+        if (typeof window.carregarAtalhosDinamicos === 'function') {
+            await window.carregarAtalhosDinamicos();
+        }
+    } catch (err) {
+        console.error("Erro ao alternar favorito:", err);
+    }
+};
 
 window.editarEstrutura = async (id) => {
     const estr = estruturasGlobais.find(e => e.id === id);
