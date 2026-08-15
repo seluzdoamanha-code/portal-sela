@@ -3201,12 +3201,7 @@ window.carregarListaAtendimento = async function() {
         const { data: activeTrats } = await db.from('app_atendimento_tratamentos').select('id').eq('status', 'Ativo');
         const activeTratCount = activeTrats ? activeTrats.length : 0;
 
-        // Calculate and render stats dashboard
-        const atendidosMesTotal = allData.filter(item => {
-            if (item.status !== 'Atendido' || !item.data_hora_atendimento) return false;
-            const d = new Date(item.data_hora_atendimento);
-            return d.getFullYear() === curYear && d.getMonth() === curMonth;
-        });
+
 
         const statsContainer = document.getElementById('statsDashboard');
         if (statsContainer) {
