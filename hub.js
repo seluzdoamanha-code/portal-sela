@@ -3043,7 +3043,7 @@ window.carregarPainelGestaoAtendimento = function() {
         <div id="statsDashboard" style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;"></div>
         
         <div>
-            <div style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; overflow-x: auto;">
+            <div class="no-scrollbar" style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; overflow-x: auto;">
                 <button onclick="mudarAbaAtendimento('fila')" id="btnAtenFila" class="btn" style="white-space: nowrap; border-radius: 8px; background: var(--primary); color: white;">📂 Fila Geral</button>
                 <button onclick="mudarAbaAtendimento('espera')" id="btnAtenEspera" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🛋️ Sala de Espera</button>
                 <button onclick="mudarAbaAtendimento('andamento')" id="btnAtenAndamento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🧑‍🤝‍🧑 Em Atendimento</button>
