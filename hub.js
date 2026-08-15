@@ -3144,6 +3144,9 @@ window.carregarPainelGestaoAtendimento = function() {
                     
                     <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--primary);">📜 Histórico de Sessões</h4>
                     <div id="fichaHistoricoSessoes" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;"></div>
+
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #3b82f6;">🗓️ Histórico de Presenças</h4>
+                    <div id="fichaHistoricoPresencas" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.1); border: 1px solid var(--border); padding: 8px; border-radius: 8px;"></div>
                     
                     <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #f59e0b;">➕ Nova Sessão de Atendimento</h4>
                     <textarea id="txtSintomasOrientacoes" placeholder="Escreva os sintomas identificados e as orientações fornecidas ao necessitado..." style="width: 100%; height: 100px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-dark); color: white; padding: 10px; font-size: 14px; font-family: inherit; resize: none; box-sizing: border-box; margin-bottom: 16px; outline: none;"></textarea>
@@ -3773,6 +3776,9 @@ window.abrirFichaAtendimento = async function(id) {
     infoPaciente.innerHTML = 'Carregando dados do paciente...';
     historicoSessoes.innerHTML = 'Carregando histórico...';
     
+    const histPresencas = document.getElementById('fichaHistoricoPresencas');
+    if (histPresencas) histPresencas.innerHTML = 'Carregando presenças...';
+    
     document.getElementById('txtSintomasOrientacoes').value = '';
     document.getElementById('chkTratFluidico').checked = false;
     document.getElementById('chkTratEspiritual').checked = false;
@@ -3815,10 +3821,47 @@ window.abrirFichaAtendimento = async function(id) {
                 `;
             }).join('');
         }
+        
+        // Obter presenças
+        if (histPresencas) {
+            const { data: trats, error: errTrats } = await db.from('app_atendimento_tratamentos').select('id, tipo, status').eq('atendimento_id', id);
+            if (errTrats) throw errTrats;
+            
+            if (!trats || trats.length === 0) {
+                histPresencas.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhum tratamento cadastrado para este paciente.</div>';
+            } else {
+                const tratIds = trats.map(t => t.id);
+                const { data: pres, error: errPres } = await db
+                    .from('app_atendimento_presencas')
+                    .select('*')
+                    .in('tratamento_id', tratIds)
+                    .order('data', { ascending: false });
+                    
+                if (errPres) throw errPres;
+                
+                if (!pres || pres.length === 0) {
+                    histPresencas.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhuma presença de tratamento registrada ainda.</div>';
+                } else {
+                    histPresencas.innerHTML = pres.map(p => {
+                        const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
+                        const tipoText = trat ? `${trat.tipo} (${trat.status})` : 'Tratamento';
+                        const dt = new Date(p.data).toLocaleDateString('pt-BR');
+                        const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
+                        return `
+                            <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4;">
+                                <strong style="color: #3b82f6;">${dt}</strong> - <span style="font-weight: 500;">${tipoText}</span>
+                                ${obs}
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+        }
     } catch(err) {
         console.error(err);
         infoPaciente.innerHTML = '<span style="color: #ef4444;">Erro ao carregar dados.</span>';
         historicoSessoes.innerHTML = '<span style="color: #ef4444;">Erro ao carregar histórico.</span>';
+        if (histPresencas) histPresencas.innerHTML = '<span style="color: #ef4444;">Erro ao carregar presenças.</span>';
     }
 };
 
@@ -3890,23 +3933,61 @@ window.salvarFichaAtendimento = async function() {
     }
 };
 
+let currentSubAbaTratamentos = 'Ativo';
+
+window.setSubAbaTratamentos = function(sub) {
+    currentSubAbaTratamentos = sub;
+    carregarTratamentosAtivosDesktop();
+};
+
 window.carregarTratamentosAtivosDesktop = async function() {
     const lista = document.getElementById('listaAten');
     if (!lista) return;
     lista.innerHTML = '<div style="color: var(--text-muted); font-size: 14px;">Carregando tratamentos...</div>';
     
     try {
-        const { data: tratamentos, error } = await db
+        const queryStatus = currentSubAbaTratamentos === 'Ativo' ? 'Ativo' : ['Concluído', 'Suspenso'];
+        const isListActive = currentSubAbaTratamentos === 'Ativo';
+        
+        let selectQuery = db
             .from('app_atendimento_tratamentos')
-            .select('*, app_atendimento_fraterno(nome_completo, telefone)')
-            .eq('status', 'Ativo')
+            .select('*, app_atendimento_fraterno(nome_completo, telefone, id)')
             .order('tipo');
+            
+        if (typeof queryStatus === 'string') {
+            selectQuery = selectQuery.eq('status', queryStatus);
+        } else {
+            selectQuery = selectQuery.in('status', queryStatus);
+        }
+        
+        const { data: tratamentos, error } = await selectQuery;
             
         if (error) throw error;
         
         lista.innerHTML = '';
+        
+        // Render sub-navigation pills
+        const subNav = document.createElement('div');
+        subNav.style.cssText = 'display: flex; gap: 12px; margin-bottom: 16px;';
+        
+        const btnActBg = currentSubAbaTratamentos === 'Ativo' ? 'var(--primary)' : 'rgba(255,255,255,0.05)';
+        const btnActCol = currentSubAbaTratamentos === 'Ativo' ? 'white' : 'var(--text-muted)';
+        
+        const btnInactBg = currentSubAbaTratamentos === 'Inativo' ? 'var(--primary)' : 'rgba(255,255,255,0.05)';
+        const btnInactCol = currentSubAbaTratamentos === 'Inativo' ? 'white' : 'var(--text-muted)';
+        
+        subNav.innerHTML = `
+            <button onclick="setSubAbaTratamentos('Ativo')" class="btn" style="padding: 6px 16px; font-size: 13px; border-radius: 6px; background: ${btnActBg}; color: ${btnActCol}; border: 1px solid var(--border);">🟢 Tratamentos Ativos</button>
+            <button onclick="setSubAbaTratamentos('Inativo')" class="btn" style="padding: 6px 16px; font-size: 13px; border-radius: 6px; background: ${btnInactBg}; color: ${btnInactCol}; border: 1px solid var(--border);">🔴 Histórico / Inativos</button>
+        `;
+        lista.appendChild(subNav);
+        
+        const containerCards = document.createElement('div');
+        containerCards.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+        lista.appendChild(containerCards);
+        
         if (!tratamentos || tratamentos.length === 0) {
-            lista.innerHTML = '<div style="padding: 24px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);">Nenhum tratamento ativo atualmente.</div>';
+            containerCards.innerHTML = `<div style="padding: 24px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);">Nenhum tratamento ${currentSubAbaTratamentos === 'Ativo' ? 'ativo atualmente' : 'histórico/inativo encontrado'}.</div>`;
             return;
         }
         
@@ -3915,7 +3996,23 @@ window.carregarTratamentosAtivosDesktop = async function() {
             card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px;';
             
             const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
-            const dtInicio = new Date(t.data_inicio).toLocaleDateString('pt-BR');
+            const dtText = isListActive 
+                ? `Início do tratamento: ${new Date(t.data_inicio).toLocaleDateString('pt-BR')}`
+                : `Período: ${new Date(t.data_inicio).toLocaleDateString('pt-BR')} até ${t.data_fim ? new Date(t.data_fim).toLocaleDateString('pt-BR') : 'atual'} (${t.status})`;
+            
+            let actionButtons = '';
+            if (isListActive) {
+                actionButtons = `
+                    <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: #10b981; color: white;">Concluir</button>
+                    <button onclick="mudarStatusTratamento('${t.id}', 'Suspenso')" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">Suspender</button>
+                    <button onclick="abrirFichaAtendimento('${t.app_atendimento_fraterno?.id}')" class="btn" style="padding: 6px 12px; font-size: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border);">📝 Evolução</button>
+                `;
+            } else {
+                actionButtons = `
+                    <button onclick="reativarTratamento('${t.id}')" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: var(--primary); color: white;">⚡ Reativar</button>
+                    <button onclick="abrirFichaAtendimento('${t.app_atendimento_fraterno?.id}')" class="btn" style="padding: 6px 12px; font-size: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border);">📝 Evolução</button>
+                `;
+            }
             
             card.innerHTML = `
                 <div>
@@ -3923,18 +4020,33 @@ window.carregarTratamentosAtivosDesktop = async function() {
                         <strong style="font-size: 15px; color: var(--text-main);">${t.app_atendimento_fraterno?.nome_completo.toUpperCase()}</strong>
                         <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white;">${t.tipo.toUpperCase()}</span>
                     </div>
-                    <div style="font-size: 13px; color: var(--text-muted);">Início do tratamento: ${dtInicio}</div>
+                    <div style="font-size: 13px; color: var(--text-muted);">${dtText}</div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                    <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: #10b981; color: white;">Concluir</button>
-                    <button onclick="mudarStatusTratamento('${t.id}', 'Suspenso')" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">Suspender</button>
+                    ${actionButtons}
                 </div>
             `;
-            lista.appendChild(card);
+            containerCards.appendChild(card);
         });
     } catch(err) {
         console.error(err);
         lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar tratamentos.</span>';
+    }
+};
+
+window.reativarTratamento = async function(id) {
+    if (!confirm('Deseja reativar este tratamento para a fila de presenças atual?')) return;
+    try {
+        const { error } = await db.from('app_atendimento_tratamentos').update({
+            status: 'Ativo',
+            data_inicio: new Date().toISOString().split('T')[0],
+            data_fim: null
+        }).eq('id', id);
+        
+        if (error) throw error;
+        carregarTratamentosAtivosDesktop();
+    } catch(err) {
+        alert('Erro ao reativar tratamento: ' + err.message);
     }
 };
 
@@ -3949,7 +4061,7 @@ window.mudarStatusTratamento = async function(id, status) {
         }).eq('id', id);
         
         if (error) throw error;
-        carregarListaAtendimento();
+        carregarTratamentosAtivosDesktop();
     } catch(err) {
         alert('Erro ao atualizar tratamento: ' + err.message);
     }
