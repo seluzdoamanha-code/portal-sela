@@ -3425,7 +3425,7 @@ function renderizarCardAtendimentoItem(container, item) {
             ` : ''}
             
             ${item.status === 'Planejado' && item.presente ? `
-                <button class="btn" onclick="abrirConcluirAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">✅ Concluir</button>
+                <button class="btn" onclick="abrirFichaAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">📝 Ficha & Fila</button>
             ` : ''}
             
             ${item.status === 'Planejado' ? `
@@ -3764,3 +3764,362 @@ async function salvarFormularioAtendimento(e) {
         btn.textContent = 'Enviar Solicitação';
     }
 }
+
+// ===================================================
+// GESTÃO DE ATENDIMENTOS DESKTOP: NOVAS FUNCIONALIDADES
+// ===================================================
+let activeFichaAtendimentoId = null;
+
+window.abrirFichaAtendimento = async function(id) {
+    activeFichaAtendimentoId = id;
+    const infoPaciente = document.getElementById('fichaInfoPaciente');
+    const historicoSessoes = document.getElementById('fichaHistoricoSessoes');
+    
+    infoPaciente.innerHTML = 'Carregando dados do paciente...';
+    historicoSessoes.innerHTML = 'Carregando histórico...';
+    
+    document.getElementById('txtSintomasOrientacoes').value = '';
+    document.getElementById('chkTratFluidico').checked = false;
+    document.getElementById('chkTratEspiritual').checked = false;
+    document.getElementById('modalFichaAtendimento').style.display = 'flex';
+    
+    try {
+        // Obter necessitado
+        const { data: paciente, error } = await db.from('app_atendimento_fraterno').select('*').eq('id', id).single();
+        if (error) throw error;
+        
+        infoPaciente.innerHTML = `
+            <strong>Nome:</strong> ${paciente.nome_completo.toUpperCase()}<br>
+            <strong>Endereço:</strong> ${paciente.endereco_completo || 'Não informado'}<br>
+            <strong>WhatsApp:</strong> ${paciente.telefone || 'Não informado'}
+        `;
+        
+        // Obter sessões anteriores
+        const { data: sessoes, error: errSess } = await db
+            .from('app_atendimento_sessoes')
+            .select('*, pessoas!atendente_id(nome_completo)')
+            .eq('atendimento_id', id)
+            .order('data', { ascending: false })
+            .limit(4);
+            
+        if (errSess) throw errSess;
+        
+        if (!sessoes || sessoes.length === 0) {
+            historicoSessoes.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhuma sessão anterior registrada.</div>';
+        } else {
+            historicoSessoes.innerHTML = sessoes.map(s => {
+                const dt = new Date(s.data).toLocaleDateString('pt-BR');
+                return `
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 13px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <strong style="color: var(--primary);">${dt}</strong>
+                            <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_completo || 'Desconhecido'}</span>
+                        </div>
+                        <div style="color: var(--text-main); white-space: pre-wrap;">${s.sintomas_orientacoes}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+    } catch(err) {
+        console.error(err);
+        infoPaciente.innerHTML = '<span style="color: #ef4444;">Erro ao carregar dados.</span>';
+        historicoSessoes.innerHTML = '<span style="color: #ef4444;">Erro ao carregar histórico.</span>';
+    }
+};
+
+window.fecharModalFicha = function() {
+    document.getElementById('modalFichaAtendimento').style.display = 'none';
+    activeFichaAtendimentoId = null;
+};
+
+window.salvarFichaAtendimento = async function() {
+    const sintomas = document.getElementById('txtSintomasOrientacoes').value.trim();
+    const tratFluidico = document.getElementById('chkTratFluidico').checked;
+    const tratEspiritual = document.getElementById('chkTratEspiritual').checked;
+    
+    if (!sintomas) {
+        alert('Por favor, informe os sintomas e orientações desta sessão.');
+        return;
+    }
+    
+    if (!tratFluidico && !tratEspiritual) {
+        alert('Por favor, selecione ao menos um tratamento (Fluídico ou Espiritual).');
+        return;
+    }
+    
+    try {
+        // Obter usuário logado atual
+        const sess = JSON.parse(localStorage.getItem('portal_sela_sessao') || '{}');
+        let atendenteId = sess.pessoa_id || null;
+        
+        // Registrar Sessão
+        const { error: errSess } = await db.from('app_atendimento_sessoes').insert([{
+            atendimento_id: activeFichaAtendimentoId,
+            atendente_id: atendenteId,
+            sintomas_orientacoes: sintomas
+        }]);
+        if (errSess) throw errSess;
+        
+        // Registrar Tratamento Fluídico se indicado
+        if (tratFluidico) {
+            const { error: errTratF } = await db.from('app_atendimento_tratamentos').insert([{
+                atendimento_id: activeFichaAtendimentoId,
+                tipo: 'Fluídico',
+                status: 'Ativo'
+            }]);
+            if (errTratF) throw errTratF;
+        }
+        
+        // Registrar Tratamento Espiritual se indicado
+        if (tratEspiritual) {
+            const { error: errTratE } = await db.from('app_atendimento_tratamentos').insert([{
+                atendimento_id: activeFichaAtendimentoId,
+                tipo: 'Espiritual',
+                status: 'Ativo'
+            }]);
+            if (errTratE) throw errTratE;
+        }
+        
+        // Atualizar status do Atendimento Fraterno para 'Em Tratamento'
+        const { error: errAten } = await db.from('app_atendimento_fraterno').update({
+            status: 'Em Tratamento',
+            data_hora_atendimento: new Date().toISOString()
+        }).eq('id', activeFichaAtendimentoId);
+        if (errAten) throw errAten;
+        
+        alert('Sessão gravada e tratamentos prescritos com sucesso!');
+        fecharModalFicha();
+        carregarListaAtendimento();
+    } catch(err) {
+        alert('Erro ao gravar sessão: ' + err.message);
+    }
+};
+
+window.carregarTratamentosAtivosDesktop = async function() {
+    const lista = document.getElementById('listaAten');
+    if (!lista) return;
+    lista.innerHTML = '<div style="color: var(--text-muted); font-size: 14px;">Carregando tratamentos...</div>';
+    
+    try {
+        const { data: tratamentos, error } = await db
+            .from('app_atendimento_tratamentos')
+            .select('*, app_atendimento_fraterno(nome_completo, telefone)')
+            .eq('status', 'Ativo')
+            .order('tipo');
+            
+        if (error) throw error;
+        
+        lista.innerHTML = '';
+        if (!tratamentos || tratamentos.length === 0) {
+            lista.innerHTML = '<div style="padding: 24px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);">Nenhum tratamento ativo atualmente.</div>';
+            return;
+        }
+        
+        tratamentos.forEach(t => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px;';
+            
+            const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
+            const dtInicio = new Date(t.data_inicio).toLocaleDateString('pt-BR');
+            
+            card.innerHTML = `
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <strong style="font-size: 15px; color: var(--text-main);">${t.app_atendimento_fraterno?.nome_completo.toUpperCase()}</strong>
+                        <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white;">${t.tipo.toUpperCase()}</span>
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-muted);">Início do tratamento: ${dtInicio}</div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: #10b981; color: white;">Concluir</button>
+                    <button onclick="mudarStatusTratamento('${t.id}', 'Suspenso')" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">Suspender</button>
+                </div>
+            `;
+            lista.appendChild(card);
+        });
+    } catch(err) {
+        console.error(err);
+        lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar tratamentos.</span>';
+    }
+};
+
+window.mudarStatusTratamento = async function(id, status) {
+    const motive = status === 'Concluído' ? 'concluir' : 'suspender';
+    if (!confirm(`Tem certeza que deseja ${motive} este tratamento?`)) return;
+    
+    try {
+        const { error } = await db.from('app_atendimento_tratamentos').update({
+            status: status,
+            data_fim: new Date().toISOString().split('T')[0]
+        }).eq('id', id);
+        
+        if (error) throw error;
+        carregarListaAtendimento();
+    } catch(err) {
+        alert('Erro ao atualizar tratamento: ' + err.message);
+    }
+};
+
+window.carregarFilaPresencasDesktop = async function() {
+    const lista = document.getElementById('listaAten');
+    if (!lista) return;
+    lista.innerHTML = '<div style="color: var(--text-muted); font-size: 14px;">Carregando fila de presença...</div>';
+    
+    try {
+        const { data: tratamentos, error } = await db
+            .from('app_atendimento_tratamentos')
+            .select('*, app_atendimento_fraterno(nome_completo)')
+            .eq('status', 'Ativo')
+            .order('tipo');
+            
+        if (error) throw error;
+        
+        lista.innerHTML = '';
+        if (!tratamentos || tratamentos.length === 0) {
+            lista.innerHTML = '<div style="padding: 24px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);">Nenhum necessitado em tratamento ativo para assinar presença.</div>';
+            return;
+        }
+        
+        const nowStr = new Date().toISOString().split('T')[0];
+        
+        // Buscar presenças já assinadas hoje para evitar duplicados
+        const { data: presencasHoje } = await db
+            .from('app_atendimento_presencas')
+            .select('tratamento_id')
+            .eq('data', nowStr);
+            
+        const idsAssinados = (presencasHoje || []).map(p => p.tratamento_id);
+        
+        tratamentos.forEach(t => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px;';
+            
+            const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
+            const jaAssinou = idsAssinados.includes(t.id);
+            
+            let acaoHTML = '';
+            if (jaAssinou) {
+                acaoHTML = '<span style="color: #10b981; font-weight: bold; font-size: 13px;">✓ Presença Assinada</span>';
+            } else if (t.tipo === 'Fluídico') {
+                acaoHTML = `<button onclick="registrarPresencaFluidico('${t.id}')" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px; background: #3b82f6; color: white;">Confirmar Presença</button>`;
+            } else {
+                acaoHTML = `
+                    <div style="display: flex; gap: 8px; width: 100%; max-width: 400px;">
+                        <input type="text" id="obs_${t.id}" placeholder="Observações de evolução/tratamento..." class="input" style="flex: 1; font-size: 13px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; padding: 6px 10px; border-radius: 4px;">
+                        <button onclick="registrarPresencaEspiritual('${t.id}')" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px; background: #8b5cf6; color: white; white-space: nowrap;">Confirmar</button>
+                    </div>
+                `;
+            }
+            
+            card.innerHTML = `
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <strong style="font-size: 15px; color: var(--text-main);">${t.app_atendimento_fraterno?.nome_completo.toUpperCase()}</strong>
+                        <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white;">${t.tipo.toUpperCase()}</span>
+                    </div>
+                </div>
+                <div>${acaoHTML}</div>
+            `;
+            lista.appendChild(card);
+        });
+    } catch(err) {
+        console.error(err);
+        lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar fila de presenças.</span>';
+    }
+};
+
+window.registrarPresencaFluidico = async function(tratamentoId) {
+    try {
+        const { error } = await db.from('app_atendimento_presencas').insert([{
+            tratamento_id: tratamentoId,
+            data: new Date().toISOString().split('T')[0]
+        }]);
+        
+        if (error) throw error;
+        carregarFilaPresencasDesktop();
+    } catch(err) {
+        alert('Erro ao registrar presença: ' + err.message);
+    }
+};
+
+window.registrarPresencaEspiritual = async function(tratamentoId) {
+    const obsInput = document.getElementById('obs_' + tratamentoId);
+    const obs = obsInput ? obsInput.value.trim() : '';
+    
+    try {
+        const { error } = await db.from('app_atendimento_presencas').insert([{
+            tratamento_id: tratamentoId,
+            data: new Date().toISOString().split('T')[0],
+            observacoes: obs || null
+        }]);
+        
+        if (error) throw error;
+        carregarFilaPresencasDesktop();
+    } catch(err) {
+        alert('Erro ao registrar presença: ' + err.message);
+    }
+};
+
+window.carregarPainelSemanalDesktop = async function() {
+    const lista = document.getElementById('listaAten');
+    if (!lista) return;
+    lista.innerHTML = '<div style="color: var(--text-muted); font-size: 14px;">Carregando painel semanal...</div>';
+    
+    try {
+        const { data: tratamentos, error } = await db
+            .from('app_atendimento_tratamentos')
+            .select('*, app_atendimento_fraterno(nome_completo), app_atendimento_presencas(data)')
+            .eq('status', 'Ativo');
+            
+        if (error) throw error;
+        
+        lista.innerHTML = '';
+        if (!tratamentos || tratamentos.length === 0) {
+            lista.innerHTML = '<div style="padding: 24px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);">Nenhum tratamento ativo para exibir estatísticas semanais.</div>';
+            return;
+        }
+        
+        tratamentos.forEach(t => {
+            const presencas = t.app_atendimento_presencas || [];
+            const presCount = presencas.length;
+            const progressPct = Math.min((presCount / 4) * 100, 100);
+            
+            let lastDate = 'Nenhuma';
+            if (presencas.length > 0) {
+                // Ordenar datas
+                const dates = presencas.map(p => new Date(p.data)).sort((a,b) => b-a);
+                lastDate = dates[0].toLocaleDateString('pt-BR');
+            }
+            
+            const card = document.createElement('div');
+            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 8px;';
+            
+            const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
+            
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 12px;">
+                    <div>
+                        <strong style="font-size: 15px; color: var(--text-main);">${t.app_atendimento_fraterno?.nome_completo.toUpperCase()}</strong>
+                        <span style="font-size: 10px; font-weight: bold; margin-left: 8px; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white;">${t.tipo.toUpperCase()}</span>
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-muted);">Última presença: <strong>${lastDate}</strong></div>
+                </div>
+                
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">
+                        <span>Frequência: ${presCount} semanas realizadas</span>
+                        <span>Progresso sugerido (4 semanas): ${presCount}/4</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); height: 8px; border-radius: 4px; overflow: hidden; width: 100%;">
+                        <div style="background: var(--primary); height: 100%; width: ${progressPct}%; border-radius: 4px; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+            `;
+            lista.appendChild(card);
+        });
+    } catch(err) {
+        console.error(err);
+        lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar painel semanal.</span>';
+    }
+};
+
