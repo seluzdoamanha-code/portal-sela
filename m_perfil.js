@@ -259,7 +259,10 @@
         }
 
         document.getElementById('lblNomeCompleto').innerText = p.nome_completo || 'Sem Nome';
-        document.getElementById('lblTipoPessoa').innerText = p.tipo_pessoa || 'Pessoa Física';
+        document.getElementById('lblNomeCurto').innerText = p.nome_curto || '';
+        
+        const tipoVal = p.tipo_pessoa || 'Física';
+        document.getElementById('lblTipoPessoa').innerText = tipoVal.startsWith('Pessoa') ? tipoVal : `Pessoa ${tipoVal}`;
         
         const papeisContainer = document.getElementById('lblPapeis');
         papeisContainer.innerHTML = '';
