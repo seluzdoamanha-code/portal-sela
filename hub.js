@@ -3983,7 +3983,7 @@ window.carregarTratamentosAtivosDesktop = async function() {
         lista.appendChild(subNav);
         
         const containerCards = document.createElement('div');
-        containerCards.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+        containerCards.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
         lista.appendChild(containerCards);
         
         if (!tratamentos || tratamentos.length === 0) {
@@ -3991,46 +3991,180 @@ window.carregarTratamentosAtivosDesktop = async function() {
             return;
         }
         
+        // Agrupar tratamentos por Pessoa/Atendimento
+        const pacienteGrupos = {};
         tratamentos.forEach(t => {
-            const card = document.createElement('div');
-            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px;';
-            
-            const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
-            const dtText = isListActive 
-                ? `Início do tratamento: ${new Date(t.data_inicio).toLocaleDateString('pt-BR')}`
-                : `Período: ${new Date(t.data_inicio).toLocaleDateString('pt-BR')} até ${t.data_fim ? new Date(t.data_fim).toLocaleDateString('pt-BR') : 'atual'} (${t.status})`;
-            
-            let actionButtons = '';
-            if (isListActive) {
-                actionButtons = `
-                    <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: #10b981; color: white;">Concluir</button>
-                    <button onclick="mudarStatusTratamento('${t.id}', 'Suspenso')" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">Suspender</button>
-                    <button onclick="abrirFichaAtendimento('${t.app_atendimento_fraterno?.id}')" class="btn" style="padding: 6px 12px; font-size: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border);">📝 Evolução</button>
-                `;
-            } else {
-                actionButtons = `
-                    <button onclick="reativarTratamento('${t.id}')" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: var(--primary); color: white;">⚡ Reativar</button>
-                    <button onclick="abrirFichaAtendimento('${t.app_atendimento_fraterno?.id}')" class="btn" style="padding: 6px 12px; font-size: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border);">📝 Evolução</button>
-                `;
+            const pac = t.app_atendimento_fraterno;
+            if (!pac) return;
+            if (!pacienteGrupos[pac.id]) {
+                pacienteGrupos[pac.id] = {
+                    info: pac,
+                    tratamentos: []
+                };
             }
+            pacienteGrupos[pac.id].tratamentos.push(t);
+        });
+        
+        Object.keys(pacienteGrupos).forEach(pacId => {
+            const grupo = pacienteGrupos[pacId];
+            const card = document.createElement('div');
+            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;';
+            
+            // Layout de tratamentos da pessoa
+            let tratsHTML = '';
+            grupo.tratamentos.forEach(t => {
+                const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
+                const dtText = isListActive 
+                    ? `Início: ${new Date(t.data_inicio).toLocaleDateString('pt-BR')}`
+                    : `Período: ${new Date(t.data_inicio).toLocaleDateString('pt-BR')} até ${t.data_fim ? new Date(t.data_fim).toLocaleDateString('pt-BR') : 'atual'} (${t.status})`;
+                
+                let actionsHTML = '';
+                if (isListActive) {
+                    actionsHTML = `
+                        <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Concluir</button>
+                        <button onclick="mudarStatusTratamento('${t.id}', 'Suspenso')" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; cursor: pointer;">Suspender</button>
+                    `;
+                } else {
+                    actionsHTML = `
+                        <button onclick="reativarTratamento('${t.id}')" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer;">⚡ Reativar</button>
+                    `;
+                }
+                
+                tratsHTML += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.01); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.03);">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase;">${t.tipo}</span>
+                            <span style="font-size: 13px; color: var(--text-muted);">${dtText}</span>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            ${actionsHTML}
+                        </div>
+                    </div>
+                `;
+            });
             
             card.innerHTML = `
-                <div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                        <strong style="font-size: 15px; color: var(--text-main);">${t.app_atendimento_fraterno?.nome_completo.toUpperCase()}</strong>
-                        <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white;">${t.tipo.toUpperCase()}</span>
-                    </div>
-                    <div style="font-size: 13px; color: var(--text-muted);">${dtText}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                    <strong style="font-size: 16px; color: var(--text-main);">${grupo.info.nome_completo.toUpperCase()}</strong>
+                    <span style="font-size: 13px; color: var(--text-muted);">📱 ${grupo.info.telefone || 'Sem telefone'}</span>
                 </div>
-                <div style="display: flex; gap: 8px;">
-                    ${actionButtons}
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    ${tratsHTML}
                 </div>
+                
+                <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+                    <button onclick="toggleEvolucaoInline('${grupo.info.id}')" class="btn" style="padding: 6px 12px; font-size: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        📝 Evolução & Prontuário
+                    </button>
+                </div>
+                
+                <!-- Painel de Evolução Inline (Oculto por padrão) -->
+                <div id="panel_evolucao_${grupo.info.id}" style="display: none; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;"></div>
             `;
             containerCards.appendChild(card);
         });
     } catch(err) {
         console.error(err);
         lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar tratamentos.</span>';
+    }
+};
+
+window.toggleEvolucaoInline = async function(id) {
+    const panel = document.getElementById('panel_evolucao_' + id);
+    if (!panel) return;
+    
+    if (panel.style.display === 'block') {
+        panel.style.display = 'none';
+        return;
+    }
+    
+    panel.style.display = 'block';
+    panel.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; padding: 8px;">Carregando histórico e prontuário de evolução...</div>';
+    
+    try {
+        // Obter sessões anteriores
+        const { data: sessoes, error: errSess } = await db
+            .from('app_atendimento_sessoes')
+            .select('*, pessoas!atendente_id(nome_completo)')
+            .eq('atendimento_id', id)
+            .order('data', { ascending: false })
+            .limit(4);
+            
+        if (errSess) throw errSess;
+        
+        // Obter tratamentos para pegar presenças
+        const { data: trats, error: errTrats } = await db.from('app_atendimento_tratamentos').select('id, tipo, status').eq('atendimento_id', id);
+        if (errTrats) throw errTrats;
+        
+        let presencasHTML = '';
+        if (trats && trats.length > 0) {
+            const tratIds = trats.map(t => t.id);
+            const { data: pres, error: errPres } = await db
+                .from('app_atendimento_presencas')
+                .select('*')
+                .in('tratamento_id', tratIds)
+                .order('data', { ascending: false });
+                
+            if (errPres) throw errPres;
+            
+            if (!pres || pres.length === 0) {
+                presencasHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 12px; padding: 4px;">Nenhuma presença de tratamento registrada ainda.</div>';
+            } else {
+                presencasHTML = pres.map(p => {
+                    const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
+                    const tipoText = trat ? `${trat.tipo} (${trat.status})` : 'Tratamento';
+                    const dt = new Date(p.data).toLocaleDateString('pt-BR');
+                    const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
+                    return `
+                        <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 6px;">
+                            <strong style="color: #3b82f6;">${dt}</strong> - <span style="font-weight: 500;">${tipoText}</span>
+                            ${obs}
+                        </div>
+                    `;
+                }).join('');
+            }
+        } else {
+            presencasHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 12px; padding: 4px;">Nenhum tratamento registrado para esta ficha.</div>';
+        }
+        
+        let sessoesHTML = '';
+        if (!sessoes || sessoes.length === 0) {
+            sessoesHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 12px; padding: 4px;">Nenhuma sessão de atendimento registrada.</div>';
+        } else {
+            sessoesHTML = sessoes.map(s => {
+                const dt = new Date(s.data).toLocaleDateString('pt-BR');
+                return `
+                    <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 6px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <strong style="color: var(--primary);">${dt}</strong>
+                            <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_completo || 'Desconhecido'}</span>
+                        </div>
+                        <div style="color: var(--text-main); white-space: pre-wrap;">${s.sintomas_orientacoes}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        panel.innerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 6px;">
+                <div>
+                    <h5 style="margin: 0 0 8px 0; font-size: 13px; color: var(--primary); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">📜 Histórico de Sessões</h5>
+                    <div style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
+                        ${sessoesHTML}
+                    </div>
+                </div>
+                <div>
+                    <h5 style="margin: 0 0 8px 0; font-size: 13px; color: #3b82f6; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">🗓️ Histórico de Presenças</h5>
+                    <div style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
+                        ${presencasHTML}
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch(err) {
+        console.error(err);
+        panel.innerHTML = '<span style="color: #ef4444; font-size: 12px;">Erro ao carregar evolução.</span>';
     }
 };
 
