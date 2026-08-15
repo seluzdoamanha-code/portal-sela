@@ -2887,7 +2887,7 @@ let currentAtendimentoTab = 'fila';
 
 window.mudarAbaAtendimento = function(aba) {
     currentAtendimentoTab = aba;
-    const abas = ['fila', 'espera', 'andamento', 'mes', 'estatisticas', 'historico'];
+    const abas = ['fila', 'espera', 'andamento', 'mes', 'estatisticas', 'historico', 'tratamentos', 'presencas', 'painelsemanal'];
     abas.forEach(a => {
         const btn = document.getElementById('btnAten' + a.charAt(0).toUpperCase() + a.slice(1));
         if (btn) {
@@ -3043,11 +3043,14 @@ window.carregarPainelGestaoAtendimento = function() {
         <div id="statsDashboard" style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;"></div>
         
         <div>
-            <div style="display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; overflow-x: auto;">
+            <div style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; overflow-x: auto;">
                 <button onclick="mudarAbaAtendimento('fila')" id="btnAtenFila" class="btn" style="white-space: nowrap; border-radius: 8px; background: var(--primary); color: white;">📂 Fila Geral</button>
                 <button onclick="mudarAbaAtendimento('espera')" id="btnAtenEspera" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🛋️ Sala de Espera</button>
                 <button onclick="mudarAbaAtendimento('andamento')" id="btnAtenAndamento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🧑‍🤝‍🧑 Em Atendimento</button>
                 <button onclick="mudarAbaAtendimento('mes')" id="btnAtenMes" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">✨ Atendidos no Mês</button>
+                <button onclick="mudarAbaAtendimento('tratamentos')" id="btnAtenTratamentos" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🩹 Tratamentos Ativos</button>
+                <button onclick="mudarAbaAtendimento('presencas')" id="btnAtenPresencas" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🗓️ Confirmar Presenças</button>
+                <button onclick="mudarAbaAtendimento('painelsemanal')" id="btnAtenPainelsemanal" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">📊 Painel Semanal</button>
                 <button onclick="mudarAbaAtendimento('estatisticas')" id="btnAtenEstatisticas" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">📈 Estatísticas</button>
                 <button onclick="mudarAbaAtendimento('historico')" id="btnAtenHistorico" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">📜 Histórico Antigo</button>
             </div>
@@ -3130,6 +3133,37 @@ window.carregarPainelGestaoAtendimento = function() {
                     </form>
                 </div>
             </div>
+
+            <!-- Modal de Ficha de Atendimento Fraterno -->
+            <div id="modalFichaAtendimento" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); overflow-y: auto;">
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 24px; max-width: 600px; width: 90%; color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
+                    <button onclick="fecharModalFicha()" style="position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+                    <h3 style="color: var(--primary); margin-top: 0; font-size: 18px; display: flex; align-items: center; gap: 8px;">🤝 Ficha de Atendimento</h3>
+                    
+                    <div id="fichaInfoPaciente" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: var(--text-muted);"></div>
+                    
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--primary);">📜 Histórico de Sessões</h4>
+                    <div id="fichaHistoricoSessoes" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;"></div>
+                    
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #f59e0b;">➕ Nova Sessão de Atendimento</h4>
+                    <textarea id="txtSintomasOrientacoes" placeholder="Escreva os sintomas identificados e as orientações fornecidas ao necessitado..." style="width: 100%; height: 100px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-dark); color: white; padding: 10px; font-size: 14px; font-family: inherit; resize: none; box-sizing: border-box; margin-bottom: 16px; outline: none;"></textarea>
+
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #10b981;">🩹 Prescrever Tratamentos</h4>
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px;">
+                            <input type="checkbox" id="chkTratFluidico" style="width: 16px; height: 16px; accent-color: var(--primary);"> Indicar <strong>Tratamento Fluídico</strong>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px;">
+                            <input type="checkbox" id="chkTratEspiritual" style="width: 16px; height: 16px; accent-color: var(--primary);"> Indicar <strong>Tratamento Energético/Espiritual</strong>
+                        </label>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px;">
+                        <button onclick="salvarFichaAtendimento()" class="btn btn-primary" style="flex:1;">Gravar Sessão e Prescrever</button>
+                        <button onclick="fecharModalFicha()" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+                    </div>
+                </div>
+            </div>
         </div>
     `;
     
@@ -3164,24 +3198,34 @@ window.carregarListaAtendimento = async function() {
             return d.getFullYear() === curYear && d.getMonth() === curMonth;
         });
 
+        const { data: activeTrats } = await db.from('app_atendimento_tratamentos').select('id').eq('status', 'Ativo');
+        const activeTratCount = activeTrats ? activeTrats.length : 0;
+
+        // Calculate and render stats dashboard
+        const atendidosMesTotal = allData.filter(item => {
+            if (item.status !== 'Atendido' || !item.data_hora_atendimento) return false;
+            const d = new Date(item.data_hora_atendimento);
+            return d.getFullYear() === curYear && d.getMonth() === curMonth;
+        });
+
         const statsContainer = document.getElementById('statsDashboard');
         if (statsContainer) {
             statsContainer.innerHTML = `
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                     <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">📂 Fila Ativa</div>
-                    <div style="font-size: 18px; font-weight: bold; color: var(--primary);">${allData.filter(d => d.status !== 'Atendido').length}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: var(--primary);">${allData.filter(d => d.status !== 'Atendido' && d.status !== 'Em Tratamento').length}</div>
                 </div>
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                     <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🛋️ Sala de Espera</div>
-                    <div style="font-size: 18px; font-weight: bold; color: #f59e0b;">${allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido').length}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #f59e0b;">${allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length}</div>
                 </div>
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                     <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🧑‍🤝‍🧑 Em Atendimento</div>
-                    <div style="font-size: 18px; font-weight: bold; color: #3b82f6;">${allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido').length}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #3b82f6;">${allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length}</div>
                 </div>
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
-                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">✨ Atendidos no Mês</div>
-                    <div style="font-size: 18px; font-weight: bold; color: #10b981;">${atendidosMesTotal.length}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🩹 Tratando</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #10b981;">${activeTratCount}</div>
                 </div>
             `;
         }
@@ -3217,13 +3261,13 @@ window.carregarListaAtendimento = async function() {
         // Filter data for list
         let data = [];
         if (currentAtendimentoTab === 'fila') {
-            data = allData.filter(d => d.status !== 'Atendido');
+            data = allData.filter(d => d.status !== 'Atendido' && d.status !== 'Em Tratamento');
             data.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
         } else if (currentAtendimentoTab === 'espera') {
-            data = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido');
+            data = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
             data.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
         } else if (currentAtendimentoTab === 'andamento') {
-            data = allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido');
+            data = allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
         } else if (currentAtendimentoTab === 'mes') {
             data = atendidosMesTotal;
         } else if (currentAtendimentoTab === 'historico') {
@@ -3232,6 +3276,18 @@ window.carregarListaAtendimento = async function() {
                 const d = new Date(item.data_hora_atendimento);
                 return !(d.getFullYear() === curYear && d.getMonth() === curMonth);
             });
+        } else if (currentAtendimentoTab === 'tratamentos') {
+            document.getElementById('loadingAten').style.display = 'none';
+            carregarTratamentosAtivosDesktop();
+            return;
+        } else if (currentAtendimentoTab === 'presencas') {
+            document.getElementById('loadingAten').style.display = 'none';
+            carregarFilaPresencasDesktop();
+            return;
+        } else if (currentAtendimentoTab === 'painelsemanal') {
+            document.getElementById('loadingAten').style.display = 'none';
+            carregarPainelSemanalDesktop();
+            return;
         }
 
         document.getElementById('loadingAten').style.display = 'none';
