@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sortOrder = document.getElementById('sortOrder');
     
     // Checkboxes de filtros de papel
-    const chkOutros = document.getElementById('showOutros');
+    const chkOutros = document.getElementById('hideOutros');
 
     if(filterSearch) filterSearch.addEventListener('input', window.aplicarFiltros);
     if(filterTag) filterTag.addEventListener('change', window.aplicarFiltros);
@@ -125,7 +125,7 @@ window.aplicarFiltros = () => {
         });
         
         // Filtra papéis que estão desmarcados nas caixas de seleção
-        const showOutros = document.getElementById('showOutros');
+        const hideOutros = document.getElementById('hideOutros');
 
         filtrados = filtrados.filter(p => {
             if (!p.papeis) return true;
@@ -138,7 +138,7 @@ window.aplicarFiltros = () => {
 
             const papeisUpper = String(p.papeis).toUpperCase();
             
-            if (showOutros && showOutros.checked === false && papeisUpper.includes('OUTRO')) return false;
+            if (hideOutros && hideOutros.checked === true && papeisUpper.includes('OUTRO')) return false;
             
             return true;
         });

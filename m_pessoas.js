@@ -25,7 +25,7 @@
         const searchInput = document.getElementById('mSearchInput');
         const filterTag = document.getElementById('mFilterTag');
         const sortOrder = document.getElementById('mSortOrder');
-        const showOutros = document.getElementById('mShowOutros');
+        const hideOutros = document.getElementById('mHideOutros');
         const btnToggleFilter = document.getElementById('btnToggleFilter');
         const filterPanel = document.getElementById('mFilterPanel');
 
@@ -41,7 +41,7 @@
         if (searchInput) searchInput.addEventListener('input', filtrarLista);
         if (filterTag) filterTag.addEventListener('change', filtrarLista);
         if (sortOrder) sortOrder.addEventListener('change', filtrarLista);
-        if (showOutros) showOutros.addEventListener('change', filtrarLista);
+        if (hideOutros) hideOutros.addEventListener('change', filtrarLista);
     });
 
     function obterIniciais(nome) {
@@ -228,12 +228,12 @@
         const input = document.getElementById('mSearchInput');
         const filterTag = document.getElementById('mFilterTag');
         const selectSort = document.getElementById('mSortOrder');
-        const chkOutros = document.getElementById('mShowOutros');
+        const chkOutros = document.getElementById('mHideOutros');
         
         const termo = (input ? input.value.toLowerCase().trim() : '');
         const tag = filterTag ? filterTag.value : '';
         const sort = selectSort ? selectSort.value : 'nome_az';
-        const showOutros = chkOutros ? chkOutros.checked : false;
+        const hideOutrosVal = chkOutros ? chkOutros.checked : false;
 
         // Filter
         let filtrados = allPessoas.filter(p => {
@@ -252,8 +252,8 @@
 
             // Lógica de "Outros"
             let matchOutros = true;
-            if (!showOutros) {
-                // Se a flag não estiver marcada, esconde as pessoas que têm a tag 'Outros'
+            if (hideOutrosVal) {
+                // Se a flag estiver marcada, esconde as pessoas que têm a tag 'Outros'
                 const temOutros = p.papeis && p.papeis.some(role => role.toLowerCase().includes('outro'));
                 if (temOutros) {
                     matchOutros = false;
