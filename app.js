@@ -350,6 +350,8 @@ function setupModal() {
     
     btnNovo.addEventListener('click', () => {
         if(window.switchTab) window.switchTab('basico');
+        const modalTitle = document.getElementById('modalTitle');
+        if (modalTitle) modalTitle.textContent = 'Nova Pessoa/Entidade';
         modal.classList.add('show');
     });
     btnClose.addEventListener('click', fecharModal);
@@ -538,6 +540,8 @@ window.editarPessoa = async (id) => {
     pessoaEditandoId = id;
     
     const modal = document.getElementById('modalPessoa');
+    const modalTitle = document.getElementById('modalTitle');
+    if (modalTitle) modalTitle.textContent = 'Editar Pessoa/Entidade';
     
     document.getElementById('inTipo').value = pessoa.tipo_pessoa || 'Física';
     document.getElementById('inTipo').dispatchEvent(new Event('change'));
