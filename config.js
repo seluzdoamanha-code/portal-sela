@@ -138,7 +138,7 @@ async function carregarPerfis() {
         if (data) data.forEach(d => map[d.chave] = d.valor);
 
         if (document.getElementById('inPerfis')) {
-            document.getElementById('inPerfis').value = map['perfis_pessoas'] || "Presidente, Vice-Presidente, Secretário, Tesoureiro, Conselheiro, Diretor, Coordenador, Associado Efetivo, Associado Proponente, Ex-Associado, Voluntário, Colaborador(a), Palestrante, Evangelizando, Estudante, Assistido(a), Paciente, Membro da Família, Empresa Parceira, Parceiro, Fornecedor, Passista, Líder, Outros";
+            document.getElementById('inPerfis').value = map['perfis_pessoas'] || "Presidente, Vice-Presidente, Secretário, Tesoureiro, Conselheiro, Diretor, Coordenador, Associado Efetivo, Associado Proponente, Ex-Associado, Voluntário, Colaborador(a), Palestrante, Evangelizando, Estudante, Assistido(a), Paciente, Membro da Família, Empresa Parceira, Parceiro, Fornecedor, Passista, Líder, Leitor, Outros";
         }
         if (document.getElementById('inLideranca')) {
             document.getElementById('inLideranca').value = map['tags_lideranca'] || "diretor, líder, lider, coordenador, gerente, presidente";

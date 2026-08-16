@@ -159,7 +159,7 @@
             "Associado Proponente", "Ex-Associado", "Voluntário", "Colaborador(a)", 
             "Palestrante", "Evangelizando", "Estudante", "Assistido(a)", "Paciente", 
             "Membro da Família", "Empresa Parceira", "Parceiro", "Fornecedor", 
-            "Passista", "Líder", "Outros"
+            "Passista", "Líder", "Leitor", "Outros"
         ];
         try {
             const { data, error } = await db.from('configuracoes').select('valor').eq('chave', 'perfis_pessoas').single();
@@ -169,12 +169,13 @@
         } catch(err) {
             // Usa tags padrao
         }
-        // Sort logic: 1. Associado Efetivo, 2. Outros, 3. Resto alfabeticamente
+        // Sort logic: 1. Associado Efetivo, 2. Leitor, 3. Outros, 4. Resto alfabeticamente
         let specialTags = [];
         if (TAGS.includes('Associado Efetivo')) { specialTags.push('Associado Efetivo'); }
+        if (TAGS.includes('Leitor')) { specialTags.push('Leitor'); }
         if (TAGS.includes('Outros')) { specialTags.push('Outros'); }
         
-        let otherTags = TAGS.filter(t => t !== 'Associado Efetivo' && t !== 'Outros').sort((a, b) => a.localeCompare(b));
+        let otherTags = TAGS.filter(t => t !== 'Associado Efetivo' && t !== 'Leitor' && t !== 'Outros').sort((a, b) => a.localeCompare(b));
         todasAsTags = [...specialTags, ...otherTags];
         const container = document.getElementById('mTagsContainer');
         if (container) {
