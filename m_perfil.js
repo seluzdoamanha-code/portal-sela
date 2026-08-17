@@ -333,6 +333,9 @@
         if (typeof window.initFinanceiro === 'function') {
             window.initFinanceiro(pessoaAtual, true);
         }
+
+        // --- HOOK BIBLIOTECA ---
+        carregarEmprestimos();
     }
 
     function preencherFormulario() {
@@ -459,6 +462,83 @@
         } finally {
             btnSaveEdit.innerText = 'Salvar';
             btnSaveEdit.disabled = false;
+        }
+    }
+
+    async function carregarEmprestimos() {
+        if (!currentId) return;
+        try {
+            const { data, error } = await db.from('emprestimos_portal')
+                .select('*')
+                .eq('pessoa_id', currentId)
+                .order('data_emprestimo', { ascending: false });
+                
+            if (error) throw error;
+            
+            const ativos = data.filter(e => e.status.toLowerCase() !== 'devolvido' && !e.data_devolucao);
+            const inativos = data.filter(e => e.status.toLowerCase() === 'devolvido' || e.data_devolucao);
+            
+            if (data.length > 0) {
+                document.getElementById('mBibliotecaContainer').style.display = 'block';
+            }
+            
+            const ativosContainer = document.getElementById('mEmprestimosAtivosContainer');
+            if (ativos.length > 0) {
+                ativosContainer.innerHTML = ativos.map(e => {
+                    const dataEmp = new Date(e.data_emprestimo);
+                    const hoje = new Date();
+                    const diffTime = Math.abs(hoje - dataEmp);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    let aviso = '';
+                    let avisoColor = '';
+                    if (diffDays > 30) {
+                        aviso = 'Renove/Devolva';
+                        avisoColor = 'color: #ef4444; font-weight: 600;';
+                    } else if (diffDays > 25) {
+                        aviso = 'Vencendo em breve';
+                        avisoColor = 'color: #f59e0b; font-weight: 600;';
+                    } else {
+                        aviso = 'No prazo';
+                        avisoColor = 'color: #10b981;';
+                    }
+                    
+                    return `
+                        <div class="m-info-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                            <div style="display: flex; justify-content: space-between; width: 100%;">
+                                <div style="font-size: 14px; font-weight: 600; color: var(--text-main);">${e.titulo_livro}</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">${e.codigo_livro}</div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; width: 100%; font-size: 12px; margin-top: 4px;">
+                                <div style="color: var(--text-muted);">Emp: ${dataEmp.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>
+                                <div style="color: var(--text-muted);">${diffDays} dias</div>
+                            </div>
+                            <div style="font-size: 12px; margin-top: 4px; ${avisoColor}">${aviso}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            const inativosContainer = document.getElementById('mEmprestimosInativosContainer');
+            if (inativos.length > 0) {
+                inativosContainer.innerHTML = inativos.map(e => {
+                    const dataEmp = new Date(e.data_emprestimo);
+                    return `
+                        <div class="m-info-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                            <div style="display: flex; justify-content: space-between; width: 100%;">
+                                <div style="font-size: 14px; font-weight: 600; color: var(--text-main);">${e.titulo_livro}</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">${e.codigo_livro}</div>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                                Emp: ${dataEmp.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+        } catch (e) {
+            console.error('Erro ao carregar empréstimos:', e);
         }
     }
 
