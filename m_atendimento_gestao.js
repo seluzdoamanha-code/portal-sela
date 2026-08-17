@@ -13,7 +13,8 @@
     const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
     let estruturaId = null;
-    let abaAtual = 'fila';
+    let abaPrincipal = 'triagem';
+    let subAba = 'fila';
     let pacienteAtualFichaId = null;
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -34,13 +35,54 @@
             t.addEventListener('click', () => {
                 tabs.forEach(x => x.classList.remove('active'));
                 t.classList.add('active');
-                abaAtual = t.dataset.tab;
+                abaPrincipal = t.dataset.main;
+                
+                // Definir subAba padrão baseada na Aba Principal
+                if (abaPrincipal === 'triagem') subAba = 'fila';
+                else if (abaPrincipal === 'atendimento') subAba = 'andamento';
+                else if (abaPrincipal === 'acompanhamento') subAba = 'tratamentos';
+                else if (abaPrincipal === 'historico') subAba = 'mes';
+                
+                renderSubTabs();
                 carregarLista();
             });
         });
 
+        window.switchSubTab = function(novaSubAba) {
+            subAba = novaSubAba;
+            renderSubTabs();
+            carregarLista();
+        };
+
+        renderSubTabs();
         carregarLista();
     });
+
+    function renderSubTabs() {
+        const container = document.getElementById('subTabsContainer');
+        if (abaPrincipal === 'triagem') {
+            container.style.display = 'flex';
+            container.innerHTML = `
+                <div class="sub-tab-pill ${subAba === 'fila' ? 'active' : ''}" onclick="switchSubTab('fila')">📂 Fila Geral</div>
+                <div class="sub-tab-pill ${subAba === 'espera' ? 'active' : ''}" onclick="switchSubTab('espera')">🛋️ Sala de Espera</div>
+            `;
+        } else if (abaPrincipal === 'atendimento') {
+            container.style.display = 'none';
+        } else if (abaPrincipal === 'acompanhamento') {
+            container.style.display = 'flex';
+            container.innerHTML = `
+                <div class="sub-tab-pill ${subAba === 'tratamentos' ? 'active' : ''}" onclick="switchSubTab('tratamentos')">🩹 Tratamentos Ativos</div>
+                <div class="sub-tab-pill ${subAba === 'presencas' ? 'active' : ''}" onclick="switchSubTab('presencas')">🗓️ Presenças</div>
+                <div class="sub-tab-pill ${subAba === 'painel_semanal' ? 'active' : ''}" onclick="switchSubTab('painel_semanal')">📊 Painel Semanal</div>
+            `;
+        } else if (abaPrincipal === 'historico') {
+            container.style.display = 'flex';
+            container.innerHTML = `
+                <div class="sub-tab-pill ${subAba === 'mes' ? 'active' : ''}" onclick="switchSubTab('mes')">✨ Atendimentos no Mês</div>
+                <div class="sub-tab-pill ${subAba === 'historico_antigo' ? 'active' : ''}" onclick="switchSubTab('historico_antigo')">📚 Histórico Antigo</div>
+            `;
+        }
+    }
 
     async function carregarLista() {
         const container = document.getElementById('listaAtendimento');
@@ -86,21 +128,21 @@
 
             let filteredData = [];
 
-            if (abaAtual === 'fila') {
+            if (subAba === 'fila') {
                 filteredData = allData.filter(d => d.status !== 'Atendido' && d.status !== 'Em Tratamento');
                 filteredData.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
                 renderNormalList(filteredData);
             } 
-            else if (abaAtual === 'espera') {
+            else if (subAba === 'espera') {
                 filteredData = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
                 filteredData.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
                 renderNormalList(filteredData);
             } 
-            else if (abaAtual === 'andamento') {
+            else if (subAba === 'andamento') {
                 filteredData = allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
                 renderAndamentoList(filteredData);
             } 
-            else if (abaAtual === 'mes') {
+            else if (subAba === 'mes') {
                 filteredData = allData.filter(item => {
                     if (item.status !== 'Atendido' && item.status !== 'Em Tratamento') return false;
                     const d = new Date(item.data_hora_atendimento || item.created_at);
@@ -108,14 +150,18 @@
                 });
                 renderHistoricoList(filteredData);
             } 
-            else if (abaAtual === 'tratamentos') {
+            else if (subAba === 'tratamentos') {
                 carregarTratamentosAtivos();
             } 
-            else if (abaAtual === 'presencas') {
+            else if (subAba === 'presencas') {
                 carregarFilaPresencas();
             } 
-            else if (abaAtual === 'painel_semanal') {
+            else if (subAba === 'painel_semanal') {
                 carregarPainelSemanal();
+            }
+            else if (subAba === 'historico_antigo') {
+                const ct = document.getElementById('listaAtendimento');
+                ct.innerHTML = '<div class="empty-state">📚 Área de Histórico Antigo e Estatísticas em desenvolvimento.</div>';
             }
 
         } catch (e) {
