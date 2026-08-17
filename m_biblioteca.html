@@ -115,10 +115,10 @@
             border-color: var(--primary);
         }
 
-        /* Grid de Livros (2 colunas) */
+        /* Lista de Livros (1 coluna) */
         .m-books-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            display: flex;
+            flex-direction: column;
             gap: 12px;
             padding: 16px;
         }
@@ -129,22 +129,29 @@
             border: 1px solid var(--border);
             overflow: hidden;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            padding: 12px;
+            gap: 16px;
             position: relative;
+            align-items: center;
         }
 
         .m-book-cover {
-            width: 100%;
-            aspect-ratio: 2/3;
+            width: 60px;
+            height: 90px;
             object-fit: cover;
+            border-radius: 6px;
             background: #2a2a2a;
+            flex-shrink: 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
         .m-book-info {
-            padding: 10px;
             display: flex;
             flex-direction: column;
+            justify-content: center;
             flex: 1;
+            padding: 0;
         }
 
         .m-book-title {
