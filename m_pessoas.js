@@ -56,7 +56,7 @@
         if (loading) loading.innerText = 'Buscando do banco...';
 
         try {
-            const { data, error } = await db.from('pessoas').select('id, nome_completo, nome_curto, tipo_pessoa, papeis, celular, email, cpf_cnpj, foto_url, created_at, status').order('nome_completo');
+            const { data, error } = await db.from('pessoas').select('id, nome_completo, nome_curto, tipo_pessoa, perfis, celular, email, cpf_cnpj, foto_url, created_at, status').order('nome_completo');
             
             if (loading) loading.style.display = 'none';
 
@@ -161,12 +161,15 @@
                 visualIcone = iniciais;
             }
 
-            // Papeis (Até 3 badges)
-            let papeisHtml = '';
-            if (p.papeis && p.papeis.length > 0) {
-                const limit = Math.min(p.papeis.length, 3);
+            // Perfis (Até 3 badges)
+            let perfisHtml = '';
+            if (p.perfis && p.perfis.length > 0) {
+                const limit = Math.min(p.perfis.length, 3);
                 for(let i=0; i<limit; i++) {
-                    papeisHtml += `<span class="badge" style="background: ${isEmpresa ? 'rgba(52, 211, 153, 0.2); color: #34d399' : 'rgba(99, 102, 241, 0.2); color: #818cf8'}; margin-right: 4px;">${p.papeis[i]}</span>`;
+                    perfisHtml += `<span class="badge" style="background: ${isEmpresa ? 'rgba(52, 211, 153, 0.2); color: #34d399' : 'rgba(99, 102, 241, 0.2); color: #818cf8'}; margin-right: 4px;">${p.perfis[i]}</span>`;
+                }
+                if (p.perfis.length > 3) {
+                    perfisHtml += `<span class="badge" style="background: rgba(255,255,255,0.1); color: #ccc;">+${p.perfis.length - 3}</span>`;
                 }
             }
             
@@ -212,8 +215,8 @@
                             ${whatsAppBtn}
                         </div>
                     </div>
-                    <div style="margin-top: 2px;">
-                        ${papeisHtml}
+                    <div style="margin-top: 8px;">
+                        ${perfisHtml}
                     </div>
                     ${documento}
                     ${emailText}
@@ -247,14 +250,14 @@
             } else if (tag === 'Jurídica') {
                 matchTag = (p.tipo_pessoa === 'Jurídica');
             } else if (tag !== '') {
-                matchTag = p.papeis && p.papeis.includes(tag);
+                matchTag = p.perfis && p.perfis.includes(tag);
             }
 
             // Lógica de "Outros"
             let matchOutros = true;
             if (hideOutrosVal) {
                 // Se a flag estiver marcada, esconde as pessoas que têm a tag 'Outros'
-                const temOutros = p.papeis && p.papeis.some(role => role.toLowerCase().includes('outro'));
+                const temOutros = p.perfis && p.perfis.some(role => role.toLowerCase().includes('outro'));
                 if (temOutros) {
                     matchOutros = false;
                 }

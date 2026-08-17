@@ -690,7 +690,7 @@ window.abrirModalNovaFamilia = async function() {
     btn.disabled = true;
     
     try {
-        const { data: pessoas, error } = await db.from('pessoas').select('id, nome_completo, papeis').order('nome_completo');
+        const { data: pessoas, error } = await db.from('pessoas').select('id, nome_completo, perfis').order('nome_completo');
         if(error) throw error;
         
         // Pode ser útil guardar pra usar nos selects de membros
@@ -711,8 +711,8 @@ window.abrirModalNovaFamilia = async function() {
 
 window.gerarOpcoesPessoasAss = function(selecionadoId = '') {
     const pessoas = window.assPessoasGlobais || [];
-    const comPerfil = pessoas.filter(p => p.papeis && p.papeis.includes('Membro da Família'));
-    const semPerfil = pessoas.filter(p => !p.papeis || !p.papeis.includes('Membro da Família'));
+    const comPerfil = pessoas.filter(p => p.perfis && p.perfis.includes('Membro da Família'));
+    const semPerfil = pessoas.filter(p => !p.perfis || !p.perfis.includes('Membro da Família'));
     
     let html = '<option value="">-- Selecione --</option>';
     

@@ -440,8 +440,8 @@ window.assPessoasGlobais = [];
 
 window.gerarOpcoesPessoasAss = function(selecionadoId = '') {
     const pessoas = window.assPessoasGlobais || [];
-    const comPerfil = pessoas.filter(p => p.papeis && p.papeis.includes('Membro da Família'));
-    const semPerfil = pessoas.filter(p => !p.papeis || !p.papeis.includes('Membro da Família'));
+    const comPerfil = pessoas.filter(p => p.perfis && p.perfis.includes('Membro da Família'));
+    const semPerfil = pessoas.filter(p => !p.perfis || !p.perfis.includes('Membro da Família'));
     
     let html = '<option value="">-- Selecione --</option>';
     
@@ -484,7 +484,7 @@ window.adicionarLinhaMembroAss = function(pessoaId = '', parentesco = '') {
 async function carregarPessoasParaForm() {
     if (window.assPessoasGlobais && window.assPessoasGlobais.length > 0) return; // Already loaded
     try {
-        const { data: pessoas, error } = await db.from('pessoas').select('id, nome_completo, papeis').order('nome_completo');
+        const { data: pessoas, error } = await db.from('pessoas').select('id, nome_completo, perfis').order('nome_completo');
         if (error) throw error;
         window.assPessoasGlobais = pessoas || [];
     } catch(err) {

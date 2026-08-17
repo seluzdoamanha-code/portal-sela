@@ -12,7 +12,7 @@
         if (!currentId) {
             const action = new URLSearchParams(window.location.search).get('action');
             if (action === 'new') {
-                pessoaAtual = { tipo_pessoa: 'Física', papeis: [] };
+                pessoaAtual = { tipo_pessoa: 'Física', perfis: [] };
                 await carregarTags();
                 document.getElementById('mLoadingState').style.display = 'none';
                 
@@ -180,9 +180,9 @@
         const container = document.getElementById('mTagsContainer');
         if (container) {
             container.innerHTML = todasAsTags.map(tag => `
-                <label style="display: flex; align-items: center; gap: 6px; background: var(--bg-card); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; font-size: 13px; color: var(--text-main);">
-                    <input type="checkbox" name="mPapeis" value="${tag}" style="width: 16px; height: 16px; accent-color: var(--primary);">
-                    ${tag}
+                <label style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <input type="checkbox" name="mPerfis" value="${tag}" style="width: 16px; height: 16px; accent-color: var(--primary);">
+                    <span style="font-size: 14px;">${tag}</span>
                 </label>
             `).join('');
         }
@@ -268,18 +268,20 @@
         const tipoVal = p.tipo_pessoa || 'Física';
         document.getElementById('lblTipoPessoa').innerText = tipoVal.startsWith('Pessoa') ? tipoVal : `Pessoa ${tipoVal}`;
         
-        const papeisContainer = document.getElementById('lblPapeis');
-        papeisContainer.innerHTML = '';
-        if (p.papeis && p.papeis.length > 0) {
-            p.papeis.forEach(papel => {
+        // Renderizar Perfis
+        const perfisContainer = document.getElementById('lblPerfis');
+        perfisContainer.innerHTML = '';
+        if (p.perfis && p.perfis.length > 0) {
+            p.perfis.forEach(perfil => {
                 const badge = document.createElement('span');
-                badge.className = 'badge';
-                badge.style.background = 'rgba(99, 102, 241, 0.2)';
+                badge.style.background = 'rgba(99, 102, 241, 0.1)';
                 badge.style.color = '#818cf8';
+                badge.style.padding = '4px 12px';
+                badge.style.borderRadius = '20px';
                 badge.style.fontSize = '12px';
-                badge.style.padding = '4px 10px';
-                badge.innerText = papel;
-                papeisContainer.appendChild(badge);
+                badge.style.fontWeight = '500';
+                badge.innerText = perfil;
+                perfisContainer.appendChild(badge);
             });
         }
 
@@ -379,10 +381,10 @@
             if (btnRemoverFoto) btnRemoverFoto.style.display = 'none';
         }
 
-        // Checkboxes de Papeis
-        const checkboxes = document.querySelectorAll('input[name="mPapeis"]');
+        // Checkboxes de Perfis
+        const checkboxes = document.querySelectorAll('input[name="mPerfis"]');
         checkboxes.forEach(cb => {
-            cb.checked = (p.papeis && p.papeis.includes(cb.value));
+            cb.checked = (p.perfis && p.perfis.includes(cb.value));
         });
     }
 
@@ -391,7 +393,8 @@
         btnSaveEdit.innerText = 'Salvando...';
         btnSaveEdit.disabled = true;
 
-        const papeis = Array.from(document.querySelectorAll('input[name="mPapeis"]:checked')).map(cb => cb.value);
+        const statusForm = document.getElementById('inpStatus').value;
+        const perfis = Array.from(document.querySelectorAll('input[name="mPerfis"]:checked')).map(cb => cb.value);
 
         const dados = {
             cpf_cnpj: document.getElementById('inpCpfCnpj').value.replace(/\D/g, '') || null,
@@ -405,8 +408,8 @@
             bairro: document.getElementById('inpBairro').value.trim(),
             cidade: document.getElementById('inpCidade').value.trim(),
             estado: document.getElementById('inpEstado').value.trim().toUpperCase(),
-            papeis: papeis,
-            status: document.getElementById('inpStatus').value || 'Ativo',
+            status: statusForm,
+            perfis: perfis,
             sexo: document.getElementById('inpSexo').value || null,
             naturalidade: document.getElementById('inpNaturalidade').value || null,
             nacionalidade: document.getElementById('inpNacionalidade').value || null,

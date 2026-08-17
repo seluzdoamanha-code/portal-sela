@@ -726,7 +726,7 @@
             const { data, error } = await db
                 .from('pessoas')
                 .select('id, nome_completo')
-                .contains('papeis', ['Atendente Fraterno']);
+                .contains('perfis', ['Atendente Fraterno']);
 
             if (error) throw error;
 

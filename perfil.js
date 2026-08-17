@@ -154,14 +154,14 @@ async function carregarPerfil() {
         if (pessoa.estado) cidadeEstado.push(pessoa.estado.toUpperCase());
         document.getElementById('infoCidadeEstado').textContent = cidadeEstado.length > 0 ? cidadeEstado.join(' / ') : '-';
 
-        // Renderizar Papéis
-        const containerPapeis = document.getElementById('infoPapeis');
-        if (pessoa.papeis && pessoa.papeis.length > 0) {
-            containerPapeis.innerHTML = pessoa.papeis.map(tag => 
-                `<span style="background: rgba(79,70,229,0.2); color: #818cf8; padding: 4px 10px; border-radius: 4px; font-size: 13px; margin-right: 6px; margin-bottom: 6px; display: inline-block;">${tag}</span>`
+        // Renderizar Perfis
+        const containerPerfis = document.getElementById('infoPerfis');
+        if (pessoa.perfis && pessoa.perfis.length > 0) {
+            containerPerfis.innerHTML = pessoa.perfis.map(tag => 
+                `<span style="display: inline-block; background: rgba(99, 102, 241, 0.1); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; margin-right: 8px; margin-bottom: 8px;">${tag}</span>`
             ).join('');
         } else {
-            containerPapeis.textContent = 'Nenhum papel atribuído';
+            containerPerfis.textContent = 'Nenhum perfil atribuído';
         }
 
         // --- HOOK FINANCEIRO ---

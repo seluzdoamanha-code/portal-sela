@@ -60,7 +60,7 @@ for p in pessoas_bd:
     if nome_comp.strip().lower() in existentes_nomes:
         continue
         
-    papeis = [p[4]] if p[4] else []
+    perfis = [p[4]] if p[4] else []
     
     dados = {
         "tipo_pessoa": "Física",
@@ -68,7 +68,7 @@ for p in pessoas_bd:
         "nome_completo": nome_comp,
         "nome_curto": formatar_nome(p[2]),
         "data_nascimento": formatar_data(p[3]),
-        "papeis": papeis,
+        "perfis": perfis,
         "celular": p[5],
         "email": p[6],
         "cep": p[7],
@@ -110,7 +110,7 @@ try:
             "tipo_pessoa": "Física",
             "cpf_cnpj": None,
             "nome_completo": nome_comp,
-            "papeis": ["Família Assistida"]
+            "perfis": ["Família Assistida"]
         }
         req = urllib.request.Request(SUPABASE_URL, data=json.dumps(dados).encode('utf-8'), headers=headers, method='POST')
         try:

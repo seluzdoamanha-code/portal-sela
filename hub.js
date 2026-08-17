@@ -445,7 +445,7 @@ async function carregarEquipe() {
             .from('vinculos_estrutura')
             .select(`
                 papel,
-                pessoas (nome_completo, papeis, celular, email)
+                pessoas (nome_completo, perfis, celular, email)
             `)
             .eq('estrutura_id', estruturaId);
             
@@ -496,9 +496,9 @@ async function carregarEquipe() {
                     ${telefone}
                     ${emailIcon}
                 </div>
-                ${pessoa.papeis && pessoa.papeis.length > 0 ? 
+                ${pessoa.perfis && pessoa.perfis.length > 0 ? 
                     `<div style="margin-top: 12px; display: flex; gap: 4px; flex-wrap: wrap;">
-                        ${pessoa.papeis.map(t => `<span style="background: rgba(129, 140, 248, 0.1); color: #818cf8; padding: 2px 8px; border-radius: 12px; font-size: 10px;">${t}</span>`).join('')}
+                        ${pessoa.perfis.map(t => `<span style="background: rgba(129, 140, 248, 0.1); color: #818cf8; padding: 2px 8px; border-radius: 12px; font-size: 10px;">${t}</span>`).join('')}
                     </div>` 
                 : ''}
             </div>
@@ -3493,7 +3493,7 @@ window.abrirTriagemAtendimento = async function(id) {
         const { data, error } = await db
             .from('pessoas')
             .select('id, nome_completo')
-            .contains('papeis', ['Atendente Fraterno']);
+            .contains('perfis', ['Atendente Fraterno']);
             
         if (error) throw error;
         

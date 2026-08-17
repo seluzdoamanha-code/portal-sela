@@ -27,12 +27,12 @@
         const selPessoa = document.getElementById('inPessoa');
         selPessoa.addEventListener('change', (e) => {
             const pessoaId = e.target.value;
-            const selectPapel = document.getElementById('inPapel');
-            const groupPapel = document.getElementById('groupPapel');
-            selectPapel.innerHTML = '';
+            const selectPerfil = document.getElementById('mInPerfil');
+            const groupPerfil = document.getElementById('mGroupPerfil');
+            selectPerfil.innerHTML = '';
             
             if (!pessoaId) {
-                groupPapel.style.display = 'none';
+                groupPerfil.style.display = 'none';
                 return;
             }
             
@@ -40,20 +40,20 @@
             const tags = p.papeis || [];
             
             if (tags.length === 0) {
-                selectPapel.innerHTML = '<option value="">(Pessoa sem papéis definidos)</option>';
-                selectPapel.disabled = true;
+                selectPerfil.innerHTML = '<option value="">(Pessoa sem papéis definidos)</option>';
+                selectPerfil.disabled = true;
                 document.getElementById('btnSaveModal').disabled = true;
             } else {
-                selectPapel.disabled = false;
+                selectPerfil.disabled = false;
                 document.getElementById('btnSaveModal').disabled = false;
                 tags.forEach(t => {
                     const opt = document.createElement('option');
                     opt.value = t;
                     opt.textContent = t;
-                    selectPapel.appendChild(opt);
+                    selectPerfil.appendChild(opt);
                 });
             }
-            groupPapel.style.display = 'block';
+            groupPerfil.style.display = 'block';
         });
 
         document.getElementById('formNovoMembro').addEventListener('submit', salvarNovoMembro);
@@ -89,7 +89,7 @@
                 .select(`
                     id,
                     parent_vinculo_id,
-                    papel,
+                    perfil,
                     pessoas (
                         id,
                         nome_completo,
@@ -104,11 +104,11 @@
             vinculosGlobais = data || [];
             
             // Popular select de líderes do modal
-            const selParent = document.getElementById('inParent');
+            const selParent = document.getElementById('mInParent');
             selParent.innerHTML = '<option value="">-- Ninguém (Será o topo) --</option>';
             vinculosGlobais.forEach(v => {
                 const nome = v.pessoas?.nome_curto || v.pessoas?.nome_completo || 'Desconhecido';
-                selParent.innerHTML += `<option value="${v.id}">${nome} (${v.papel})</option>`;
+                selParent.innerHTML += `<option value="${v.id}">${nome} (${v.perfil})</option>`;
             });
 
             if (vinculosGlobais.length === 0) {
@@ -138,14 +138,14 @@
         wrapper.className = `tree-node-wrapper indent-${nivel}`;
         
         const nome = no.pessoas?.nome_curto || no.pessoas?.nome_completo || 'Desconhecido';
-        const papel = no.papel || 'Membro';
+        const nPerfil = no.perfil || 'Membro';
         
         // Alerta de inconsistência de cargo
-        let avisoRole = '';
+        let corRole = 'var(--text-muted)';
         if (no.pessoas) {
             const tags = no.pessoas.papeis || [];
-            if (!tags.includes(papel)) {
-                avisoRole = `<div class="role-warning">⚠️ Requer Revisão (Tag Removida)</div>`;
+            if (!tags.includes(nPerfil)) {
+                corRole = 'var(--danger)';
             }
         }
 
@@ -153,8 +153,7 @@
             <div class="tree-node-card">
                 <div class="tree-node-info">
                     <div class="tree-node-name">${nome}</div>
-                    <div class="tree-node-role">${papel}</div>
-                    ${avisoRole}
+                    <div style="font-size: 11px; color: ${corRole}; margin-top: 2px;">${nPerfil}</div>
                 </div>
                 <div class="tree-node-actions">
                     <button class="btn-node-action btn-delete" onclick="excluirVinculo('${no.id}')">
@@ -206,21 +205,21 @@
     window.fecharModal = function() {
         document.getElementById('modalNovoMembro').style.display = 'none';
         document.getElementById('formNovoMembro').reset();
-        document.getElementById('groupPapel').style.display = 'none';
+        document.getElementById('mGroupPerfil').style.display = 'none';
     };
 
     async function salvarNovoMembro(e) {
         e.preventDefault();
         
         const pessoaId = document.getElementById('inPessoa').value;
-        const papel = document.getElementById('inPapel').value;
-        const parentId = document.getElementById('inParent').value || null;
+        const perfil = document.getElementById('mInPerfil').value;
+        const parentId = document.getElementById('mInParent').value || null;
 
         try {
             const { error } = await db.from('vinculos_estrutura').insert([{
                 estrutura_id: estruturaId,
                 pessoa_id: pessoaId,
-                papel: papel,
+                perfil: perfil,
                 parent_vinculo_id: parentId
             }]);
 

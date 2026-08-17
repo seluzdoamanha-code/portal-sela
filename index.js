@@ -26,12 +26,12 @@
     async function carregarEstatisticas() {
         try {
             // Conta pessoas físicas e jurídicas
-            const { data: pessoas, error: errPessoas } = await db.from('pessoas').select('tipo_pessoa, papeis');
+            const { data: pessoas, error: errPessoas } = await db.from('pessoas').select('tipo_pessoa, perfis');
             if (!errPessoas && pessoas) {
                 const pjs = pessoas.filter(p => p.tipo_pessoa === 'Jurídica').length;
                 
-                const efetivos = pessoas.filter(p => p.tipo_pessoa === 'Física' && p.papeis && p.papeis.includes('Associado Efetivo')).length;
-                const proponentes = pessoas.filter(p => p.tipo_pessoa === 'Física' && p.papeis && p.papeis.includes('Associado Proponente')).length;
+                const efetivos = pessoas.filter(p => p.tipo_pessoa === 'Física' && p.perfis && p.perfis.includes('Associado Efetivo')).length;
+                const proponentes = pessoas.filter(p => p.tipo_pessoa === 'Física' && p.perfis && p.perfis.includes('Associado Proponente')).length;
                 
                 const fisicasTotais = pessoas.filter(p => p.tipo_pessoa === 'Física').length;
                 const demais = fisicasTotais - (efetivos + proponentes);

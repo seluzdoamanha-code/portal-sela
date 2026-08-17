@@ -102,36 +102,36 @@ async function carregarPessoasParaSelect() {
         selPessoa.appendChild(grupoFisicas);
         selPessoa.appendChild(grupoJuridicas);
         
-        // Listener para popular os papeis
         selPessoa.addEventListener('change', (e) => {
             const pessoaId = e.target.value;
-            const selectPapel = document.getElementById('inPapel');
-            const groupPapel = document.getElementById('groupPapel');
-            selectPapel.innerHTML = '';
+            const selectPerfil = document.getElementById('inPerfil');
+            const groupPerfil = document.getElementById('groupPerfil');
+            selectPerfil.innerHTML = '';
             
             if (!pessoaId) {
-                groupPapel.style.display = 'none';
+                groupPerfil.style.display = 'none';
                 return;
             }
             
             const p = pessoasParaSelect.find(x => x.id == pessoaId);
             const tags = p.papeis || [];
             
-            if (tags.length === 0) {
-                selectPapel.innerHTML = '<option value="">(Pessoa não possui Tags no cadastro)</option>';
-                selectPapel.disabled = true;
+            if (!tags || tags.length === 0) {
+                selectPerfil.innerHTML = '<option value="">(Pessoa não possui Tags no cadastro)</option>';
+                selectPerfil.disabled = true;
                 document.getElementById('btnSaveModal').disabled = true;
             } else {
-                selectPapel.disabled = false;
+                selectPerfil.innerHTML = '<option value="">Selecione um perfil...</option>';
+                selectPerfil.disabled = false;
                 document.getElementById('btnSaveModal').disabled = false;
                 tags.forEach(t => {
                     const opt = document.createElement('option');
                     opt.value = t;
                     opt.textContent = t;
-                    selectPapel.appendChild(opt);
+                    selectPerfil.appendChild(opt);
                 });
             }
-            groupPapel.style.display = 'block';
+            groupPerfil.style.display = 'block';
         });
     }
 }
@@ -144,7 +144,7 @@ async function carregarArvore() {
         .select(`
             id,
             parent_vinculo_id,
-            papel,
+            perfil,
             pessoas (
                 id,
                 nome_completo,
@@ -171,7 +171,7 @@ function atualizarSelectParents(vinculos) {
     selParent.innerHTML = '<option value="">-- Ninguém (Será o topo da Árvore) --</option>';
     vinculos.forEach(v => {
         const nome = v.pessoas?.nome_curto || v.pessoas?.nome_completo || 'Desconhecido';
-        selParent.innerHTML += `<option value="${v.id}">${nome} (${v.papel})</option>`;
+        selParent.innerHTML += `<option value="${v.id}">${nome} (${v.perfil})</option>`;
     });
 }
 
@@ -182,7 +182,7 @@ function renderizarGrafico(vinculos) {
             parentId: v.parent_vinculo_id || "",
             nome: v.pessoas?.nome_curto || v.pessoas?.nome_completo || "Sem Nome",
             nome_curto: v.pessoas?.nome_curto || v.pessoas?.nome_completo || "Sem Nome",
-            papel: v.papel || "Membro",
+            perfil: v.perfil || "Membro",
             pessoa_id: v.pessoas?.id
         };
     });
@@ -193,7 +193,7 @@ function renderizarGrafico(vinculos) {
             id: "virtual-root",
             parentId: "",
             nome: "⚠️ Múltiplos Topos",
-            papel: "(Nó Corretivo)",
+            perfil: "(Nó Corretivo)",
             isVirtual: true
         });
         roots.forEach(r => r.parentId = "virtual-root");
@@ -238,7 +238,7 @@ function renderizarGrafico(vinculos) {
                         
                         if (p) {
                             const tags = p.papeis || [];
-                            if (!tags.includes(d.data.papel)) {
+                            if (!tags.includes(d.data.perfil)) {
                                 aviso = `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; padding: 2px 4px; background: #fee2e2; border-radius: 4px;">⚠️ Requer Revisão (Tag Removida)</div>`;
                             }
                         }
@@ -275,7 +275,7 @@ function renderizarGrafico(vinculos) {
                                     ${nomeCurto}
                                 </div>
                                 <div style="font-size: 12px; color: #94a3b8; text-align: center; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 4px; margin-bottom: 4px;">
-                                    ${d.data.papel}
+                                    ${d.data.perfil}
                                 </div>
                                 ${aviso}
                             </div>
@@ -320,13 +320,13 @@ function setupModal() {
         btnSave.textContent = 'Salvando...';
         
         const pessoaId = document.getElementById('inPessoa').value;
-        const papel = document.getElementById('inPapel').value;
+        const perfil = document.getElementById('inPerfil').value;
         const parentId = document.getElementById('inParent').value;
         
         const dados = {
             estrutura_id: estruturaId,
             pessoa_id: pessoaId,
-            papel: papel,
+            perfil: perfil,
             parent_vinculo_id: parentId ? parentId : null
         };
         
