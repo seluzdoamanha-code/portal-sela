@@ -2883,20 +2883,67 @@ window.salvarEdicaoIrradiacao = async function(event) {
 // ==========================================
 // MÓDULO WEB: ATENDIMENTO FRATERNO
 // ==========================================
-let currentAtendimentoTab = 'fila';
+let currentAtendimentoMainTab = 'triagem';
+let currentAtendimentoSubTab = 'fila';
 
-window.mudarAbaAtendimento = function(aba) {
-    currentAtendimentoTab = aba;
-    const abas = ['fila', 'espera', 'andamento', 'mes', 'estatisticas', 'historico', 'tratamentos', 'presencas', 'painelsemanal'];
-    abas.forEach(a => {
-        const btn = document.getElementById('btnAten' + a.charAt(0).toUpperCase() + a.slice(1));
+window.mudarAbaPrincipalAtendimento = function(mainTab) {
+    currentAtendimentoMainTab = mainTab;
+    const mains = ['triagem', 'atendimento', 'acompanhamento', 'historico'];
+    mains.forEach(m => {
+        const btn = document.getElementById('btnMainAten' + m.charAt(0).toUpperCase() + m.slice(1));
         if (btn) {
-            btn.style.background = a === aba ? 'var(--primary)' : 'transparent';
-            btn.style.color = a === aba ? 'white' : 'var(--text-main)';
+            btn.style.background = m === mainTab ? 'var(--primary)' : 'transparent';
+            btn.style.color = m === mainTab ? 'white' : 'var(--text-main)';
         }
     });
+
+    if (mainTab === 'triagem') currentAtendimentoSubTab = 'fila';
+    else if (mainTab === 'atendimento') currentAtendimentoSubTab = 'andamento';
+    else if (mainTab === 'acompanhamento') currentAtendimentoSubTab = 'tratamentos';
+    else if (mainTab === 'historico') currentAtendimentoSubTab = 'mes';
+
+    renderizarSubAbasAtendimento();
     carregarListaAtendimento();
 };
+
+window.mudarSubAbaAtendimento = function(subTab) {
+    currentAtendimentoSubTab = subTab;
+    renderizarSubAbasAtendimento();
+    carregarListaAtendimento();
+};
+
+function renderizarSubAbasAtendimento() {
+    const container = document.getElementById('subTabsAtenContainer');
+    if (!container) return;
+
+    const baseStyle = "white-space: nowrap; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); padding: 6px 14px; transition: all 0.2s; cursor: pointer; outline: none; ";
+    const activeStyle = baseStyle + "background: rgba(99,102,241,0.15); color: var(--primary); border-color: rgba(99,102,241,0.4);";
+    const inactiveStyle = baseStyle + "background: rgba(255,255,255,0.05); color: var(--text-muted);";
+
+    if (currentAtendimentoMainTab === 'triagem') {
+        container.style.display = 'flex';
+        container.innerHTML = `
+            <button onclick="mudarSubAbaAtendimento('fila')" style="${currentAtendimentoSubTab === 'fila' ? activeStyle : inactiveStyle}">📂 Fila Geral</button>
+            <button onclick="mudarSubAbaAtendimento('espera')" style="${currentAtendimentoSubTab === 'espera' ? activeStyle : inactiveStyle}">🛋️ Sala de Espera</button>
+        `;
+    } else if (currentAtendimentoMainTab === 'atendimento') {
+        container.style.display = 'none';
+    } else if (currentAtendimentoMainTab === 'acompanhamento') {
+        container.style.display = 'flex';
+        container.innerHTML = `
+            <button onclick="mudarSubAbaAtendimento('tratamentos')" style="${currentAtendimentoSubTab === 'tratamentos' ? activeStyle : inactiveStyle}">🩹 Tratamentos Ativos</button>
+            <button onclick="mudarSubAbaAtendimento('presencas')" style="${currentAtendimentoSubTab === 'presencas' ? activeStyle : inactiveStyle}">🗓️ Confirmar Presenças</button>
+            <button onclick="mudarSubAbaAtendimento('painelsemanal')" style="${currentAtendimentoSubTab === 'painelsemanal' ? activeStyle : inactiveStyle}">📊 Painel Semanal</button>
+        `;
+    } else if (currentAtendimentoMainTab === 'historico') {
+        container.style.display = 'flex';
+        container.innerHTML = `
+            <button onclick="mudarSubAbaAtendimento('mes')" style="${currentAtendimentoSubTab === 'mes' ? activeStyle : inactiveStyle}">✨ Atendidos no Mês</button>
+            <button onclick="mudarSubAbaAtendimento('estatisticas')" style="${currentAtendimentoSubTab === 'estatisticas' ? activeStyle : inactiveStyle}">📈 Estatísticas</button>
+            <button onclick="mudarSubAbaAtendimento('historico')" style="${currentAtendimentoSubTab === 'historico' ? activeStyle : inactiveStyle}">📜 Histórico Antigo</button>
+        `;
+    }
+}
 
 let chartAtenMensalInstance = null;
 let chartAtenSemanalInstance = null;
@@ -3043,16 +3090,17 @@ window.carregarPainelGestaoAtendimento = function() {
         <div id="statsDashboard" style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;"></div>
         
         <div>
-            <div class="no-scrollbar" style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; overflow-x: auto;">
-                <button onclick="mudarAbaAtendimento('fila')" id="btnAtenFila" class="btn" style="white-space: nowrap; border-radius: 8px; background: var(--primary); color: white;">📂 Fila Geral</button>
-                <button onclick="mudarAbaAtendimento('espera')" id="btnAtenEspera" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🛋️ Sala de Espera</button>
-                <button onclick="mudarAbaAtendimento('andamento')" id="btnAtenAndamento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🧑‍🤝‍🧑 Em Atendimento</button>
-                <button onclick="mudarAbaAtendimento('mes')" id="btnAtenMes" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">✨ Atendidos no Mês</button>
-                <button onclick="mudarAbaAtendimento('tratamentos')" id="btnAtenTratamentos" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🩹 Tratamentos Ativos</button>
-                <button onclick="mudarAbaAtendimento('presencas')" id="btnAtenPresencas" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">🗓️ Confirmar Presenças</button>
-                <button onclick="mudarAbaAtendimento('painelsemanal')" id="btnAtenPainelsemanal" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">📊 Painel Semanal</button>
-                <button onclick="mudarAbaAtendimento('estatisticas')" id="btnAtenEstatisticas" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">📈 Estatísticas</button>
-                <button onclick="mudarAbaAtendimento('historico')" id="btnAtenHistorico" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main);">📜 Histórico Antigo</button>
+            <!-- Abas Principais -->
+            <div class="no-scrollbar" style="display: flex; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; overflow-x: auto;">
+                <button onclick="mudarAbaPrincipalAtendimento('triagem')" id="btnMainAtenTriagem" class="btn" style="white-space: nowrap; border-radius: 8px; background: var(--primary); color: white; padding: 10px 20px;">📋 Triagem</button>
+                <button onclick="mudarAbaPrincipalAtendimento('atendimento')" id="btnMainAtenAtendimento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🧑‍🤝‍🧑 Atendimento</button>
+                <button onclick="mudarAbaPrincipalAtendimento('acompanhamento')" id="btnMainAtenAcompanhamento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🔎 Acompanhamento</button>
+                <button onclick="mudarAbaPrincipalAtendimento('historico')" id="btnMainAtenHistorico" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">📊 Histórico</button>
+            </div>
+            
+            <!-- Sub-abas -->
+            <div id="subTabsAtenContainer" class="no-scrollbar" style="display: flex; gap: 8px; margin-bottom: 24px; padding-bottom: 12px; overflow-x: auto;">
+                <!-- Injetado dinamicamente -->
             </div>
             
             <div id="loadingAten" style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">Carregando lista...</div>
@@ -3175,6 +3223,7 @@ window.carregarPainelGestaoAtendimento = function() {
         e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
     });
 
+    renderizarSubAbasAtendimento();
     carregarListaAtendimento();
 };
 
@@ -3228,7 +3277,7 @@ window.carregarListaAtendimento = async function() {
             `;
         }
 
-        if (currentAtendimentoTab === 'estatisticas') {
+        if (currentAtendimentoSubTab === 'estatisticas') {
             lista.innerHTML = `
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
                     <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 20px; min-height: 280px;">
@@ -3258,31 +3307,31 @@ window.carregarListaAtendimento = async function() {
 
         // Filter data for list
         let data = [];
-        if (currentAtendimentoTab === 'fila') {
+        if (currentAtendimentoSubTab === 'fila') {
             data = allData.filter(d => d.status !== 'Atendido' && d.status !== 'Em Tratamento');
             data.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
-        } else if (currentAtendimentoTab === 'espera') {
+        } else if (currentAtendimentoSubTab === 'espera') {
             data = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
             data.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
-        } else if (currentAtendimentoTab === 'andamento') {
+        } else if (currentAtendimentoSubTab === 'andamento') {
             data = allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
-        } else if (currentAtendimentoTab === 'mes') {
+        } else if (currentAtendimentoSubTab === 'mes') {
             data = atendidosMesTotal;
-        } else if (currentAtendimentoTab === 'historico') {
+        } else if (currentAtendimentoSubTab === 'historico') {
             data = allData.filter(item => {
                 if (item.status !== 'Atendido' || !item.data_hora_atendimento) return false;
                 const d = new Date(item.data_hora_atendimento);
                 return !(d.getFullYear() === curYear && d.getMonth() === curMonth);
             });
-        } else if (currentAtendimentoTab === 'tratamentos') {
+        } else if (currentAtendimentoSubTab === 'tratamentos') {
             document.getElementById('loadingAten').style.display = 'none';
             carregarTratamentosAtivosDesktop();
             return;
-        } else if (currentAtendimentoTab === 'presencas') {
+        } else if (currentAtendimentoSubTab === 'presencas') {
             document.getElementById('loadingAten').style.display = 'none';
             carregarFilaPresencasDesktop();
             return;
-        } else if (currentAtendimentoTab === 'painelsemanal') {
+        } else if (currentAtendimentoSubTab === 'painelsemanal') {
             document.getElementById('loadingAten').style.display = 'none';
             carregarPainelSemanalDesktop();
             return;
@@ -3298,11 +3347,11 @@ window.carregarListaAtendimento = async function() {
             return;
         }
         
-        if (currentAtendimentoTab === 'fila' || currentAtendimentoTab === 'espera') {
+        if (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera') {
             data.forEach(item => {
                 renderizarCardAtendimentoItem(lista, item);
             });
-        } else if (currentAtendimentoTab === 'andamento') {
+        } else if (currentAtendimentoSubTab === 'andamento') {
             data.sort((a, b) => {
                 const attA = (a.pessoas?.nome_completo || 'Sem Atendente').toLowerCase();
                 const attB = (b.pessoas?.nome_completo || 'Sem Atendente').toLowerCase();
@@ -3418,7 +3467,7 @@ function renderizarCardAtendimentoItem(container, item) {
                 <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo}', '${item.endereco_completo || ''}', '${item.telefone || ''}')" style="font-size: 12px; padding: 6px 12px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">✏️ Editar</button>
             ` : ''}
             
-            ${(item.status === 'Pendente' || (item.status === 'Planejado' && currentAtendimentoTab !== 'andamento')) ? `
+            ${(item.status === 'Pendente' || (item.status === 'Planejado' && currentAtendimentoSubTab !== 'andamento')) ? `
                 <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">🤝 Triagem</button>
             ` : ''}
             
