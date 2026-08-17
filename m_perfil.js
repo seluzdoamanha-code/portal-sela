@@ -475,6 +475,13 @@
                 
             if (error) throw error;
             
+            const codigos = [...new Set(data.map(e => e.codigo_livro))];
+            let capasMap = {};
+            if (codigos.length > 0) {
+                const { data: livros } = await db.from('livros_catalogo').select('codigo, capa_url').in('codigo', codigos);
+                if (livros) livros.forEach(l => capasMap[l.codigo] = l.capa_url);
+            }
+            
             const ativos = data.filter(e => e.status.toLowerCase() !== 'devolvido' && !e.data_devolucao);
             const inativos = data.filter(e => e.status.toLowerCase() === 'devolvido' || e.data_devolucao);
             
@@ -485,6 +492,7 @@
             const ativosContainer = document.getElementById('mEmprestimosAtivosContainer');
             if (ativos.length > 0) {
                 ativosContainer.innerHTML = ativos.map(e => {
+                    const capa = capasMap[e.codigo_livro] || 'https://via.placeholder.com/60x90/2a2a2a/cccccc?text=Sem+Capa';
                     const dataEmp = new Date(e.data_emprestimo);
                     const hoje = new Date();
                     const diffTime = Math.abs(hoje - dataEmp);
@@ -504,16 +512,19 @@
                     }
                     
                     return `
-                        <div class="m-info-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
-                            <div style="display: flex; justify-content: space-between; width: 100%;">
-                                <div style="font-size: 14px; font-weight: 600; color: var(--text-main);">${e.titulo_livro}</div>
-                                <div style="font-size: 12px; color: var(--text-muted);">${e.codigo_livro}</div>
+                        <div class="m-info-row" style="flex-direction: row; align-items: flex-start; gap: 12px;">
+                            <img src="${capa}" style="width: 50px; height: 75px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://via.placeholder.com/60x90/2a2a2a/cccccc?text=Sem+Capa'">
+                            <div style="flex: 1; display: flex; flex-direction: column;">
+                                <div style="display: flex; justify-content: space-between; width: 100%;">
+                                    <div style="font-size: 14px; font-weight: 600; color: var(--text-main);">${e.titulo_livro}</div>
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Cód: ${e.codigo_livro}</div>
+                                <div style="display: flex; justify-content: space-between; width: 100%; font-size: 12px; margin-top: 4px;">
+                                    <div style="color: var(--text-muted);">Emp: ${dataEmp.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>
+                                    <div style="color: var(--text-muted);">${diffDays} dias</div>
+                                </div>
+                                <div style="font-size: 12px; margin-top: 4px; ${avisoColor}">${aviso}</div>
                             </div>
-                            <div style="display: flex; justify-content: space-between; width: 100%; font-size: 12px; margin-top: 4px;">
-                                <div style="color: var(--text-muted);">Emp: ${dataEmp.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>
-                                <div style="color: var(--text-muted);">${diffDays} dias</div>
-                            </div>
-                            <div style="font-size: 12px; margin-top: 4px; ${avisoColor}">${aviso}</div>
                         </div>
                     `;
                 }).join('');
@@ -522,15 +533,19 @@
             const inativosContainer = document.getElementById('mEmprestimosInativosContainer');
             if (inativos.length > 0) {
                 inativosContainer.innerHTML = inativos.map(e => {
+                    const capa = capasMap[e.codigo_livro] || 'https://via.placeholder.com/60x90/2a2a2a/cccccc?text=Sem+Capa';
                     const dataEmp = new Date(e.data_emprestimo);
                     return `
-                        <div class="m-info-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
-                            <div style="display: flex; justify-content: space-between; width: 100%;">
-                                <div style="font-size: 14px; font-weight: 600; color: var(--text-main);">${e.titulo_livro}</div>
-                                <div style="font-size: 12px; color: var(--text-muted);">${e.codigo_livro}</div>
-                            </div>
-                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-                                Emp: ${dataEmp.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                        <div class="m-info-row" style="flex-direction: row; align-items: flex-start; gap: 12px;">
+                            <img src="${capa}" style="width: 50px; height: 75px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://via.placeholder.com/60x90/2a2a2a/cccccc?text=Sem+Capa'">
+                            <div style="flex: 1; display: flex; flex-direction: column;">
+                                <div style="display: flex; justify-content: space-between; width: 100%;">
+                                    <div style="font-size: 14px; font-weight: 600; color: var(--text-main);">${e.titulo_livro}</div>
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Cód: ${e.codigo_livro}</div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                                    Emp: ${dataEmp.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                                </div>
                             </div>
                         </div>
                     `;

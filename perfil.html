@@ -203,12 +203,18 @@
                 <!-- Módulo Financeiro -->
                 <div id="financeiroContainer" style="display: none;"></div>
 
-                <div class="card-perfil" style="border-left: 4px solid #8b5cf6;">
-                    <h3 class="secao-titulo">Biblioteca (Em Breve)</h3>
-                    <p style="color: var(--text-muted); font-size: 14px; line-height: 1.5;">
-                        Se essa pessoa for um "Leitor", aqui aparecerão os livros que ela pegou emprestado, 
-                        o histórico de leitura e avisos de devolução.
-                    </p>
+                <div class="card-perfil" id="bibliotecaContainer" style="border-left: 4px solid #8b5cf6; display: none;">
+                    <h3 class="secao-titulo">Biblioteca - Empréstimos</h3>
+                    
+                    <h4 style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Em Andamento</h4>
+                    <div id="emprestimosAtivosContainer" style="margin-bottom: 24px;">
+                        <p style="color: var(--text-muted); font-size: 13px;">Nenhum empréstimo ativo.</p>
+                    </div>
+
+                    <h4 style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Histórico</h4>
+                    <div id="emprestimosInativosContainer">
+                        <p style="color: var(--text-muted); font-size: 13px;">Nenhum histórico encontrado.</p>
+                    </div>
                 </div>
 
             </div>

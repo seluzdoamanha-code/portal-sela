@@ -169,8 +169,80 @@ async function carregarPerfil() {
             window.initFinanceiro(pessoa);
         }
 
+        // --- HOOK BIBLIOTECA ---
+        carregarEmprestimos();
+
     } catch (err) {
         console.error("Erro ao carregar perfil:", err);
         document.getElementById('nomePessoa').textContent = "Erro ao carregar perfil";
+    }
+}
+
+async function carregarEmprestimos() {
+    if (!pessoaId) return;
+    try {
+        const { data: emprestimos, error } = await db.from('emprestimos_portal')
+            .select('*')
+            .eq('pessoa_id', pessoaId)
+            .order('data_emprestimo', { ascending: false });
+            
+        if (error) throw error;
+        
+        if (!emprestimos || emprestimos.length === 0) return;
+        
+        document.getElementById('bibliotecaContainer').style.display = 'block';
+        
+        // Fetch covers
+        const codigos = [...new Set(emprestimos.map(e => e.codigo_livro))];
+        let capasMap = {};
+        if (codigos.length > 0) {
+            const { data: livros, error: errLivros } = await db.from('livros_catalogo')
+                .select('codigo, capa_url')
+                .in('codigo', codigos);
+            if (!errLivros && livros) {
+                livros.forEach(l => {
+                    capasMap[l.codigo] = l.capa_url;
+                });
+            }
+        }
+        
+        const ativos = emprestimos.filter(e => e.status.toLowerCase() !== 'devolvido' && !e.data_devolucao);
+        const inativos = emprestimos.filter(e => e.status.toLowerCase() === 'devolvido' || e.data_devolucao);
+        
+        const renderCard = (e, isActive) => {
+            const capa = capasMap[e.codigo_livro] || 'https://via.placeholder.com/60x90/2a2a2a/cccccc?text=Sem+Capa';
+            const dataEmp = new Date(e.data_emprestimo);
+            
+            let avisoHtml = '';
+            if (isActive) {
+                const diffDays = Math.ceil(Math.abs(new Date() - dataEmp) / (1000 * 60 * 60 * 24));
+                let color = '#10b981';
+                let txt = 'No prazo';
+                if (diffDays > 30) { color = '#ef4444'; txt = 'Atrasado'; }
+                else if (diffDays > 25) { color = '#f59e0b'; txt = 'Vencendo'; }
+                avisoHtml = `<div style="margin-top: 8px; font-size: 12px; font-weight: 600; color: ${color};">${txt} (${diffDays} dias)</div>`;
+            }
+            
+            return `
+                <div style="display: flex; gap: 16px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; background: var(--bg-panel);">
+                    <img src="${capa}" style="width: 60px; height: 90px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://via.placeholder.com/60x90/2a2a2a/cccccc?text=Sem+Capa'">
+                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                        <div style="font-weight: 600; font-size: 14px; color: var(--text-main); margin-bottom: 4px;">${e.titulo_livro}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Cód: ${e.codigo_livro}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Emp: ${dataEmp.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>
+                        ${avisoHtml}
+                    </div>
+                </div>
+            `;
+        };
+
+        const ativosContainer = document.getElementById('emprestimosAtivosContainer');
+        if (ativos.length > 0) ativosContainer.innerHTML = ativos.map(e => renderCard(e, true)).join('');
+        
+        const inativosContainer = document.getElementById('emprestimosInativosContainer');
+        if (inativos.length > 0) inativosContainer.innerHTML = inativos.map(e => renderCard(e, false)).join('');
+        
+    } catch (e) {
+        console.error('Erro ao carregar empréstimos:', e);
     }
 }
