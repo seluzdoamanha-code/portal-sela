@@ -277,7 +277,7 @@
             <div class="card-actions" style="flex-wrap: wrap; margin-top: 12px; gap: 8px;">
                 ${item.status !== 'Atendido' ? btnPresenca : ''}
                 
-                ${item.status === 'Pendente' || (item.status === 'Planejado' && abaAtual !== 'andamento') ? `
+                ${item.status === 'Pendente' || (item.status === 'Planejado' && subAba !== 'andamento') ? `
                     <button class="btn-action" onclick="abrirTriagem('${item.id}')" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">🤝 Triagem</button>
                 ` : ''}
 
