@@ -166,7 +166,7 @@
 
         } catch (e) {
             console.error("Erro ao carregar dados:", e);
-            container.innerHTML = '<div class="empty-state" style="color:var(--danger);">Erro ao carregar dados do Supabase.</div>';
+            container.innerHTML = `<div class="empty-state" style="color:var(--danger);">Erro ao carregar dados do Supabase:<br><small style="color:#ef4444; margin-top:8px; display:block;">${e.message || JSON.stringify(e)}</small></div>`;
         }
     }
 
