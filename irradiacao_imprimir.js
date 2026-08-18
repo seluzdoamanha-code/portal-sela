@@ -18,7 +18,17 @@ async function carregarLeituras() {
     
     const lblData = document.getElementById('lblData');
     const nomeDia = diaSelecionado ? diaSelecionado : 'Todos os dias';
-    lblData.innerText = 'Atividade de Irradiação - Leituras para Irradiação para o dia ' + nomeDia;
+    
+    const hoje = new Date();
+    const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const diaImpressao = diasSemana[hoje.getDay()];
+    
+    const d = new Date(Date.UTC(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const semanaNum = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+
+    lblData.innerText = `Atividade de Irradiação - Leituras para o dia ${nomeDia}/${diaImpressao} (semana ${semanaNum})`;
 
     try {
         let query = db.from('app_irradiacao_solicitacoes')
