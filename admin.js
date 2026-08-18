@@ -1,6 +1,6 @@
 const SUPABASE_URL = 'https://aymdooyafimliiggxeqs.supabase.co';
-// As chaves são pegas do config.js que é importado antes
-const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, window.SUPABASE_KEY_CONFIG || 'eyJhbG...') : null;
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5bWRvb3lhZmltbGlpZ2d4ZXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDUxNDksImV4cCI6MjEwMDY4MTE0OX0.-NBhiyGDlrWq4QKNLx9Ll5GlIk0mV_rBWnr0vdbUCOU';
+const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Verificação de Acesso Global
@@ -17,7 +17,7 @@ async function verificarAcessoAdmin() {
 
         const userEmail = session.user.email;
         const { data: userProfile, error } = await db
-            .from('pessoas')
+            .from('usuarios_autorizados')
             .select('nivel_acesso')
             .eq('email', userEmail)
             .single();
