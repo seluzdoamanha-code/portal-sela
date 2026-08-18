@@ -119,18 +119,18 @@ window.aplicarFiltros = () => {
                 if (tagSelecionada === 'Física' || tagSelecionada === 'Jurídica') {
                     matchTag = p.tipo_pessoa === tagSelecionada;
                 } else {
-                    matchTag = p.papeis && p.papeis.includes(tagSelecionada);
+                    matchTag = p.perfis && p.perfis.includes(tagSelecionada);
                 }
             }
             
             return matchBusca && matchTag;
         });
         
-        // Filtra papeis que estão desmarcados nas caixas de seleção
+        // Filtra perfis que estão desmarcados nas caixas de seleção
         const hideOutros = document.getElementById('hideOutros');
 
         filtrados = filtrados.filter(p => {
-            if (!p.papeis) return true;
+            if (!p.perfis) return true;
             
             // Se a tag selecionada no Dropdown for EXATAMENTE uma dessas, nós ignoramos a checkbox
             // para não dar conflito (ex: o usuário escolhe "Estudante" no dropdown, ele quer ver os estudantes)
@@ -138,9 +138,9 @@ window.aplicarFiltros = () => {
                 return true;
             }
 
-            const papeisUpper = String(p.papeis).toUpperCase();
+            const perfisUpper = String(p.perfis).toUpperCase();
             
-            if (hideOutros && hideOutros.checked === true && papeisUpper.includes('OUTRO')) return false;
+            if (hideOutros && hideOutros.checked === true && perfisUpper.includes('OUTRO')) return false;
             
             return true;
         });
@@ -240,7 +240,7 @@ function renderizarTabela(dados) {
     
     dados.forEach(pessoa => {
         // Criar uma cópia e remover duplicatas para evitar mutação do estado original
-        let tags = Array.from(new Set(pessoa.papeis || []));
+        let tags = Array.from(new Set(pessoa.perfis || []));
         
         // Remove 'Empresa' solto se existir, para não duplicar com a tag formatada
         tags = tags.filter(t => t !== 'Empresa' && t !== '🏢 Empresa');
@@ -479,11 +479,11 @@ function setupModal() {
         const cidade = document.getElementById('inCidade').value || null;
         const estado = document.getElementById('inEstado').value || null;
         
-        // Coleta papeis selecionados
-        const papeis = Array.from(document.querySelectorAll('input[name="papeis"]:checked')).map(cb => cb.value);
+        // Coleta perfis selecionados
+        const perfis = Array.from(document.querySelectorAll('input[name="perfis"]:checked')).map(cb => cb.value);
 
         const dados = {
-            cpf_cnpj, nome_completo, nome_curto, tipo_pessoa, celular, email, papeis,
+            cpf_cnpj, nome_completo, nome_curto, tipo_pessoa, celular, email, perfis,
             status, data_nascimento, sexo, naturalidade, nacionalidade, nome_mae, nome_pai, estado_civil, profissao,
             cep, endereco, bairro, cidade, estado
         };
@@ -601,10 +601,10 @@ window.editarPessoa = async (id) => {
 
     document.getElementById('inFoto').value = ''; // Limpa o input de arquivo
     
-    // Marcar os papeis corretas
-    const papeis = pessoa.papeis || [];
-    document.querySelectorAll('input[name="papeis"]').forEach(cb => {
-        cb.checked = papeis.includes(cb.value);
+    // Marcar os perfis corretas
+    const perfis = pessoa.perfis || [];
+    document.querySelectorAll('input[name="perfis"]').forEach(cb => {
+        cb.checked = perfis.includes(cb.value);
     });
     
     // Forçar a máscara logo após preencher (caso venha do banco sem formatação)
@@ -639,7 +639,7 @@ window.renderizarTagsDisponiveis = async () => {
     ];
 
     try {
-        const { data, error } = await db.from('configuracoes').select('valor').eq('chave', 'papeis_pessoas').single();
+        const { data, error } = await db.from('configuracoes').select('valor').eq('chave', 'perfis_pessoas').single();
         if (data && data.valor) {
         TAGS = data.valor.split(',').map(s => s.trim()).filter(s => s !== '');
         }
@@ -660,7 +660,7 @@ window.renderizarTagsDisponiveis = async () => {
     if (container) {
         container.innerHTML = TAGS.map(tag => `
             <label class="tag-checkbox tag-checkbox-ui">
-                <input type="checkbox" name="papeis" value="${tag}">
+                <input type="checkbox" name="perfis" value="${tag}">
                 <span>${tag}</span>
             </label>
         `).join('');

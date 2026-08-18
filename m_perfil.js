@@ -12,7 +12,7 @@
         if (!currentId) {
             const action = new URLSearchParams(window.location.search).get('action');
             if (action === 'new') {
-                pessoaAtual = { tipo_pessoa: 'Física', papeis: [] };
+                pessoaAtual = { tipo_pessoa: 'Física', perfis: [] };
                 await carregarTags();
                 document.getElementById('mLoadingState').style.display = 'none';
                 
@@ -162,7 +162,7 @@
             "Passista", "Líder", "Leitor", "Outros"
         ];
         try {
-            const { data, error } = await db.from('configuracoes').select('valor').eq('chave', 'papeis_pessoas').single();
+            const { data, error } = await db.from('configuracoes').select('valor').eq('chave', 'perfis_pessoas').single();
             if (data && data.valor) {
                 TAGS = data.valor.split(',').map(s => s.trim()).filter(s => s !== '');
             }
@@ -269,10 +269,10 @@
         document.getElementById('lblTipoPessoa').innerText = tipoVal.startsWith('Pessoa') ? tipoVal : `Pessoa ${tipoVal}`;
         
         // Renderizar Perfis
-        const papeisContainer = document.getElementById('lblPerfis');
-        papeisContainer.innerHTML = '';
-        if (p.papeis && p.papeis.length > 0) {
-            p.papeis.forEach(perfil => {
+        const perfisContainer = document.getElementById('lblPerfis');
+        perfisContainer.innerHTML = '';
+        if (p.perfis && p.perfis.length > 0) {
+            p.perfis.forEach(perfil => {
                 const badge = document.createElement('span');
                 badge.style.background = 'rgba(99, 102, 241, 0.1)';
                 badge.style.color = '#818cf8';
@@ -281,7 +281,7 @@
                 badge.style.fontSize = '12px';
                 badge.style.fontWeight = '500';
                 badge.innerText = perfil;
-                papeisContainer.appendChild(badge);
+                perfisContainer.appendChild(badge);
             });
         }
 
@@ -384,7 +384,7 @@
         // Checkboxes de Perfis
         const checkboxes = document.querySelectorAll('input[name="mPerfis"]');
         checkboxes.forEach(cb => {
-            cb.checked = (p.papeis && p.papeis.includes(cb.value));
+            cb.checked = (p.perfis && p.perfis.includes(cb.value));
         });
     }
 
@@ -394,7 +394,7 @@
         btnSaveEdit.disabled = true;
 
         const statusForm = document.getElementById('inpStatus').value;
-        const papeis = Array.from(document.querySelectorAll('input[name="mPerfis"]:checked')).map(cb => cb.value);
+        const perfis = Array.from(document.querySelectorAll('input[name="mPerfis"]:checked')).map(cb => cb.value);
 
         const dados = {
             cpf_cnpj: document.getElementById('inpCpfCnpj').value.replace(/\D/g, '') || null,
@@ -409,7 +409,7 @@
             cidade: document.getElementById('inpCidade').value.trim(),
             estado: document.getElementById('inpEstado').value.trim().toUpperCase(),
             status: statusForm,
-            papeis: papeis,
+            perfis: perfis,
             sexo: document.getElementById('inpSexo').value || null,
             naturalidade: document.getElementById('inpNaturalidade').value || null,
             nacionalidade: document.getElementById('inpNacionalidade').value || null,
