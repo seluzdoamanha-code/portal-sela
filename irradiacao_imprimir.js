@@ -30,7 +30,7 @@ async function carregarLeituras() {
 
     const dataFormatada = hoje.toLocaleDateString('pt-BR');
 
-    lblData.innerText = `Atividade de Irradiação - Leituras para o dia ${nomeDia}/${diaImpressao} (impresso em ${dataFormatada} - semana ${semanaNum})`;
+    lblData.innerText = `Atividade de Irradiação - Leituras para o dia ${nomeDia} (impresso em ${dataFormatada} - semana ${semanaNum})`;
 
     try {
         let query = db.from('app_irradiacao_solicitacoes')
