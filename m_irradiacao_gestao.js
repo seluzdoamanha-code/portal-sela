@@ -204,6 +204,19 @@ function renderLista() {
                 <button class="btn-action btn-danger" onclick="arquivar('${item.id}')">Forçar Arquivamento</button>
             `;
         } else if (currentTab === 'historico') {
+            let lastDateInfo = '';
+            let logs = item.log_datas_leituras;
+            if (typeof logs === 'string') {
+                try { logs = JSON.parse(logs); } catch(e) { logs = []; }
+            }
+            if (Array.isArray(logs) && logs.length > 0) {
+                const lastLog = new Date(logs[logs.length - 1]);
+                if (!isNaN(lastLog)) {
+                    lastDateInfo = ` | Última leitura: <strong style="color: #cbd5e1;">${lastLog.toLocaleDateString('pt-BR')}</strong>`;
+                }
+            }
+            progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: Histórico${lastDateInfo}</div>`;
+
             actions = `
                 <button class="btn-action btn-primary" onclick="aprovar('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}')">Reativar ♻️</button>
                 <button class="btn-action btn-secondary" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})">Editar ✏️</button>

@@ -2016,6 +2016,19 @@ async function carregarListaIrradiacao() {
                     <button onclick="arquivarIrradiacao('${item.id}')" class="btn btn-secondary" style="padding: 6px 12px;">Forçar Arquivamento</button>
                 `;
             } else if (currentIrradiacaoTab === 'historico') {
+                let lastDateInfo = '';
+                let logs = item.log_datas_leituras;
+                if (typeof logs === 'string') {
+                    try { logs = JSON.parse(logs); } catch(e) { logs = []; }
+                }
+                if (Array.isArray(logs) && logs.length > 0) {
+                    const lastLog = new Date(logs[logs.length - 1]);
+                    if (!isNaN(lastLog)) {
+                        lastDateInfo = ` | Última leitura: <strong style="color: #cbd5e1;">${lastLog.toLocaleDateString('pt-BR')}</strong>`;
+                    }
+                }
+                progressHtml = `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Status: Histórico${lastDateInfo}</div>`;
+                
                 actionsHtml = `
                     <button onclick="aprovarIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}')" class="btn btn-secondary" style="padding: 6px 12px;">♻️ Reativar (Triagem)</button>
                     <button onclick="abrirModalEdicaoIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}', ${semanasAlvoStr})" class="btn btn-secondary" style="padding: 6px 12px;">✏️ Editar</button>
