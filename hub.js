@@ -1173,17 +1173,23 @@ window.carregarAtividadesRegulares = async function() {
 window.salvarAtividadeRegular = async function(event) {
     event.preventDefault();
     const btn = document.getElementById('btnSaveAtReg');
-    btn.disabled = true;
-    btn.textContent = 'Salvando...';
-
-    const id = document.getElementById('inAtRegId').value;
-    const titulo = document.getElementById('inAtRegTitulo').value;
-    const diaSemana = document.getElementById('inAtRegDiaSemana').value;
-    const horario = document.getElementById('inAtRegHorario').value;
-    const linkEstruturaId = document.getElementById('inAtRegLinkEstruturaId').value || null;
-    const descricao = document.getElementById('inAtRegDescricao').value;
+    const form = document.getElementById('formAtividadeRegular');
+    
+    // Remover erros antigos
+    const oldErr = document.getElementById('errAtReg');
+    if (oldErr) oldErr.remove();
 
     try {
+        btn.disabled = true;
+        btn.textContent = 'Salvando...';
+
+        const id = document.getElementById('inAtRegId').value;
+        const titulo = document.getElementById('inAtRegTitulo').value;
+        const diaSemana = document.getElementById('inAtRegDiaSemana').value;
+        const horario = document.getElementById('inAtRegHorario').value;
+        const linkEstruturaId = document.getElementById('inAtRegLinkEstruturaId').value || null;
+        const descricao = document.getElementById('inAtRegDescricao').value;
+
         if (id) {
             const { error } = await db.from('atividades_regulares').update({
                 titulo,
@@ -1209,10 +1215,18 @@ window.salvarAtividadeRegular = async function(event) {
         await carregarAtividadesRegulares();
     } catch (err) {
         console.error("Erro ao salvar atividade regular:", err);
-        alert("Erro ao salvar atividade regular: " + err.message);
+        const errDiv = document.createElement('div');
+        errDiv.id = 'errAtReg';
+        errDiv.style.color = '#ef4444';
+        errDiv.style.marginTop = '12px';
+        errDiv.style.fontSize = '13px';
+        errDiv.innerHTML = `Erro do banco: ${err.message || JSON.stringify(err)}`;
+        form.appendChild(errDiv);
     } finally {
-        btn.disabled = false;
-        btn.textContent = 'Salvar Atividade';
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Salvar Atividade';
+        }
     }
 };
 
