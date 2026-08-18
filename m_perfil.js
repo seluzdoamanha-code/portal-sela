@@ -233,7 +233,7 @@
             pessoaAtual = data;
             renderizarVisualizacao();
 
-            const podeEditar = window.podeEditarPessoas();
+            const podeEditar = (typeof window.podeEditarPessoas === 'function' && window.podeEditarPessoas());
             if (podeEditar) {
                 document.getElementById('btnOpenEdit').style.display = 'block';
             }
