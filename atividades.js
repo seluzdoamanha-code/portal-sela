@@ -267,15 +267,21 @@ window.editarEstrutura = async (id) => {
         apps: isIrradiacao || isAssistencia || isAtendimento
     };
     
-    document.getElementById('inTabEquipe').checked = !!config.equipe;
-    document.getElementById('inTabAgenda').checked = !!config.agenda;
-    document.getElementById('inTabProjetos').checked = !!config.projetos;
-    document.getElementById('inTabDocumentos').checked = !!config.documentos;
-    document.getElementById('inTabTesouraria').checked = !!config.tesouraria;
-    document.getElementById('inTabApps').checked = !!config.apps;
+    const eq = document.getElementById('inTabEquipe');
+    if (eq) eq.checked = !!config.equipe;
+    const ag = document.getElementById('inTabAgenda');
+    if (ag) ag.checked = !!config.agenda;
+    const pr = document.getElementById('inTabProjetos');
+    if (pr) pr.checked = !!config.projetos;
+    const doc = document.getElementById('inTabDocumentos');
+    if (doc) doc.checked = !!config.documentos;
+    const tes = document.getElementById('inTabTesouraria');
+    if (tes) tes.checked = !!config.tesouraria;
+    const app = document.getElementById('inTabApps');
+    if (app) app.checked = !!config.apps;
 
-    
-    document.getElementById('modalEstrutura').classList.add('show');
+    const modalEstrutura = document.getElementById('modalEstrutura');
+    if (modalEstrutura) modalEstrutura.classList.add('show');
 };
 
 window.excluirEstrutura = async (id) => {
