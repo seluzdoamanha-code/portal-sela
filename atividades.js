@@ -143,23 +143,27 @@ function setupModal() {
     const form = document.getElementById('formEstrutura');
     
     const fecharModal = () => { 
-        modal.classList.remove('show'); 
-        form.reset();
-        document.getElementById('inTabEquipe').checked = true;
-        document.getElementById('inTabAgenda').checked = true;
-        document.getElementById('inTabProjetos').checked = true;
-        document.getElementById('inTabDocumentos').checked = true;
-        document.getElementById('inTabTesouraria').checked = false;
-        const form = document.getElementById('formEstrutura');
+        if (modal) modal.classList.remove('show'); 
         if (form) form.reset();
+        
+        const eq = document.getElementById('inTabEquipe');
+        if (eq) eq.checked = true;
+        const ag = document.getElementById('inTabAgenda');
+        if (ag) ag.checked = true;
+        const pr = document.getElementById('inTabProjetos');
+        if (pr) pr.checked = true;
+        const doc = document.getElementById('inTabDocumentos');
+        if (doc) doc.checked = true;
+        const tes = document.getElementById('inTabTesouraria');
+        if (tes) tes.checked = false;
+        
         estruturaEditandoId = null;
     };
     
-    btnNovo.addEventListener('click', () => modal.classList.add('show'));
-    btnClose.addEventListener('click', fecharModal);
-    btnCancel.addEventListener('click', fecharModal);
+    if (btnNovo && modal) btnNovo.addEventListener('click', () => modal.classList.add('show'));
+    if (btnClose) btnClose.addEventListener('click', fecharModal);
+    if (btnCancel) btnCancel.addEventListener('click', fecharModal);
     
-    const form = document.getElementById('formEstrutura');
     if (form) {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
