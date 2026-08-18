@@ -163,7 +163,7 @@ function renderLista() {
             try { logsGlobal = JSON.parse(logsGlobal); } catch(e) { logsGlobal = []; }
         }
         const arrayLogs = Array.isArray(logsGlobal) ? logsGlobal : [];
-        const totalLeiturasHtml = arrayLogs.length > 0 ? ` | Total histórico: <strong style="color: var(--text-main);">${arrayLogs.length}</strong>` : '';
+        const totalLeiturasHtml = arrayLogs.length > 0 ? ` | Total de Irradiações: <strong style="color: var(--text-main);">${arrayLogs.length}</strong>` : '';
 
         if (currentTab === 'pendentes') {
             progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: Pendente${totalLeiturasHtml}</div>`;

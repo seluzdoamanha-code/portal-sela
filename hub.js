@@ -1968,7 +1968,7 @@ async function carregarListaIrradiacao() {
                 try { logsGlobal = JSON.parse(logsGlobal); } catch(e) { logsGlobal = []; }
             }
             const arrayLogs = Array.isArray(logsGlobal) ? logsGlobal : [];
-            const totalLeiturasHtml = arrayLogs.length > 0 ? ` | Total histórico: <strong style="color: #cbd5e1;">${arrayLogs.length}</strong>` : '';
+            const totalLeiturasHtml = arrayLogs.length > 0 ? ` | Total de Irradiações: <strong style="color: #cbd5e1;">${arrayLogs.length}</strong>` : '';
 
             if (currentIrradiacaoTab === 'pendentes') {
                 progressHtml = `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Status: Pendente${totalLeiturasHtml}</div>`;
