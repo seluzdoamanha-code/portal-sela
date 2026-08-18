@@ -3473,7 +3473,7 @@ function renderizarCardAtendimentoItem(container, item) {
         <div style="flex: 1;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <strong style="font-size: 16px; color: var(--text-main);">${item.nome_completo.toUpperCase()}</strong>
-                <span style="font-size: 11px; padding: 2px 6px; background: rgba(255,255,255,0.1); border-radius: 12px; color: var(--text-muted);">${dateStr}</span>
+                <span style="font-size: 11px; padding: 2px 6px; background: rgba(255,255,255,0.1); border-radius: 12px; color: var(--text-muted);">${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</span>
             </div>
             
             <div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-muted);">
@@ -3817,12 +3817,22 @@ async function salvarFormularioAtendimento(e) {
     const whats = document.getElementById('inAtenWhats').value;
 
     try {
+        let criadoPor = 'Desconhecido';
+        try {
+            const profStr = localStorage.getItem('sela_user_profile');
+            if (profStr) {
+                const prof = JSON.parse(profStr);
+                criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || 'Desconhecido';
+            }
+        } catch(e) {}
+
         const { error } = await db.from('app_atendimento_fraterno').insert([{
             nome_completo: nome,
             endereco_completo: endereco,
             data_nascimento: nascimento,
             telefone: whats,
-            status: 'Pendente'
+            status: 'Pendente',
+            criado_por: criadoPor
         }]);
 
         if (error) throw error;

@@ -263,7 +263,7 @@
             <div class="card-header">
                 <div>
                     <div class="card-title">${item.nome_completo ? item.nome_completo.toUpperCase() : 'Sem Nome'}</div>
-                    <div class="card-date">Criado em: ${dataCriacao}</div>
+                    <div class="card-date">Criado em: ${dataCriacao}${item.criado_por ? ' por ' + item.criado_por : ''}</div>
                 </div>
             </div>
             

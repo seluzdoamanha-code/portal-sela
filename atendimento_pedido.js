@@ -22,12 +22,22 @@
         const telefone = document.getElementById('inTelefone').value.trim();
 
         try {
+            let criadoPor = 'Desconhecido';
+            try {
+                const profStr = localStorage.getItem('sela_user_profile');
+                if (profStr) {
+                    const prof = JSON.parse(profStr);
+                    criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || 'Desconhecido';
+                }
+            } catch(e) {}
+
             const { error } = await db.from('app_atendimento_fraterno').insert([{
                 nome_completo: nome,
                 endereco_completo: endereco,
                 data_nascimento: nascimento,
                 telefone: telefone,
-                status: 'Pendente'
+                status: 'Pendente',
+                criado_por: criadoPor
             }]);
 
             if (error) throw error;
