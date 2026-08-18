@@ -1963,7 +1963,15 @@ async function carregarListaIrradiacao() {
             const safeDias = (item.dias_semana||'').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const semanasAlvoStr = item.semanas_alvo || 4;
 
+            let logsGlobal = item.log_datas_leituras;
+            if (typeof logsGlobal === 'string') {
+                try { logsGlobal = JSON.parse(logsGlobal); } catch(e) { logsGlobal = []; }
+            }
+            const arrayLogs = Array.isArray(logsGlobal) ? logsGlobal : [];
+            const totalLeiturasHtml = arrayLogs.length > 0 ? ` | Total histórico: <strong style="color: #cbd5e1;">${arrayLogs.length}</strong>` : '';
+
             if (currentIrradiacaoTab === 'pendentes') {
+                progressHtml = `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Status: Pendente${totalLeiturasHtml}</div>`;
                 actionsHtml = `
                     <button onclick="aprovarIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}')" class="btn btn-primary" style="padding: 6px 12px;">✅ Aprovar p/ Leitura</button>
                     <button onclick="abrirModalEdicaoIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}', ${semanasAlvoStr})" class="btn btn-secondary" style="padding: 6px 12px;">✏️ Editar</button>
@@ -2008,7 +2016,7 @@ async function carregarListaIrradiacao() {
                     }
                 }
                 
-                progressHtml = `<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">${checkboxRepetir}<div style="display:flex; align-items:center; margin-bottom:4px;">Leituras: <strong style="margin-left: 4px; margin-right: 2px; color: var(--accent);">${leituras}/${semanas_alvo}</strong> ${lastDateHtml}</div><div style="display:flex; flex-wrap:wrap; max-width: 250px;">${caixinhas}</div></div>`;
+                progressHtml = `<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">${checkboxRepetir}<div style="display:flex; align-items:center; margin-bottom:4px; flex-wrap:wrap;">Leituras atuais: <strong style="margin-left: 4px; margin-right: 2px; color: var(--accent);">${leituras}/${semanas_alvo}</strong>${totalLeiturasHtml} ${lastDateHtml}</div><div style="display:flex; flex-wrap:wrap; max-width: 250px;">${caixinhas}</div></div>`;
                 
                 actionsHtml = `
                     <button id="btn_ler_${item.id}" onclick="marcarLeituraIrr(this, '${item.id}', ${leituras}, ${semanas_alvo}, ${item.renovacao_automatica ? 'true' : 'false'})" class="btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; transition: all 0.3s ease;">✅ Registrar Leitura</button>
@@ -2027,7 +2035,7 @@ async function carregarListaIrradiacao() {
                         lastDateInfo = ` | Última leitura: <strong style="color: #cbd5e1;">${lastLog.toLocaleDateString('pt-BR')}</strong>`;
                     }
                 }
-                progressHtml = `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Status: Histórico${lastDateInfo}</div>`;
+                progressHtml = `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Status: Histórico${totalLeiturasHtml}${lastDateInfo}</div>`;
                 
                 actionsHtml = `
                     <button onclick="aprovarIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}')" class="btn btn-secondary" style="padding: 6px 12px;">♻️ Reativar (Triagem)</button>

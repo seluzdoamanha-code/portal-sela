@@ -158,7 +158,15 @@ function renderLista() {
         let actions = '';
         let progressHtml = '';
         
+        let logsGlobal = item.log_datas_leituras;
+        if (typeof logsGlobal === 'string') {
+            try { logsGlobal = JSON.parse(logsGlobal); } catch(e) { logsGlobal = []; }
+        }
+        const arrayLogs = Array.isArray(logsGlobal) ? logsGlobal : [];
+        const totalLeiturasHtml = arrayLogs.length > 0 ? ` | Total histórico: <strong style="color: var(--text-main);">${arrayLogs.length}</strong>` : '';
+
         if (currentTab === 'pendentes') {
+            progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: Pendente${totalLeiturasHtml}</div>`;
             actions = `
                 <button class="btn-action btn-primary" onclick="aprovar('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}')">Triagem ✔️</button>
                 <button class="btn-action btn-secondary" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})">Editar ✏️</button>
@@ -196,7 +204,7 @@ function renderLista() {
                 }
             }
             
-            progressHtml = `<div style="margin-top: 8px; font-size: 13px; color: var(--text-muted);"><div style="display:flex; align-items:center; margin-bottom:4px;">Leituras: <strong style="color:var(--accent); margin-left:4px;">${leituras}/${semanas_alvo}</strong> ${lastDateHtml}</div><div style="margin-top:4px; display:flex; flex-wrap:wrap;">${caixinhas}</div></div>`;
+            progressHtml = `<div style="margin-top: 8px; font-size: 13px; color: var(--text-muted);"><div style="display:flex; align-items:center; margin-bottom:4px; flex-wrap:wrap;">Leituras atuais: <strong style="color:var(--accent); margin-left:4px; margin-right:4px;">${leituras}/${semanas_alvo}</strong>${totalLeiturasHtml} ${lastDateHtml}</div><div style="margin-top:4px; display:flex; flex-wrap:wrap;">${caixinhas}</div></div>`;
             
             actions = `
                 <button id="btn_ler_${item.id}" onclick="marcarLeituraIrrMobile(this, '${item.id}', ${leituras}, ${semanas_alvo})" class="btn-action" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; transition: all 0.3s ease;">✅ Registrar Leitura</button>
@@ -215,7 +223,7 @@ function renderLista() {
                     lastDateInfo = ` | Última leitura: <strong style="color: #cbd5e1;">${lastLog.toLocaleDateString('pt-BR')}</strong>`;
                 }
             }
-            progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: Histórico${lastDateInfo}</div>`;
+            progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: Histórico${totalLeiturasHtml}${lastDateInfo}</div>`;
 
             actions = `
                 <button class="btn-action btn-primary" onclick="aprovar('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}')">Reativar ♻️</button>
