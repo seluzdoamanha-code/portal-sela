@@ -150,7 +150,8 @@ function setupModal() {
         document.getElementById('inTabProjetos').checked = true;
         document.getElementById('inTabDocumentos').checked = true;
         document.getElementById('inTabTesouraria').checked = false;
-        document.getElementById('inTabApps').checked = false; 
+        const form = document.getElementById('formEstrutura');
+        if (form) form.reset();
         estruturaEditandoId = null;
     };
     
@@ -158,51 +159,59 @@ function setupModal() {
     btnClose.addEventListener('click', fecharModal);
     btnCancel.addEventListener('click', fecharModal);
     
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const btnSave = document.getElementById('btnSaveModal');
-        btnSave.disabled = true;
-        btnSave.textContent = 'Salvando...';
-        
-
-        const tipo = document.getElementById('inTipoEstrutura').value;
-        const nome = document.getElementById('inNomeEstrutura').value;
-        const abas_config = {
-            equipe: document.getElementById('inTabEquipe').checked,
-            agenda: document.getElementById('inTabAgenda').checked,
-            projetos: document.getElementById('inTabProjetos').checked,
-            documentos: document.getElementById('inTabDocumentos').checked,
-            tesouraria: document.getElementById('inTabTesouraria').checked,
-            apps: document.getElementById('inTabApps').checked
-        };
-        
-        const dados = {
-            tipo: tipo,
-            nome: nome,
-            abas_config: abas_config
-        };
-
-        
-        try {
-            if (estruturaEditandoId) {
-                const { error } = await db.from('estruturas').update(dados).eq('id', estruturaEditandoId);
-                if (error) throw error;
-            } else {
-                const { error } = await db.from('estruturas').insert([dados]);
-                if (error) throw error;
-            }
+    const form = document.getElementById('formEstrutura');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btnSave = document.getElementById('btnSaveModal');
             
-            fecharModal();
-            carregarEstruturas();
-        } catch (error) {
-            console.error('Erro ao salvar:', error);
-            alert('Erro ao salvar. Verifique o console.');
-        } finally {
-            btnSave.disabled = false;
-            btnSave.textContent = 'Salvar Estrutura';
-        }
-    });
+            try {
+                btnSave.disabled = true;
+                btnSave.textContent = 'Salvando...';
+                
+                const tipo = document.getElementById('inTipoEstrutura').value;
+                const nome = document.getElementById('inNomeEstrutura').value;
+                
+                const isIrradiacao = (nome || '').toLowerCase().includes('irradia') || (nome || '').toLowerCase().includes('sela');
+                const isAssistencia = (nome || '').toLowerCase().includes('assist') && (nome || '').toLowerCase().includes('social');
+                const isAtendimento = (nome || '').toLowerCase().includes('atendimento');
+                
+                const abas_config = {
+                    equipe: document.getElementById('inTabEquipe')?.checked ?? true,
+                    agenda: document.getElementById('inTabAgenda')?.checked ?? true,
+                    projetos: document.getElementById('inTabProjetos')?.checked ?? true,
+                    documentos: document.getElementById('inTabDocumentos')?.checked ?? true,
+                    tesouraria: document.getElementById('inTabTesouraria')?.checked ?? false,
+                    apps: document.getElementById('inTabApps')?.checked ?? (isIrradiacao || isAssistencia || isAtendimento)
+                };
+                
+                const dados = {
+                    tipo: tipo,
+                    nome: nome,
+                    abas_config: abas_config
+                };
+                
+                if (estruturaEditandoId) {
+                    const { error } = await db.from('estruturas').update(dados).eq('id', estruturaEditandoId);
+                    if (error) throw error;
+                } else {
+                    const { error } = await db.from('estruturas').insert([dados]);
+                    if (error) throw error;
+                }
+                
+                fecharModal();
+                carregarEstruturas();
+            } catch (error) {
+                console.error('Erro ao salvar estrutura:', error);
+                alert('Erro ao salvar. Verifique o console: ' + error.message);
+            } finally {
+                if (btnSave) {
+                    btnSave.disabled = false;
+                    btnSave.textContent = 'Salvar Estrutura';
+                }
+            }
+        });
+    }
 }
 
 window.alternarFavorito = async function(id) {
