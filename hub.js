@@ -2029,7 +2029,7 @@ async function carregarListaIrradiacao() {
                         <div style="flex: 1;">
                             <h4 style="color: var(--text-main); margin: 0 0 4px 0; font-size: 16px;">${item.nome_solicitado}</h4>
                             <p style="color: var(--text-muted); font-size: 13px; margin: 0;">📍 ${item.endereco || 'Endereço não informado'}</p>
-                            <span style="font-size: 11px; color: var(--text-muted);">Criado em: ${dataPed} | Dia alvo: <strong style="color: #cbd5e1;">${item.dias_semana}</strong></span>
+                            <span style="font-size: 11px; color: var(--text-muted);">Criado em: ${dataPed}${item.criado_por ? ' por ' + item.criado_por : ''} | Dia alvo: <strong style="color: #cbd5e1;">${item.dias_semana}</strong></span>
                             ${progressHtml}
                         </div>
                     </div>
@@ -2072,6 +2072,15 @@ async function salvarIrradiacao(e) {
     }
     
     try {
+        let criadoPor = 'Desconhecido';
+        try {
+            const profStr = localStorage.getItem('sela_user_profile');
+            if (profStr) {
+                const prof = JSON.parse(profStr);
+                criadoPor = (prof.nome || '').trim().split(' ')[0] || 'Desconhecido';
+            }
+        } catch(e) {}
+
         // Criar N registros independentes, um para cada dia selecionado
         const recordsToInsert = dias.map(dia => ({
             estrutura_id: estruturaId,
@@ -2079,7 +2088,8 @@ async function salvarIrradiacao(e) {
             endereco: endereco,
             dias_semana: dia,
             status: 'pendente',
-            leituras: 0
+            leituras: 0,
+            criado_por: criadoPor
         }));
         
         const { data, error } = await db.from('app_irradiacao_solicitacoes').insert(recordsToInsert).select('id');
