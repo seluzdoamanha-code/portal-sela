@@ -12,7 +12,7 @@
         if (!currentId) {
             const action = new URLSearchParams(window.location.search).get('action');
             if (action === 'new') {
-                pessoaAtual = { tipo_pessoa: 'Física', perfis: [] };
+                pessoaAtual = { tipo_pessoa: 'Física', papeis: [] };
                 await carregarTags();
                 document.getElementById('mLoadingState').style.display = 'none';
                 
@@ -162,7 +162,7 @@
             "Passista", "Líder", "Leitor", "Outros"
         ];
         try {
-            const { data, error } = await db.from('configuracoes').select('valor').eq('chave', 'perfis_pessoas').single();
+            const { data, error } = await db.from('configuracoes').select('valor').eq('chave', 'papeis_pessoas').single();
             if (data && data.valor) {
                 TAGS = data.valor.split(',').map(s => s.trim()).filter(s => s !== '');
             }
@@ -269,10 +269,10 @@
         document.getElementById('lblTipoPessoa').innerText = tipoVal.startsWith('Pessoa') ? tipoVal : `Pessoa ${tipoVal}`;
         
         // Renderizar Perfis
-        const perfisContainer = document.getElementById('lblPerfis');
-        perfisContainer.innerHTML = '';
-        if (p.perfis && p.perfis.length > 0) {
-            p.perfis.forEach(perfil => {
+        const papeisContainer = document.getElementById('lblPerfis');
+        papeisContainer.innerHTML = '';
+        if (p.papeis && p.papeis.length > 0) {
+            p.papeis.forEach(perfil => {
                 const badge = document.createElement('span');
                 badge.style.background = 'rgba(99, 102, 241, 0.1)';
                 badge.style.color = '#818cf8';
@@ -281,7 +281,7 @@
                 badge.style.fontSize = '12px';
                 badge.style.fontWeight = '500';
                 badge.innerText = perfil;
-                perfisContainer.appendChild(badge);
+                papeisContainer.appendChild(badge);
             });
         }
 
@@ -384,7 +384,7 @@
         // Checkboxes de Perfis
         const checkboxes = document.querySelectorAll('input[name="mPerfis"]');
         checkboxes.forEach(cb => {
-            cb.checked = (p.perfis && p.perfis.includes(cb.value));
+            cb.checked = (p.papeis && p.papeis.includes(cb.value));
         });
     }
 
@@ -394,7 +394,7 @@
         btnSaveEdit.disabled = true;
 
         const statusForm = document.getElementById('inpStatus').value;
-        const perfis = Array.from(document.querySelectorAll('input[name="mPerfis"]:checked')).map(cb => cb.value);
+        const papeis = Array.from(document.querySelectorAll('input[name="mPerfis"]:checked')).map(cb => cb.value);
 
         const dados = {
             cpf_cnpj: document.getElementById('inpCpfCnpj').value.replace(/\D/g, '') || null,
@@ -409,7 +409,7 @@
             cidade: document.getElementById('inpCidade').value.trim(),
             estado: document.getElementById('inpEstado').value.trim().toUpperCase(),
             status: statusForm,
-            perfis: perfis,
+            papeis: papeis,
             sexo: document.getElementById('inpSexo').value || null,
             naturalidade: document.getElementById('inpNaturalidade').value || null,
             nacionalidade: document.getElementById('inpNacionalidade').value || null,
@@ -461,7 +461,30 @@
             
         } catch(e) {
             console.error(e);
-            alert('Erro ao salvar os dados.');
+            let msg = 'Ocorreu um erro ao salvar os dados.';
+            if (e && e.code === '23505' && e.message && e.message.includes('pessoas_cpf_cnpj_key')) {
+                msg = 'Já existe um cadastro com este CPF/CNPJ. Por favor, verifique os dados informados.';
+            } else if (e && e.message) {
+                msg = e.message;
+            }
+            
+            let modal = document.getElementById('errorAlertModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'errorAlertModal';
+                modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
+                modal.innerHTML = `
+                    <div style="background:var(--bg-panel, #252526);color:var(--text-main, #e0e0e0);padding:24px;border-radius:12px;max-width:400px;width:90%;box-shadow:0 10px 25px rgba(0,0,0,0.5);text-align:center;font-family:inherit;">
+                        <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+                        <h3 style="margin:0 0 16px 0;font-size:20px;font-weight:600;">Atenção</h3>
+                        <p id="errorAlertMessage" style="margin:0 0 24px 0;font-size:16px;line-height:1.5;color:var(--text-muted, #9ca3af);"></p>
+                        <button onclick="document.getElementById('errorAlertModal').style.display='none'" style="background:var(--primary, #6366f1);color:#fff;border:none;padding:12px 24px;border-radius:8px;font-size:16px;font-weight:500;cursor:pointer;width:100%;transition:background 0.2s;">Entendi</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            document.getElementById('errorAlertMessage').textContent = msg;
+            modal.style.display = 'flex';
         } finally {
             btnSaveEdit.innerText = 'Salvar';
             btnSaveEdit.disabled = false;

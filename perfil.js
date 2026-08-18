@@ -156,8 +156,8 @@ async function carregarPerfil() {
 
         // Renderizar Perfis
         const containerPerfis = document.getElementById('infoPerfis');
-        if (pessoa.perfis && pessoa.perfis.length > 0) {
-            containerPerfis.innerHTML = pessoa.perfis.map(tag => 
+        if (pessoa.papeis && pessoa.papeis.length > 0) {
+            containerPerfis.innerHTML = pessoa.papeis.map(tag => 
                 `<span style="display: inline-block; background: rgba(99, 102, 241, 0.1); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; margin-right: 8px; margin-bottom: 8px;">${tag}</span>`
             ).join('');
         } else {

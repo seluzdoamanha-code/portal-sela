@@ -119,18 +119,18 @@ window.aplicarFiltros = () => {
                 if (tagSelecionada === 'Física' || tagSelecionada === 'Jurídica') {
                     matchTag = p.tipo_pessoa === tagSelecionada;
                 } else {
-                    matchTag = p.perfis && p.perfis.includes(tagSelecionada);
+                    matchTag = p.papeis && p.papeis.includes(tagSelecionada);
                 }
             }
             
             return matchBusca && matchTag;
         });
         
-        // Filtra perfis que estão desmarcados nas caixas de seleção
+        // Filtra papeis que estão desmarcados nas caixas de seleção
         const hideOutros = document.getElementById('hideOutros');
 
         filtrados = filtrados.filter(p => {
-            if (!p.perfis) return true;
+            if (!p.papeis) return true;
             
             // Se a tag selecionada no Dropdown for EXATAMENTE uma dessas, nós ignoramos a checkbox
             // para não dar conflito (ex: o usuário escolhe "Estudante" no dropdown, ele quer ver os estudantes)
@@ -138,9 +138,9 @@ window.aplicarFiltros = () => {
                 return true;
             }
 
-            const perfisUpper = String(p.perfis).toUpperCase();
+            const papeisUpper = String(p.papeis).toUpperCase();
             
-            if (hideOutros && hideOutros.checked === true && perfisUpper.includes('OUTRO')) return false;
+            if (hideOutros && hideOutros.checked === true && papeisUpper.includes('OUTRO')) return false;
             
             return true;
         });
@@ -240,7 +240,7 @@ function renderizarTabela(dados) {
     
     dados.forEach(pessoa => {
         // Criar uma cópia e remover duplicatas para evitar mutação do estado original
-        let tags = Array.from(new Set(pessoa.perfis || []));
+        let tags = Array.from(new Set(pessoa.papeis || []));
         
         // Remove 'Empresa' solto se existir, para não duplicar com a tag formatada
         tags = tags.filter(t => t !== 'Empresa' && t !== '🏢 Empresa');
@@ -402,7 +402,12 @@ function setupModal() {
         
         if (docLimpo.length >= 11) {
             timeoutBusca = setTimeout(async () => {
-                const { data } = await db.from('pessoas').select('id, nome_completo').eq('cpf_cnpj', docLimpo).neq('id', pessoaEditandoId || '').single();
+                let query = db.from('pessoas').select('id, nome_completo').eq('cpf_cnpj', docLimpo);
+                if (pessoaEditandoId) {
+                    query = query.neq('id', pessoaEditandoId);
+                }
+                const { data } = await query.single();
+                
                 if (data) {
                     erroCpf.textContent = `⚠️ Este ${inTipo.value === 'Jurídica' ? 'CNPJ' : 'CPF'} já está cadastrado para: ${data.nome_completo}`;
                     erroCpf.style.display = 'block';
@@ -474,11 +479,11 @@ function setupModal() {
         const cidade = document.getElementById('inCidade').value || null;
         const estado = document.getElementById('inEstado').value || null;
         
-        // Coleta perfis selecionados
-        const perfis = Array.from(document.querySelectorAll('input[name="perfis"]:checked')).map(cb => cb.value);
+        // Coleta papeis selecionados
+        const papeis = Array.from(document.querySelectorAll('input[name="papeis"]:checked')).map(cb => cb.value);
 
         const dados = {
-            cpf_cnpj, nome_completo, nome_curto, tipo_pessoa, celular, email, perfis,
+            cpf_cnpj, nome_completo, nome_curto, tipo_pessoa, celular, email, papeis,
             status, data_nascimento, sexo, naturalidade, nacionalidade, nome_mae, nome_pai, estado_civil, profissao,
             cep, endereco, bairro, cidade, estado
         };
@@ -524,7 +529,30 @@ function setupModal() {
             }
         } catch (error) {
             console.error('Erro ao salvar pessoa:', error);
-            alert('Erro ao salvar os dados: ' + JSON.stringify(error));
+            let msg = 'Ocorreu um erro ao salvar os dados.';
+            if (error && error.code === '23505' && error.message && error.message.includes('pessoas_cpf_cnpj_key')) {
+                msg = 'Já existe um cadastro com este CPF/CNPJ. Por favor, verifique os dados informados.';
+            } else if (error && error.message) {
+                msg = error.message;
+            }
+            
+            let modal = document.getElementById('errorAlertModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'errorAlertModal';
+                modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
+                modal.innerHTML = `
+                    <div style="background:var(--bg-panel, #252526);color:var(--text-main, #e0e0e0);padding:24px;border-radius:12px;max-width:400px;width:90%;box-shadow:0 10px 25px rgba(0,0,0,0.5);text-align:center;font-family:inherit;">
+                        <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+                        <h3 style="margin:0 0 16px 0;font-size:20px;font-weight:600;">Atenção</h3>
+                        <p id="errorAlertMessage" style="margin:0 0 24px 0;font-size:16px;line-height:1.5;color:var(--text-muted, #9ca3af);"></p>
+                        <button onclick="document.getElementById('errorAlertModal').style.display='none'" style="background:var(--primary, #6366f1);color:#fff;border:none;padding:12px 24px;border-radius:8px;font-size:16px;font-weight:500;cursor:pointer;width:100%;transition:background 0.2s;">Entendi</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            document.getElementById('errorAlertMessage').textContent = msg;
+            modal.style.display = 'flex';
         } finally {
             btnSave.disabled = false;
             btnSave.textContent = 'Salvar Cadastro';
@@ -573,10 +601,10 @@ window.editarPessoa = async (id) => {
 
     document.getElementById('inFoto').value = ''; // Limpa o input de arquivo
     
-    // Marcar os perfis corretas
-    const perfis = pessoa.perfis || [];
-    document.querySelectorAll('input[name="perfis"]').forEach(cb => {
-        cb.checked = perfis.includes(cb.value);
+    // Marcar os papeis corretas
+    const papeis = pessoa.papeis || [];
+    document.querySelectorAll('input[name="papeis"]').forEach(cb => {
+        cb.checked = papeis.includes(cb.value);
     });
     
     // Forçar a máscara logo após preencher (caso venha do banco sem formatação)
@@ -611,7 +639,7 @@ window.renderizarTagsDisponiveis = async () => {
     ];
 
     try {
-        const { data, error } = await db.from('configuracoes').select('valor').eq('chave', 'perfis_pessoas').single();
+        const { data, error } = await db.from('configuracoes').select('valor').eq('chave', 'papeis_pessoas').single();
         if (data && data.valor) {
         TAGS = data.valor.split(',').map(s => s.trim()).filter(s => s !== '');
         }
@@ -632,7 +660,7 @@ window.renderizarTagsDisponiveis = async () => {
     if (container) {
         container.innerHTML = TAGS.map(tag => `
             <label class="tag-checkbox tag-checkbox-ui">
-                <input type="checkbox" name="perfis" value="${tag}">
+                <input type="checkbox" name="papeis" value="${tag}">
                 <span>${tag}</span>
             </label>
         `).join('');
