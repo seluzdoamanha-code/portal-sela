@@ -271,8 +271,16 @@
         // Renderizar Perfis
         const perfisContainer = document.getElementById('lblPerfis');
         perfisContainer.innerHTML = '';
-        if (p.perfis && p.perfis.length > 0) {
-            p.perfis.forEach(perfil => {
+        
+        let perfisArray = [];
+        if (Array.isArray(p.perfis)) {
+            perfisArray = p.perfis;
+        } else if (typeof p.perfis === 'string') {
+            try { perfisArray = JSON.parse(p.perfis); } catch(e) { perfisArray = [p.perfis]; }
+        }
+
+        if (perfisArray.length > 0) {
+            perfisArray.forEach(perfil => {
                 const badge = document.createElement('span');
                 badge.style.background = 'rgba(99, 102, 241, 0.1)';
                 badge.style.color = '#818cf8';

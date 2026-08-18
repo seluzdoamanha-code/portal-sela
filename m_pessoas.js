@@ -163,13 +163,20 @@
 
             // Perfis (Até 3 badges)
             let perfisHtml = '';
-            if (p.perfis && p.perfis.length > 0) {
-                const limit = Math.min(p.perfis.length, 3);
+            let perfisArray = [];
+            if (Array.isArray(p.perfis)) {
+                perfisArray = p.perfis;
+            } else if (typeof p.perfis === 'string') {
+                try { perfisArray = JSON.parse(p.perfis); } catch(e) { perfisArray = [p.perfis]; }
+            }
+
+            if (perfisArray.length > 0) {
+                const limit = Math.min(perfisArray.length, 3);
                 for(let i=0; i<limit; i++) {
-                    perfisHtml += `<span class="badge" style="background: ${isEmpresa ? 'rgba(52, 211, 153, 0.2); color: #34d399' : 'rgba(99, 102, 241, 0.2); color: #818cf8'}; margin-right: 4px;">${p.perfis[i]}</span>`;
+                    perfisHtml += `<span class="badge" style="background: ${isEmpresa ? 'rgba(52, 211, 153, 0.2); color: #34d399' : 'rgba(99, 102, 241, 0.2); color: #818cf8'}; margin-right: 4px;">${perfisArray[i]}</span>`;
                 }
-                if (p.perfis.length > 3) {
-                    perfisHtml += `<span class="badge" style="background: rgba(255,255,255,0.1); color: #ccc;">+${p.perfis.length - 3}</span>`;
+                if (perfisArray.length > 3) {
+                    perfisHtml += `<span class="badge" style="background: rgba(255,255,255,0.1); color: #ccc;">+${perfisArray.length - 3}</span>`;
                 }
             }
             
@@ -233,37 +240,48 @@
         const selectSort = document.getElementById('mSortOrder');
         const chkOutros = document.getElementById('mHideOutros');
         
-        const termo = (input ? input.value.toLowerCase().trim() : '');
+        const busca = (input ? input.value.trim() : '');
         const tag = filterTag ? filterTag.value : '';
         const sort = selectSort ? selectSort.value : 'nome_az';
         const hideOutrosVal = chkOutros ? chkOutros.checked : false;
 
-        // Filter
         let filtrados = allPessoas.filter(p => {
-            const nome = (p.nome_completo || '').toLowerCase();
-            const doc = (p.cpf_cnpj || '').toLowerCase();
-            const matchTermo = termo === '' || nome.includes(termo) || doc.includes(termo);
-            
+            let perfisArray = [];
+            if (Array.isArray(p.perfis)) {
+                perfisArray = p.perfis;
+            } else if (typeof p.perfis === 'string') {
+                try { perfisArray = JSON.parse(p.perfis); } catch(e) { perfisArray = [p.perfis]; }
+            }
+
+            let matchBusca = true;
+            if (busca) {
+                const term = busca.toLowerCase();
+                const nome = (p.nome_completo || '').toLowerCase();
+                const apelido = (p.nome_curto || '').toLowerCase();
+                const cpf = (p.cpf_cnpj || '');
+                matchBusca = nome.includes(term) || apelido.includes(term) || cpf.includes(term);
+            }
+
             let matchTag = true;
             if (tag === 'Física') {
                 matchTag = (p.tipo_pessoa === 'Física' || !p.tipo_pessoa);
             } else if (tag === 'Jurídica') {
                 matchTag = (p.tipo_pessoa === 'Jurídica');
             } else if (tag !== '') {
-                matchTag = p.perfis && p.perfis.includes(tag);
+                matchTag = perfisArray.includes(tag);
             }
 
             // Lógica de "Outros"
             let matchOutros = true;
             if (hideOutrosVal) {
                 // Se a flag estiver marcada, esconde as pessoas que têm a tag 'Outros'
-                const temOutros = p.perfis && p.perfis.some(role => role.toLowerCase().includes('outro'));
+                const temOutros = perfisArray.some(role => role.toLowerCase().includes('outro'));
                 if (temOutros) {
                     matchOutros = false;
                 }
             }
 
-            return matchTermo && matchTag && matchOutros;
+            return matchBusca && matchTag && matchOutros;
         });
 
         // Sort

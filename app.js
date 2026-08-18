@@ -602,7 +602,13 @@ window.editarPessoa = async (id) => {
     document.getElementById('inFoto').value = ''; // Limpa o input de arquivo
     
     // Marcar os perfis corretas
-    const perfis = pessoa.perfis || [];
+    let perfis = [];
+    if (Array.isArray(pessoa.perfis)) {
+        perfis = pessoa.perfis;
+    } else if (typeof pessoa.perfis === 'string') {
+        try { perfis = JSON.parse(pessoa.perfis); } catch(e) { perfis = [pessoa.perfis]; }
+    }
+
     document.querySelectorAll('input[name="perfis"]').forEach(cb => {
         cb.checked = perfis.includes(cb.value);
     });
@@ -656,7 +662,7 @@ window.renderizarTagsDisponiveis = async () => {
     let otherTags = TAGS.filter(t => t !== 'Associado Efetivo' && t !== 'Leitor' && t !== 'Outros').sort((a, b) => a.localeCompare(b));
     TAGS = [...specialTags, ...otherTags];
 
-    const container = document.getElementById('tagsCheckboxContainer');
+    const container = document.getElementById('tagsContainer');
     if (container) {
         container.innerHTML = TAGS.map(tag => `
             <label class="tag-checkbox tag-checkbox-ui">
