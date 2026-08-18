@@ -65,10 +65,26 @@ async function checkAuth() {
         return;
     }
 
+    // 3.5 Tentar buscar o nome_curto na tabela pessoas
+    let nomeCurtoPessoa = null;
+    try {
+        const { data: pessoaData } = await authDb
+            .from('pessoas')
+            .select('nome_curto')
+            .eq('email', email)
+            .single();
+        if (pessoaData && pessoaData.nome_curto) {
+            nomeCurtoPessoa = pessoaData.nome_curto;
+        }
+    } catch(e) {
+        console.warn("Usuário não encontrado na tabela pessoas ou sem nome curto.");
+    }
+
     // 4. Usuário autorizado! 
     // Vamos injetar os dados dele no localStorage para o sidebar.js puxar
     const userProfile = {
         nome: whitelist.nome || session.user.user_metadata.full_name || 'Trabalhador SELA',
+        nome_curto: nomeCurtoPessoa || whitelist.nome || session.user.user_metadata.full_name || 'Trabalhador SELA',
         foto: session.user.user_metadata.avatar_url || 'https://ui-avatars.com/api/?name=Sela&background=random',
         email: email,
         nivel_acesso: whitelist.nivel_acesso || 'comum'

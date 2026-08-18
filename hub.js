@@ -2077,7 +2077,7 @@ async function salvarIrradiacao(e) {
             const profStr = localStorage.getItem('sela_user_profile');
             if (profStr) {
                 const prof = JSON.parse(profStr);
-                criadoPor = (prof.nome || '').trim().split(' ')[0] || 'Desconhecido';
+                criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || 'Desconhecido';
             }
         } catch(e) {}
 

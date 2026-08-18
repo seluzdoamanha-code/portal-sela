@@ -220,7 +220,7 @@ function renderLista() {
                     </div>
                 </div>
                 <div class="m-card-meta">
-                    Em: ${dataPed} | Dias: <span style="color: var(--text-main);">${item.dias_semana}</span>
+                    Em: ${dataPed}${item.criado_por ? ' por ' + item.criado_por : ''} | Dias: <span style="color: var(--text-main);">${item.dias_semana}</span>
                     ${progressHtml}
                 </div>
                 <div class="m-card-actions">

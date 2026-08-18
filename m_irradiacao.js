@@ -133,13 +133,23 @@ async function salvarIrradiacao(e) {
     btnSave.textContent = 'Enviando...';
     
     try {
+        let criadoPor = 'Desconhecido';
+        try {
+            const profStr = localStorage.getItem('sela_user_profile');
+            if (profStr) {
+                const prof = JSON.parse(profStr);
+                criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || 'Desconhecido';
+            }
+        } catch(e) {}
+
         const recordsToInsert = dias.map(dia => ({
             estrutura_id: estruturaId,
             nome_solicitado: nome,
             endereco: isDesencarnado ? null : endereco,
             dias_semana: dia,
             status: 'pendente',
-            leituras: 0
+            leituras: 0,
+            criado_por: criadoPor
         }));
         
         const { data, error } = await db
