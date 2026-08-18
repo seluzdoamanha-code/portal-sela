@@ -266,7 +266,10 @@
         document.getElementById('lblNomeCurto').innerText = p.nome_curto || '';
         
         const tipoVal = p.tipo_pessoa || 'Física';
-        document.getElementById('lblTipoPessoa').innerText = tipoVal.startsWith('Pessoa') ? tipoVal : `Pessoa ${tipoVal}`;
+        const lblTipoPessoa = document.getElementById('lblTipoPessoa');
+        if (lblTipoPessoa) {
+            lblTipoPessoa.innerText = tipoVal.startsWith('Pessoa') ? tipoVal : `Pessoa ${tipoVal}`;
+        }
         
         // Renderizar Perfis
         const perfisContainer = document.getElementById('lblPerfis');
