@@ -28,7 +28,9 @@ async function carregarLeituras() {
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     const semanaNum = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
 
-    lblData.innerText = `Atividade de Irradiação - Leituras para o dia ${nomeDia}/${diaImpressao} (semana ${semanaNum})`;
+    const dataFormatada = hoje.toLocaleDateString('pt-BR');
+
+    lblData.innerText = `Atividade de Irradiação - Leituras para o dia ${nomeDia}/${diaImpressao} (impresso em ${dataFormatada} - semana ${semanaNum})`;
 
     try {
         let query = db.from('app_irradiacao_solicitacoes')
