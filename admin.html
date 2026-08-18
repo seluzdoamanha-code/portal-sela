@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administração Global - Portal SELA</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Tabs de navegação rolante */
+        .admin-tabs-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+            padding-bottom: 8px;
+        }
+        
+        .admin-tabs-wrapper::-webkit-scrollbar {
+            height: 4px;
+        }
+        .admin-tabs-wrapper::-webkit-scrollbar-thumb {
+            background-color: var(--border);
+            border-radius: 4px;
+        }
+        
+        .admin-tabs {
+            display: inline-flex;
+            gap: 12px;
+            padding: 0 4px;
+        }
+        
+        .admin-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid transparent;
+        }
+        
+        .admin-tab:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .admin-tab.active {
+            color: #fff;
+            background: var(--primary);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .placeholder-card {
+            background: var(--bg-panel);
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth_guard.js"></script>
+    <link rel="icon" type="image/png" href="logo_sela.png">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar injetada via JS -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <h2>Portal SELA</h2>
+            </div>
+            <nav class="main-nav" id="mainNav">
+                <!-- Preenchido pelo sidebar.js -->
+            </nav>
+        </aside>
+
+        <main class="content-area">
+            <header class="topbar">
+                <div style="display: flex; gap: 16px; align-items: center;">
+                    <h1 style="font-size: 24px; font-weight: 600; margin: 0;">🛠️ Administração Global</h1>
+                </div>
+            </header>
+
+            <div class="content-body" id="adminContent" style="display: none;">
+                
+                <!-- Wrapper com rolagem horizontal -->
+                <div class="admin-tabs-wrapper">
+                    <div class="admin-tabs" id="adminTabs">
+                        <div class="admin-tab active" onclick="switchTab('home')">🏠 Home</div>
+                        <div class="admin-tab" onclick="switchTab('associados')">🤝 Associados</div>
+                        <div class="admin-tab" onclick="switchTab('mensalidades')">💳 Mensalidades</div>
+                        <div class="admin-tab" onclick="switchTab('departamentos')">🏢 Departamentos</div>
+                        <div class="admin-tab" onclick="switchTab('atividades')">🗓️ Atividades</div>
+                        <div class="admin-tab" onclick="switchTab('pessoas')">👥 Pessoas</div>
+                        <div class="admin-tab" onclick="switchTab('legais')">⚖️ Legais</div>
+                        <div class="admin-tab" onclick="switchTab('financas')">💰 Finanças</div>
+                        <div class="admin-tab" onclick="switchTab('bd')">🗄️ Banco de Dados</div>
+                    </div>
+                </div>
+
+                <!-- Conteúdos das Abas -->
+                <div id="tab-home" class="tab-content active">
+                    <div class="placeholder-card">
+                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Visão Geral do Sistema</h3>
+                        <p>Painel central de controle. Em breve terá gráficos e atalhos rápidos.</p>
+                    </div>
+                </div>
+
+                <div id="tab-associados" class="tab-content">
+                    <div class="placeholder-card">
+                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Gestão de Associados</h3>
+                        <p>Aguardando detalhamento de conteúdo e formatação.</p>
+                    </div>
+                </div>
+
+                <div id="tab-mensalidades" class="tab-content">
+                    <div class="placeholder-card">
+                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Controle de Mensalidades</h3>
+                        <p>Aguardando detalhamento de conteúdo e formatação.</p>
+                    </div>
+                </div>
+
+                <div id="tab-departamentos" class="tab-content">
+                    <div class="placeholder-card">
+                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Organograma e Departamentos</h3>
+                        <p>Aguardando detalhamento de conteúdo e formatação.</p>
+                    </div>
+                </div>
+
+                <div id="tab-atividades" class="tab-content">
+                    <div class="placeholder-card">
+                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Gestão de Atividades Regulares</h3>
+                        <p>Aguardando detalhamento de conteúdo e formatação.</p>
+                    </div>
+                </div>
+
+                <div id="tab-pessoas" class="tab-content">
+                    <div class="placeholder-card">
+                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Base Global de Pessoas</h3>
+                        <p>Aguardando detalhamento de conteúdo e formatação.</p>
+                    </div>
+                </div>
+
+                <div id="tab-legais" class="tab-content">
+                    <div class="placeholder-card">
+                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Documentos e Assuntos Legais</h3>
+                        <p>Aguardando detalhamento de conteúdo e formatação.</p>
+                    </div>
+                </div>
+
+                <div id="tab-financas" class="tab-content">
+                    <div class="placeholder-card">
+                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Painel Financeiro</h3>
+                        <p>Aguardando detalhamento de conteúdo e formatação.</p>
+                    </div>
+                </div>
+
+                <div id="tab-bd" class="tab-content">
+                    <div class="placeholder-card">
+                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Manutenção do Banco de Dados</h3>
+                        <p>Aguardando detalhamento de conteúdo e formatação.</p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="admin.js"></script>
+    <script src="sidebar.js"></script>
+</body>
+</html>
