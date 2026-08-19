@@ -187,7 +187,27 @@ function renderizarGrafico(vinculos) {
         };
     });
 
-    const roots = chartData.filter(v => !v.parentId || v.parentId === "");
+    let validIds = new Set(chartData.map(v => String(v.id)));
+    chartData.forEach(v => {
+        v.id = String(v.id);
+        if (v.parentId) {
+            v.parentId = String(v.parentId);
+            if (!validIds.has(v.parentId)) {
+                v.parentId = "";
+            }
+        } else {
+            v.parentId = "";
+        }
+    });
+
+    let roots = chartData.filter(v => v.parentId === "");
+    
+    // Fallback para caso haja dependência circular (todos tem pai)
+    if (roots.length === 0 && chartData.length > 0) {
+        chartData[0].parentId = "";
+        roots = [chartData[0]];
+    }
+
     if (roots.length > 1) {
         chartData.push({
             id: "virtual-root",
