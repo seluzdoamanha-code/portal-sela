@@ -3412,11 +3412,7 @@ window.carregarListaAtendimento = async function () {
             return;
         }
 
-        if (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera') {
-            lista.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;';
-        } else {
-            lista.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
-        }
+        lista.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
 
         // Filter data for list
         let data = [];
@@ -3544,11 +3540,8 @@ function renderizarCardAtendimentoItem(container, item) {
     const card = document.createElement('div');
     const isGrid = (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera');
 
-    if (isGrid) {
-        card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 16px; transition: all 0.2s;';
-    } else {
-        card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; transition: all 0.2s;';
-    }
+    card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; transition: all 0.2s;';
+    
     card.onmouseover = () => card.style.background = 'rgba(255,255,255,0.05)';
     card.onmouseout = () => card.style.background = 'rgba(255,255,255,0.03)';
 
@@ -3566,14 +3559,11 @@ function renderizarCardAtendimentoItem(container, item) {
 
     // Container for buttons
     const buttonsContainerStyle = isGrid 
-        ? 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px;' 
+        ? 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 250px;' 
         : 'display: flex; flex-direction: column; gap: 8px; min-width: 140px;';
 
-    const infoContainerStyle = isGrid 
-        ? 'flex: 1;' 
-        : 'flex: 1; display: flex; flex-wrap: wrap; gap: 32px; justify-content: space-between;';
+    const infoContainerStyle = 'flex: 1; display: flex; flex-wrap: wrap; gap: 32px; justify-content: space-between;';
 
-    // Se for tabela, podemos colocar info no meio
     let leftInfo = `
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
             <strong style="font-size: 16px; color: var(--text-main);">${item.nome_completo.toUpperCase()}</strong>
@@ -3586,15 +3576,14 @@ function renderizarCardAtendimentoItem(container, item) {
         </div>
     `;
 
-    let rightInfo = isGrid ? infoExtra : `<div style="font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">${infoExtra}</div>`;
+    let rightInfo = `<div style="font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">${infoExtra}</div>`;
 
     card.innerHTML = `
         <div style="${infoContainerStyle}">
-            <div style="${isGrid ? '' : 'flex: 2; min-width: 280px;'}">
+            <div style="flex: 2; min-width: 280px;">
                 ${leftInfo}
-                ${isGrid ? `<div style="margin-top: 8px;">${rightInfo}</div>` : ''}
             </div>
-            ${!isGrid ? `<div style="flex: 1; min-width: 200px;">${rightInfo}</div>` : ''}
+            <div style="flex: 1; min-width: 200px;">${rightInfo}</div>
         </div>
         
         <div style="${buttonsContainerStyle}">
