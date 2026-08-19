@@ -290,7 +290,7 @@
                 ` : ''}
 
                 <div style="display: flex; gap: 8px; flex: none; width: auto; min-width: 44px; margin-left: auto;">
-                    <button class="btn-action" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="flex: none; width: auto; min-width: 44px; padding: 10px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);">✏️</button>
+                    <button class="btn-action" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="flex: none; width: auto; min-width: 44px; padding: 10px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);">✏️</button>
                     <button class="btn-action btn-delete" onclick="excluirPedido('${item.id}')" style="flex: none; width: auto; min-width: 44px; padding: 10px;">🗑️</button>
                 </div>
             </div>

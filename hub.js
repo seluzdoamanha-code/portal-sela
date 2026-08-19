@@ -3582,7 +3582,7 @@ function renderizarCardAtendimentoItem(container, item) {
         buttonsHtml = `
             ${item.status !== 'Atendido' ? btnPresenca : '<div></div>'}
             ${item.status !== 'Atendido' ? `
-                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo.replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${item.telefone || ''}')" style="font-size: 14px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️</button>
+                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="font-size: 14px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️</button>
             ` : '<div></div>'}
             
             ${(item.status === 'Pendente' || item.status === 'Planejado') ? `
@@ -3602,7 +3602,7 @@ function renderizarCardAtendimentoItem(container, item) {
             ` : '<div></div>'}
             
             ${item.status !== 'Atendido' ? `
-                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo.replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${item.telefone || ''}')" style="font-size: 14px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️</button>
+                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="font-size: 14px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️</button>
             ` : '<div></div>'}
             
             ${item.status === 'Planejado' ? `
@@ -3617,7 +3617,7 @@ function renderizarCardAtendimentoItem(container, item) {
             ${item.status !== 'Atendido' ? btnPresenca : ''}
             
             ${item.status !== 'Atendido' ? `
-                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo.replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${item.telefone || ''}')" style="font-size: 12px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️ Editar</button>
+                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="font-size: 12px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️ Editar</button>
             ` : ''}
             
             ${(item.status === 'Pendente' || (item.status === 'Planejado' && currentAtendimentoSubTab !== 'andamento')) ? `
