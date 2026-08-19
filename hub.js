@@ -2926,23 +2926,45 @@ window.carregarEstatisticasIrradiacao = async function () {
 }
 
 window.abrirModalEdicaoIrradiacao = function (id, nome, endereco, dia, semanas) {
-    document.getElementById('editIrrId').value = id;
-    document.getElementById('editIrrNome').value = nome;
-    document.getElementById('editIrrEndereco').value = endereco;
-    document.getElementById('editIrrDia').value = dia;
-    document.getElementById('editIrrSemanas').value = semanas;
-
-    document.getElementById('modalEdicaoIrradiacao').style.display = 'flex';
+    const html = `
+        <form onsubmit="window.salvarEdicaoIrradiacaoSideSheet(event, '${id}')" style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Nome</label>
+                <input type="text" id="editIrrNomeSS" value="${nome}" required class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+            </div>
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Endereço</label>
+                <input type="text" id="editIrrEnderecoSS" value="${endereco}" required class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+            </div>
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Dia da Semana</label>
+                <select id="editIrrDiaSS" class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                    <option value="Segunda-feira" ${dia === 'Segunda-feira' ? 'selected' : ''}>Segunda-feira</option>
+                    <option value="Terça-feira" ${dia === 'Terça-feira' ? 'selected' : ''}>Terça-feira</option>
+                    <option value="Quarta-feira (Desobsessão)" ${dia === 'Quarta-feira (Desobsessão)' ? 'selected' : ''}>Quarta-feira (Desobsessão)</option>
+                    <option value="Quarta-feira (Desencarnado)" ${dia === 'Quarta-feira (Desencarnado)' ? 'selected' : ''}>Quarta-feira (Desencarnado)</option>
+                    <option value="Quinta-feira" ${dia === 'Quinta-feira' ? 'selected' : ''}>Quinta-feira</option>
+                </select>
+            </div>
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Semanas Alvo</label>
+                <input type="number" id="editIrrSemanasSS" value="${semanas}" required min="1" max="52" class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+            </div>
+            <div style="margin-top: 16px;">
+                <button type="submit" class="btn" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; background: var(--sela-orange); border: none; color: white; cursor: pointer;">Salvar Alterações</button>
+            </div>
+        </form>
+    `;
+    window.abrirSideSheet('Editar Solicitação', html);
 };
 
-window.salvarEdicaoIrradiacao = async function (event) {
+window.salvarEdicaoIrradiacaoSideSheet = async function (event, id) {
     event.preventDefault();
 
-    const id = document.getElementById('editIrrId').value;
-    const nome = document.getElementById('editIrrNome').value.toUpperCase();
-    const endereco = document.getElementById('editIrrEndereco').value.toUpperCase();
-    const dia = document.getElementById('editIrrDia').value;
-    const semanas = parseInt(document.getElementById('editIrrSemanas').value, 10);
+    const nome = document.getElementById('editIrrNomeSS').value.toUpperCase();
+    const endereco = document.getElementById('editIrrEnderecoSS').value.toUpperCase();
+    const dia = document.getElementById('editIrrDiaSS').value;
+    const semanas = parseInt(document.getElementById('editIrrSemanasSS').value, 10);
 
     try {
         const { error } = await db.from('app_irradiacao_solicitacoes').update({
@@ -2954,7 +2976,7 @@ window.salvarEdicaoIrradiacao = async function (event) {
 
         if (error) throw error;
 
-        document.getElementById('modalEdicaoIrradiacao').style.display = 'none';
+        window.fecharSideSheet();
         await carregarListaIrradiacao();
 
     } catch (err) {
@@ -4538,7 +4560,7 @@ window.abrirSideSheetPendenteHub = function(itemDataStr) {
                 <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px;">
                     <button class="btn" style="background: var(--success); color: white; width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); aprovarIrradiacao('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}')">Aprovar p/ Caderno ✔️</button>
                     
-                    <button class="btn" style="background: transparent; color: var(--primary); width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--primary); font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); abrirModalEdicaoIrradiacao('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}', ${item.semanasAlvo})">Editar Informações ✏️</button>
+                    <button class="btn" style="background: transparent; color: var(--primary); width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--primary); font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); abrirModalEdicaoIrradiacao('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}', ${item.semanasAlvo})">Editar Solicitação ✏️</button>
                     
                     <button class="btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); excluirIrradiacaoDefinitivo('${item.id}')">Excluir Registro 🗑️</button>
                 </div>
