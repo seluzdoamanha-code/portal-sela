@@ -444,7 +444,7 @@ async function carregarEquipe() {
         const { data, error } = await db
             .from('vinculos_estrutura')
             .select(`
-                papel,
+                perfil,
                 pessoas (nome_completo, perfis, celular, email)
             `)
             .eq('estrutura_id', estruturaId);
@@ -474,7 +474,7 @@ async function carregarEquipe() {
             const pessoa = rel.pessoas;
             if (!pessoa) return;
 
-            const isLider = rel.papel && tagsLideranca.some(tag => rel.papel.toLowerCase().includes(tag));
+            const isLider = rel.perfil && tagsLideranca.some(tag => rel.perfil.toLowerCase().includes(tag));
 
             // Format phone if it exists
             let telefone = '';
@@ -491,7 +491,7 @@ async function carregarEquipe() {
             const cardHtml = `
             <div style="background: var(--bg-panel); border: 1px solid ${isLider ? 'var(--primary)' : 'var(--border)'}; border-radius: 8px; padding: 16px; display: flex; flex-direction: column;">
                 <div style="font-size: 15px; font-weight: 600; color: var(--text-main);">${pessoa.nome_completo}</div>
-                <div style="font-size: 13px; color: var(--primary); margin-top: 4px; font-weight: 500;">${rel.papel || 'Membro'}</div>
+                <div style="font-size: 13px; color: var(--primary); margin-top: 4px; font-weight: 500;">${rel.perfil || 'Membro'}</div>
                 <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
                     ${telefone}
                     ${emailIcon}
