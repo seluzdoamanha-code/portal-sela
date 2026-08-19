@@ -1863,7 +1863,14 @@ window.mudarAbaIrradiacao = function (aba) {
     } else {
         estatisticasContainer.style.display = 'none';
         if (limpezaContainer) limpezaContainer.style.display = 'none';
-        listaIrradiacoes.style.display = 'flex';
+        
+        if (aba === 'ativos' || aba === 'historico') {
+            listaIrradiacoes.style.display = 'flex';
+            listaIrradiacoes.style.flexDirection = 'column';
+        } else {
+            listaIrradiacoes.style.display = 'grid';
+            listaIrradiacoes.style.gridTemplateColumns = 'repeat(auto-fill, minmax(300px, 1fr))';
+        }
 
         filtrosDias.style.display = 'flex';
         window.setDiaIrradiacao(currentIrradiacaoDia); // Força render
@@ -2055,21 +2062,39 @@ async function carregarListaIrradiacao() {
                 `;
             }
 
-            html += `
-                <div id="card_irr_${item.id}" style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; transition: all 0.5s ease;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <div style="flex: 1;">
-                            <h4 style="color: var(--text-main); margin: 0 0 4px 0; font-size: 16px;">${item.nome_solicitado}</h4>
+            if (currentIrradiacaoTab === 'ativos' || currentIrradiacaoTab === 'historico') {
+                html += `
+                    <div id="card_irr_${item.id}" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 24px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="flex: 2; min-width: 250px;">
+                            <h4 style="color: var(--primary); margin: 0 0 4px 0; font-size: 16px; font-weight: 700;">${item.nome_solicitado}</h4>
                             <p style="color: var(--text-muted); font-size: 13px; margin: 0;">📍 ${item.endereco || 'Endereço não informado'}</p>
-                            <span style="font-size: 11px; color: var(--text-muted);">Criado em: ${dataPed}${item.criado_por ? ' por ' + item.criado_por : ''} | Dia alvo: <strong style="color: #cbd5e1;">${item.dias_semana}</strong></span>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Criado em: ${dataPed}${item.criado_por ? ' por ' + item.criado_por : ''} | Alvo: <strong style="color: var(--primary);">${item.dias_semana}</strong></div>
+                        </div>
+                        <div style="flex: 2; display: flex; flex-direction: column; justify-content: center; border-left: 1px solid var(--border); padding-left: 24px; min-width: 250px;">
                             ${progressHtml}
                         </div>
+                        <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 150px; align-items: stretch;">
+                            ${actionsHtml}
+                        </div>
                     </div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        ${actionsHtml}
+                `;
+            } else {
+                html += `
+                    <div id="card_irr_${item.id}" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="display: flex; justify-content: space-between;">
+                            <div style="flex: 1;">
+                                <h4 style="color: var(--primary); margin: 0 0 4px 0; font-size: 16px; font-weight: 700;">${item.nome_solicitado}</h4>
+                                <p style="color: var(--text-muted); font-size: 13px; margin: 0;">📍 ${item.endereco || 'Endereço não informado'}</p>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Criado em: ${dataPed}${item.criado_por ? ' por ' + item.criado_por : ''} | Alvo: <strong style="color: var(--primary);">${item.dias_semana}</strong></div>
+                                ${progressHtml}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                            ${actionsHtml}
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
         });
         lista.innerHTML = html;
 
