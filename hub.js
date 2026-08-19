@@ -1737,7 +1737,7 @@ window.carregarPainelGestaoIrradiacao = async function () {
                 <button class="btn btn-secondary btn-dia" data-dia="Quinta-feira" onclick="setDiaIrradiacao('Quinta-feira')">Quinta-feira</button>
             </div>
 
-            <div id="listaIrradiacoes" style="display: flex; flex-direction: column; gap: 12px;">
+            <div id="listaIrradiacoes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
                 <div style="color: var(--text-muted); font-size: 13px;">Carregando...</div>
             </div>
             
