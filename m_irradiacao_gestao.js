@@ -4,8 +4,8 @@ let dataFull = [];
 let editandoId = null;
 
 const diasSemanaList = [
-    'Todos', 'Segunda-feira', 'Terça-feira', 
-    'Quarta-feira (Desobsessão)', 'Quarta-feira (Desencarnado)', 
+    'Todos', 'Segunda-feira', 'Terça-feira',
+    'Quarta-feira (Desobsessão)', 'Quarta-feira (Desencarnado)',
     'Quinta-feira'
 ];
 
@@ -25,41 +25,41 @@ function voltarParaHub() {
 
 function mudarAba(aba) {
     currentTab = aba;
-    
+
     // Atualizar UI das abas
     document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
     document.getElementById(`tab_${aba}`).classList.add('active');
-    
+
     const filters = document.getElementById('filtersContainer');
     const lista = document.getElementById('listaGestaoIrradiacoes');
     const estatisticas = document.getElementById('estatisticasContainer');
-    
+
     if (aba === 'estatisticas') {
-        if(filters) filters.style.display = 'none';
-        if(lista) lista.style.display = 'none';
-        if(estatisticas) estatisticas.style.display = 'block';
+        if (filters) filters.style.display = 'none';
+        if (lista) lista.style.display = 'none';
+        if (estatisticas) estatisticas.style.display = 'block';
         carregarEstatisticasIrradiacaoMobile();
     } else {
-        if(filters) filters.style.display = 'flex';
-        if(lista) lista.style.display = 'block';
-        if(estatisticas) estatisticas.style.display = 'none';
+        if (filters) filters.style.display = 'flex';
+        if (lista) lista.style.display = 'block';
+        if (estatisticas) estatisticas.style.display = 'none';
         carregarLista();
     }
 }
 
 function setDia(dia) {
     currentDia = dia;
-    
+
     // Atualizar UI dos filtros
     document.querySelectorAll('.m-filter-pill').forEach(p => p.classList.remove('active'));
-    
+
     if (dia === '') {
         document.getElementById('pill_todos').classList.add('active');
     } else {
         const p = document.getElementById(`pill_${formatDiaId(dia)}`);
-        if(p) p.classList.add('active');
+        if (p) p.classList.add('active');
     }
-    
+
     renderLista();
 }
 
@@ -75,29 +75,29 @@ function formatDiaId(dia) {
 async function carregarLista() {
     const listaEl = document.getElementById('listaGestaoIrradiacoes');
     listaEl.innerHTML = '<div class="empty-state">Carregando dados...</div>';
-    
+
     const estruturaId = localStorage.getItem('estrutura_atual');
-    
+
     try {
         let query = db.from('app_irradiacao_solicitacoes').select('*');
         if (estruturaId) {
             query = query.eq('estrutura_id', estruturaId);
         }
-        
+
         let targetStatus = currentTab;
         if (currentTab === 'ativos') targetStatus = 'ativo';
         if (currentTab === 'pendentes') targetStatus = 'pendente';
-        
+
         query = query.eq('status', targetStatus).order('nome_solicitado', { ascending: true });
-        
+
         const { data, error } = await query;
-        
+
         if (error) throw error;
-        
+
         dataFull = data || [];
         atualizarContadores(dataFull);
         renderLista();
-        
+
     } catch (err) {
         console.error(err);
         listaEl.innerHTML = `<div class="empty-state" style="color:var(--danger)">Erro ao carregar os dados.<br>${err.message}</div>`;
@@ -113,7 +113,7 @@ function atualizarContadores(dados) {
         'Quarta-feira (Desencarnado)': 0,
         'Quinta-feira': 0
     };
-    
+
     dados.forEach(item => {
         const d = item.dias_semana || '';
         if (d.includes('Segunda-feira')) counts['Segunda-feira']++;
@@ -122,7 +122,7 @@ function atualizarContadores(dados) {
         if (d.includes('Quarta-feira (Desencarnado)')) counts['Quarta-feira (Desencarnado)']++;
         if (d.includes('Quinta-feira')) counts['Quinta-feira']++;
     });
-    
+
     document.getElementById('count_Todos').innerText = `(${counts['Todos']})`;
     document.getElementById('count_Segunda-feira').innerText = `(${counts['Segunda-feira']})`;
     document.getElementById('count_Terça-feira').innerText = `(${counts['Terça-feira']})`;
@@ -133,37 +133,37 @@ function atualizarContadores(dados) {
 
 function renderLista() {
     const listaEl = document.getElementById('listaGestaoIrradiacoes');
-    
+
     let filtered = dataFull;
     if (currentDia !== '') {
         filtered = dataFull.filter(item => (item.dias_semana || '').includes(currentDia));
     }
-    
+
     if (filtered.length === 0) {
         listaEl.innerHTML = '<div class="empty-state">Nenhum registro encontrado nesta visão.</div>';
         return;
     }
-    
+
     let html = '';
     filtered.forEach(item => {
         const dataPed = new Date(item.criado_em).toLocaleDateString('pt-BR');
         const endStr = item.endereco ? item.endereco : 'Endereço não informado';
-        
+
         // Escape para botões
         const safeNome = (item.nome_solicitado || '').replace(/'/g, "\\'");
         const safeEnd = (item.endereco || '').replace(/'/g, "\\'");
         const safeDias = (item.dias_semana || '').replace(/'/g, "\\'");
         const semanasAlvoStr = item.semanas_alvo || 4;
-        
+
         let actions = '';
         let progressHtml = '';
-        
+
         let logsGlobal = item.log_datas_leituras;
         if (typeof logsGlobal === 'string') {
-            try { logsGlobal = JSON.parse(logsGlobal); } catch(e) { logsGlobal = []; }
+            try { logsGlobal = JSON.parse(logsGlobal); } catch (e) { logsGlobal = []; }
         }
         const arrayLogs = Array.isArray(logsGlobal) ? logsGlobal : [];
-        const totalLeiturasHtml = arrayLogs.length > 0 ? ` | Total de Irradiações: <strong style="color: var(--text-main);">${arrayLogs.length}</strong>` : '';
+        const totalLeiturasHtml = arrayLogs.length > 0 ? ` | Irradiações:&nbsp;<strong style="color: var(--text-main);">${arrayLogs.length}</strong>` : '';
 
         if (currentTab === 'pendentes') {
             progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: Pendente${totalLeiturasHtml}</div>`;
@@ -174,20 +174,20 @@ function renderLista() {
             `;
         } else if (currentTab === 'ativos') {
             const leituras = item.leituras || 0;
-            const semanas_alvo = item.semanas_alvo || 4; 
+            const semanas_alvo = item.semanas_alvo || 4;
             let caixinhas = '';
-            for(let i=1; i<=semanas_alvo; i++) {
+            for (let i = 1; i <= semanas_alvo; i++) {
                 if (i <= leituras) {
                     caixinhas += `<span class="bola-irradiacao preenchida" style="display:inline-block; width:16px; height:16px; background:#10b981; border-radius:50%; margin-right:4px; margin-bottom:4px; transition: all 0.3s ease;"></span>`;
                 } else {
                     caixinhas += `<span class="bola-irradiacao vazia" style="display:inline-block; width:16px; height:16px; border:2px solid #334155; border-radius:50%; margin-right:4px; margin-bottom:4px; transition: all 0.3s ease;"></span>`;
                 }
             }
-            
+
             let lastDateHtml = '';
             let logs = item.log_datas_leituras;
             if (typeof logs === 'string') {
-                try { logs = JSON.parse(logs); } catch(e) { logs = []; }
+                try { logs = JSON.parse(logs); } catch (e) { logs = []; }
             }
             if (Array.isArray(logs) && logs.length > 0) {
                 const lastLog = logs[logs.length - 1];
@@ -203,9 +203,9 @@ function renderLista() {
                     }
                 }
             }
-            
-            progressHtml = `<div style="margin-top: 8px; font-size: 13px; color: var(--text-muted);"><div style="display:flex; align-items:center; margin-bottom:4px; flex-wrap:wrap;">Leituras atuais: <strong style="color:var(--accent); margin-left:4px; margin-right:4px;">${leituras}/${semanas_alvo}</strong>${totalLeiturasHtml} ${lastDateHtml}</div><div style="margin-top:4px; display:flex; flex-wrap:wrap;">${caixinhas}</div></div>`;
-            
+
+            progressHtml = `<div style="margin-top: 8px; font-size: 13px; color: var(--text-muted);"><div style="display:flex; align-items:center; margin-bottom:4px; flex-wrap:wrap;">Leitura atual: <strong style="color:var(--accent); margin-left:4px; margin-right:4px;">${leituras}/${semanas_alvo}</strong>${totalLeiturasHtml} ${lastDateHtml}</div><div style="margin-top:4px; display:flex; flex-wrap:wrap;">${caixinhas}</div></div>`;
+
             actions = `
                 <button id="btn_ler_${item.id}" onclick="marcarLeituraIrrMobile(this, '${item.id}', ${leituras}, ${semanas_alvo})" class="btn-action" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; transition: all 0.3s ease;">✅ Registrar Leitura</button>
                 <button class="btn-action btn-secondary" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})">Editar ✏️</button>
@@ -215,12 +215,12 @@ function renderLista() {
             let lastDateInfo = '';
             let logs = item.log_datas_leituras;
             if (typeof logs === 'string') {
-                try { logs = JSON.parse(logs); } catch(e) { logs = []; }
+                try { logs = JSON.parse(logs); } catch (e) { logs = []; }
             }
             if (Array.isArray(logs) && logs.length > 0) {
                 const lastLog = new Date(logs[logs.length - 1]);
                 if (!isNaN(lastLog)) {
-                    lastDateInfo = ` | Última leitura: <strong style="color: #cbd5e1;">${lastLog.toLocaleDateString('pt-BR')}</strong>`;
+                    lastDateInfo = ` | Última: <strong style="color: #cbd5e1;">${lastLog.toLocaleDateString('pt-BR')}</strong>`;
                 }
             }
             progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: Histórico${totalLeiturasHtml}${lastDateInfo}</div>`;
@@ -231,7 +231,7 @@ function renderLista() {
                 <button class="btn-action btn-danger" onclick="excluir('${item.id}')">Excluir</button>
             `;
         }
-        
+
         html += `
             <div class="m-card" id="card_irr_${item.id}">
                 <div class="m-card-header">
@@ -250,7 +250,7 @@ function renderLista() {
             </div>
         `;
     });
-    
+
     listaEl.innerHTML = html;
 }
 
@@ -263,7 +263,7 @@ function abrirEdicao(id, nome, end, dias, semanas) {
     document.getElementById('editNome').value = nome;
     document.getElementById('editEnd').value = end;
     document.getElementById('editSemanasRestantes').value = semanas;
-    
+
     // Marcar tags corretas
     document.querySelectorAll('.edit-tag').forEach(tag => {
         if (dias.includes(tag.getAttribute('data-val'))) {
@@ -272,7 +272,7 @@ function abrirEdicao(id, nome, end, dias, semanas) {
             tag.classList.remove('selected');
         }
     });
-    
+
     document.getElementById('bsOverlay').classList.add('active');
     document.getElementById('bsEdicao').classList.add('active');
 }
@@ -289,27 +289,27 @@ function toggleEditTag(el) {
 
 async function salvarEdicao() {
     if (!editandoId) return;
-    
+
     const nome = document.getElementById('editNome').value.trim().toUpperCase();
     const end = document.getElementById('editEnd').value.trim().toUpperCase();
-    
+
     let diasArr = [];
     document.querySelectorAll('.edit-tag.selected').forEach(tag => {
         diasArr.push(tag.getAttribute('data-val'));
     });
-    
+
     if (diasArr.length === 0) {
         alert('Selecione ao menos um dia!');
         return;
     }
-    
+
     if (!nome) {
         alert('Nome obrigatório!');
         return;
     }
-    
+
     const diasStr = diasArr.join(', ');
-    
+
     try {
         const { error } = await db.from('app_irradiacao_solicitacoes')
             .update({
@@ -318,12 +318,12 @@ async function salvarEdicao() {
                 dias_semana: diasStr
             })
             .eq('id', editandoId);
-            
+
         if (error) throw error;
-        
+
         fecharBottomSheet();
         carregarLista(); // recarrega e atualiza UI
-        
+
     } catch (err) {
         alert('Erro ao salvar: ' + err.message);
     }
@@ -334,8 +334,8 @@ async function salvarEdicao() {
 // ACOES DIRETAS (Triagem, Excluir, Arquivar)
 // ----------------------------------------------------
 async function aprovar(id, nome, end, dias) {
-    if(!confirm(`Mover '${nome}' para o Painel de Leitura (Ativo)?`)) return;
-    
+    if (!confirm(`Mover '${nome}' para o Painel de Leitura (Ativo)?`)) return;
+
     try {
         const { error } = await db.from('app_irradiacao_solicitacoes')
             .update({ status: 'ativo', leituras: 0 })
@@ -348,7 +348,7 @@ async function aprovar(id, nome, end, dias) {
 }
 
 async function excluir(id) {
-    if(!confirm('Tem certeza que deseja excluir esta solicitação permanentemente?')) return;
+    if (!confirm('Tem certeza que deseja excluir esta solicitação permanentemente?')) return;
     try {
         const { error } = await db.from('app_irradiacao_solicitacoes')
             .delete().eq('id', id);
@@ -360,7 +360,7 @@ async function excluir(id) {
 }
 
 async function arquivar(id) {
-    if(!confirm('Forçar arquivamento (mover para histórico)?')) return;
+    if (!confirm('Forçar arquivamento (mover para histórico)?')) return;
     try {
         const { error } = await db.from('app_irradiacao_solicitacoes')
             .update({ status: 'historico' }).eq('id', id);
@@ -374,13 +374,13 @@ async function arquivar(id) {
 // ----------------------------------------------------
 // MARCAR LEITURA (IGUAL AO DESKTOP)
 // ----------------------------------------------------
-window.marcarLeituraIrrMobile = async function(btnElement, id, leituras_atuais, semanas_alvo) {
+window.marcarLeituraIrrMobile = async function (btnElement, id, leituras_atuais, semanas_alvo) {
     try {
         const novaLeitura = leituras_atuais + 1;
         const card = document.getElementById(`card_irr_${id}`);
-        
+
         // --- EFEITO VISUAL IMEDIATO (Optimistic UI) ---
-        if (btnElement && btnElement.nodeType) { 
+        if (btnElement && btnElement.nodeType) {
             btnElement.disabled = true;
             btnElement.innerHTML = '✔️ Lido';
             btnElement.style.background = '#059669';
@@ -406,28 +406,28 @@ window.marcarLeituraIrrMobile = async function(btnElement, id, leituras_atuais, 
             }
         }
         // ----------------------------------------------
-        
+
         // Buscar log_datas_leituras atual
         const { data: rowData, error: fetchErr } = await db.from('app_irradiacao_solicitacoes').select('log_datas_leituras, renovacao_automatica').eq('id', id).single();
         if (fetchErr) throw fetchErr;
-        
+
         let logs = rowData.log_datas_leituras || [];
         if (!Array.isArray(logs)) logs = [];
         logs.push(new Date().toISOString());
-        
+
         const autoRenovar = rowData.renovacao_automatica === true;
-        
+
         // --- ATUALIZAÇÃO DO CACHE LOCAL (dataFull) ---
         const itemIdx = dataFull.findIndex(i => i.id === id);
         let novoStatus = 'ativo';
         let novasLeiturasAtuais = novaLeitura;
-        
+
         if (novaLeitura >= semanas_alvo) {
             if (autoRenovar) {
                 // Reinicia ciclo automaticamente
                 novasLeiturasAtuais = 0;
-                const { error } = await db.from('app_irradiacao_solicitacoes').update({ 
-                    leituras: 0, 
+                const { error } = await db.from('app_irradiacao_solicitacoes').update({
+                    leituras: 0,
                     status: 'ativo',
                     log_datas_leituras: logs
                 }).eq('id', id);
@@ -436,8 +436,8 @@ window.marcarLeituraIrrMobile = async function(btnElement, id, leituras_atuais, 
                 if (confirm(`O ciclo de ${semanas_alvo} semanas desta irradiação chegou ao fim.\nDeseja reiniciar o ciclo (Renovar) para mais ${semanas_alvo} semanas?\n\n[OK] para Renovar\n[Cancelar] para Arquivar`)) {
                     // Renovar
                     novasLeiturasAtuais = 0;
-                    const { error } = await db.from('app_irradiacao_solicitacoes').update({ 
-                        leituras: 0, 
+                    const { error } = await db.from('app_irradiacao_solicitacoes').update({
+                        leituras: 0,
                         status: 'ativo',
                         log_datas_leituras: logs
                     }).eq('id', id);
@@ -445,8 +445,8 @@ window.marcarLeituraIrrMobile = async function(btnElement, id, leituras_atuais, 
                 } else {
                     // Arquivar
                     novoStatus = 'historico';
-                    const { error } = await db.from('app_irradiacao_solicitacoes').update({ 
-                        leituras: novaLeitura, 
+                    const { error } = await db.from('app_irradiacao_solicitacoes').update({
+                        leituras: novaLeitura,
                         status: 'historico',
                         log_datas_leituras: logs
                     }).eq('id', id);
@@ -456,14 +456,14 @@ window.marcarLeituraIrrMobile = async function(btnElement, id, leituras_atuais, 
             }
         } else {
             // Apenas atualiza a contagem
-            const { error } = await db.from('app_irradiacao_solicitacoes').update({ 
+            const { error } = await db.from('app_irradiacao_solicitacoes').update({
                 leituras: novaLeitura,
                 log_datas_leituras: logs
             }).eq('id', id);
-            
+
             if (error) throw error;
         }
-        
+
         if (itemIdx > -1) {
             dataFull[itemIdx].leituras = novasLeiturasAtuais;
             dataFull[itemIdx].status = novoStatus;
@@ -491,26 +491,26 @@ window.marcarLeituraIrrMobile = async function(btnElement, id, leituras_atuais, 
 // ----------------------------------------------------
 // ESTATÍSTICAS MOBILE
 // ----------------------------------------------------
-window.carregarEstatisticasIrradiacaoMobile = async function() {
+window.carregarEstatisticasIrradiacaoMobile = async function () {
     try {
         const { data, error } = await db.from('app_irradiacao_solicitacoes').select('*');
         if (error) throw error;
-        
+
         let totalAtivos = 0;
         let totalLidas = 0;
-        
+
         const leiturasPorSemana = {};
         const leiturasPorSemanaPorDia = {};
-        
+
         data.forEach(item => {
             if (item.status === 'ativo') {
                 totalAtivos++;
             }
-            
+
             // Processar as leituras reais
             let logs = item.log_datas_leituras;
             if (typeof logs === 'string') {
-                try { logs = JSON.parse(logs); } catch(e) { logs = []; }
+                try { logs = JSON.parse(logs); } catch (e) { logs = []; }
             }
             if (Array.isArray(logs) && logs.length > 0) {
                 const diaDaIrradiacao = item.dias_semana || 'Outros';
@@ -521,10 +521,10 @@ window.carregarEstatisticasIrradiacaoMobile = async function() {
                         const dCopy = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
                         const dayNum = dCopy.getUTCDay() || 7;
                         dCopy.setUTCDate(dCopy.getUTCDate() + 4 - dayNum);
-                        const yearStart = new Date(Date.UTC(dCopy.getUTCFullYear(),0,1));
-                        const weekNo = Math.ceil((((dCopy - yearStart) / 86400000) + 1)/7);
+                        const yearStart = new Date(Date.UTC(dCopy.getUTCFullYear(), 0, 1));
+                        const weekNo = Math.ceil((((dCopy - yearStart) / 86400000) + 1) / 7);
                         const weekKey = `Semana ${weekNo}`;
-                        
+
                         leiturasPorSemana[weekKey] = (leiturasPorSemana[weekKey] || 0) + 1;
                         if (!leiturasPorSemanaPorDia[weekKey]) leiturasPorSemanaPorDia[weekKey] = {};
                         leiturasPorSemanaPorDia[weekKey][diaDaIrradiacao] = (leiturasPorSemanaPorDia[weekKey][diaDaIrradiacao] || 0) + 1;
@@ -532,7 +532,7 @@ window.carregarEstatisticasIrradiacaoMobile = async function() {
                 });
             }
         });
-        
+
         document.getElementById('statTotalLeituras').innerText = totalLidas;
         document.getElementById('statAtivos').innerText = totalAtivos;
 
@@ -540,16 +540,16 @@ window.carregarEstatisticasIrradiacaoMobile = async function() {
         if (window.Chart) {
             Chart.defaults.color = '#94a3b8';
             Chart.defaults.font.family = 'Inter';
-            
+
             // --- GRÁFICO SEMANAL (LINHA) ---
             if (window.irrSemanalChartMobile) window.irrSemanalChartMobile.destroy();
             const ctxSemanal = document.getElementById('irradiacaoSemanalChart').getContext('2d');
-            
-            const sortedWeeks = Object.keys(leiturasPorSemana).sort((a,b) => {
+
+            const sortedWeeks = Object.keys(leiturasPorSemana).sort((a, b) => {
                 const getVal = (s) => parseInt(s.replace('Semana ', '')) || 0;
                 return getVal(a) - getVal(b);
             });
-            
+
             const colorMap = {
                 'Segunda-feira': '#3b82f6',
                 'Terça-feira': '#10b981',
@@ -558,7 +558,7 @@ window.carregarEstatisticasIrradiacaoMobile = async function() {
                 'Quinta-feira': '#8b5cf6',
                 'Outros': '#94a3b8'
             };
-            
+
             const datasetsSemanal = Object.keys(colorMap).map(dia => {
                 return {
                     label: dia.replace('Quarta-feira (Desobsessão)', 'Qua(Desob)').replace('Quarta-feira (Desencarnado)', 'Qua(Desenc)'),
@@ -570,7 +570,7 @@ window.carregarEstatisticasIrradiacaoMobile = async function() {
                     pointRadius: 2
                 };
             }).filter(ds => ds.data.some(v => v > 0));
-            
+
             datasetsSemanal.push({
                 label: 'Total da Semana',
                 data: sortedWeeks.map(w => leiturasPorSemana[w] || 0),
@@ -582,7 +582,7 @@ window.carregarEstatisticasIrradiacaoMobile = async function() {
                 fill: true,
                 pointRadius: 3
             });
-            
+
             window.irrSemanalChartMobile = new Chart(ctxSemanal, {
                 type: 'line',
                 data: {
@@ -593,11 +593,11 @@ window.carregarEstatisticasIrradiacaoMobile = async function() {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { 
+                        legend: {
                             display: true,
                             position: 'bottom',
                             labels: { boxWidth: 10, font: { size: 10 } }
-                        } 
+                        }
                     },
                     scales: {
                         y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
@@ -605,11 +605,11 @@ window.carregarEstatisticasIrradiacaoMobile = async function() {
                     }
                 }
             });
-            
+
             // --- GRÁFICO TOTAL POR DIA (BARRA) ---
             if (window.irrTotalChartMobile) window.irrTotalChartMobile.destroy();
             const ctxTotal = document.getElementById('irradiacaoChart').getContext('2d');
-            
+
             const diasDisponiveis = Object.keys(colorMap);
             const totalReadsPerDay = {};
             sortedWeeks.forEach(w => {
@@ -617,7 +617,7 @@ window.carregarEstatisticasIrradiacaoMobile = async function() {
                     totalReadsPerDay[d] = (totalReadsPerDay[d] || 0) + ((leiturasPorSemanaPorDia[w] && leiturasPorSemanaPorDia[w][d]) ? leiturasPorSemanaPorDia[w][d] : 0);
                 });
             });
-            
+
             window.irrTotalChartMobile = new Chart(ctxTotal, {
                 type: 'bar',
                 data: {
