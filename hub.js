@@ -3412,11 +3412,7 @@ window.carregarListaAtendimento = async function () {
             return;
         }
 
-        if (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera' || currentAtendimentoSubTab === 'andamento') {
-            lista.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;';
-        } else {
-            lista.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
-        }
+        lista.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
 
         // Filter data for list
         let data = [];
@@ -3544,7 +3540,7 @@ function renderizarCardAtendimentoItem(container, item) {
     const card = document.createElement('div');
     const isGrid = (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera');
 
-    card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; transition: all 0.2s;';
+    card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 16px; transition: all 0.2s;';
     
     card.onmouseover = () => card.style.background = 'rgba(255,255,255,0.05)';
     card.onmouseout = () => card.style.background = 'rgba(255,255,255,0.03)';
@@ -3552,9 +3548,9 @@ function renderizarCardAtendimentoItem(container, item) {
     let infoExtra = '';
     if (item.status === 'Atendido' && item.data_hora_atendimento) {
         const dtAtendido = new Date(item.data_hora_atendimento).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-        infoExtra = `<div style="margin-top: 4px; color: #10b981; font-weight: 500;">✓ Atendido em: ${dtAtendido} por ${item.pessoas?.nome_completo || 'Atendente'}</div>`;
+        infoExtra = `<div style="margin-top: 8px; color: #10b981; font-weight: 500; font-size: 13px;">✓ Atendido em: ${dtAtendido} por ${item.pessoas?.nome_completo || 'Atendente'}</div>`;
     } else if (item.status === 'Planejado' && item.pessoas?.nome_completo) {
-        infoExtra = `<div style="margin-top: 4px; color: var(--primary); font-weight: 500;">📅 Atribuído a: ${item.pessoas.nome_completo}</div>`;
+        infoExtra = `<div style="margin-top: 8px; color: var(--primary); font-weight: 500; font-size: 13px;">📅 Atribuído a: ${item.pessoas.nome_completo}</div>`;
     }
 
     const btnPresenca = item.presente ?
@@ -3562,32 +3558,22 @@ function renderizarCardAtendimentoItem(container, item) {
         `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', true)" style="font-size: 12px; padding: 10px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s;">⚪ Confirmar Presença</button>`;
 
     // Container for buttons
-    const buttonsContainerStyle = isGrid 
-        ? 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 250px;' 
-        : 'display: flex; flex-direction: column; gap: 8px; min-width: 140px;';
-
-    const infoContainerStyle = 'flex: 1; display: flex; flex-wrap: wrap; gap: 32px; justify-content: space-between;';
+    const buttonsContainerStyle = 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 250px; flex-shrink: 0;';
 
     let leftInfo = `
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <strong style="font-size: 16px; color: var(--text-main);">${item.nome_completo.toUpperCase()}</strong>
-            <span style="font-size: 11px; padding: 2px 6px; background: rgba(255,255,255,0.1); border-radius: 12px; color: var(--text-muted);">${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</span>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-muted);">
-            <div>📍 ${item.endereco_completo || 'Sem endereço'}</div>
-            <div>🎂 ${item.data_nascimento ? item.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
-            <div style="display: flex; align-items: center; gap: 8px;">📱 ${item.telefone || 'Sem telefone'} ${whatsLink}</div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+            <strong style="font-size: 16px; color: var(--text-main); margin-bottom: 2px;">${item.nome_completo.toUpperCase()}</strong>
+            <div style="font-size: 13px; color: var(--text-muted);">📍 ${item.endereco_completo || 'Sem endereço'}</div>
+            <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${item.data_nascimento ? item.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">📱 Celular: ${item.telefone || 'Não informado'} ${whatsLink}</div>
+            <div style="font-size: 11px; margin-top: 4px; padding: 4px 8px; background: rgba(255,255,255,0.05); border-radius: 12px; color: var(--text-muted); display: inline-block; width: fit-content;">Solicitado em ${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</div>
+            ${infoExtra}
         </div>
     `;
 
-    let rightInfo = `<div style="font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">${infoExtra}</div>`;
-
     card.innerHTML = `
-        <div style="${infoContainerStyle}">
-            <div style="flex: 2; min-width: 280px;">
-                ${leftInfo}
-            </div>
-            <div style="flex: 1; min-width: 200px;">${rightInfo}</div>
+        <div style="flex: 1;">
+            ${leftInfo}
         </div>
         
         <div style="${buttonsContainerStyle}">
