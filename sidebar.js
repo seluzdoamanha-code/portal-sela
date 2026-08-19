@@ -96,12 +96,25 @@
             </nav>
         `;
         
+        const sideSheetHTML = `
+            <div id="globalSideSheetOverlay" class="side-sheet-overlay" onclick="fecharSideSheet()"></div>
+            <div id="globalSideSheet" class="side-sheet">
+                <div class="side-sheet-header">
+                    <h3 id="globalSideSheetTitle">Detalhes</h3>
+                    <button class="btn-close" onclick="fecharSideSheet()" style="background:transparent; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">&times;</button>
+                </div>
+                <div id="globalSideSheetContent" class="side-sheet-content">
+                </div>
+            </div>
+        `;
+
         if (existingSidebar) {
             existingSidebar.outerHTML = sidebarHTML;
             if (!document.querySelector('.mobile-header')) {
                 const container = document.querySelector('.app-container');
                 container.insertAdjacentHTML('afterbegin', mobileHeaderHTML);
                 container.insertAdjacentHTML('beforeend', bottomNavHTML);
+                container.insertAdjacentHTML('beforeend', sideSheetHTML);
             }
         } else {
             const container = document.querySelector('.app-container');
@@ -109,9 +122,33 @@
                 container.insertAdjacentHTML('afterbegin', mobileHeaderHTML);
                 container.insertAdjacentHTML('afterbegin', sidebarHTML);
                 container.insertAdjacentHTML('beforeend', bottomNavHTML);
+                container.insertAdjacentHTML('beforeend', sideSheetHTML);
             }
         }
         
+        window.abrirSideSheet = function(titulo, htmlConteudo) {
+            const titleEl = document.getElementById('globalSideSheetTitle');
+            const contentEl = document.getElementById('globalSideSheetContent');
+            const overlay = document.getElementById('globalSideSheetOverlay');
+            const sheet = document.getElementById('globalSideSheet');
+            if(titleEl) titleEl.textContent = titulo;
+            if(contentEl) contentEl.innerHTML = htmlConteudo;
+            if(overlay) overlay.classList.add('show');
+            if(sheet) sheet.classList.add('show');
+        };
+
+        window.fecharSideSheet = function() {
+            const overlay = document.getElementById('globalSideSheetOverlay');
+            const sheet = document.getElementById('globalSideSheet');
+            if(overlay) overlay.classList.remove('show');
+            if(sheet) sheet.classList.remove('show');
+            const contentEl = document.getElementById('globalSideSheetContent');
+            if(contentEl) {
+                // optional small delay to clear content after animation
+                setTimeout(() => contentEl.innerHTML = '', 300);
+            }
+        };
+
         // Lógica de Collapse (Desktop)
         const sidebar = document.querySelector('.sidebar');
         const btnToggle = document.getElementById('toggleSidebarBtn');

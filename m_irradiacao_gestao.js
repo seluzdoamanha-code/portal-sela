@@ -166,11 +166,22 @@ function renderLista() {
         const totalLeiturasHtml = arrayLogs.length > 0 ? ` | Irradiações:&nbsp;<strong style="color: var(--text-main);">${arrayLogs.length}</strong>` : '';
 
         if (currentTab === 'pendentes') {
-            progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: Pendente${totalLeiturasHtml}</div>`;
+            progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: <strong style="color: var(--warning);">Pendente</strong>${totalLeiturasHtml}</div>`;
+            
+            // Encode data for Side-Sheet
+            const itemDataStr = encodeURIComponent(JSON.stringify({
+                id: item.id,
+                nome: item.nome_solicitado,
+                endereco: item.endereco,
+                dias: item.dias_semana,
+                semanasAlvo: item.semanas_alvo || 4,
+                criadoPor: item.criado_por,
+                dataPed: dataPed,
+                totalLeiturasHtml: totalLeiturasHtml
+            }));
+
             actions = `
-                <button class="btn-action btn-primary" onclick="aprovar('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}')">Triagem ✔️</button>
-                <button class="btn-action btn-secondary" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})">Editar ✏️</button>
-                <button class="btn-action btn-danger" onclick="excluir('${item.id}')">Excluir</button>
+                <button class="btn-action" style="background: var(--sela-orange); color: #fff; width: 100%; border: none;" onclick="window.abrirSideSheetPendente('${itemDataStr}')">Analisar Ficha 📋</button>
             `;
         } else if (currentTab === 'ativos') {
             const leituras = item.leituras || 0;
@@ -645,5 +656,47 @@ window.carregarEstatisticasIrradiacaoMobile = async function () {
     } catch (err) {
         console.error(err);
         alert('Erro ao carregar estatísticas: ' + err.message);
+    }
+};
+
+window.abrirSideSheetPendente = function(itemDataStr) {
+    try {
+        const item = JSON.parse(decodeURIComponent(itemDataStr));
+        const html = `
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="background: var(--bg-dark); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Beneficiado</div>
+                    <div style="font-size: 18px; font-weight: 700; color: var(--text-main);">${item.nome}</div>
+                    <div style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">📍 ${item.endereco}</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="background: var(--bg-dark); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Dia(s) da Semana</div>
+                        <div style="font-size: 14px; font-weight: 600; color: var(--primary); margin-top: 4px;">${item.dias}</div>
+                    </div>
+                    <div style="background: var(--bg-dark); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Semanas Alvo</div>
+                        <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-top: 4px;">${item.semanasAlvo} Semanas</div>
+                    </div>
+                </div>
+
+                <div style="font-size: 12px; color: var(--text-muted); background: var(--bg-dark); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div><strong>Data do Pedido:</strong> ${item.dataPed}</div>
+                    ${item.criadoPor ? `<div style="margin-top: 4px;"><strong>Criado por:</strong> ${item.criadoPor}</div>` : ''}
+                </div>
+
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px;">
+                    <button class="btn" style="background: var(--success); color: white; width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); aprovar('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}')">Aprovar p/ Caderno ✔️</button>
+                    
+                    <button class="btn" style="background: transparent; color: var(--primary); width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--primary); font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); abrirEdicao('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}', ${item.semanasAlvo})">Editar Informações ✏️</button>
+                    
+                    <button class="btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); excluir('${item.id}')">Excluir Registro 🗑️</button>
+                </div>
+            </div>
+        `;
+        window.abrirSideSheet('Ficha de Irradiação', html);
+    } catch (e) {
+        console.error("Erro ao abrir side-sheet", e);
     }
 };

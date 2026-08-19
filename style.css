@@ -1,5 +1,77 @@
-/* Estética Premium - Variáveis e Tema Base */
+/* Estética Premium - Variáveis e Tema Base (Sela Orange Accent) */
 :root {
+    --primary: #06346F;
+    --primary-hover: #042550;
+    --bg-dark: #F8FAFC;
+    --bg-panel: #FFFFFF;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+    --border: #E2E8F0;
+    --success: #10b981;
+    --warning: #EADF6C;
+    --sela-orange: #FA9128;
+    --sela-orange-hover: #E38324;
+}
+
+/* Side-Sheet Styles */
+.side-sheet-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 1050;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.side-sheet-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.side-sheet {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    max-width: 90vw;
+    height: 100vh;
+    background: var(--bg-panel);
+    box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+    z-index: 1100;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+.side-sheet.show {
+    transform: translateX(0);
+}
+
+.side-sheet-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.side-sheet-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--primary);
+}
+
+.side-sheet-content {
+    padding: 24px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Tema Escuro (Opcional caso queiram manter) */
+body.theme-dark {
     --primary: #4f46e5;
     --primary-hover: #4338ca;
     --bg-dark: #0f172a;
@@ -7,8 +79,6 @@
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --border: #334155;
-    --success: #10b981;
-    --warning: #f59e0b;
 }
 
 /* Tema Claro / Cinza */
