@@ -3521,7 +3521,8 @@ window.alternarPresencaAtendimento = async function (id, presente) {
 };
 
 function renderizarCardAtendimentoItem(container, item) {
-    const dateStr = new Date(item.created_at).toLocaleString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const d = new Date(item.created_at);
+    const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
     let ageInfo = '';
     if (item.data_nascimento) {
@@ -3561,8 +3562,8 @@ function renderizarCardAtendimentoItem(container, item) {
         `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', false)" style="font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
         `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', true)" style="font-size: 12px; padding: 10px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s;">⚪ Confirmar Presença</button>`;
 
-    // Container for buttons
-    const buttonsContainerStyle = 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 250px; flex-shrink: 0;';
+    // Container for buttons: giving much more space to the left side (data)
+    const buttonsContainerStyle = 'display: grid; grid-template-columns: 1fr 44px; gap: 8px; flex-shrink: 0; min-width: 160px;';
 
     let leftInfo = `
         <div style="display: flex; flex-direction: column; gap: 6px;">
@@ -3570,7 +3571,7 @@ function renderizarCardAtendimentoItem(container, item) {
             <div style="font-size: 13px; color: var(--text-muted);">📍 ${item.endereco_completo || 'Sem endereço'}</div>
             <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${item.data_nascimento ? item.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
             <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">📱 Celular: ${item.telefone || 'Não informado'} ${whatsLink}</div>
-            <div style="font-size: 11px; margin-top: 4px; padding: 4px 8px; background: rgba(255,255,255,0.05); border-radius: 12px; color: var(--text-muted); display: inline-block; width: fit-content;">Solicitado em ${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</div>
+            <div style="font-size: 11px; margin-top: 4px; padding: 4px 8px; background: rgba(255,255,255,0.05); border-radius: 12px; color: var(--text-muted); display: inline-block; width: fit-content;">Em ${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</div>
             ${infoExtra}
         </div>
     `;
