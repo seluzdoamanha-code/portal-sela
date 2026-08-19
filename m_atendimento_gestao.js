@@ -282,7 +282,7 @@
                 ` : ''}
 
                 ${item.status === 'Planejado' && item.presente ? `
-                    <button class="btn-action" onclick="abrirFichaAtendimento('${item.id}')" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">📝 Ficha & Fila</button>
+                    <button class="btn-action" onclick="abrirFichaAtendimento('${item.id}')" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">📝 Ficha</button>
                 ` : ''}
 
                 ${item.status === 'Planejado' ? `
@@ -389,7 +389,7 @@
                     ${formHtml}
                 </div>
             `;
-            document.getElementById('sideSheetContent').innerHTML = finalHtml;
+            document.getElementById('globalSideSheetContent').innerHTML = finalHtml;
 
         } catch(e) {
             Swal.fire('Erro', 'Erro ao abrir a ficha: ' + e.message, 'error');

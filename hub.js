@@ -4172,10 +4172,10 @@ window.abrirFichaAtendimento = async function (id) {
                 ${formHtml}
             </div>
         `;
-        document.getElementById('sideSheetContent').innerHTML = finalHtml;
+        document.getElementById('globalSideSheetContent').innerHTML = finalHtml;
     } catch (err) {
         console.error(err);
-        document.getElementById('sideSheetContent').innerHTML = '<div style="padding: 24px; color: #ef4444;">Erro ao carregar dados da ficha.</div>';
+        document.getElementById('globalSideSheetContent').innerHTML = '<div style="padding: 24px; color: #ef4444;">Erro ao carregar dados da ficha.</div>';
     }
 };
 window.salvarFichaAtendimentoSideSheet = async function () {
