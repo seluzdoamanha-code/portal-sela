@@ -3478,7 +3478,7 @@ window.carregarListaAtendimento = async function () {
                 if (attendantName !== currentAttendant) {
                     currentAttendant = attendantName;
                     const header = document.createElement('div');
-                    header.style.cssText = 'margin-top: 16px; margin-bottom: 8px; font-weight: bold; color: var(--primary); font-size: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;';
+                    header.style.cssText = 'grid-column: 1 / -1; margin-top: 16px; margin-bottom: 8px; font-weight: bold; color: var(--primary); font-size: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;';
                     header.innerHTML = `👨‍💼 Atendente: ${currentAttendant.toUpperCase()}`;
                     lista.appendChild(header);
                 }
@@ -3575,32 +3575,65 @@ function renderizarCardAtendimentoItem(container, item) {
         </div>
     `;
 
+    let buttonsHtml = '';
+    
+    if (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera') {
+        buttonsHtml = `
+            ${item.status !== 'Atendido' ? btnPresenca : '<div></div>'}
+            ${item.status !== 'Atendido' ? `
+                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo.replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${item.telefone || ''}')" style="font-size: 14px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️</button>
+            ` : '<div></div>'}
+            
+            ${(item.status === 'Pendente' || item.status === 'Planejado') ? `
+                <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px;">🤝 Triagem</button>
+            ` : '<div></div>'}
+            
+            <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 14px; padding: 10px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">🗑️</button>
+        `;
+    } else if (currentAtendimentoSubTab === 'andamento') {
+        buttonsHtml = `
+            <div style="grid-column: 1 / -1;">
+                ${item.status !== 'Atendido' ? btnPresenca : ''}
+            </div>
+            
+            ${item.status === 'Planejado' && item.presente ? `
+                <button class="btn" onclick="abrirFichaAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">📝 Ficha</button>
+            ` : '<div></div>'}
+            
+            ${item.status !== 'Atendido' ? `
+                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo.replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${item.telefone || ''}')" style="font-size: 14px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️</button>
+            ` : '<div></div>'}
+            
+            ${item.status === 'Planejado' ? `
+                <button class="btn" onclick="desatribuirAtendenteAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px;">👤✕ Desatribuir</button>
+            ` : '<div></div>'}
+            
+            <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 14px; padding: 10px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">🗑️</button>
+        `;
+    } else {
+        // Fallback for Historico
+        buttonsHtml = `
+            ${item.status !== 'Atendido' ? btnPresenca : ''}
+            
+            ${item.status !== 'Atendido' ? `
+                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo.replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${item.telefone || ''}')" style="font-size: 12px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️ Editar</button>
+            ` : ''}
+            
+            ${(item.status === 'Pendente' || (item.status === 'Planejado' && currentAtendimentoSubTab !== 'andamento')) ? `
+                <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px;">🤝 Triagem</button>
+            ` : ''}
+            
+            <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">🗑️ Excluir</button>
+        `;
+    }
+
     card.innerHTML = `
         <div style="flex: 1;">
             ${leftInfo}
         </div>
         
         <div style="${buttonsContainerStyle}">
-            ${item.status !== 'Atendido' ? btnPresenca : ''}
-            
-            ${(item.status === 'Pendente' || (item.status === 'Planejado' && currentAtendimentoSubTab !== 'andamento')) ? `
-                <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px;">🤝 Triagem</button>
-            ` : ''}
-            
-            ${item.status === 'Planejado' && item.presente ? `
-                <button class="btn" onclick="abrirFichaAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">📝 Ficha</button>
-            ` : ''}
-            
-            ${item.status === 'Planejado' ? `
-                <button class="btn" onclick="desatribuirAtendenteAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px;">👤✕ Desatribuir</button>
-            ` : ''}
-
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-                ${item.status !== 'Atendido' ? `
-                    <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo.replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${item.telefone || ''}')" style="flex: 1; font-size: 14px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️</button>
-                ` : ''}
-                <button class="btn" onclick="excluirAtendimento('${item.id}')" style="flex: 1; font-size: 14px; padding: 10px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">🗑️</button>
-            </div>
+            ${buttonsHtml}
         </div>
     `;
 
