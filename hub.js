@@ -3595,7 +3595,7 @@ function renderizarCardAtendimentoItem(container, item) {
                 <button class="btn" onclick="desatribuirAtendenteAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px;">👤✕ Desatribuir</button>
             ` : ''}
 
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
                 ${item.status !== 'Atendido' ? `
                     <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo.replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${item.telefone || ''}')" style="flex: 1; font-size: 14px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️</button>
                 ` : ''}
