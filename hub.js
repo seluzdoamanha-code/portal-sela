@@ -3412,7 +3412,11 @@ window.carregarListaAtendimento = async function () {
             return;
         }
 
-        lista.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+        if (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera' || currentAtendimentoSubTab === 'andamento') {
+            lista.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;';
+        } else {
+            lista.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+        }
 
         // Filter data for list
         let data = [];

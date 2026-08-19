@@ -289,7 +289,10 @@
                     <button class="btn-action" onclick="desatribuirAtendente('${item.id}')" style="background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">👤✕ Desatribuir</button>
                 ` : ''}
 
-                <button class="btn-action btn-delete" onclick="excluirPedido('${item.id}')" style="flex: none; width: auto; min-width: 44px; padding: 10px;">🗑️</button>
+                <div style="display: flex; gap: 8px; flex: none; width: auto; min-width: 44px; margin-left: auto;">
+                    <button class="btn-action" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="flex: none; width: auto; min-width: 44px; padding: 10px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);">✏️</button>
+                    <button class="btn-action btn-delete" onclick="excluirPedido('${item.id}')" style="flex: none; width: auto; min-width: 44px; padding: 10px;">🗑️</button>
+                </div>
             </div>
         `;
         return div;
@@ -780,6 +783,66 @@
             carregarLista();
         } catch(e) {
             Swal.fire('Erro!', 'Falha ao atualizar presença.', 'error');
+        }
+    };
+
+    window.abrirEdicaoAtendimento = function (id, nome, endereco, fone) {
+        const html = `
+            <form onsubmit="salvarEdicaoAtendimentoSideSheet(event, '${id}')" style="display: flex; flex-direction: column; gap: 16px; height: 100%;">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                    <div class="form-group">
+                        <label style="color: var(--text-muted); font-size: 13px;">Nome Completo</label>
+                        <input type="text" id="sideEditAtenNome" required value="${nome}" class="input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: var(--text-muted); font-size: 13px;">Endereço</label>
+                        <textarea id="sideEditAtenEndereco" class="input" rows="3" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">${endereco}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: var(--text-muted); font-size: 13px;">WhatsApp</label>
+                        <input type="text" id="sideEditAtenWhats" value="${fone}" class="input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">
+                    </div>
+                </div>
+
+                <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
+                    <button type="button" onclick="window.fecharSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border);">Cancelar</button>
+                    <button type="submit" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Salvar Alterações</button>
+                </div>
+            </form>
+        `;
+        window.abrirSideSheet('Editar Solicitação', html);
+
+        setTimeout(() => {
+            const whatsInput = document.getElementById('sideEditAtenWhats');
+            if (whatsInput) {
+                whatsInput.addEventListener('input', function (e) {
+                    var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+                    e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+                });
+            }
+        }, 100);
+    };
+
+    window.salvarEdicaoAtendimentoSideSheet = async function (e, id) {
+        e.preventDefault();
+        const nome = document.getElementById('sideEditAtenNome').value;
+        const end = document.getElementById('sideEditAtenEndereco').value;
+        const fone = document.getElementById('sideEditAtenWhats').value;
+
+        try {
+            const { error } = await db.from('app_atendimento_fraterno').update({
+                nome_completo: nome,
+                endereco_completo: end,
+                telefone: fone
+            }).eq('id', id);
+
+            if (error) throw error;
+            window.fecharSideSheet();
+            carregarLista();
+        } catch (err) {
+            Swal.fire('Erro', 'Erro ao salvar edição: ' + err.message, 'error');
         }
     };
 
