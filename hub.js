@@ -3642,19 +3642,31 @@ function renderizarCardAtendimentoItem(container, item) {
 }
 
 window.desatribuirAtendenteAtendimento = async function (id) {
-    if (confirm("Tem certeza que deseja remover o atendente atribuído a este paciente? Ele voltará para a fila de espera.")) {
-        try {
-            const { error } = await db.from('app_atendimento_fraterno').update({
-                atendente_id: null,
-                status: 'Pendente'
-            }).eq('id', id);
+    Swal.fire({
+        title: 'Desatribuir Atendente?',
+        text: "O paciente voltará para a fila de espera.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Desatribuir',
+        background: 'var(--bg-panel)',
+        color: 'var(--text-main)'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const { error } = await db.from('app_atendimento_fraterno').update({
+                    atendente_id: null,
+                    status: 'Pendente'
+                }).eq('id', id);
 
-            if (error) throw error;
-            carregarListaAtendimento();
-        } catch (err) {
-            alert('Erro ao remover atribuição: ' + err.message);
+                if (error) throw error;
+                carregarListaAtendimento();
+            } catch (err) {
+                Swal.fire('Erro', 'Erro ao remover atribuição: ' + err.message, 'error');
+            }
         }
-    }
+    });
 };
 
 window.abrirEdicaoAtendimento = function (id, nome, endereco, fone) {
