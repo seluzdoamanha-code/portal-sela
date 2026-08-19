@@ -3583,10 +3583,6 @@ function renderizarCardAtendimentoItem(container, item) {
         <div style="${buttonsContainerStyle}">
             ${item.status !== 'Atendido' ? btnPresenca : ''}
             
-            ${item.status !== 'Atendido' ? `
-                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo.replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${item.telefone || ''}')" style="font-size: 12px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️ Editar</button>
-            ` : ''}
-            
             ${(item.status === 'Pendente' || (item.status === 'Planejado' && currentAtendimentoSubTab !== 'andamento')) ? `
                 <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px;">🤝 Triagem</button>
             ` : ''}
@@ -3598,8 +3594,13 @@ function renderizarCardAtendimentoItem(container, item) {
             ${item.status === 'Planejado' ? `
                 <button class="btn" onclick="desatribuirAtendenteAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px;">👤✕ Desatribuir</button>
             ` : ''}
-            
-            <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">🗑️ Excluir</button>
+
+            <div style="display: flex; gap: 8px;">
+                ${item.status !== 'Atendido' ? `
+                    <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo.replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${item.telefone || ''}')" style="flex: 1; font-size: 14px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️</button>
+                ` : ''}
+                <button class="btn" onclick="excluirAtendimento('${item.id}')" style="flex: 1; font-size: 14px; padding: 10px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">🗑️</button>
+            </div>
         </div>
     `;
 
