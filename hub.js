@@ -4515,7 +4515,7 @@ window.abrirSideSheetPendenteHub = function(itemDataStr) {
                 </div>
             </div>
         `;
-        window.abrirSideSheet('Ficha de Irradiação', html);
+        window.abrirSideSheet('Analisar Solicitação', html);
     } catch (e) {
         console.error("Erro ao abrir side-sheet", e);
     }

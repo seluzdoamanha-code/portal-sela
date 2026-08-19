@@ -12,17 +12,41 @@ const diasSemanaList = [
 document.addEventListener('DOMContentLoaded', () => {
     // Inject Side-Sheet if not present
     if (!document.getElementById('globalSideSheet')) {
+        const styleSheet = `
+            <style>
+                .side-sheet-overlay {
+                    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                    background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px);
+                    z-index: 1050; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+                }
+                .side-sheet-overlay.show { opacity: 1; pointer-events: auto; }
+                .side-sheet {
+                    position: fixed; top: 0; right: 0; width: 400px; max-width: 90vw; height: 100vh;
+                    background: var(--bg-card, #1e293b); box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+                    z-index: 1100; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    display: flex; flex-direction: column;
+                }
+                .side-sheet.show { transform: translateX(0); }
+                .side-sheet-header {
+                    padding: 20px 24px; border-bottom: 1px solid var(--border);
+                    display: flex; align-items: center; justify-content: space-between;
+                }
+                .side-sheet-header h3 { margin: 0; font-size: 18px; color: var(--accent); }
+                .side-sheet-content { padding: 24px; flex: 1; overflow-y: auto; }
+            </style>
+        `;
         const sideSheetHTML = `
             <div id="globalSideSheetOverlay" class="side-sheet-overlay" onclick="fecharSideSheet()"></div>
             <div id="globalSideSheet" class="side-sheet">
                 <div class="side-sheet-header">
-                    <h3 id="globalSideSheetTitle">Detalhes</h3>
+                    <h3 id="globalSideSheetTitle">Analisar Solicitação</h3>
                     <button class="btn-close" onclick="fecharSideSheet()" style="background:transparent; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">&times;</button>
                 </div>
                 <div id="globalSideSheetContent" class="side-sheet-content">
                 </div>
             </div>
         `;
+        document.head.insertAdjacentHTML('beforeend', styleSheet);
         document.body.insertAdjacentHTML('beforeend', sideSheetHTML);
     }
 
@@ -731,7 +755,7 @@ window.abrirSideSheetPendente = function(itemDataStr) {
                 </div>
             </div>
         `;
-        window.abrirSideSheet('Ficha de Irradiação', html);
+        window.abrirSideSheet('Analisar Solicitação', html);
     } catch (e) {
         console.error("Erro ao abrir side-sheet", e);
     }

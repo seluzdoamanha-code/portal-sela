@@ -100,7 +100,7 @@
             <div id="globalSideSheetOverlay" class="side-sheet-overlay" onclick="fecharSideSheet()"></div>
             <div id="globalSideSheet" class="side-sheet">
                 <div class="side-sheet-header">
-                    <h3 id="globalSideSheetTitle">Detalhes</h3>
+                    <h3 id="globalSideSheetTitle">Analisar Solicitação</h3>
                     <button class="btn-close" onclick="fecharSideSheet()" style="background:transparent; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">&times;</button>
                 </div>
                 <div id="globalSideSheetContent" class="side-sheet-content">
