@@ -2037,9 +2037,11 @@ async function carregarListaIrradiacao() {
                 progressHtml = `<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">${checkboxRepetir}<div style="display:flex; align-items:center; margin-bottom:4px; flex-wrap:wrap;">Leitura atual: <strong style="margin-left: 4px; margin-right: 2px; color: var(--accent);">${leituras}/${semanas_alvo}</strong>${totalLeiturasHtml} ${lastDateHtml}</div><div style="display:flex; flex-wrap:wrap; max-width: 250px;">${caixinhas}</div></div>`;
 
                 actionsHtml = `
-                    <button id="btn_ler_${item.id}" onclick="marcarLeituraIrr(this, '${item.id}', ${leituras}, ${semanas_alvo}, ${item.renovacao_automatica ? 'true' : 'false'})" class="btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; transition: all 0.3s ease;">✅ Registrar Leitura</button>
-                    <button onclick="abrirModalEdicaoIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}', ${semanasAlvoStr})" class="btn btn-secondary" style="padding: 6px 12px;">✏️ Editar</button>
-                    <button onclick="arquivarIrradiacao('${item.id}')" class="btn btn-secondary" style="padding: 6px 12px;">Forçar Arquivamento</button>
+                    <button id="btn_ler_${item.id}" onclick="marcarLeituraIrr(this, '${item.id}', ${leituras}, ${semanas_alvo}, ${item.renovacao_automatica ? 'true' : 'false'})" class="btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; padding: 8px 12px; transition: all 0.3s ease; width: 100%; font-weight: 600;">✅ Registrar Leitura</button>
+                    <div style="display: flex; gap: 8px; width: 100%;">
+                        <button onclick="abrirModalEdicaoIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}', ${semanasAlvoStr})" class="btn btn-secondary" style="padding: 6px 12px; flex: 1;">✏️ Editar</button>
+                        <button onclick="arquivarIrradiacao('${item.id}')" class="btn btn-secondary" style="padding: 6px 12px; flex: 1;">Arquivar</button>
+                    </div>
                 `;
             } else if (currentIrradiacaoTab === 'historico') {
                 let lastDateInfo = '';
@@ -2056,9 +2058,11 @@ async function carregarListaIrradiacao() {
                 progressHtml = `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Status: Histórico${totalLeiturasHtml}${lastDateInfo}</div>`;
 
                 actionsHtml = `
-                    <button onclick="aprovarIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}')" class="btn btn-secondary" style="padding: 6px 12px;">♻️ Reativar (Triagem)</button>
-                    <button onclick="abrirModalEdicaoIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}', ${semanasAlvoStr})" class="btn btn-secondary" style="padding: 6px 12px;">✏️ Editar</button>
-                    <button onclick="excluirIrradiacaoDefinitivo('${item.id}')" class="btn" style="color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; background: transparent;">Apagar</button>
+                    <button onclick="aprovarIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}')" class="btn btn-secondary" style="padding: 8px 12px; width: 100%; font-weight: 600;">♻️ Reativar (Triagem)</button>
+                    <div style="display: flex; gap: 8px; width: 100%;">
+                        <button onclick="abrirModalEdicaoIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}', ${semanasAlvoStr})" class="btn btn-secondary" style="padding: 6px 12px; flex: 1;">✏️ Editar</button>
+                        <button onclick="excluirIrradiacaoDefinitivo('${item.id}')" class="btn" style="color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; background: transparent; flex: 1;">Apagar</button>
+                    </div>
                 `;
             }
 
