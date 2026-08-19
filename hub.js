@@ -3412,16 +3412,22 @@ window.carregarListaAtendimento = async function () {
             return;
         }
 
+        if (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera') {
+            lista.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;';
+        } else {
+            lista.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+        }
+
         // Filter data for list
         let data = [];
         if (currentAtendimentoSubTab === 'fila') {
-            data = allData.filter(d => d.status !== 'Atendido' && d.status !== 'Em Tratamento');
+            data = allData.filter(d => !d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
             data.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
         } else if (currentAtendimentoSubTab === 'espera') {
             data = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
             data.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
         } else if (currentAtendimentoSubTab === 'andamento') {
-            data = allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
+            data = allData.filter(d => d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
         } else if (currentAtendimentoSubTab === 'mes') {
             data = atendidosMesTotal;
         } else if (currentAtendimentoSubTab === 'historico') {
@@ -3536,7 +3542,13 @@ function renderizarCardAtendimentoItem(container, item) {
     }
 
     const card = document.createElement('div');
-    card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; transition: all 0.2s;';
+    const isGrid = (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera');
+
+    if (isGrid) {
+        card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 16px; transition: all 0.2s;';
+    } else {
+        card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; transition: all 0.2s;';
+    }
     card.onmouseover = () => card.style.background = 'rgba(255,255,255,0.05)';
     card.onmouseout = () => card.style.background = 'rgba(255,255,255,0.03)';
 
@@ -3549,44 +3561,62 @@ function renderizarCardAtendimentoItem(container, item) {
     }
 
     const btnPresenca = item.presente ?
-        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', false)" style="font-size: 12px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Não Presente';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
-        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', true)" style="font-size: 12px; padding: 6px 12px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); transition: all 0.2s;">⚪ Confirmar Presença</button>`;
+        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', false)" style="font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
+        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', true)" style="font-size: 12px; padding: 10px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s;">⚪ Confirmar Presença</button>`;
+
+    // Container for buttons
+    const buttonsContainerStyle = isGrid 
+        ? 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px;' 
+        : 'display: flex; flex-direction: column; gap: 8px; min-width: 140px;';
+
+    const infoContainerStyle = isGrid 
+        ? 'flex: 1;' 
+        : 'flex: 1; display: flex; flex-wrap: wrap; gap: 32px; justify-content: space-between;';
+
+    // Se for tabela, podemos colocar info no meio
+    let leftInfo = `
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <strong style="font-size: 16px; color: var(--text-main);">${item.nome_completo.toUpperCase()}</strong>
+            <span style="font-size: 11px; padding: 2px 6px; background: rgba(255,255,255,0.1); border-radius: 12px; color: var(--text-muted);">${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-muted);">
+            <div>📍 ${item.endereco_completo || 'Sem endereço'}</div>
+            <div>🎂 ${item.data_nascimento ? item.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
+            <div style="display: flex; align-items: center; gap: 8px;">📱 ${item.telefone || 'Sem telefone'} ${whatsLink}</div>
+        </div>
+    `;
+
+    let rightInfo = isGrid ? infoExtra : `<div style="font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">${infoExtra}</div>`;
 
     card.innerHTML = `
-        <div style="flex: 1;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <strong style="font-size: 16px; color: var(--text-main);">${item.nome_completo.toUpperCase()}</strong>
-                <span style="font-size: 11px; padding: 2px 6px; background: rgba(255,255,255,0.1); border-radius: 12px; color: var(--text-muted);">${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</span>
+        <div style="${infoContainerStyle}">
+            <div style="${isGrid ? '' : 'flex: 2; min-width: 280px;'}">
+                ${leftInfo}
+                ${isGrid ? `<div style="margin-top: 8px;">${rightInfo}</div>` : ''}
             </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-muted);">
-                <div>📍 ${item.endereco_completo || 'Sem endereço'}</div>
-                <div>🎂 ${item.data_nascimento ? item.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
-                <div style="display: flex; align-items: center; gap: 8px;">📱 ${item.telefone || 'Sem telefone'} ${whatsLink}</div>
-                ${infoExtra}
-            </div>
+            ${!isGrid ? `<div style="flex: 1; min-width: 200px;">${rightInfo}</div>` : ''}
         </div>
         
-        <div style="display: flex; flex-direction: column; gap: 8px; min-width: 140px;">
+        <div style="${buttonsContainerStyle}">
             ${item.status !== 'Atendido' ? btnPresenca : ''}
             
             ${item.status !== 'Atendido' ? `
-                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo}', '${item.endereco_completo || ''}', '${item.telefone || ''}')" style="font-size: 12px; padding: 6px 12px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">✏️ Editar</button>
+                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${item.nome_completo.replace(/'/g, "\\'")}', '${(item.endereco_completo || '').replace(/'/g, "\\'")}', '${item.telefone || ''}')" style="font-size: 12px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️ Editar</button>
             ` : ''}
             
             ${(item.status === 'Pendente' || (item.status === 'Planejado' && currentAtendimentoSubTab !== 'andamento')) ? `
-                <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">🤝 Triagem</button>
+                <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px;">🤝 Triagem</button>
             ` : ''}
             
             ${item.status === 'Planejado' && item.presente ? `
-                <button class="btn" onclick="abrirFichaAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">📝 Ficha & Fila</button>
+                <button class="btn" onclick="abrirFichaAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">📝 Ficha</button>
             ` : ''}
             
             ${item.status === 'Planejado' ? `
-                <button class="btn" onclick="desatribuirAtendenteAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">👤✕ Desatribuir</button>
+                <button class="btn" onclick="desatribuirAtendenteAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px;">👤✕ Desatribuir</button>
             ` : ''}
             
-            <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 12px; padding: 6px 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">🗑️ Excluir</button>
+            <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">🗑️ Excluir</button>
         </div>
     `;
 
@@ -3610,19 +3640,50 @@ window.desatribuirAtendenteAtendimento = async function (id) {
 };
 
 window.abrirEdicaoAtendimento = function (id, nome, endereco, fone) {
-    document.getElementById('editAtenId').value = id;
-    document.getElementById('editAtenNome').value = nome;
-    document.getElementById('editAtenEndereco').value = endereco;
-    document.getElementById('editAtenWhats').value = fone;
-    document.getElementById('modalEdicaoAtendimento').style.display = 'flex';
+    const html = `
+        <form onsubmit="salvarEdicaoAtendimentoSideSheet(event, '${id}')" style="display: flex; flex-direction: column; gap: 16px; height: 100%;">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                <div class="form-group">
+                    <label style="color: var(--text-muted); font-size: 13px;">Nome Completo</label>
+                    <input type="text" id="sideEditAtenNome" required value="${nome}" class="input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">
+                </div>
+                
+                <div class="form-group">
+                    <label style="color: var(--text-muted); font-size: 13px;">Endereço</label>
+                    <textarea id="sideEditAtenEndereco" class="input" rows="3" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">${endereco}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label style="color: var(--text-muted); font-size: 13px;">WhatsApp</label>
+                    <input type="text" id="sideEditAtenWhats" value="${fone}" class="input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">
+                </div>
+            </div>
+
+            <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
+                <button type="button" onclick="window.fecharSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border);">Cancelar</button>
+                <button type="submit" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Salvar Alterações</button>
+            </div>
+        </form>
+    `;
+    window.abrirSideSheet('Editar Solicitação', html);
+
+    // Apply mascara de whatsapp
+    setTimeout(() => {
+        const whatsInput = document.getElementById('sideEditAtenWhats');
+        if (whatsInput) {
+            whatsInput.addEventListener('input', function (e) {
+                var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+                e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+            });
+        }
+    }, 100);
 };
 
-window.salvarEdicaoAtendimento = async function (e) {
+window.salvarEdicaoAtendimentoSideSheet = async function (e, id) {
     e.preventDefault();
-    const id = document.getElementById('editAtenId').value;
-    const nome = document.getElementById('editAtenNome').value;
-    const end = document.getElementById('editAtenEndereco').value;
-    const fone = document.getElementById('editAtenWhats').value;
+    const nome = document.getElementById('sideEditAtenNome').value;
+    const end = document.getElementById('sideEditAtenEndereco').value;
+    const fone = document.getElementById('sideEditAtenWhats').value;
 
     try {
         const { error } = await db.from('app_atendimento_fraterno').update({
@@ -3632,7 +3693,7 @@ window.salvarEdicaoAtendimento = async function (e) {
         }).eq('id', id);
 
         if (error) throw error;
-        document.getElementById('modalEdicaoAtendimento').style.display = 'none';
+        window.fecharSideSheet();
         carregarListaAtendimento();
     } catch (err) {
         alert('Erro ao salvar edição: ' + err.message);
@@ -3640,10 +3701,24 @@ window.salvarEdicaoAtendimento = async function (e) {
 };
 
 window.abrirTriagemAtendimento = async function (id) {
-    document.getElementById('triagemAtenId').value = id;
-    const select = document.getElementById('selectAtendenteAtendimento');
-    select.innerHTML = '<option value="">Carregando atendentes...</option>';
-    document.getElementById('modalTriagemAtendimento').style.display = 'flex';
+    const html = `
+        <form onsubmit="salvarTriagemAtendimentoSideSheet(event, '${id}')" style="display: flex; flex-direction: column; gap: 16px; height: 100%;">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                <div class="form-group">
+                    <label style="color: var(--text-muted); font-size: 13px;">Atendente Fraterno</label>
+                    <select id="sideSelectAtendenteAtendimento" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">
+                        <option value="">Carregando atendentes...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
+                <button type="button" onclick="window.fecharSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border);">Cancelar</button>
+                <button type="submit" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Atribuir</button>
+            </div>
+        </form>
+    `;
+    window.abrirSideSheet('🤝 Selecionar Atendente', html);
 
     try {
         const { data, error } = await db
@@ -3652,6 +3727,9 @@ window.abrirTriagemAtendimento = async function (id) {
             .contains('perfis', ['Atendente Fraterno']);
 
         if (error) throw error;
+
+        const select = document.getElementById('sideSelectAtendenteAtendimento');
+        if (!select) return;
 
         if (!data || data.length === 0) {
             select.innerHTML = '<option value="">Nenhum Atendente Fraterno cadastrado</option>';
@@ -3664,14 +3742,14 @@ window.abrirTriagemAtendimento = async function (id) {
             data.map(p => `<option value="${p.id}">${p.nome_completo}</option>`).join('');
     } catch (err) {
         console.error(err);
-        select.innerHTML = '<option value="">Erro ao carregar atendentes</option>';
+        const select = document.getElementById('sideSelectAtendenteAtendimento');
+        if (select) select.innerHTML = '<option value="">Erro ao carregar atendentes</option>';
     }
 };
 
-window.salvarTriagemAtendimento = async function (e) {
+window.salvarTriagemAtendimentoSideSheet = async function (e, id) {
     e.preventDefault();
-    const id = document.getElementById('triagemAtenId').value;
-    const atendenteId = document.getElementById('selectAtendenteAtendimento').value;
+    const atendenteId = document.getElementById('sideSelectAtendenteAtendimento').value;
 
     if (!atendenteId) {
         alert('Por favor, selecione um atendente.');
@@ -3688,7 +3766,8 @@ window.salvarTriagemAtendimento = async function (e) {
             .eq('id', id);
 
         if (error) throw error;
-        document.getElementById('modalTriagemAtendimento').style.display = 'none';
+
+        window.fecharSideSheet();
         carregarListaAtendimento();
     } catch (err) {
         alert('Erro ao salvar triagem: ' + err.message);
@@ -3936,32 +4015,21 @@ let activeFichaAtendimentoId = null;
 
 window.abrirFichaAtendimento = async function (id) {
     activeFichaAtendimentoId = id;
-    const infoPaciente = document.getElementById('fichaInfoPaciente');
-    const historicoSessoes = document.getElementById('fichaHistoricoSessoes');
-
-    infoPaciente.innerHTML = 'Carregando dados do paciente...';
-    historicoSessoes.innerHTML = 'Carregando histórico...';
-
-    const histPresencas = document.getElementById('fichaHistoricoPresencas');
-    if (histPresencas) histPresencas.innerHTML = 'Carregando presenças...';
-
-    document.getElementById('txtSintomasOrientacoes').value = '';
-    document.getElementById('chkTratFluidico').checked = false;
-    document.getElementById('chkTratEspiritual').checked = false;
-    document.getElementById('modalFichaAtendimento').style.display = 'flex';
+    window.abrirSideSheet('Ficha de Atendimento', '<div style="padding: 24px;">Carregando dados...</div>');
 
     try {
-        // Obter necessitado
         const { data: paciente, error } = await db.from('app_atendimento_fraterno').select('*').eq('id', id).single();
         if (error) throw error;
 
-        infoPaciente.innerHTML = `
-            <strong>Nome:</strong> ${paciente.nome_completo.toUpperCase()}<br>
-            <strong>Endereço:</strong> ${paciente.endereco_completo || 'Não informado'}<br>
-            <strong>WhatsApp:</strong> ${paciente.telefone || 'Não informado'}
+        let infoHtml = `
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Dados do Necessitado</h4>
+                <strong>Nome:</strong> ${paciente.nome_completo.toUpperCase()}<br>
+                <strong>Endereço:</strong> ${paciente.endereco_completo || 'Não informado'}<br>
+                <strong>WhatsApp:</strong> ${paciente.telefone || 'Não informado'}
+            </div>
         `;
 
-        // Obter sessões anteriores
         const { data: sessoes, error: errSess } = await db
             .from('app_atendimento_sessoes')
             .select('*, pessoas!atendente_id(nome_completo)')
@@ -3971,13 +4039,14 @@ window.abrirFichaAtendimento = async function (id) {
 
         if (errSess) throw errSess;
 
+        let sessoesHtml = '<div style="margin-bottom: 24px;"><h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Últimas Sessões</h4>';
         if (!sessoes || sessoes.length === 0) {
-            historicoSessoes.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhuma sessão anterior registrada.</div>';
+            sessoesHtml += '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhuma sessão anterior registrada.</div>';
         } else {
-            historicoSessoes.innerHTML = sessoes.map(s => {
+            sessoesHtml += sessoes.map(s => {
                 const dt = new Date(s.data).toLocaleDateString('pt-BR');
                 return `
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 13px;">
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 13px; margin-bottom: 8px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                             <strong style="color: var(--primary);">${dt}</strong>
                             <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_completo || 'Desconhecido'}</span>
@@ -3987,59 +4056,88 @@ window.abrirFichaAtendimento = async function (id) {
                 `;
             }).join('');
         }
+        sessoesHtml += '</div>';
 
-        // Obter presenças
-        if (histPresencas) {
-            const { data: trats, error: errTrats } = await db.from('app_atendimento_tratamentos').select('id, tipo, status').eq('atendimento_id', id);
-            if (errTrats) throw errTrats;
+        const { data: trats, error: errTrats } = await db.from('app_atendimento_tratamentos').select('id, tipo, status').eq('atendimento_id', id);
+        if (errTrats) throw errTrats;
 
-            if (!trats || trats.length === 0) {
-                histPresencas.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhum tratamento cadastrado para este paciente.</div>';
+        let presHtml = '<div style="margin-bottom: 24px;"><h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Presenças em Tratamentos</h4>';
+        if (!trats || trats.length === 0) {
+            presHtml += '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhum tratamento cadastrado para este paciente.</div>';
+        } else {
+            const tratIds = trats.map(t => t.id);
+            const { data: pres, error: errPres } = await db
+                .from('app_atendimento_presencas')
+                .select('*')
+                .in('tratamento_id', tratIds)
+                .order('data', { ascending: false });
+
+            if (errPres) throw errPres;
+
+            if (!pres || pres.length === 0) {
+                presHtml += '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhuma presença de tratamento registrada ainda.</div>';
             } else {
-                const tratIds = trats.map(t => t.id);
-                const { data: pres, error: errPres } = await db
-                    .from('app_atendimento_presencas')
-                    .select('*')
-                    .in('tratamento_id', tratIds)
-                    .order('data', { ascending: false });
-
-                if (errPres) throw errPres;
-
-                if (!pres || pres.length === 0) {
-                    histPresencas.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhuma presença de tratamento registrada ainda.</div>';
-                } else {
-                    histPresencas.innerHTML = pres.map(p => {
-                        const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
-                        const tipoText = trat ? `${trat.tipo} (${trat.status})` : 'Tratamento';
-                        const dt = new Date(p.data).toLocaleDateString('pt-BR');
-                        const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
-                        return `
-                            <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4;">
-                                <strong style="color: #3b82f6;">${dt}</strong> - <span style="font-weight: 500;">${tipoText}</span>
-                                ${obs}
-                            </div>
-                        `;
-                    }).join('');
-                }
+                presHtml += '<div style="max-height: 150px; overflow-y: auto;">';
+                presHtml += pres.map(p => {
+                    const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
+                    const tipoText = trat ? `${trat.tipo} (${trat.status})` : 'Tratamento';
+                    const dt = new Date(p.data).toLocaleDateString('pt-BR');
+                    const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
+                    return `
+                        <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 4px;">
+                            <strong style="color: #3b82f6;">${dt}</strong> - <span style="font-weight: 500;">${tipoText}</span>
+                            ${obs}
+                        </div>
+                    `;
+                }).join('');
+                presHtml += '</div>';
             }
         }
+        presHtml += '</div>';
+
+        let formHtml = `
+            <div style="margin-bottom: 24px;">
+                <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Registro de Atendimento Atual</h4>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="color: var(--text-muted); font-size: 13px;">Sintomas e Orientações</label>
+                    <textarea id="sideTxtSintomasOrientacoes" class="input" rows="4" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;" placeholder="Descreva os sintomas apresentados e as orientações transmitidas..."></textarea>
+                </div>
+                <div style="display: flex; gap: 24px; margin-bottom: 16px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="sideChkTratFluidico" style="width: 18px; height: 18px; accent-color: var(--primary);">
+                        <span>Prescrever Tratamento Fluídico</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="sideChkTratEspiritual" style="width: 18px; height: 18px; accent-color: var(--primary);">
+                        <span>Prescrever Tratamento Espiritual</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div style="padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
+                <button type="button" onclick="window.fecharSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border);">Cancelar</button>
+                <button type="button" onclick="salvarFichaAtendimentoSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Gravar Sessão e Tratamentos</button>
+            </div>
+        `;
+
+        const finalHtml = `
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                ${infoHtml}
+                ${sessoesHtml}
+                ${presHtml}
+                ${formHtml}
+            </div>
+        `;
+        document.getElementById('sideSheetContent').innerHTML = finalHtml;
     } catch (err) {
         console.error(err);
-        infoPaciente.innerHTML = '<span style="color: #ef4444;">Erro ao carregar dados.</span>';
-        historicoSessoes.innerHTML = '<span style="color: #ef4444;">Erro ao carregar histórico.</span>';
-        if (histPresencas) histPresencas.innerHTML = '<span style="color: #ef4444;">Erro ao carregar presenças.</span>';
+        document.getElementById('sideSheetContent').innerHTML = '<div style="padding: 24px; color: #ef4444;">Erro ao carregar dados da ficha.</div>';
     }
 };
-
-window.fecharModalFicha = function () {
-    document.getElementById('modalFichaAtendimento').style.display = 'none';
-    activeFichaAtendimentoId = null;
-};
-
-window.salvarFichaAtendimento = async function () {
-    const sintomas = document.getElementById('txtSintomasOrientacoes').value.trim();
-    const tratFluidico = document.getElementById('chkTratFluidico').checked;
-    const tratEspiritual = document.getElementById('chkTratEspiritual').checked;
+window.salvarFichaAtendimentoSideSheet = async function () {
+    const sintomas = document.getElementById('sideTxtSintomasOrientacoes').value.trim();
+    const tratFluidico = document.getElementById('sideChkTratFluidico').checked;
+    const tratEspiritual = document.getElementById('sideChkTratEspiritual').checked;
 
     if (!sintomas) {
         alert('Por favor, informe os sintomas e orientações desta sessão.');
@@ -4092,7 +4190,7 @@ window.salvarFichaAtendimento = async function () {
         if (errAten) throw errAten;
 
         alert('Sessão gravada e tratamentos prescritos com sucesso!');
-        fecharModalFicha();
+        window.fecharSideSheet();
         carregarListaAtendimento();
     } catch (err) {
         alert('Erro ao gravar sessão: ' + err.message);

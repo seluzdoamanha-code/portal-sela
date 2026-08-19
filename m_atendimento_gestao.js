@@ -129,7 +129,7 @@
             let filteredData = [];
 
             if (subAba === 'fila') {
-                filteredData = allData.filter(d => d.status !== 'Atendido' && d.status !== 'Em Tratamento');
+                filteredData = allData.filter(d => !d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
                 filteredData.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
                 renderNormalList(filteredData);
             } 
@@ -139,7 +139,7 @@
                 renderNormalList(filteredData);
             } 
             else if (subAba === 'andamento') {
-                filteredData = allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
+                filteredData = allData.filter(d => d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
                 renderAndamentoList(filteredData);
             } 
             else if (subAba === 'mes') {
@@ -299,24 +299,20 @@
 
     window.abrirFichaAtendimento = async function(id) {
         pacienteAtualFichaId = id;
-        const modal = document.getElementById('modalFicha');
-        modal.style.display = 'block';
-        
-        document.getElementById('fichaInfoPaciente').innerHTML = 'Carregando dados...';
-        document.getElementById('fichaHistoricoSessoes').innerHTML = '';
-        document.getElementById('txtSintomasOrientacoes').value = '';
-        document.getElementById('chkTratFluidico').checked = false;
-        document.getElementById('chkTratEspiritual').checked = false;
+        window.abrirSideSheet('Ficha de Atendimento', '<div style="padding: 24px;">Carregando dados...</div>');
 
         try {
             // Detalhes do necessitado
             const { data: paciente, error } = await db.from('app_atendimento_fraterno').select('*').eq('id', id).single();
             if (error) throw error;
 
-            document.getElementById('fichaInfoPaciente').innerHTML = `
-                <strong>Nome:</strong> ${paciente.nome_completo.toUpperCase()}<br>
-                <strong>Nascimento:</strong> ${paciente.data_nascimento ? paciente.data_nascimento.split('-').reverse().join('/') : '-'}<br>
-                <strong>Telefone:</strong> ${paciente.telefone || '-'}
+            let infoHtml = `
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Dados do Necessitado</h4>
+                    <strong>Nome:</strong> ${paciente.nome_completo.toUpperCase()}<br>
+                    <strong>Nascimento:</strong> ${paciente.data_nascimento ? paciente.data_nascimento.split('-').reverse().join('/') : '-'}<br>
+                    <strong>Telefone:</strong> ${paciente.telefone || '-'}
+                </div>
             `;
 
             // Histórico de sessões anteriores
@@ -328,51 +324,82 @@
 
             if (errSess) throw errSess;
 
-            const histContainer = document.getElementById('fichaHistoricoSessoes');
+            let sessoesHtml = '<div style="margin-bottom: 24px;"><h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Últimas Sessões</h4>';
             if (sessoes && sessoes.length > 0) {
                 sessoes.forEach((s, idx) => {
                     const dt = new Date(s.data).toLocaleDateString('pt-BR');
-                    const sessCard = document.createElement('div');
-                    sessCard.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; font-size: 13px;';
-                    sessCard.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-weight:bold; color:var(--text-main);">
-                            <span>Sessão de ${dt}</span>
-                            <span style="color:var(--primary); font-size:11px;">Atendente: ${s.pessoas?.nome_completo || 'N/A'}</span>
+                    sessoesHtml += `
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; font-size: 13px; margin-bottom: 8px;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-weight:bold; color:var(--text-main);">
+                                <span>Sessão de ${dt}</span>
+                                <span style="color:var(--primary); font-size:11px;">Atendente: ${s.pessoas?.nome_completo || 'N/A'}</span>
+                            </div>
+                            <div style="color:var(--text-muted); line-height:1.4; white-space:pre-wrap;">${s.sintomas_orientacoes}</div>
                         </div>
-                        <div style="color:var(--text-muted); line-height:1.4; white-space:pre-wrap;">${s.sintomas_orientacoes}</div>
                     `;
-                    histContainer.appendChild(sessCard);
                 });
             } else {
-                histContainer.innerHTML = '<div style="font-size:12px; color:var(--text-muted); font-style:italic;">Nenhuma sessão anterior gravada.</div>';
+                sessoesHtml += '<div style="font-size:12px; color:var(--text-muted); font-style:italic;">Nenhuma sessão anterior gravada.</div>';
             }
+            sessoesHtml += '</div>';
 
+            let chkF = false;
+            let chkE = false;
             // Verificar se já possui tratamentos ativos prescritos
             const { data: trats } = await db.from('app_atendimento_tratamentos').select('tipo').eq('atendimento_id', id).eq('status', 'Ativo');
             if (trats) {
                 trats.forEach(t => {
-                    if (t.tipo === 'Fluídico') document.getElementById('chkTratFluidico').checked = true;
-                    if (t.tipo === 'Espiritual') document.getElementById('chkTratEspiritual').checked = true;
+                    if (t.tipo === 'Fluídico') chkF = true;
+                    if (t.tipo === 'Espiritual') chkE = true;
                 });
             }
 
+            let formHtml = `
+                <div style="margin-bottom: 24px;">
+                    <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Registro de Atendimento</h4>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="color: var(--text-muted); font-size: 13px;">Sintomas e Orientações</label>
+                        <textarea id="sideTxtSintomasOrientacoes" class="input" rows="4" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;" placeholder="Descreva os sintomas apresentados..."></textarea>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="sideChkTratFluidico" ${chkF ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);">
+                            <span>Prescrever Tratamento Fluídico</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="sideChkTratEspiritual" ${chkE ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);">
+                            <span>Prescrever Tratamento Espiritual</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div style="padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
+                    <button type="button" onclick="window.fecharSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border);">Cancelar</button>
+                    <button type="button" onclick="salvarFichaAtendimentoSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Gravar</button>
+                </div>
+            `;
+
+            const finalHtml = `
+                <div style="display: flex; flex-direction: column; gap: 8px; padding-bottom: 32px;">
+                    ${infoHtml}
+                    ${sessoesHtml}
+                    ${formHtml}
+                </div>
+            `;
+            document.getElementById('sideSheetContent').innerHTML = finalHtml;
+
         } catch(e) {
             Swal.fire('Erro', 'Erro ao abrir a ficha: ' + e.message, 'error');
-            fecharModalFicha();
+            window.fecharSideSheet();
         }
     };
 
-    window.fecharModalFicha = function() {
-        document.getElementById('modalFicha').style.display = 'none';
-        pacienteAtualFichaId = null;
-    };
-
-    window.salvarFichaAtendimento = async function() {
+    window.salvarFichaAtendimentoSideSheet = async function() {
         if (!pacienteAtualFichaId) return;
 
-        const anotacoes = document.getElementById('txtSintomasOrientacoes').value.trim();
-        const querFluidico = document.getElementById('chkTratFluidico').checked;
-        const querEspiritual = document.getElementById('chkTratEspiritual').checked;
+        const anotacoes = document.getElementById('sideTxtSintomasOrientacoes').value.trim();
+        const querFluidico = document.getElementById('sideChkTratFluidico').checked;
+        const querEspiritual = document.getElementById('sideChkTratEspiritual').checked;
 
         if (!anotacoes) {
             Swal.fire('Aviso', 'Por favor, preencha os sintomas/orientações da sessão.', 'warning');
@@ -380,7 +407,6 @@
         }
 
         try {
-            // Obter o usuário logado para associar como atendente_id
             const { data: { session } } = await db.auth.getSession();
             let atendenteId = null;
             if (session && session.user && session.user.email) {
@@ -388,7 +414,6 @@
                 if (pessoa) atendenteId = pessoa.id;
             }
 
-            // 1. Gravar na tabela de sessões
             const { error: errSess } = await db.from('app_atendimento_sessoes').insert([{
                 atendimento_id: pacienteAtualFichaId,
                 data: new Date().toISOString().split('T')[0],
@@ -397,7 +422,6 @@
             }]);
             if (errSess) throw errSess;
 
-            // 2. Tratar a prescrição dos tratamentos (Fluídico)
             if (querFluidico) {
                 const { data: existFluid } = await db.from('app_atendimento_tratamentos').select('id').eq('atendimento_id', pacienteAtualFichaId).eq('tipo', 'Fluídico').eq('status', 'Ativo');
                 if (!existFluid || existFluid.length === 0) {
@@ -408,9 +432,6 @@
                         data_inicio: new Date().toISOString().split('T')[0]
                     }]);
                 }
-            } else {
-                // Se desmarcou, suspender
-                await db.from('app_atendimento_tratamentos').update({ status: 'Suspenso' }).eq('atendimento_id', pacienteAtualFichaId).eq('tipo', 'Fluídico').eq('status', 'Ativo');
             }
 
             // 3. Tratar a prescrição dos tratamentos (Espiritual)
@@ -424,25 +445,20 @@
                         data_inicio: new Date().toISOString().split('T')[0]
                     }]);
                 }
-            } else {
-                // Se desmarcou, suspender
-                await db.from('app_atendimento_tratamentos').update({ status: 'Suspenso' }).eq('atendimento_id', pacienteAtualFichaId).eq('tipo', 'Espiritual').eq('status', 'Ativo');
             }
 
-            // 4. Atualizar o status geral do atendimento fraterno
-            const novoStatus = (querFluidico || querEspiritual) ? 'Em Tratamento' : 'Atendido';
-            const { error: errAtend } = await db.from('app_atendimento_fraterno').update({
-                status: novoStatus,
+            // 4. Mudar status do paciente para 'Em Tratamento' e registrar a data do último atendimento
+            await db.from('app_atendimento_fraterno').update({
+                status: 'Em Tratamento',
                 data_hora_atendimento: new Date().toISOString()
             }).eq('id', pacienteAtualFichaId);
-            if (errAtend) throw errAtend;
 
-            Swal.fire('Sucesso!', 'Atendimento fraterno registrado com sucesso.', 'success');
-            fecharModalFicha();
+            Swal.fire('Sucesso', 'Sessão gravada e tratamentos prescritos!', 'success');
+            window.fecharSideSheet();
             carregarLista();
 
         } catch(e) {
-            Swal.fire('Erro!', 'Falha ao salvar atendimento: ' + e.message, 'error');
+            Swal.fire('Erro', 'Erro ao gravar: ' + e.message, 'error');
         }
     };
 
@@ -768,6 +784,25 @@
     };
 
     window.abrirTriagem = async function(id) {
+        const html = `
+            <form onsubmit="salvarTriagemSideSheet(event, '${id}')" style="display: flex; flex-direction: column; gap: 16px; height: 100%;">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                    <div class="form-group">
+                        <label style="color: var(--text-muted); font-size: 13px;">Atendente Fraterno</label>
+                        <select id="sideSelectAtendenteAtendimento" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">
+                            <option value="">Carregando atendentes...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
+                    <button type="button" onclick="window.fecharSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border);">Cancelar</button>
+                    <button type="submit" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Atribuir</button>
+                </div>
+            </form>
+        `;
+        window.abrirSideSheet('🤝 Selecionar Atendente', html);
+
         try {
             const { data, error } = await db
                 .from('pessoas')
@@ -776,52 +811,45 @@
 
             if (error) throw error;
 
+            const select = document.getElementById('sideSelectAtendenteAtendimento');
+            if (!select) return;
+
             if (!data || data.length === 0) {
-                Swal.fire('Aviso', 'Nenhum voluntário cadastrado como Atendente Fraterno.', 'warning');
+                select.innerHTML = '<option value="">Nenhum Atendente Fraterno cadastrado</option>';
                 return;
             }
 
             data.sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
 
-            const options = {};
-            data.forEach(p => {
-                options[p.id] = p.nome_completo;
-            });
-
-            const { value: atendenteId } = await Swal.fire({
-                title: '🤝 Selecione o Atendente',
-                input: 'select',
-                inputOptions: options,
-                inputPlaceholder: 'Escolha um atendente...',
-                showCancelButton: true,
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: 'var(--primary)',
-                background: 'var(--bg-panel)',
-                color: 'var(--text-main)',
-                inputValidator: (value) => {
-                    return new Promise((resolve) => {
-                        if (value) {
-                            resolve();
-                        } else {
-                            resolve('Selecione um atendente!');
-                        }
-                    });
-                }
-            });
-
-            if (atendenteId) {
-                const { error: updErr } = await db
-                    .from('app_atendimento_fraterno')
-                    .update({ atendente_id: atendenteId, status: 'Planejado' })
-                    .eq('id', id);
-
-                if (updErr) throw updErr;
-                Swal.fire('Sucesso!', 'Atendente atribuído.', 'success');
-                carregarLista();
-            }
-
+            select.innerHTML = '<option value="">Selecione um atendente...</option>' +
+                data.map(p => `<option value="${p.id}">${p.nome_completo}</option>`).join('');
         } catch(e) {
-            Swal.fire('Erro!', 'Falha na triagem: ' + e.message, 'error');
+            Swal.fire('Erro!', 'Falha ao carregar atendentes: ' + e.message, 'error');
+            const select = document.getElementById('sideSelectAtendenteAtendimento');
+            if (select) select.innerHTML = '<option value="">Erro ao carregar</option>';
+        }
+    };
+
+    window.salvarTriagemSideSheet = async function (e, id) {
+        e.preventDefault();
+        const atendenteId = document.getElementById('sideSelectAtendenteAtendimento').value;
+
+        if (!atendenteId) {
+            Swal.fire('Aviso', 'Selecione um atendente.', 'warning');
+            return;
+        }
+
+        try {
+            const { error: updErr } = await db
+                .from('app_atendimento_fraterno')
+                .update({ atendente_id: atendenteId, status: 'Planejado' })
+                .eq('id', id);
+
+            if (updErr) throw updErr;
+            window.fecharSideSheet();
+            carregarLista();
+        } catch (err) {
+            Swal.fire('Erro!', 'Falha ao salvar triagem: ' + err.message, 'error');
         }
     };
 
