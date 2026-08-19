@@ -50,10 +50,10 @@ async function carregarEstrutura() {
 }
 
 async function carregarPessoasParaSelect() {
-    const { data, error } = await db.from('pessoas').select('id, nome_curto, nome_completo, cpf_cnpj, tipo_pessoa, papeis').order('nome_completo');
+    const { data, error } = await db.from('pessoas').select('id, nome_curto, nome_completo, cpf_cnpj, tipo_pessoa, perfis').order('nome_completo');
     if (data) {
-        // Filtrar apenas associados efetivos
-        const efetivos = data.filter(p => p.papeis && p.papeis.includes('Associado Efetivo'));
+        // Filtrar apenas pessoas que possuem algum perfil cadastrado
+        const efetivos = data.filter(p => p.perfis && p.perfis.length > 0);
         pessoasParaSelect = efetivos;
         const selPessoa = document.getElementById('inPessoa');
         
@@ -114,7 +114,7 @@ async function carregarPessoasParaSelect() {
             }
             
             const p = pessoasParaSelect.find(x => x.id == pessoaId);
-            const tags = p.papeis || [];
+            const tags = p.perfis || [];
             
             if (!tags || tags.length === 0) {
                 selectPerfil.innerHTML = '<option value="">(Pessoa não possui Tags no cadastro)</option>';
@@ -149,7 +149,7 @@ async function carregarArvore() {
                 id,
                 nome_completo,
                 nome_curto,
-                papeis
+                perfis
             )
         `)
         .eq('estrutura_id', estruturaId);
@@ -257,7 +257,7 @@ function renderizarGrafico(vinculos) {
                         let nomeCurto = d.data.nome_curto;
                         
                         if (p) {
-                            const tags = p.papeis || [];
+                            const tags = p.perfis || [];
                             if (!tags.includes(d.data.perfil)) {
                                 aviso = `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; padding: 2px 4px; background: #fee2e2; border-radius: 4px;">⚠️ Requer Revisão (Tag Removida)</div>`;
                             }
