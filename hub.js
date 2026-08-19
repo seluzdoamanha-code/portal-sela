@@ -3842,13 +3842,27 @@ window.salvarConcluirAtendimento = async function (e) {
 };
 
 window.excluirAtendimento = async function (id) {
-    if (confirm('Tem certeza que deseja apagar este pedido definitivamente?')) {
-        try {
-            const { error } = await db.from('app_atendimento_fraterno').delete().eq('id', id);
-            if (error) throw error;
-            carregarListaAtendimento();
-        } catch (e) { alert('Erro ao excluir: ' + e.message); }
-    }
+    Swal.fire({
+        title: 'Excluir Solicitação?',
+        text: "Tem certeza que deseja apagar este pedido definitivamente?",
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Excluir',
+        background: 'var(--bg-panel)',
+        color: 'var(--text-main)'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const { error } = await db.from('app_atendimento_fraterno').delete().eq('id', id);
+                if (error) throw error;
+                carregarListaAtendimento();
+            } catch (err) {
+                Swal.fire('Erro', 'Erro ao excluir: ' + err.message, 'error');
+            }
+        }
+    });
 };
 
 
