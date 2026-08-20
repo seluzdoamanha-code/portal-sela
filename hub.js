@@ -1487,6 +1487,12 @@ window.carregarAppMiniApps = async function () {
                 <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Registrar novo pedido de Atendimento Fraterno.</p>
             </div>
             
+            <div onclick="abrirFormularioHistorico()" style="background: rgba(139, 92, 246, 0.05); border: 1px solid #8b5cf6; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(139, 92, 246, 0.05)'; this.style.transform='none'">
+                <div style="font-size: 32px; margin-bottom: 12px;">🗃️</div>
+                <h3 style="color: #8b5cf6; margin-bottom: 8px;">Inserir Ficha Antiga</h3>
+                <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Migrar prontuários do arquivo morto para o sistema digital.</p>
+            </div>
+            
             <div onclick="carregarPainelGestaoAtendimento()" style="background: rgba(245, 158, 11, 0.05); border: 1px solid #f59e0b; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(245, 158, 11, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(245, 158, 11, 0.05)'; this.style.transform='none'">
                 <div style="font-size: 32px; margin-bottom: 12px;">⚙️</div>
                 <h3 style="color: #f59e0b; margin-bottom: 8px;">Gestão de Atendimentos</h3>
@@ -3368,14 +3374,26 @@ window.carregarListaAtendimento = async function () {
 
     try {
         const [fraternoReq, tratamentosReq] = await Promise.all([
-            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo)'),
+            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo), app_pacientes(*)'),
             db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)').eq('status', 'Ativo')
         ]);
         if (fraternoReq.error) throw fraternoReq.error;
         if (tratamentosReq.error) throw tratamentosReq.error;
 
-        const allData = fraternoReq.data;
+        let allData = fraternoReq.data;
         const allTratamentos = tratamentosReq.data;
+
+        if (allData) {
+            allData = allData.map(f => {
+                if (f.app_pacientes) {
+                    f.nome_completo = f.app_pacientes.nome_completo || f.nome_completo;
+                    f.telefone = f.app_pacientes.telefone || f.telefone;
+                    f.endereco_completo = f.app_pacientes.endereco_completo || f.endereco_completo;
+                    f.data_nascimento = f.app_pacientes.data_nascimento || f.data_nascimento;
+                }
+                return f;
+            });
+        }
 
         // Month calculations for current/past filter
         const now = new Date();
@@ -3793,6 +3811,15 @@ window.salvarEdicaoAtendimentoSideSheet = async function (e, id) {
     const fone = document.getElementById('sideEditAtenWhats').value;
 
     try {
+        const { data: oldData } = await db.from('app_atendimento_fraterno').select('paciente_id').eq('id', id).single();
+        if (oldData && oldData.paciente_id) {
+            await db.from('app_pacientes').update({
+                nome_completo: nome,
+                endereco_completo: end,
+                telefone: fone
+            }).eq('id', oldData.paciente_id);
+        }
+
         const { error } = await db.from('app_atendimento_fraterno').update({
             nome_completo: nome,
             endereco_completo: end,
@@ -3866,6 +3893,7 @@ window.salvarTriagemAtendimentoSideSheet = async function (e, id) {
     try {
         const { error } = await db
             .from('app_atendimento_fraterno')
+            .select('*, pessoas(nome_completo), app_pacientes(*)')
             .update({
                 atendente_id: atendenteId,
                 status: 'Planejado'
@@ -4109,7 +4137,17 @@ async function salvarFormularioAtendimento(e) {
             }
         } catch (e) { }
 
+        const { data: novoPaciente, error: errPac } = await db.from('app_pacientes').insert([{
+            nome_completo: nome,
+            telefone: whats,
+            data_nascimento: nascimento,
+            endereco_completo: endereco
+        }]).select().single();
+        
+        if (errPac) throw errPac;
+
         const { error } = await db.from('app_atendimento_fraterno').insert([{
+            paciente_id: novoPaciente.id,
             nome_completo: nome,
             endereco_completo: endereco,
             data_nascimento: nascimento,
@@ -4304,6 +4342,14 @@ window.salvarFichaAtendimentoSideSheet = async function () {
         }
 
         // Atualizar status do Atendimento Fraterno para 'Em Tratamento'
+        if (id_paciente) {
+            await db.from('app_pacientes').update({
+                nome_completo: nome,
+                endereco_completo: end,
+                telefone: wpp
+            }).eq('id', id_paciente);
+        }
+
         const { error: errAten } = await db.from('app_atendimento_fraterno').update({
             status: 'Em Tratamento',
             data_hora_atendimento: new Date().toISOString()
@@ -4631,6 +4677,7 @@ window.encaminharParaNovaTriagem = async function(fraterno_id) {
 
                 // Inserir nova ficha
                 const { error: errI } = await db.from('app_atendimento_fraterno').insert([{
+                    paciente_id: oldData.paciente_id,
                     nome_completo: oldData.nome_completo,
                     endereco_completo: oldData.endereco_completo,
                     telefone: oldData.telefone,
