@@ -4468,7 +4468,7 @@ window.carregarTratamentosAtivosDesktop = async function () {
 
         let selectQuery = db
             .from('app_atendimento_tratamentos')
-            .select('*, app_atendimento_fraterno(nome_completo, telefone, id)')
+            .select('*, app_atendimento_fraterno(nome_completo, telefone, id), app_atendimento_presencas(data)')
             .order('tipo');
 
         if (typeof queryStatus === 'string') {
@@ -4529,9 +4529,16 @@ window.carregarTratamentosAtivosDesktop = async function () {
 
                 let actionsHTML = '';
                 if (isListActive) {
-                    const btnConfirm = `
-                        <button onclick="confirmarSessaoTratamento('${t.id}', '${t.tipo}')" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px; background: ${t.tipo === 'Espiritual' ? '#8b5cf6' : '#3b82f6'}; color: white; border: none; border-radius: 4px; cursor: pointer;">Confirmar Atendimento</button>
-                    `;
+                    let attendedToday = false;
+                    if (t.app_atendimento_presencas) {
+                        const todayStr = new Date().toLocaleDateString('pt-BR');
+                        attendedToday = t.app_atendimento_presencas.some(p => new Date(p.data).toLocaleDateString('pt-BR') === todayStr);
+                    }
+
+                    const btnConfirm = attendedToday
+                        ? `<button disabled class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed var(--border); border-radius: 4px; cursor: not-allowed;">Atendimento já foi realizado HOJE!</button>`
+                        : `<button onclick="confirmarSessaoTratamento('${t.id}', '${t.tipo}')" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px; background: ${t.tipo === 'Espiritual' ? '#8b5cf6' : '#3b82f6'}; color: white; border: none; border-radius: 4px; cursor: pointer;">Confirmar Atendimento</button>`;
+                    
                     actionsHTML = `
                         ${btnConfirm}
                         <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Concluir</button>
