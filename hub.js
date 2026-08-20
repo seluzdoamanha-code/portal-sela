@@ -4483,23 +4483,8 @@ window.carregarTratamentosAtivosDesktop = async function () {
 
         lista.innerHTML = '';
 
-        // Render sub-navigation pills
-        const subNav = document.createElement('div');
-        subNav.style.cssText = 'display: flex; gap: 12px; margin-bottom: 16px;';
-
-        const btnActBg = currentSubAbaTratamentos === 'Ativo' ? 'var(--primary)' : 'rgba(255,255,255,0.05)';
-        const btnActCol = currentSubAbaTratamentos === 'Ativo' ? 'white' : 'var(--text-muted)';
-
-        const btnInactBg = currentSubAbaTratamentos === 'Inativo' ? 'var(--primary)' : 'rgba(255,255,255,0.05)';
-        const btnInactCol = currentSubAbaTratamentos === 'Inativo' ? 'white' : 'var(--text-muted)';
-
-        subNav.innerHTML = `
-            <button onclick="setSubAbaTratamentos('Ativo')" class="btn" style="padding: 6px 16px; font-size: 13px; border-radius: 6px; background: ${btnActBg}; color: ${btnActCol}; border: 1px solid var(--border);">🟢 Tratamentos Ativos</button>
-        `;
-        lista.appendChild(subNav);
-
         const containerCards = document.createElement('div');
-        containerCards.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
+        containerCards.style.cssText = 'display: flex; flex-direction: column; gap: 16px; margin-top: 8px;';
         lista.appendChild(containerCards);
 
         if (!tratamentos || tratamentos.length === 0) {
