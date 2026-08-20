@@ -456,7 +456,7 @@
                         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; font-size: 13px; margin-bottom: 8px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-weight:bold; color:var(--text-main);">
                                 <div>
-                                    <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #3b82f6; color: white; text-transform: uppercase;">FRATERNO</span>
+                                    <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase;">FRATERNO</span>
                                     <span style="margin-left: 4px;">Sessão de ${dt}</span>
                                 </div>
                                 <span style="color:var(--primary); font-size:11px;">Atendente: ${s.pessoas?.nome_completo || 'N/A'}</span>
@@ -634,6 +634,11 @@
                     <div style="margin-top:8px;">
                         <button onclick="encaminharParaNovaTriagemMobile('${t.app_atendimento_fraterno?.id}')" class="btn-action" style="width:100%; background:rgba(139, 92, 246, 0.1); color:#8b5cf6; border:1px solid rgba(139, 92, 246, 0.3);">📋 Novo Atendimento</button>
                     </div>
+                    <div style="margin-top:8px;">
+                        <button onclick="toggleEvolucaoInlineMobile('${t.app_atendimento_fraterno?.id}')" class="btn-action" style="width:100%; background:rgba(255,255,255,0.05); color:white; border:1px solid var(--border);">📝 Evolução & Prontuário</button>
+                    </div>
+                    
+                    <div id="panel_evolucao_m_${t.app_atendimento_fraterno?.id}" style="display: none; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;"></div>
                 `;
                 container.appendChild(card);
             });
@@ -641,6 +646,118 @@
             container.innerHTML = `<div class="empty-state">Erro: ${e.message}</div>`;
         }
     }
+
+    window.toggleEvolucaoInlineMobile = async function (id) {
+        const panel = document.getElementById('panel_evolucao_m_' + id);
+        if (!panel) return;
+
+        if (panel.style.display === 'block') {
+            panel.style.display = 'none';
+            return;
+        }
+
+        panel.style.display = 'block';
+        panel.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; padding: 8px;">Carregando histórico e prontuário de evolução...</div>';
+
+        try {
+            const { data: sessoes, error: errSess } = await db
+                .from('app_atendimento_sessoes')
+                .select('*, pessoas!atendente_id(nome_completo)')
+                .eq('atendimento_id', id)
+                .order('data', { ascending: false })
+                .limit(4);
+
+            if (errSess) throw errSess;
+
+            const { data: trats, error: errTrats } = await db.from('app_atendimento_tratamentos').select('id, tipo, status').eq('atendimento_id', id);
+            if (errTrats) throw errTrats;
+
+            let presencasHTML = '';
+            if (trats && trats.length > 0) {
+                const tratIds = trats.map(t => t.id);
+                const { data: pres, error: errPres } = await db
+                    .from('app_atendimento_presencas')
+                    .select('*')
+                    .in('tratamento_id', tratIds)
+                    .order('data', { ascending: false });
+
+                if (errPres) throw errPres;
+
+                if (pres) {
+                    pres.sort((a, b) => {
+                        const tA = trats.find(t => t.id === a.tratamento_id)?.tipo || '';
+                        const tB = trats.find(t => t.id === b.tratamento_id)?.tipo || '';
+                        if (tA === 'Fluídico' && tB === 'Espiritual') return -1;
+                        if (tA === 'Espiritual' && tB === 'Fluídico') return 1;
+                        const dA = new Date(a.data || 0);
+                        const dB = new Date(b.data || 0);
+                        return dB - dA;
+                    });
+                }
+
+                if (!pres || pres.length === 0) {
+                    presencasHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 12px; padding: 4px;">Nenhuma presença registrada ainda.</div>';
+                } else {
+                    presencasHTML = pres.map(p => {
+                        const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
+                        const dt = p.data ? p.data.split('T')[0].split('-').reverse().join('/') : '';
+                        const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
+                        const badgeColor = trat?.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
+                        return `
+                            <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 6px;">
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase;">${trat?.tipo || 'TRAT.'}</span>
+                                <strong style="color: #3b82f6; margin-left: 4px;">${dt}</strong>
+                                ${obs}
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } else {
+                presencasHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 12px; padding: 4px;">Nenhum tratamento registrado para esta ficha.</div>';
+            }
+
+            let sessoesHTML = '';
+            if (!sessoes || sessoes.length === 0) {
+                sessoesHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 12px; padding: 4px;">Nenhuma sessão de atendimento registrada.</div>';
+            } else {
+                sessoesHTML = sessoes.map(s => {
+                    const dt = s.data ? s.data.split('T')[0].split('-').reverse().join('/') : '';
+                    return `
+                        <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 6px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <div>
+                                    <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase;">FRATERNO</span>
+                                    <strong style="color: var(--primary); margin-left: 4px;">${dt}</strong>
+                                </div>
+                                <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_completo || 'Desconhecido'}</span>
+                            </div>
+                            <div style="color: var(--text-main); white-space: pre-wrap;">${s.sintomas_orientacoes}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            panel.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 16px; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 6px;">
+                    <div>
+                        <h5 style="margin: 0 0 8px 0; font-size: 13px; color: var(--primary); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">📜 Histórico de Atendimentos Fraternos</h5>
+                        <div style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
+                            ${sessoesHTML}
+                        </div>
+                    </div>
+                    <div>
+                        <h5 style="margin: 0 0 8px 0; font-size: 13px; color: #3b82f6; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">🗓️ Histórico de Tratamentos</h5>
+                        <div style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
+                            ${presencasHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            console.error(err);
+            panel.innerHTML = '<span style="color: #ef4444; font-size: 12px;">Erro ao carregar evolução.</span>';
+        }
+    };
 
     window.mudarStatusTratamento = async function(id, status) {
         Swal.fire({
