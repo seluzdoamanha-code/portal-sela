@@ -4206,8 +4206,11 @@ window.abrirFichaAtendimento = async function (id) {
                 const dt = s.data ? s.data.split('T')[0].split('-').reverse().join('/') : '';
                 return `
                     <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 13px; margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                            <strong style="color: var(--primary);">${dt}</strong>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <div>
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #3b82f6; color: white; text-transform: uppercase;">FRATERNO</span>
+                                <strong style="color: var(--primary); margin-left: 4px;">${dt}</strong>
+                            </div>
                             <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_completo || 'Desconhecido'}</span>
                         </div>
                         <div style="color: var(--text-main); white-space: pre-wrap;">${s.sintomas_orientacoes}</div>
@@ -4233,18 +4236,31 @@ window.abrirFichaAtendimento = async function (id) {
 
             if (errPres) throw errPres;
 
+            if (pres) {
+                pres.sort((a, b) => {
+                    const tA = trats.find(t => t.id === a.tratamento_id)?.tipo || '';
+                    const tB = trats.find(t => t.id === b.tratamento_id)?.tipo || '';
+                    if (tA === 'Fluídico' && tB === 'Espiritual') return -1;
+                    if (tA === 'Espiritual' && tB === 'Fluídico') return 1;
+                    const dA = new Date(a.data || 0);
+                    const dB = new Date(b.data || 0);
+                    return dB - dA;
+                });
+            }
+
             if (!pres || pres.length === 0) {
                 presHtml += '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhuma presença de tratamento registrada ainda.</div>';
             } else {
                 presHtml += '<div style="max-height: 150px; overflow-y: auto;">';
                 presHtml += pres.map(p => {
                     const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
-                    const tipoText = trat ? `${trat.tipo} (${trat.status})` : 'Tratamento';
                     const dt = p.data ? p.data.split('T')[0].split('-').reverse().join('/') : '';
                     const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
+                    const badgeColor = trat?.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
                     return `
                         <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 4px;">
-                            <strong style="color: #3b82f6;">${dt}</strong> - <span style="font-weight: 500;">${tipoText}</span>
+                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase;">${trat?.tipo || 'TRAT.'}</span>
+                            <strong style="color: #3b82f6; margin-left: 4px;">${dt}</strong>
                             ${obs}
                         </div>
                     `;
@@ -4589,8 +4605,11 @@ window.toggleEvolucaoInline = async function (id) {
                 const dt = s.data ? s.data.split('T')[0].split('-').reverse().join('/') : '';
                 return `
                     <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 6px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                            <strong style="color: var(--primary);">${dt}</strong>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <div>
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #3b82f6; color: white; text-transform: uppercase;">FRATERNO</span>
+                                <strong style="color: var(--primary); margin-left: 4px;">${dt}</strong>
+                            </div>
                             <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_completo || 'Desconhecido'}</span>
                         </div>
                         <div style="color: var(--text-main); white-space: pre-wrap;">${s.sintomas_orientacoes}</div>
