@@ -3328,10 +3328,10 @@ window.carregarPainelGestaoAtendimento = function () {
                     
                     <div id="fichaInfoPaciente" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: var(--text-muted);"></div>
                     
-                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--primary);">📜 Histórico de Sessões</h4>
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--primary);">📜 Histórico de Atendimentos Fraternos</h4>
                     <div id="fichaHistoricoSessoes" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;"></div>
 
-                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #3b82f6;">🗓️ Histórico de Presenças</h4>
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #3b82f6;">🗓️ Histórico de Tratamentos</h4>
                     <div id="fichaHistoricoPresencas" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.1); border: 1px solid var(--border); padding: 8px; border-radius: 8px;"></div>
                     
                     <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #f59e0b;">➕ Nova Sessão de Atendimento</h4>
@@ -4548,17 +4548,30 @@ window.toggleEvolucaoInline = async function (id) {
 
             if (errPres) throw errPres;
 
+            if (pres) {
+                pres.sort((a, b) => {
+                    const tA = trats.find(t => t.id === a.tratamento_id)?.tipo || '';
+                    const tB = trats.find(t => t.id === b.tratamento_id)?.tipo || '';
+                    if (tA === 'Fluídico' && tB === 'Espiritual') return -1;
+                    if (tA === 'Espiritual' && tB === 'Fluídico') return 1;
+                    const dA = new Date(a.data || 0);
+                    const dB = new Date(b.data || 0);
+                    return dB - dA;
+                });
+            }
+
             if (!pres || pres.length === 0) {
                 presencasHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 12px; padding: 4px;">Nenhuma presença de tratamento registrada ainda.</div>';
             } else {
                 presencasHTML = pres.map(p => {
                     const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
-                    const tipoText = trat ? `${trat.tipo} (${trat.status})` : 'Tratamento';
                     const dt = p.data ? p.data.split('T')[0].split('-').reverse().join('/') : '';
                     const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
+                    const badgeColor = trat?.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
                     return `
                         <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 6px;">
-                            <strong style="color: #3b82f6;">${dt}</strong> - <span style="font-weight: 500;">${tipoText}</span>
+                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase;">${trat?.tipo || 'TRAT.'}</span>
+                            <strong style="color: #3b82f6; margin-left: 4px;">${dt}</strong>
                             ${obs}
                         </div>
                     `;
@@ -4589,13 +4602,13 @@ window.toggleEvolucaoInline = async function (id) {
         panel.innerHTML = `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 6px;">
                 <div>
-                    <h5 style="margin: 0 0 8px 0; font-size: 13px; color: var(--primary); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">📜 Histórico de Sessões</h5>
+                    <h5 style="margin: 0 0 8px 0; font-size: 13px; color: var(--primary); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">📜 Histórico de Atendimentos Fraternos</h5>
                     <div style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
                         ${sessoesHTML}
                     </div>
                 </div>
                 <div>
-                    <h5 style="margin: 0 0 8px 0; font-size: 13px; color: #3b82f6; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">🗓️ Histórico de Presenças</h5>
+                    <h5 style="margin: 0 0 8px 0; font-size: 13px; color: #3b82f6; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">🗓️ Histórico de Tratamentos</h5>
                     <div style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
                         ${presencasHTML}
                     </div>
