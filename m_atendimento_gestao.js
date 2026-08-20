@@ -100,7 +100,7 @@
                 // Definir subAba padrão baseada na Aba Principal
                 if (abaPrincipal === 'triagem') subAba = 'fila';
                 else if (abaPrincipal === 'atendimento') subAba = 'andamento';
-                else if (abaPrincipal === 'acompanhamento') subAba = 'presencas';
+                else if (abaPrincipal === 'acompanhamento') subAba = 'tratamentos';
                 else if (abaPrincipal === 'historico') subAba = 'mes';
                 
                 renderSubTabs();
@@ -131,8 +131,6 @@
         } else if (abaPrincipal === 'acompanhamento') {
             container.style.display = 'flex';
             container.innerHTML = `
-                <div class="sub-tab-pill ${subAba === 'presencas' ? 'active' : ''}" onclick="switchSubTab('presencas')">🗓️ Fila Geral</div>
-                <div class="sub-tab-pill ${subAba === 'espera_tratamento' ? 'active' : ''}" onclick="switchSubTab('espera_tratamento')">🛋️ Sala de Espera</div>
                 <div class="sub-tab-pill ${subAba === 'tratamentos' ? 'active' : ''}" onclick="switchSubTab('tratamentos')">🩹 Tratamentos Ativos</div>
                 <div class="sub-tab-pill ${subAba === 'painel_semanal' ? 'active' : ''}" onclick="switchSubTab('painel_semanal')">📊 Painel Semanal</div>
             `;
@@ -152,9 +150,15 @@
         if (!db) return;
 
         try {
-            // Obter todos os atendimentos
-            const { data: allData, error } = await db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo)');
-            if (error) throw error;
+            const [fraternoReq, tratamentosReq] = await Promise.all([
+                db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo)'),
+                db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)').eq('status', 'Ativo')
+            ]);
+            if (fraternoReq.error) throw fraternoReq.error;
+            if (tratamentosReq.error) throw tratamentosReq.error;
+
+            const allData = fraternoReq.data;
+            const allTratamentos = tratamentosReq.data;
 
             const now = new Date();
             const curYear = now.getFullYear();
@@ -162,12 +166,10 @@
 
             // Estatísticas
             const totalFila = allData.filter(d => d.status !== 'Atendido' && d.status !== 'Em Tratamento').length;
-            const espera = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length;
+            const espera = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length + allTratamentos.filter(t => t.presente).length;
             const andamento = allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length;
             
-            // Buscar tratamentos para estatística
-            const { data: activeTrats } = await db.from('app_atendimento_tratamentos').select('id').eq('status', 'Ativo');
-            const totalTratamentos = activeTrats ? activeTrats.length : 0;
+            const totalTratamentos = allTratamentos ? allTratamentos.length : 0;
 
             const statsContainer = document.getElementById('statsDashboardMobile');
             if (statsContainer) {
@@ -189,14 +191,37 @@
 
             let filteredData = [];
 
-            if (subAba === 'fila') {
-                filteredData = allData.filter(d => !d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
-                filteredData.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
-                renderNormalList(filteredData);
-            } 
-            else if (subAba === 'espera') {
-                filteredData = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
-                filteredData.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
+            if (subAba === 'fila' || subAba === 'espera') {
+                const isFila = subAba === 'fila';
+
+                const frats = allData.filter(d => isFila ? (!d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento') : (d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento'))
+                    .map(d => ({ ...d, unified_type: 'Fraterno' }));
+
+                const trats = allTratamentos.filter(d => isFila ? !d.presente : d.presente)
+                    .map(d => ({
+                        id: d.id,
+                        fraterno_id: d.fraterno_id,
+                        unified_type: d.tipo,
+                        nome_completo: d.app_atendimento_fraterno?.nome_completo || '',
+                        endereco_completo: d.app_atendimento_fraterno?.endereco_completo || '',
+                        telefone: d.app_atendimento_fraterno?.telefone || '',
+                        data_nascimento: d.app_atendimento_fraterno?.data_nascimento || '',
+                        created_at: d.app_atendimento_fraterno?.created_at || d.created_at,
+                        presente: d.presente,
+                        status: d.status,
+                        is_tratamento: true
+                    }));
+
+                filteredData = [...frats, ...trats];
+
+                const orderType = { 'Fraterno': 1, 'Fluídico': 2, 'Espiritual': 3 };
+                filteredData.sort((a, b) => {
+                    const oa = orderType[a.unified_type] || 99;
+                    const ob = orderType[b.unified_type] || 99;
+                    if (oa !== ob) return oa - ob;
+                    return (a.nome_completo || '').localeCompare(b.nome_completo || '');
+                });
+
                 renderNormalList(filteredData);
             } 
             else if (subAba === 'andamento') {
@@ -241,7 +266,17 @@
             container.innerHTML = '<div class="empty-state">Nenhum necessitado nesta fila.</div>';
             return;
         }
+
+        let currentType = null;
         data.forEach(item => {
+            if (item.unified_type && item.unified_type !== currentType) {
+                currentType = item.unified_type;
+                const typeColor = currentType === 'Fraterno' ? '#f59e0b' : (currentType === 'Fluídico' ? '#3b82f6' : '#8b5cf6');
+                const header = document.createElement('div');
+                header.style.cssText = `margin-top: 16px; margin-bottom: 8px; font-weight: bold; color: ${typeColor}; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; display: flex; align-items: center; gap: 8px;`;
+                header.innerHTML = `<span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${typeColor};"></span> ${currentType.toUpperCase()}`;
+                container.appendChild(header);
+            }
             container.appendChild(criarCardElement(item));
         });
     }
@@ -339,27 +374,34 @@
             ${infoExtra}
 
             <div class="card-actions" style="flex-wrap: wrap; margin-top: 12px; gap: 8px;">
-                ${item.status !== 'Atendido' ? btnPresenca : ''}
-                
-                ${item.status === 'Pendente' || (item.status === 'Planejado' && subAba !== 'andamento') ? `
-                    <button class="btn-action" onclick="abrirTriagem('${item.id}')" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">🤝 Triagem</button>
-                ` : ''}
-
-                ${item.status === 'Planejado' && item.presente ? `
-                    <button class="btn-action" onclick="abrirFichaAtendimento('${item.id}')" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">📝 Ficha</button>
-                ` : ''}
-
-                ${item.status === 'Planejado' ? `
-                    <button class="btn-action" onclick="desatribuirAtendente('${item.id}')" style="background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">👤✕ Desatribuir</button>
-                ` : ''}
-
-                <div style="display: flex; gap: 8px; flex: none; width: auto; min-width: 44px; margin-left: auto;">
-                    ${item.status === 'Atendido' ? `
-                    <button class="btn-action" onclick="encaminharParaNovaTriagemMobile('${item.id}')" style="flex: none; width: auto; padding: 10px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3);">📋 Novo Atendimento</button>
+                ${item.is_tratamento ? `
+                    ${item.presente ? 
+                        `<button class="btn-action" onclick="alternarPresencaTratamento('${item.id}', false)" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); width: 100%;">🔴 Remover Presença</button>` :
+                        `<button class="btn-action" onclick="alternarPresencaTratamento('${item.id}', true)" style="background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); width: 100%;">⚪ Confirmar Presença</button>`
+                    }
+                ` : `
+                    ${item.status !== 'Atendido' ? btnPresenca : ''}
+                    
+                    ${item.status === 'Pendente' || (item.status === 'Planejado' && subAba !== 'andamento') ? `
+                        <button class="btn-action" onclick="abrirTriagem('${item.id}')" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">🤝 Triagem</button>
                     ` : ''}
-                    <button class="btn-action" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="flex: none; width: auto; min-width: 44px; padding: 10px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);">✏️</button>
-                    <button class="btn-action btn-delete" onclick="excluirPedido('${item.id}')" style="flex: none; width: auto; min-width: 44px; padding: 10px;">🗑️</button>
-                </div>
+
+                    ${item.status === 'Planejado' && item.presente ? `
+                        <button class="btn-action" onclick="abrirFichaAtendimento('${item.id}')" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">📝 Ficha</button>
+                    ` : ''}
+
+                    ${item.status === 'Planejado' ? `
+                        <button class="btn-action" onclick="desatribuirAtendente('${item.id}')" style="background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">👤✕ Desatribuir</button>
+                    ` : ''}
+
+                    <div style="display: flex; gap: 8px; flex: none; width: auto; min-width: 44px; margin-left: auto;">
+                        ${item.status === 'Atendido' ? `
+                        <button class="btn-action" onclick="encaminharParaNovaTriagemMobile('${item.id}')" style="flex: none; width: auto; padding: 10px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3);">📋 Novo Atendimento</button>
+                        ` : ''}
+                        <button class="btn-action" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="flex: none; width: auto; min-width: 44px; padding: 10px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);">✏️</button>
+                        <button class="btn-action btn-delete" onclick="excluirPedido('${item.id}')" style="flex: none; width: auto; min-width: 44px; padding: 10px;">🗑️</button>
+                    </div>
+                `}
             </div>
         `;
         return div;
@@ -568,6 +610,9 @@
                     <div class="card-info"><strong>WhatsApp:</strong> ${t.app_atendimento_fraterno?.telefone || '-'}</div>
 
                     <div style="margin-top:12px; display:flex; gap:8px;">
+                        <button onclick="confirmarSessaoTratamento('${t.id}', '${t.tipo}')" class="btn-action" style="background:${tipoCor}; color:white; border:none; width:100%;">Confirmar Atendimento</button>
+                    </div>
+                    <div style="margin-top:8px; display:flex; gap:8px;">
                         <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" class="btn-action" style="background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2);">Concluir</button>
                         <button onclick="mudarStatusTratamento('${t.id}', 'Suspenso')" class="btn-action" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);">Suspender</button>
                     </div>

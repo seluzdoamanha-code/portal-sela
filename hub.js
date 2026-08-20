@@ -3032,7 +3032,7 @@ window.mudarAbaPrincipalAtendimento = function (mainTab) {
 
     if (mainTab === 'triagem') currentAtendimentoSubTab = 'fila';
     else if (mainTab === 'atendimento') currentAtendimentoSubTab = 'andamento';
-    else if (mainTab === 'acompanhamento') currentAtendimentoSubTab = 'presencas';
+    else if (mainTab === 'acompanhamento') currentAtendimentoSubTab = 'tratamentos';
     else if (mainTab === 'historico') currentAtendimentoSubTab = 'mes';
 
     renderizarSubAbasAtendimento();
@@ -3064,8 +3064,6 @@ function renderizarSubAbasAtendimento() {
     } else if (currentAtendimentoMainTab === 'acompanhamento') {
         container.style.display = 'flex';
         container.innerHTML = `
-            <button onclick="mudarSubAbaAtendimento('presencas')" style="${currentAtendimentoSubTab === 'presencas' ? activeStyle : inactiveStyle}">🗓️ Fila Geral</button>
-            <button onclick="mudarSubAbaAtendimento('espera_tratamento')" style="${currentAtendimentoSubTab === 'espera_tratamento' ? activeStyle : inactiveStyle}">🛋️ Sala de Espera</button>
             <button onclick="mudarSubAbaAtendimento('tratamentos')" style="${currentAtendimentoSubTab === 'tratamentos' ? activeStyle : inactiveStyle}">🩹 Tratamentos Ativos</button>
             <button onclick="mudarSubAbaAtendimento('painelsemanal')" style="${currentAtendimentoSubTab === 'painelsemanal' ? activeStyle : inactiveStyle}">📊 Painel Semanal</button>
         `;
@@ -3369,8 +3367,15 @@ window.carregarListaAtendimento = async function () {
     lista.innerHTML = '';
 
     try {
-        const { data: allData, error } = await db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo)');
-        if (error) throw error;
+        const [fraternoReq, tratamentosReq] = await Promise.all([
+            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo)'),
+            db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)').eq('status', 'Ativo')
+        ]);
+        if (fraternoReq.error) throw fraternoReq.error;
+        if (tratamentosReq.error) throw tratamentosReq.error;
+
+        const allData = fraternoReq.data;
+        const allTratamentos = tratamentosReq.data;
 
         // Month calculations for current/past filter
         const now = new Date();
@@ -3384,10 +3389,7 @@ window.carregarListaAtendimento = async function () {
             return d.getFullYear() === curYear && d.getMonth() === curMonth;
         });
 
-        const { data: activeTrats } = await db.from('app_atendimento_tratamentos').select('id').eq('status', 'Ativo');
-        const activeTratCount = activeTrats ? activeTrats.length : 0;
-
-
+        const activeTratCount = allTratamentos ? allTratamentos.length : 0;
 
         const statsContainer = document.getElementById('statsDashboard');
         if (statsContainer) {
@@ -3398,7 +3400,7 @@ window.carregarListaAtendimento = async function () {
                 </div>
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                     <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🛋️ Sala de Espera</div>
-                    <div style="font-size: 18px; font-weight: bold; color: #f59e0b;">${allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #f59e0b;">${allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length + allTratamentos.filter(t => t.presente).length}</div>
                 </div>
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                     <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🧑‍🤝‍🧑 Em Atendimento</div>
@@ -3447,12 +3449,37 @@ window.carregarListaAtendimento = async function () {
 
         // Filter data for list
         let data = [];
-        if (currentAtendimentoSubTab === 'fila') {
-            data = allData.filter(d => !d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
-            data.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
-        } else if (currentAtendimentoSubTab === 'espera') {
-            data = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
-            data.sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || ''));
+        if (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera') {
+            const isFila = currentAtendimentoSubTab === 'fila';
+
+            const frats = allData.filter(d => isFila ? (!d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento') : (d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento'))
+                .map(d => ({ ...d, unified_type: 'Fraterno' }));
+            
+            const trats = allTratamentos.filter(d => isFila ? !d.presente : d.presente)
+                .map(d => ({
+                    id: d.id,
+                    fraterno_id: d.fraterno_id,
+                    unified_type: d.tipo,
+                    nome_completo: d.app_atendimento_fraterno?.nome_completo || '',
+                    endereco_completo: d.app_atendimento_fraterno?.endereco_completo || '',
+                    telefone: d.app_atendimento_fraterno?.telefone || '',
+                    data_nascimento: d.app_atendimento_fraterno?.data_nascimento || '',
+                    created_at: d.app_atendimento_fraterno?.created_at || d.created_at,
+                    presente: d.presente,
+                    status: d.status,
+                    is_tratamento: true
+                }));
+
+            data = [...frats, ...trats];
+            
+            const orderType = { 'Fraterno': 1, 'Fluídico': 2, 'Espiritual': 3 };
+            data.sort((a, b) => {
+                const oa = orderType[a.unified_type] || 99;
+                const ob = orderType[b.unified_type] || 99;
+                if (oa !== ob) return oa - ob;
+                return (a.nome_completo || '').localeCompare(b.nome_completo || '');
+            });
+
         } else if (currentAtendimentoSubTab === 'andamento') {
             data = allData.filter(d => d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
         } else if (currentAtendimentoSubTab === 'mes') {
@@ -3492,7 +3519,16 @@ window.carregarListaAtendimento = async function () {
         }
 
         if (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera') {
+            let currentType = null;
             data.forEach(item => {
+                if (item.unified_type !== currentType) {
+                    currentType = item.unified_type;
+                    const typeColor = currentType === 'Fraterno' ? '#f59e0b' : (currentType === 'Fluídico' ? '#3b82f6' : '#8b5cf6');
+                    const header = document.createElement('div');
+                    header.style.cssText = `grid-column: 1 / -1; margin-top: 16px; margin-bottom: 8px; font-weight: bold; color: ${typeColor}; font-size: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; display: flex; align-items: center; gap: 8px;`;
+                    header.innerHTML = `<span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:${typeColor};"></span> ${currentType.toUpperCase()}`;
+                    lista.appendChild(header);
+                }
                 renderizarCardAtendimentoItem(lista, item);
             });
         } else if (currentAtendimentoSubTab === 'andamento') {
@@ -3610,18 +3646,28 @@ function renderizarCardAtendimentoItem(container, item) {
     let buttonsHtml = '';
     
     if (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera') {
-        buttonsHtml = `
-            ${item.status !== 'Atendido' ? btnPresenca : '<div></div>'}
-            ${item.status !== 'Atendido' ? `
-                <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="font-size: 14px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️</button>
-            ` : '<div></div>'}
+        if (item.is_tratamento) {
+            const btnPresencaTrat = item.presente ?
+                `<button class="btn" onclick="alternarPresencaTratamento('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
+                `<button class="btn" onclick="alternarPresencaTratamento('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s;">⚪ Confirmar Presença</button>`;
             
-            ${(item.status === 'Pendente' || item.status === 'Planejado') ? `
-                <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px;">🤝 Triagem</button>
-            ` : '<div></div>'}
-            
-            <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 14px; padding: 10px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">🗑️</button>
-        `;
+            buttonsHtml = `
+                ${btnPresencaTrat}
+            `;
+        } else {
+            buttonsHtml = `
+                ${item.status !== 'Atendido' ? btnPresenca : '<div></div>'}
+                ${item.status !== 'Atendido' ? `
+                    <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="font-size: 14px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️</button>
+                ` : '<div></div>'}
+                
+                ${(item.status === 'Pendente' || item.status === 'Planejado') ? `
+                    <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px;">🤝 Triagem</button>
+                ` : '<div></div>'}
+                
+                <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 14px; padding: 10px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">🗑️</button>
+            `;
+        }
     } else if (currentAtendimentoSubTab === 'andamento') {
         buttonsHtml = `
             <div style="grid-column: 1 / -1;">
@@ -4359,7 +4405,11 @@ window.carregarTratamentosAtivosDesktop = async function () {
 
                 let actionsHTML = '';
                 if (isListActive) {
+                    const btnConfirm = `
+                        <button onclick="confirmarSessaoTratamento('${t.id}', '${t.tipo}')" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px; background: ${t.tipo === 'Espiritual' ? '#8b5cf6' : '#3b82f6'}; color: white; border: none; border-radius: 4px; cursor: pointer;">Confirmar Atendimento</button>
+                    `;
                     actionsHTML = `
+                        ${btnConfirm}
                         <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Concluir</button>
                         <button onclick="mudarStatusTratamento('${t.id}', 'Suspenso')" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; cursor: pointer;">Suspender</button>
                     `;
