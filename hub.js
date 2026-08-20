@@ -3032,7 +3032,7 @@ window.mudarAbaPrincipalAtendimento = function (mainTab) {
 
     if (mainTab === 'triagem') currentAtendimentoSubTab = 'fila';
     else if (mainTab === 'atendimento') currentAtendimentoSubTab = 'andamento';
-    else if (mainTab === 'acompanhamento') currentAtendimentoSubTab = 'tratamentos';
+    else if (mainTab === 'acompanhamento') currentAtendimentoSubTab = 'presencas';
     else if (mainTab === 'historico') currentAtendimentoSubTab = 'mes';
 
     renderizarSubAbasAtendimento();
@@ -3064,8 +3064,8 @@ function renderizarSubAbasAtendimento() {
     } else if (currentAtendimentoMainTab === 'acompanhamento') {
         container.style.display = 'flex';
         container.innerHTML = `
+            <button onclick="mudarSubAbaAtendimento('presencas')" style="${currentAtendimentoSubTab === 'presencas' ? activeStyle : inactiveStyle}">🗓️ Fila Geral</button>
             <button onclick="mudarSubAbaAtendimento('tratamentos')" style="${currentAtendimentoSubTab === 'tratamentos' ? activeStyle : inactiveStyle}">🩹 Tratamentos Ativos</button>
-            <button onclick="mudarSubAbaAtendimento('presencas')" style="${currentAtendimentoSubTab === 'presencas' ? activeStyle : inactiveStyle}">🗓️ Confirmar Presenças</button>
             <button onclick="mudarSubAbaAtendimento('painelsemanal')" style="${currentAtendimentoSubTab === 'painelsemanal' ? activeStyle : inactiveStyle}">📊 Painel Semanal</button>
         `;
     } else if (currentAtendimentoMainTab === 'historico') {
@@ -3227,7 +3227,7 @@ window.carregarPainelGestaoAtendimento = function () {
             <div class="no-scrollbar" style="display: flex; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; overflow-x: auto;">
                 <button onclick="mudarAbaPrincipalAtendimento('triagem')" id="btnMainAtenTriagem" class="btn" style="white-space: nowrap; border-radius: 8px; background: var(--primary); color: white; padding: 10px 20px;">📋 Triagem</button>
                 <button onclick="mudarAbaPrincipalAtendimento('atendimento')" id="btnMainAtenAtendimento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🧑‍🤝‍🧑 Atendimento</button>
-                <button onclick="mudarAbaPrincipalAtendimento('acompanhamento')" id="btnMainAtenAcompanhamento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🔎 Acompanhamento</button>
+                <button onclick="mudarAbaPrincipalAtendimento('acompanhamento')" id="btnMainAtenAcompanhamento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🔎 Tratamentos Fluídico e Espiritual</button>
                 <button onclick="mudarAbaPrincipalAtendimento('historico')" id="btnMainAtenHistorico" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">📊 Histórico</button>
             </div>
             

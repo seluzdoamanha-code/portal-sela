@@ -100,7 +100,7 @@
                 // Definir subAba padrão baseada na Aba Principal
                 if (abaPrincipal === 'triagem') subAba = 'fila';
                 else if (abaPrincipal === 'atendimento') subAba = 'andamento';
-                else if (abaPrincipal === 'acompanhamento') subAba = 'tratamentos';
+                else if (abaPrincipal === 'acompanhamento') subAba = 'presencas';
                 else if (abaPrincipal === 'historico') subAba = 'mes';
                 
                 renderSubTabs();
@@ -131,8 +131,8 @@
         } else if (abaPrincipal === 'acompanhamento') {
             container.style.display = 'flex';
             container.innerHTML = `
+                <div class="sub-tab-pill ${subAba === 'presencas' ? 'active' : ''}" onclick="switchSubTab('presencas')">🗓️ Fila Geral</div>
                 <div class="sub-tab-pill ${subAba === 'tratamentos' ? 'active' : ''}" onclick="switchSubTab('tratamentos')">🩹 Tratamentos Ativos</div>
-                <div class="sub-tab-pill ${subAba === 'presencas' ? 'active' : ''}" onclick="switchSubTab('presencas')">🗓️ Presenças</div>
                 <div class="sub-tab-pill ${subAba === 'painel_semanal' ? 'active' : ''}" onclick="switchSubTab('painel_semanal')">📊 Painel Semanal</div>
             `;
         } else if (abaPrincipal === 'historico') {
