@@ -354,6 +354,9 @@
                 ` : ''}
 
                 <div style="display: flex; gap: 8px; flex: none; width: auto; min-width: 44px; margin-left: auto;">
+                    ${item.status === 'Atendido' ? `
+                    <button class="btn-action" onclick="encaminharParaNovaTriagemMobile('${item.id}')" style="flex: none; width: auto; padding: 10px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3);">📋 Novo Atendimento</button>
+                    ` : ''}
                     <button class="btn-action" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="flex: none; width: auto; min-width: 44px; padding: 10px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);">✏️</button>
                     <button class="btn-action btn-delete" onclick="excluirPedido('${item.id}')" style="flex: none; width: auto; min-width: 44px; padding: 10px;">🗑️</button>
                 </div>
@@ -568,6 +571,9 @@
                         <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" class="btn-action" style="background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2);">Concluir</button>
                         <button onclick="mudarStatusTratamento('${t.id}', 'Suspenso')" class="btn-action" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);">Suspender</button>
                     </div>
+                    <div style="margin-top:8px;">
+                        <button onclick="encaminharParaNovaTriagemMobile('${t.app_atendimento_fraterno?.id}')" class="btn-action" style="width:100%; background:rgba(139, 92, 246, 0.1); color:#8b5cf6; border:1px solid rgba(139, 92, 246, 0.3);">📋 Novo Atendimento</button>
+                    </div>
                 `;
                 container.appendChild(card);
             });
@@ -599,6 +605,50 @@
                     carregarLista();
                 } catch(e) {
                     Swal.fire('Erro', 'Erro ao atualizar tratamento.', 'error');
+                }
+            }
+        });
+    };
+
+    window.encaminharParaNovaTriagemMobile = async function(fraterno_id) {
+        Swal.fire({
+            title: 'Novo Atendimento?',
+            text: 'Isto criará uma nova ficha para este paciente e o enviará para a Triagem.',
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#8b5cf6',
+            cancelButtonColor: 'var(--text-muted)',
+            confirmButtonText: 'Sim, criar',
+            cancelButtonText: 'Cancelar',
+            background: 'var(--bg-panel)',
+            color: 'white'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    // Obter dados pessoais da ficha antiga
+                    const { data: oldData, error: errF } = await db.from('app_atendimento_fraterno').select('*').eq('id', fraterno_id).single();
+                    if (errF) throw errF;
+
+                    // Inserir nova ficha
+                    const { error: errI } = await db.from('app_atendimento_fraterno').insert([{
+                        nome_completo: oldData.nome_completo,
+                        endereco_completo: oldData.endereco_completo,
+                        telefone: oldData.telefone,
+                        data_nascimento: oldData.data_nascimento,
+                        status: 'Pendente' // Vai para a Triagem
+                    }]);
+
+                    if (errI) throw errI;
+
+                    Swal.fire({
+                        title: 'Ficha Criada!',
+                        text: 'Paciente encaminhado para a fila de Triagem.',
+                        icon: 'success',
+                        background: 'var(--bg-panel)',
+                        color: 'white'
+                    });
+                } catch(e) {
+                    Swal.fire('Erro', 'Falha ao criar nova ficha: ' + e.message, 'error');
                 }
             }
         });
@@ -679,7 +729,7 @@
 
         try {
             const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo)')
+                .select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone)')
                 .eq('status', 'Ativo')
                 .eq('presente', true);
 
@@ -700,11 +750,20 @@
                 
                 const badgeColor = t.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
 
+                let ageInfo = '';
+                if (f.data_nascimento) {
+                    const anoNasc = f.data_nascimento.split('-')[0];
+                    const age = new Date().getFullYear() - parseInt(anoNasc);
+                    ageInfo = ` (${age} anos)`;
+                }
+
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
                         <div>
                             <span style="font-size:15px; font-weight:600; color:white; display:block; margin-bottom: 4px;">${f.nome_completo.toUpperCase()}</span>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📍 ${f.endereco_completo || 'Sem endereço'}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">📍 ${f.endereco_completo || 'Sem endereço'}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">🎂 Nascimento: ${f.data_nascimento ? f.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📱 Celular: ${f.telefone || 'Não informado'}</div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
                             <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44;">${t.tipo}</span>

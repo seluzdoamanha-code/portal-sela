@@ -4392,7 +4392,10 @@ window.carregarTratamentosAtivosDesktop = async function () {
                     ${tratsHTML}
                 </div>
                 
-                <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
+                    <button onclick="encaminharParaNovaTriagem('${grupo.info.id}')" class="btn" style="padding: 6px 12px; font-size: 12px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        📋 Novo Atendimento
+                    </button>
                     <button onclick="toggleEvolucaoInline('${grupo.info.id}')" class="btn" style="padding: 6px 12px; font-size: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                         📝 Evolução & Prontuário
                     </button>
@@ -4508,36 +4511,136 @@ window.toggleEvolucaoInline = async function (id) {
 };
 
 window.reativarTratamento = async function (id) {
-    if (!confirm('Deseja reativar este tratamento para a fila de presenças atual?')) return;
-    try {
-        const { error } = await db.from('app_atendimento_tratamentos').update({
-            status: 'Ativo',
-            data_inicio: new Date().toISOString().split('T')[0],
-            data_fim: null
-        }).eq('id', id);
+    Swal.fire({
+        title: 'Reativar Tratamento?',
+        text: 'Um novo ciclo de tratamento será iniciado para este paciente.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--primary)',
+        cancelButtonColor: 'var(--text-muted)',
+        confirmButtonText: 'Sim, reativar',
+        cancelButtonText: 'Cancelar',
+        background: 'var(--bg-panel)',
+        color: 'var(--text-main)'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                // Obter dados do tratamento antigo
+                const { data: oldTrat, error: errFetch } = await db.from('app_atendimento_tratamentos').select('*').eq('id', id).single();
+                if (errFetch) throw errFetch;
 
-        if (error) throw error;
-        carregarTratamentosAtivosDesktop();
-    } catch (err) {
-        alert('Erro ao reativar tratamento: ' + err.message);
-    }
+                // Criar novo ciclo
+                const { error: errInsert } = await db.from('app_atendimento_tratamentos').insert([{
+                    atendimento_id: oldTrat.atendimento_id,
+                    tipo: oldTrat.tipo,
+                    status: 'Ativo',
+                    data_inicio: new Date().toISOString().split('T')[0],
+                    presente: false
+                }]);
+
+                if (errInsert) throw errInsert;
+
+                Swal.fire({
+                    title: 'Sucesso!',
+                    text: 'Novo ciclo de tratamento iniciado.',
+                    icon: 'success',
+                    background: 'var(--bg-panel)',
+                    color: 'var(--text-main)',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                carregarTratamentosAtivosDesktop();
+            } catch (err) {
+                Swal.fire('Erro', 'Erro ao reativar tratamento: ' + err.message, 'error');
+            }
+        }
+    });
+};
+
+window.encaminharParaNovaTriagem = async function(fraterno_id) {
+    Swal.fire({
+        title: 'Novo Atendimento?',
+        text: 'Isto criará uma nova ficha para este paciente e o enviará para a Triagem.',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#8b5cf6',
+        cancelButtonColor: 'var(--text-muted)',
+        confirmButtonText: 'Sim, criar',
+        cancelButtonText: 'Cancelar',
+        background: 'var(--bg-panel)',
+        color: 'var(--text-main)'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                // Obter dados pessoais da ficha antiga
+                const { data: oldData, error: errF } = await db.from('app_atendimento_fraterno').select('*').eq('id', fraterno_id).single();
+                if (errF) throw errF;
+
+                // Inserir nova ficha
+                const { error: errI } = await db.from('app_atendimento_fraterno').insert([{
+                    nome_completo: oldData.nome_completo,
+                    endereco_completo: oldData.endereco_completo,
+                    telefone: oldData.telefone,
+                    data_nascimento: oldData.data_nascimento,
+                    status: 'Pendente' // Vai para a Triagem
+                }]);
+
+                if (errI) throw errI;
+
+                Swal.fire({
+                    title: 'Ficha Criada!',
+                    text: 'Paciente encaminhado para a fila de Triagem.',
+                    icon: 'success',
+                    background: 'var(--bg-panel)',
+                    color: 'var(--text-main)'
+                });
+            } catch(e) {
+                Swal.fire('Erro', 'Falha ao criar nova ficha: ' + e.message, 'error');
+            }
+        }
+    });
 };
 
 window.mudarStatusTratamento = async function (id, status) {
     const motive = status === 'Concluído' ? 'concluir' : 'suspender';
-    if (!confirm(`Tem certeza que deseja ${motive} este tratamento?`)) return;
+    
+    Swal.fire({
+        title: `Deseja ${motive} este tratamento?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: status === 'Concluído' ? '#10b981' : '#ef4444',
+        cancelButtonColor: 'var(--text-muted)',
+        confirmButtonText: `Sim, ${motive}`,
+        cancelButtonText: 'Cancelar',
+        background: 'var(--bg-panel)',
+        color: 'var(--text-main)'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const { error } = await db.from('app_atendimento_tratamentos').update({
+                    status: status,
+                    data_fim: new Date().toISOString().split('T')[0]
+                }).eq('id', id);
 
-    try {
-        const { error } = await db.from('app_atendimento_tratamentos').update({
-            status: status,
-            data_fim: new Date().toISOString().split('T')[0]
-        }).eq('id', id);
-
-        if (error) throw error;
-        carregarTratamentosAtivosDesktop();
-    } catch (err) {
-        alert('Erro ao atualizar tratamento: ' + err.message);
-    }
+                if (error) throw error;
+                
+                Swal.fire({
+                    title: 'Atualizado!',
+                    text: 'Status do tratamento alterado.',
+                    icon: 'success',
+                    background: 'var(--bg-panel)',
+                    color: 'var(--text-main)',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                
+                carregarTratamentosAtivosDesktop();
+            } catch (err) {
+                Swal.fire('Erro', 'Erro ao mudar status: ' + err.message, 'error');
+            }
+        }
+    });
 };
 
 window.carregarFilaPresencasDesktop = async function () {
@@ -4665,6 +4768,13 @@ window.carregarEsperaTratamentoDesktop = async function () {
                 `;
             }
 
+            let ageInfo = '';
+            if (f.data_nascimento) {
+                const anoNasc = f.data_nascimento.split('-')[0];
+                const age = new Date().getFullYear() - parseInt(anoNasc);
+                ageInfo = ` (${age} anos)`;
+            }
+
             card.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
@@ -4673,6 +4783,8 @@ window.carregarEsperaTratamentoDesktop = async function () {
                             <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white;">${t.tipo.toUpperCase()}</span>
                         </div>
                         <div style="font-size: 13px; color: var(--text-muted);">📍 ${f.endereco_completo || 'Sem endereço'}</div>
+                        <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${f.data_nascimento ? f.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
+                        <div style="font-size: 13px; color: var(--text-muted);">📱 Celular: ${f.telefone || 'Não informado'}</div>
                     </div>
                     <button class="btn" onclick="marcarTratamentoPresente('${t.id}', false)" style="padding: 6px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; font-size: 11px;">Desfazer Presente</button>
                 </div>
