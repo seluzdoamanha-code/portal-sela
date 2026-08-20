@@ -3711,6 +3711,8 @@ function renderizarCardAtendimentoItem(container, item) {
         buttonsHtml = `
             ${item.status !== 'Atendido' ? btnPresenca : ''}
             
+            <button class="btn" onclick="abrirFichaAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">📝 Ficha</button>
+
             ${item.status !== 'Atendido' ? `
                 <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="font-size: 12px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️ Editar</button>
             ` : ''}
@@ -4269,40 +4271,52 @@ window.abrirFichaAtendimento = async function (id) {
         }
         presHtml += '</div>';
 
-        let formHtml = `
-            <div style="margin-bottom: 24px;">
-                <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Registro de Atendimento Atual</h4>
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <label style="color: var(--text-muted); font-size: 13px;">Sintomas e Orientações</label>
-                    <textarea id="sideTxtSintomasOrientacoes" class="input" rows="4" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;" placeholder="Descreva os sintomas apresentados e as orientações transmitidas..."></textarea>
+        let formHtml = '';
+        if (paciente.status !== 'Atendido') {
+            formHtml = `
+                <div style="margin-bottom: 24px;">
+                    <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Registro de Atendimento Atual</h4>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="color: var(--text-muted); font-size: 13px;">Sintomas e Orientações</label>
+                        <textarea id="sideTxtSintomasOrientacoes" class="input" rows="4" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;" placeholder="Descreva os sintomas apresentados e as orientações transmitidas..."></textarea>
+                    </div>
+                    <div style="display: flex; gap: 24px; margin-bottom: 16px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="sideChkTratFluidico" style="width: 18px; height: 18px; accent-color: var(--primary);" onchange="if(this.checked) document.getElementById('sideChkApenasConversa').checked = false;">
+                            <span>Prescrever Tratamento Fluídico</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="sideChkTratEspiritual" style="width: 18px; height: 18px; accent-color: var(--primary);" onchange="if(this.checked) document.getElementById('sideChkApenasConversa').checked = false;">
+                            <span>Prescrever Tratamento Espiritual</span>
+                        </label>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="sideChkApenasConversa" style="width: 18px; height: 18px; accent-color: #f59e0b;" onchange="if(this.checked) { document.getElementById('sideChkTratFluidico').checked = false; document.getElementById('sideChkTratEspiritual').checked = false; }">
+                            <span style="color: #f59e0b; font-weight: 500;">Apenas Conversa Fraterna</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="sideChkEvangelhoLar" style="width: 18px; height: 18px; accent-color: #10b981;">
+                            <span style="color: #10b981; font-weight: 500;">Implantação de Evangelho no Lar</span>
+                        </label>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 24px; margin-bottom: 16px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="sideChkTratFluidico" style="width: 18px; height: 18px; accent-color: var(--primary);" onchange="if(this.checked) document.getElementById('sideChkApenasConversa').checked = false;">
-                        <span>Prescrever Tratamento Fluídico</span>
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="sideChkTratEspiritual" style="width: 18px; height: 18px; accent-color: var(--primary);" onchange="if(this.checked) document.getElementById('sideChkApenasConversa').checked = false;">
-                        <span>Prescrever Tratamento Espiritual</span>
-                    </label>
+                
+                <div style="padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
+                    <button type="button" onclick="window.fecharSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border);">Cancelar</button>
+                    <button type="button" onclick="salvarFichaAtendimentoSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Gravar Sessão e Tratamentos</button>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="sideChkApenasConversa" style="width: 18px; height: 18px; accent-color: #f59e0b;" onchange="if(this.checked) { document.getElementById('sideChkTratFluidico').checked = false; document.getElementById('sideChkTratEspiritual').checked = false; }">
-                        <span style="color: #f59e0b; font-weight: 500;">Apenas Conversa Fraterna</span>
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="sideChkEvangelhoLar" style="width: 18px; height: 18px; accent-color: #10b981;">
-                        <span style="color: #10b981; font-weight: 500;">Implantação de Evangelho no Lar</span>
-                    </label>
+            `;
+        } else {
+            formHtml = `
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 12px; align-items: center;">
+                    <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Este atendimento já foi concluído.</p>
+                    <button type="button" onclick="window.fecharSideSheet(); encaminharParaNovaTriagem('${id}');" class="btn" style="padding: 12px 24px; border-radius: 8px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; width: 100%;">
+                        📋 Iniciar Novo Atendimento
+                    </button>
                 </div>
-            </div>
-            
-            <div style="padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
-                <button type="button" onclick="window.fecharSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border);">Cancelar</button>
-                <button type="button" onclick="salvarFichaAtendimentoSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Gravar Sessão e Tratamentos</button>
-            </div>
-        `;
+            `;
+        }
 
         const finalHtml = `
             <div style="display: flex; flex-direction: column; gap: 8px;">
