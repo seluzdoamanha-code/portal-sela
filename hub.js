@@ -2552,12 +2552,25 @@ window.reativarIrradiacao = async function (id) {
 }
 
 window.excluirIrradiacaoDefinitivo = async function (id) {
-    if (!confirm("Atenção! Confirma exclusão DEFINITIVA do sistema?")) return;
-    try {
-        const { error } = await db.from('app_irradiacao_solicitacoes').delete().eq('id', id);
-        if (error) throw error;
-        await carregarListaIrradiacao();
-    } catch (err) { console.error(err); alert("Erro ao excluir."); }
+    Swal.fire({
+        title: 'Excluir Solicitação?',
+        text: 'Atenção! Confirma exclusão DEFINITIVA do sistema?',
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Excluir',
+        background: 'var(--bg-panel)',
+        color: 'var(--text-main)'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const { error } = await db.from('app_irradiacao_solicitacoes').delete().eq('id', id);
+                if (error) throw error;
+                await carregarListaIrradiacao();
+            } catch (err) { console.error(err); Swal.fire('Erro', 'Erro ao excluir.', 'error'); }
+        }
+    });
 };
 
 window.irradiacaoChartInstance = null;

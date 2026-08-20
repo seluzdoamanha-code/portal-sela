@@ -407,15 +407,28 @@ async function aprovar(id, nome, end, dias) {
 }
 
 async function excluir(id) {
-    if (!confirm('Tem certeza que deseja excluir esta solicitação permanentemente?')) return;
-    try {
-        const { error } = await db.from('app_irradiacao_solicitacoes')
-            .delete().eq('id', id);
-        if (error) throw error;
-        carregarLista();
-    } catch (err) {
-        alert('Erro ao excluir: ' + err.message);
-    }
+    Swal.fire({
+        title: 'Excluir Solicitação?',
+        text: 'Tem certeza que deseja excluir esta solicitação permanentemente?',
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Excluir',
+        background: 'var(--bg-panel)',
+        color: 'var(--text-main)'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const { error } = await db.from('app_irradiacao_solicitacoes')
+                    .delete().eq('id', id);
+                if (error) throw error;
+                carregarLista();
+            } catch (err) {
+                Swal.fire('Erro', 'Erro ao excluir: ' + err.message, 'error');
+            }
+        }
+    });
 }
 
 async function arquivar(id) {
