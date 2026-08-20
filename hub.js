@@ -4521,7 +4521,13 @@ window.carregarTratamentosAtivosDesktop = async function () {
             pacienteGrupos[pac.id].tratamentos.push(t);
         });
 
-        Object.keys(pacienteGrupos).forEach(pacId => {
+        const sortedPacIds = Object.keys(pacienteGrupos).sort((a, b) => {
+            const nameA = pacienteGrupos[a].info?.nome_completo || '';
+            const nameB = pacienteGrupos[b].info?.nome_completo || '';
+            return nameA.localeCompare(nameB);
+        });
+
+        sortedPacIds.forEach(pacId => {
             const grupo = pacienteGrupos[pacId];
             const card = document.createElement('div');
             card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;';
@@ -5198,9 +5204,9 @@ window.carregarPainelSemanalDesktop = async function () {
             listaHtml += '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhum tratamento ativo no momento.</div>';
         } else {
             const sortedTrats = tratamentos.sort((a, b) => {
-                const pA = a.app_atendimento_presencas ? a.app_atendimento_presencas.length : 0;
-                const pB = b.app_atendimento_presencas ? b.app_atendimento_presencas.length : 0;
-                return pB - pA;
+                const nameA = a.app_atendimento_fraterno?.nome_completo || '';
+                const nameB = b.app_atendimento_fraterno?.nome_completo || '';
+                return nameA.localeCompare(nameB);
             });
 
             listaHtml += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px;">`;
@@ -5219,16 +5225,26 @@ window.carregarPainelSemanalDesktop = async function () {
                     }
                 }
                 
+                if (presCount > limit) {
+                    boxesHtml += `<div style="width: 24px; height: 24px; border-radius: 4px; background: rgba(16, 185, 129, 0.2); border: 1px dashed #10b981; display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 10px; font-weight: bold;">+${presCount - limit}</div>`;
+                }
+
                 const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
                 
                 listaHtml += `
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; flex-direction: column;">
                         <div style="font-size: 13px; font-weight: bold; color: var(--text-main); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                             ${t.app_atendimento_fraterno?.nome_completo.toUpperCase()}
                         </div>
-                        <div style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; display: inline-block; margin-bottom: 12px;">${t.tipo.toUpperCase()}</div>
-                        <div style="display: flex; gap: 8px; margin-top: auto;">
-                            ${boxesHtml}
+                        <div style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; display: inline-block; margin-bottom: 12px; align-self: flex-start;">${t.tipo.toUpperCase()}</div>
+                        <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; gap: 4px;">
+                                ${boxesHtml}
+                            </div>
+                            <div style="display: flex; gap: 4px;">
+                                <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" title="Concluir" class="btn" style="padding: 4px; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+                                <button onclick="mudarStatusTratamento('${t.id}', 'Suspenso')" title="Suspender" class="btn" style="padding: 4px; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                            </div>
                         </div>
                     </div>
                 `;
