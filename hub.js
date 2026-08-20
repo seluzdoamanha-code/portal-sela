@@ -2535,12 +2535,25 @@ window.marcarLeituraIrr = async function (btnElement, id, leituras_atuais, seman
 }
 
 window.arquivarIrradiacao = async function (id) {
-    if (!confirm("Deseja forçar o arquivamento deste nome mesmo antes das 4 semanas?")) return;
-    try {
-        const { error } = await db.from('app_irradiacao_solicitacoes').update({ status: 'historico' }).eq('id', id);
-        if (error) throw error;
-        await carregarListaIrradiacao();
-    } catch (err) { console.error(err); alert('Erro ao arquivar'); }
+    Swal.fire({
+        title: 'Forçar Arquivamento?',
+        text: 'Deseja forçar o arquivamento deste nome mesmo antes do fim do ciclo?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Arquivar',
+        background: 'var(--bg-panel)',
+        color: 'var(--text-main)'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const { error } = await db.from('app_irradiacao_solicitacoes').update({ status: 'historico' }).eq('id', id);
+                if (error) throw error;
+                await carregarListaIrradiacao();
+            } catch (err) { console.error(err); Swal.fire('Erro', 'Erro ao arquivar', 'error'); }
+        }
+    });
 }
 
 window.reativarIrradiacao = async function (id) {

@@ -432,15 +432,28 @@ async function excluir(id) {
 }
 
 async function arquivar(id) {
-    if (!confirm('Forçar arquivamento (mover para histórico)?')) return;
-    try {
-        const { error } = await db.from('app_irradiacao_solicitacoes')
-            .update({ status: 'historico' }).eq('id', id);
-        if (error) throw error;
-        carregarLista();
-    } catch (err) {
-        alert('Erro ao arquivar: ' + err.message);
-    }
+    Swal.fire({
+        title: 'Forçar Arquivamento?',
+        text: 'Forçar arquivamento (mover para histórico)?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Arquivar',
+        background: 'var(--bg-panel)',
+        color: 'var(--text-main)'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const { error } = await db.from('app_irradiacao_solicitacoes')
+                    .update({ status: 'historico' }).eq('id', id);
+                if (error) throw error;
+                carregarLista();
+            } catch (err) {
+                Swal.fire('Erro', 'Erro ao arquivar: ' + err.message, 'error');
+            }
+        }
+    });
 }
 
 // ----------------------------------------------------
@@ -505,7 +518,20 @@ window.marcarLeituraIrrMobile = async function (btnElement, id, leituras_atuais,
                 }).eq('id', id);
                 if (error) throw error;
             } else {
-                if (confirm(`O ciclo de ${semanas_alvo} semanas desta irradiação chegou ao fim.\nDeseja reiniciar o ciclo (Renovar) para mais ${semanas_alvo} semanas?\n\n[OK] para Renovar\n[Cancelar] para Arquivar`)) {
+                const result = await Swal.fire({
+                    title: 'Fim do Ciclo',
+                    text: `O ciclo de ${semanas_alvo} semanas desta irradiação chegou ao fim. Deseja reiniciar o ciclo (Renovar) para mais ${semanas_alvo} semanas?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: 'var(--primary)',
+                    cancelButtonColor: '#f59e0b',
+                    confirmButtonText: 'Renovar',
+                    cancelButtonText: 'Arquivar',
+                    background: 'var(--bg-panel)',
+                    color: 'var(--text-main)'
+                });
+
+                if (result.isConfirmed) {
                     // Renovar
                     novasLeiturasAtuais = 0;
                     const { error } = await db.from('app_irradiacao_solicitacoes').update({
@@ -514,7 +540,7 @@ window.marcarLeituraIrrMobile = async function (btnElement, id, leituras_atuais,
                         log_datas_leituras: logs
                     }).eq('id', id);
                     if (error) throw error;
-                } else {
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
                     // Arquivar
                     novoStatus = 'historico';
                     const { error } = await db.from('app_irradiacao_solicitacoes').update({
@@ -524,6 +550,9 @@ window.marcarLeituraIrrMobile = async function (btnElement, id, leituras_atuais,
                     }).eq('id', id);
                     if (error) throw error;
                     if (card) card.style.display = 'none';
+                } else {
+                    // Usuário clicou fora ou esc, reverter UI do card se necessário
+                    throw new Error("Ação cancelada pelo usuário");
                 }
             }
         } else {
