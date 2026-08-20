@@ -1165,6 +1165,7 @@
             
             if (subAba === 'presencas') carregarFilaPresencas();
             else if (subAba === 'espera_tratamento') carregarEsperaTratamento();
+            else if (subAba === 'fila') carregarLista();
         } catch (err) {
             Swal.fire('Erro', 'Não foi possível alterar a presença', 'error');
         }

@@ -5009,6 +5009,7 @@ window.marcarTratamentoPresente = async function(id, statusPresente) {
         
         if (currentAtendimentoSubTab === 'presencas') carregarFilaPresencasDesktop();
         else if (currentAtendimentoSubTab === 'espera_tratamento') carregarEsperaTratamentoDesktop();
+        else if (currentAtendimentoSubTab === 'fila') carregarListaAtendimento();
     } catch (err) {
         console.error(err);
         Swal.fire('Erro', 'Não foi possível alterar a presença', 'error');
