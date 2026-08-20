@@ -648,8 +648,14 @@
                 
                 let attendedToday = false;
                 if (t.app_atendimento_presencas) {
-                    const todayStr = new Date().toLocaleDateString('pt-BR');
-                    attendedToday = t.app_atendimento_presencas.some(p => new Date(p.data).toLocaleDateString('pt-BR') === todayStr);
+                    const now = new Date();
+                    const tzOffset = now.getTimezoneOffset() * 60000;
+                    const todayLocal = new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
+                    
+                    attendedToday = t.app_atendimento_presencas.some(p => {
+                        if (!p.data) return false;
+                        return p.data.split('T')[0] === todayLocal;
+                    });
                 }
 
                 card.innerHTML = `
