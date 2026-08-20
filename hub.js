@@ -4208,7 +4208,7 @@ window.abrirFichaAtendimento = async function (id) {
                     <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 13px; margin-bottom: 8px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                             <div>
-                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #3b82f6; color: white; text-transform: uppercase;">FRATERNO</span>
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase;">FRATERNO</span>
                                 <strong style="color: var(--primary); margin-left: 4px;">${dt}</strong>
                             </div>
                             <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_completo || 'Desconhecido'}</span>
@@ -4607,7 +4607,7 @@ window.toggleEvolucaoInline = async function (id) {
                     <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 6px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                             <div>
-                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #3b82f6; color: white; text-transform: uppercase;">FRATERNO</span>
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase;">FRATERNO</span>
                                 <strong style="color: var(--primary); margin-left: 4px;">${dt}</strong>
                             </div>
                             <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_completo || 'Desconhecido'}</span>
