@@ -4165,7 +4165,7 @@ window.abrirFichaAtendimento = async function (id) {
             sessoesHtml += '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhuma sessão anterior registrada.</div>';
         } else {
             sessoesHtml += sessoes.map(s => {
-                const dt = new Date(s.data).toLocaleDateString('pt-BR');
+                const dt = s.data ? s.data.split('T')[0].split('-').reverse().join('/') : '';
                 return `
                     <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 13px; margin-bottom: 8px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
@@ -4202,7 +4202,7 @@ window.abrirFichaAtendimento = async function (id) {
                 presHtml += pres.map(p => {
                     const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
                     const tipoText = trat ? `${trat.tipo} (${trat.status})` : 'Tratamento';
-                    const dt = new Date(p.data).toLocaleDateString('pt-BR');
+                    const dt = p.data ? p.data.split('T')[0].split('-').reverse().join('/') : '';
                     const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
                     return `
                         <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 4px;">
@@ -4399,9 +4399,11 @@ window.carregarTratamentosAtivosDesktop = async function () {
             let tratsHTML = '';
             grupo.tratamentos.forEach(t => {
                 const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
+                const dtIniStr = t.data_inicio ? t.data_inicio.split('T')[0].split('-').reverse().join('/') : '';
+                const dtFimStr = t.data_fim ? t.data_fim.split('T')[0].split('-').reverse().join('/') : 'atual';
                 const dtText = isListActive
-                    ? `Início: ${new Date(t.data_inicio).toLocaleDateString('pt-BR')}`
-                    : `Período: ${new Date(t.data_inicio).toLocaleDateString('pt-BR')} até ${t.data_fim ? new Date(t.data_fim).toLocaleDateString('pt-BR') : 'atual'} (${t.status})`;
+                    ? `Início: ${dtIniStr}`
+                    : `Período: ${dtIniStr} até ${dtFimStr} (${t.status})`;
 
                 let actionsHTML = '';
                 if (isListActive) {
@@ -4506,7 +4508,7 @@ window.toggleEvolucaoInline = async function (id) {
                 presencasHTML = pres.map(p => {
                     const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
                     const tipoText = trat ? `${trat.tipo} (${trat.status})` : 'Tratamento';
-                    const dt = new Date(p.data).toLocaleDateString('pt-BR');
+                    const dt = p.data ? p.data.split('T')[0].split('-').reverse().join('/') : '';
                     const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
                     return `
                         <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 6px;">
@@ -4525,7 +4527,7 @@ window.toggleEvolucaoInline = async function (id) {
             sessoesHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 12px; padding: 4px;">Nenhuma sessão de atendimento registrada.</div>';
         } else {
             sessoesHTML = sessoes.map(s => {
-                const dt = new Date(s.data).toLocaleDateString('pt-BR');
+                const dt = s.data ? s.data.split('T')[0].split('-').reverse().join('/') : '';
                 return `
                     <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 6px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
@@ -4889,17 +4891,18 @@ window.confirmarSessaoTratamento = async function(tratamentoId, tipo) {
 
 async function processarSessaoTratamento(tratamentoId, observacoes) {
     try {
-        // Registra presença
+        const d = new Date();
+        const localDateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        
         let payload = {
             tratamento_id: tratamentoId,
-            data: new Date().toISOString().split('T')[0]
+            data: localDateStr
         };
         if (observacoes) payload.observacoes = observacoes.trim();
 
         const { error: err1 } = await db.from('app_atendimento_presencas').insert([payload]);
         if (err1) throw err1;
 
-        // Tira o tratamento da sala de espera para amanhã (ou hoje já concluído)
         const { error: err2 } = await db.from('app_atendimento_tratamentos').update({ presente: false }).eq('id', tratamentoId);
         if (err2) throw err2;
 
@@ -4913,7 +4916,7 @@ async function processarSessaoTratamento(tratamentoId, observacoes) {
             showConfirmButton: false
         });
 
-        carregarEsperaTratamentoDesktop();
+        carregarTratamentosAtivosDesktop();
     } catch (err) {
         console.error(err);
         Swal.fire('Erro', 'Erro ao confirmar atendimento: ' + err.message, 'error');
@@ -4947,8 +4950,8 @@ window.carregarPainelSemanalDesktop = async function () {
             let lastDate = 'Nenhuma';
             if (presencas.length > 0) {
                 // Ordenar datas
-                const dates = presencas.map(p => new Date(p.data)).sort((a, b) => b - a);
-                lastDate = dates[0].toLocaleDateString('pt-BR');
+                const datesStr = presencas.map(p => p.data).sort((a, b) => b.localeCompare(a));
+                lastDate = datesStr[0].split('T')[0].split('-').reverse().join('/');
             }
 
             const card = document.createElement('div');

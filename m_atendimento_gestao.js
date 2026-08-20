@@ -439,7 +439,7 @@
             let sessoesHtml = '<div style="margin-bottom: 24px;"><h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Últimas Sessões</h4>';
             if (sessoes && sessoes.length > 0) {
                 sessoes.forEach((s, idx) => {
-                    const dt = new Date(s.data).toLocaleDateString('pt-BR');
+                    const dt = s.data ? s.data.split('T')[0].split('-').reverse().join('/') : '';
                     sessoesHtml += `
                         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; font-size: 13px; margin-bottom: 8px;">
                             <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-weight:bold; color:var(--text-main);">
@@ -598,7 +598,7 @@
                 card.className = 'card-atendimento';
                 card.style.marginBottom = '12px';
                 
-                const dtInicio = new Date(t.data_inicio).toLocaleDateString('pt-BR');
+                const dtInicio = t.data_inicio ? t.data_inicio.split('T')[0].split('-').reverse().join('/') : '';
                 const tipoCor = t.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
 
                 card.innerHTML = `
@@ -868,9 +868,12 @@
 
     async function processarSessaoTratamentoMobile(tratamentoId, observacoes) {
         try {
+            const d = new Date();
+            const localDateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            
             let payload = {
                 tratamento_id: tratamentoId,
-                data: new Date().toISOString().split('T')[0]
+                data: localDateStr
             };
             if (observacoes) payload.observacoes = observacoes.trim();
 
@@ -890,7 +893,7 @@
                 showConfirmButton: false
             });
 
-            carregarEsperaTratamento();
+            carregarTratamentosAtivos();
         } catch (err) {
             Swal.fire('Erro', 'Erro ao confirmar atendimento: ' + err.message, 'error');
         }
@@ -956,7 +959,7 @@
 
                 fluidicos.forEach(f => {
                     const count = presCount[f.id] || 0;
-                    const uData = ultimasPres[f.id] ? new Date(ultimasPres[f.id]).toLocaleDateString('pt-BR') : 'Nenhuma';
+                    const uData = ultimasPres[f.id] ? ultimasPres[f.id].split('T')[0].split('-').reverse().join('/') : 'Nenhuma';
                     
                     const card = document.createElement('div');
                     card.style.cssText = 'background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; padding:10px; margin-bottom:8px; font-size:13px;';
@@ -983,7 +986,7 @@
 
                 espirituais.forEach(e => {
                     const count = presCount[e.id] || 0;
-                    const uData = ultimasPres[e.id] ? new Date(ultimasPres[e.id]).toLocaleDateString('pt-BR') : 'Nenhuma';
+                    const uData = ultimasPres[e.id] ? ultimasPres[e.id].split('T')[0].split('-').reverse().join('/') : 'Nenhuma';
                     
                     const card = document.createElement('div');
                     card.style.cssText = 'background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; padding:10px; margin-bottom:8px; font-size:13px;';
