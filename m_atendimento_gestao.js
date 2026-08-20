@@ -379,8 +379,8 @@
             <div class="card-actions" style="flex-wrap: wrap; margin-top: 12px; gap: 8px;">
                 ${item.is_tratamento ? `
                     ${item.presente ? 
-                        `<button class="btn-action" onclick="alternarPresencaTratamento('${item.id}', false)" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); width: 100%;">🔴 Remover Presença</button>` :
-                        `<button class="btn-action" onclick="alternarPresencaTratamento('${item.id}', true)" style="background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); width: 100%;">⚪ Confirmar Presença</button>`
+                        `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', false)" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); width: 100%;">🔴 Remover Presença</button>` :
+                        `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', true)" style="background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); width: 100%;">⚪ Confirmar Presença</button>`
                     }
                 ` : `
                     ${item.status !== 'Atendido' ? btnPresenca : ''}
