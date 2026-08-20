@@ -4375,8 +4375,9 @@ window.salvarFichaAtendimentoSideSheet = async function () {
         // Atualizar status do Atendimento Fraterno para 'Em Tratamento'
 
 
+        const novoStatus = (tratFluidico || tratEspiritual) ? 'Em Tratamento' : 'Atendido';
         const { error: errAten } = await db.from('app_atendimento_fraterno').update({
-            status: 'Em Tratamento',
+            status: novoStatus,
             data_hora_atendimento: new Date().toISOString()
         }).eq('id', activeFichaAtendimentoId);
         if (errAten) throw errAten;

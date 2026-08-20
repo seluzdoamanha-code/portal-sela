@@ -593,9 +593,10 @@
                 }
             }
 
-            // 4. Mudar status do paciente para 'Em Tratamento' e registrar a data do último atendimento
+            // 4. Mudar status do paciente para 'Em Tratamento' ou 'Atendido' e registrar a data do último atendimento
+            const novoStatus = (querFluidico || querEspiritual) ? 'Em Tratamento' : 'Atendido';
             await db.from('app_atendimento_fraterno').update({
-                status: 'Em Tratamento',
+                status: novoStatus,
                 data_hora_atendimento: new Date().toISOString()
             }).eq('id', pacienteAtualFichaId);
 
