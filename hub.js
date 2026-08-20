@@ -4373,13 +4373,7 @@ window.salvarFichaAtendimentoSideSheet = async function () {
         }
 
         // Atualizar status do Atendimento Fraterno para 'Em Tratamento'
-        if (id_paciente) {
-            await db.from('app_pacientes').update({
-                nome_completo: nome,
-                endereco_completo: end,
-                telefone: wpp
-            }).eq('id', id_paciente);
-        }
+
 
         const { error: errAten } = await db.from('app_atendimento_fraterno').update({
             status: 'Em Tratamento',
