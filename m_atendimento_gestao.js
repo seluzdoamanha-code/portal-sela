@@ -132,6 +132,7 @@
             container.style.display = 'flex';
             container.innerHTML = `
                 <div class="sub-tab-pill ${subAba === 'presencas' ? 'active' : ''}" onclick="switchSubTab('presencas')">🗓️ Fila Geral</div>
+                <div class="sub-tab-pill ${subAba === 'espera_tratamento' ? 'active' : ''}" onclick="switchSubTab('espera_tratamento')">🛋️ Sala de Espera</div>
                 <div class="sub-tab-pill ${subAba === 'tratamentos' ? 'active' : ''}" onclick="switchSubTab('tratamentos')">🩹 Tratamentos Ativos</div>
                 <div class="sub-tab-pill ${subAba === 'painel_semanal' ? 'active' : ''}" onclick="switchSubTab('painel_semanal')">📊 Painel Semanal</div>
             `;
@@ -216,6 +217,9 @@
             else if (subAba === 'presencas') {
                 carregarFilaPresencas();
             } 
+            else if (subAba === 'espera_tratamento') {
+                carregarEsperaTratamento();
+            }
             else if (subAba === 'painel_semanal') {
                 carregarPainelSemanal();
             }
@@ -607,40 +611,58 @@
         container.innerHTML = '';
 
         try {
-            // Obter tratamentos ativos com detalhes do necessitado
             const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(nome_completo, status)')
-                .eq('status', 'Ativo');
+                .select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)')
+                .eq('status', 'Ativo')
+                .eq('presente', false);
 
             if (error) throw error;
 
             if (!trats || trats.length === 0) {
-                container.innerHTML = '<div class="empty-state">Nenhum necessitado em tratamento ativo para assinar presença.</div>';
+                container.innerHTML = '<div class="empty-state">Nenhum necessitado em tratamento ativo na Fila Geral.</div>';
                 return;
             }
 
-            // Ordenar por nome
             trats.sort((a,b) => (a.app_atendimento_fraterno?.nome_completo || '').localeCompare(b.app_atendimento_fraterno?.nome_completo || ''));
 
             trats.forEach(t => {
+                const f = t.app_atendimento_fraterno;
                 const card = document.createElement('div');
                 card.className = 'card-atendimento';
                 card.style.marginBottom = '12px';
                 
                 const badgeColor = t.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
 
+                const d = new Date(f.created_at);
+                const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+                let ageInfo = '';
+                if (f.data_nascimento) {
+                    const anoNasc = f.data_nascimento.split('-')[0];
+                    const age = new Date().getFullYear() - parseInt(anoNasc);
+                    ageInfo = ` (${age} anos)`;
+                }
+
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="font-size:15px; font-weight:600; color:white;">${t.app_atendimento_fraterno?.nome_completo.toUpperCase()}</span>
-                        <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44;">${t.tipo}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                        <div>
+                            <span style="font-size:15px; font-weight:600; color:white; display:block; margin-bottom: 4px;">${f.nome_completo.toUpperCase()}</span>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">📍 ${f.endereco_completo || 'Sem endereço'}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">🎂 Nascimento: ${f.data_nascimento ? f.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📱 Celular: ${f.telefone || 'Não informado'}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">Em ${dateStr}</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                            <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44;">${t.tipo}</span>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn-action" onclick="window.editarPacienteMobile('${f.id}')" style="padding: 8px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;">✏️</button>
+                                <button class="btn-action" onclick="excluirSolicitacao('${f.id}')" style="padding: 8px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; font-size: 14px;">🗑️</button>
+                            </div>
+                        </div>
                     </div>
                     
                     <div style="margin-top:12px;">
-                        ${t.tipo === 'Fluídico' ? `
-                            <button onclick="registrarPresencaFluidico('${t.id}')" class="btn-action" style="background:#10b981; color:white; border:none; width:100%; padding:10px;">🟢 Confirmar Presença</button>
-                        ` : `
-                            <button onclick="registrarPresencaEspiritual('${t.id}')" class="btn-action" style="background:#818cf8; color:white; border:none; width:100%; padding:10px;">✨ Registrar Presença + Obs</button>
-                        `}
+                        <button onclick="marcarTratamentoPresenteMobile('${t.id}', true)" class="btn-action" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px solid var(--border); width:100%; padding:10px; border-radius: 8px;">⚪ Confirmar Presença</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -651,82 +673,125 @@
         }
     }
 
-    window.registrarPresencaFluidico = async function(tratamentoId) {
+    async function carregarEsperaTratamento() {
+        const container = document.getElementById('listaAtendimento');
+        container.innerHTML = '';
+
         try {
-            const dataHoje = new Date().toISOString().split('T')[0];
-
-            // Evitar duplicidade no mesmo dia
-            const { data: exist } = await db.from('app_atendimento_presencas')
-                .select('id')
-                .eq('tratamento_id', tratamentoId)
-                .eq('data', dataHoje);
-
-            if (exist && exist.length > 0) {
-                Swal.fire('Aviso', 'Presença de hoje para este paciente já foi registrada.', 'info');
-                return;
-            }
-
-            const { error } = await db.from('app_atendimento_presencas').insert([{
-                tratamento_id: tratamentoId,
-                data: dataHoje
-            }]);
+            const { data: trats, error } = await db.from('app_atendimento_tratamentos')
+                .select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo)')
+                .eq('status', 'Ativo')
+                .eq('presente', true);
 
             if (error) throw error;
 
+            if (!trats || trats.length === 0) {
+                container.innerHTML = '<div class="empty-state">Sala de Espera de Tratamentos vazia.</div>';
+                return;
+            }
+
+            trats.sort((a,b) => (a.app_atendimento_fraterno?.nome_completo || '').localeCompare(b.app_atendimento_fraterno?.nome_completo || ''));
+
+            trats.forEach(t => {
+                const f = t.app_atendimento_fraterno;
+                const card = document.createElement('div');
+                card.className = 'card-atendimento';
+                card.style.marginBottom = '12px';
+                
+                const badgeColor = t.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
+
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                        <div>
+                            <span style="font-size:15px; font-weight:600; color:white; display:block; margin-bottom: 4px;">${f.nome_completo.toUpperCase()}</span>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📍 ${f.endereco_completo || 'Sem endereço'}</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                            <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44;">${t.tipo}</span>
+                            <button onclick="marcarTratamentoPresenteMobile('${t.id}', false)" class="btn-action" style="padding: 4px 8px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; font-size: 11px;">Desfazer Presente</button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:12px;">
+                        <button onclick="confirmarSessaoTratamentoMobile('${t.id}', '${t.tipo}')" class="btn-action" style="background:${badgeColor}; color:white; border:none; width:100%; padding:10px; border-radius: 8px; font-weight: 600;">Confirmar Atendimento</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+        } catch(e) {
+            container.innerHTML = `<div class="empty-state">Erro: ${e.message}</div>`;
+        }
+    }
+
+    window.marcarTratamentoPresenteMobile = async function(id, statusPresente) {
+        try {
+            const { error } = await db.from('app_atendimento_tratamentos').update({ presente: statusPresente }).eq('id', id);
+            if (error) throw error;
+            
+            if (subAba === 'presencas') carregarFilaPresencas();
+            else if (subAba === 'espera_tratamento') carregarEsperaTratamento();
+        } catch (err) {
+            Swal.fire('Erro', 'Não foi possível alterar a presença', 'error');
+        }
+    };
+
+    window.confirmarSessaoTratamentoMobile = async function(tratamentoId, tipo) {
+        if (tipo === 'Espiritual') {
             Swal.fire({
+                title: 'Confirmar Atendimento Espiritual',
+                input: 'textarea',
+                inputLabel: 'Observações da Sessão (Opcional)',
+                inputPlaceholder: 'Relate informações relevantes do atendimento...',
+                showCancelButton: true,
+                confirmButtonColor: '#8b5cf6',
+                cancelButtonText: 'Cancelar',
+                confirmButtonText: 'Confirmar',
+                background: 'var(--bg-panel)',
+                color: 'var(--text-main)',
+                inputAttributes: {
+                    style: 'background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border); border-radius: 8px;'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    processarSessaoTratamentoMobile(tratamentoId, result.value || '');
+                }
+            });
+        } else {
+            processarSessaoTratamentoMobile(tratamentoId, '');
+        }
+    };
+
+    async function processarSessaoTratamentoMobile(tratamentoId, observacoes) {
+        try {
+            let payload = {
+                tratamento_id: tratamentoId,
+                data: new Date().toISOString().split('T')[0]
+            };
+            if (observacoes) payload.observacoes = observacoes.trim();
+
+            const { error: err1 } = await db.from('app_atendimento_presencas').insert([payload]);
+            if (err1) throw err1;
+
+            const { error: err2 } = await db.from('app_atendimento_tratamentos').update({ presente: false }).eq('id', tratamentoId);
+            if (err2) throw err2;
+
+            Swal.fire({
+                title: 'Sucesso',
+                text: 'Atendimento registrado com sucesso!',
                 icon: 'success',
-                title: 'Confirmado!',
-                text: 'Presença fluídica registrada.',
+                background: 'var(--bg-panel)',
+                color: 'var(--text-main)',
                 timer: 1500,
                 showConfirmButton: false
             });
 
-        } catch(e) {
-            Swal.fire('Erro', 'Falha ao registrar presença.', 'error');
+            carregarEsperaTratamento();
+        } catch (err) {
+            Swal.fire('Erro', 'Erro ao confirmar atendimento: ' + err.message, 'error');
         }
-    };
+    }
 
-    window.registrarPresencaEspiritual = async function(tratamentoId) {
-        const dataHoje = new Date().toISOString().split('T')[0];
-
-        const { value: formValues } = await Swal.fire({
-            title: '✨ Detalhes da Sessão Espiritual',
-            background: 'var(--bg-panel)',
-            color: 'white',
-            html: `
-                <div style="text-align:left; margin-bottom:8px; font-size:13px; color:var(--text-muted);">Data:</div>
-                <input type="date" id="presData" class="swal2-input" value="${dataHoje}" style="background:var(--bg-dark); color:white; border-color:var(--border); width:90%; margin-top:0; margin-bottom:12px;">
-                <div style="text-align:left; margin-bottom:8px; font-size:13px; color:var(--text-muted);">Observações / Recomendações:</div>
-                <textarea id="presObs" class="swal2-textarea" placeholder="Como o paciente se sentiu, recomendações da equipe..." style="background:var(--bg-dark); color:white; border-color:var(--border); width:90%; height:80px; resize:none;"></textarea>
-            `,
-            showCancelButton: true,
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#818cf8',
-            confirmButtonText: 'Gravar Presença',
-            preConfirm: () => {
-                return {
-                    data: document.getElementById('presData').value,
-                    obs: document.getElementById('presObs').value
-                };
-            }
-        });
-
-        if (formValues) {
-            try {
-                const { error } = await db.from('app_atendimento_presencas').insert([{
-                    tratamento_id: tratamentoId,
-                    data: formValues.data,
-                    observacoes: formValues.obs
-                }]);
-
-                if (error) throw error;
-
-                Swal.fire('Sucesso!', 'Presença e observações gravadas.', 'success');
-            } catch(e) {
-                Swal.fire('Erro', 'Erro ao gravar presença espiritual.', 'error');
-            }
-        }
-    };
 
     // --- PAINEL SEMANAL DE ACOMPANHAMENTO ---
 

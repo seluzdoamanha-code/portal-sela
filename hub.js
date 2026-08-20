@@ -3065,6 +3065,7 @@ function renderizarSubAbasAtendimento() {
         container.style.display = 'flex';
         container.innerHTML = `
             <button onclick="mudarSubAbaAtendimento('presencas')" style="${currentAtendimentoSubTab === 'presencas' ? activeStyle : inactiveStyle}">🗓️ Fila Geral</button>
+            <button onclick="mudarSubAbaAtendimento('espera_tratamento')" style="${currentAtendimentoSubTab === 'espera_tratamento' ? activeStyle : inactiveStyle}">🛋️ Sala de Espera</button>
             <button onclick="mudarSubAbaAtendimento('tratamentos')" style="${currentAtendimentoSubTab === 'tratamentos' ? activeStyle : inactiveStyle}">🩹 Tratamentos Ativos</button>
             <button onclick="mudarSubAbaAtendimento('painelsemanal')" style="${currentAtendimentoSubTab === 'painelsemanal' ? activeStyle : inactiveStyle}">📊 Painel Semanal</button>
         `;
@@ -3226,7 +3227,7 @@ window.carregarPainelGestaoAtendimento = function () {
             <!-- Abas Principais -->
             <div class="no-scrollbar" style="display: flex; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; overflow-x: auto;">
                 <button onclick="mudarAbaPrincipalAtendimento('triagem')" id="btnMainAtenTriagem" class="btn" style="white-space: nowrap; border-radius: 8px; background: var(--primary); color: white; padding: 10px 20px;">📋 Triagem</button>
-                <button onclick="mudarAbaPrincipalAtendimento('atendimento')" id="btnMainAtenAtendimento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🧑‍🤝‍🧑 Atendimento</button>
+                <button onclick="mudarAbaPrincipalAtendimento('atendimento')" id="btnMainAtenAtendimento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🧑‍🤝‍🧑 Atendimento Fraterno</button>
                 <button onclick="mudarAbaPrincipalAtendimento('acompanhamento')" id="btnMainAtenAcompanhamento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🔎 Tratamentos Fluídico e Espiritual</button>
                 <button onclick="mudarAbaPrincipalAtendimento('historico')" id="btnMainAtenHistorico" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">📊 Histórico</button>
             </div>
@@ -3469,6 +3470,10 @@ window.carregarListaAtendimento = async function () {
         } else if (currentAtendimentoSubTab === 'presencas') {
             document.getElementById('loadingAten').style.display = 'none';
             carregarFilaPresencasDesktop();
+            return;
+        } else if (currentAtendimentoSubTab === 'espera_tratamento') {
+            document.getElementById('loadingAten').style.display = 'none';
+            carregarEsperaTratamentoDesktop();
             return;
         } else if (currentAtendimentoSubTab === 'painelsemanal') {
             document.getElementById('loadingAten').style.display = 'none';
@@ -4538,102 +4543,220 @@ window.mudarStatusTratamento = async function (id, status) {
 window.carregarFilaPresencasDesktop = async function () {
     const lista = document.getElementById('listaAten');
     if (!lista) return;
-    lista.innerHTML = '<div style="color: var(--text-muted); font-size: 14px;">Carregando fila de presença...</div>';
+    lista.innerHTML = '<div style="color: var(--text-muted); font-size: 14px;">Carregando Fila Geral...</div>';
 
     try {
         const { data: tratamentos, error } = await db
             .from('app_atendimento_tratamentos')
-            .select('*, app_atendimento_fraterno(nome_completo)')
+            .select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)')
             .eq('status', 'Ativo')
+            .eq('presente', false)
             .order('tipo');
 
         if (error) throw error;
 
         lista.innerHTML = '';
         if (!tratamentos || tratamentos.length === 0) {
-            lista.innerHTML = '<div style="padding: 24px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);">Nenhum necessitado em tratamento ativo para assinar presença.</div>';
+            lista.innerHTML = '<div style="padding: 24px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);">Nenhum tratamento ativo na fila geral.</div>';
             return;
         }
 
-        const nowStr = new Date().toISOString().split('T')[0];
-
-        // Buscar presenças já assinadas hoje para evitar duplicados
-        const { data: presencasHoje } = await db
-            .from('app_atendimento_presencas')
-            .select('tratamento_id')
-            .eq('data', nowStr);
-
-        const idsAssinados = (presencasHoje || []).map(p => p.tratamento_id);
+        // Apply grid layout similar to Triagem
+        lista.style.display = 'grid';
+        lista.style.gridTemplateColumns = 'repeat(auto-fill, minmax(400px, 1fr))';
+        lista.style.gap = '12px';
 
         tratamentos.forEach(t => {
-            const card = document.createElement('div');
-            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px;';
-
+            const f = t.app_atendimento_fraterno;
             const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
-            const jaAssinou = idsAssinados.includes(t.id);
+            const badgeText = t.tipo.toUpperCase();
 
-            let acaoHTML = '';
-            if (jaAssinou) {
-                acaoHTML = '<span style="color: #10b981; font-weight: bold; font-size: 13px;">✓ Presença Assinada</span>';
-            } else if (t.tipo === 'Fluídico') {
-                acaoHTML = `<button onclick="registrarPresencaFluidico('${t.id}')" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px; background: #3b82f6; color: white;">Confirmar Presença</button>`;
-            } else {
-                acaoHTML = `
-                    <div style="display: flex; gap: 8px; width: 100%; max-width: 400px;">
-                        <input type="text" id="obs_${t.id}" placeholder="Observações de evolução/tratamento..." class="input" style="flex: 1; font-size: 13px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; padding: 6px 10px; border-radius: 4px;">
-                        <button onclick="registrarPresencaEspiritual('${t.id}')" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px; background: #8b5cf6; color: white; white-space: nowrap;">Confirmar</button>
-                    </div>
-                `;
+            const d = new Date(f.created_at);
+            const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+            let ageInfo = '';
+            if (f.data_nascimento) {
+                const anoNasc = f.data_nascimento.split('-')[0];
+                const age = new Date().getFullYear() - parseInt(anoNasc);
+                ageInfo = ` (${age} anos)`;
             }
 
-            card.innerHTML = `
-                <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                        <strong style="font-size: 15px; color: var(--text-main);">${t.app_atendimento_fraterno?.nome_completo.toUpperCase()}</strong>
-                        <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white;">${t.tipo.toUpperCase()}</span>
+            const card = document.createElement('div');
+            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 16px; transition: all 0.2s;';
+            card.onmouseover = () => card.style.background = 'rgba(255,255,255,0.05)';
+            card.onmouseout = () => card.style.background = 'rgba(255,255,255,0.03)';
+
+            const buttonsContainerStyle = 'display: grid; grid-template-columns: 1fr 44px; gap: 8px; flex-shrink: 0; min-width: 160px;';
+
+            let leftInfo = `
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <strong style="font-size: 16px; color: var(--text-main); margin-bottom: 2px;">${f.nome_completo.toUpperCase()}</strong>
+                        <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white;">${badgeText}</span>
                     </div>
+                    <div style="font-size: 13px; color: var(--text-muted);">📍 ${f.endereco_completo || 'Sem endereço'}</div>
+                    <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${f.data_nascimento ? f.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
+                    <div style="font-size: 13px; color: var(--text-muted);">📱 Celular: ${f.telefone || 'Não informado'}</div>
+                    <div style="margin-top: 4px; font-size: 11px; color: var(--text-muted);">Em ${dateStr}</div>
                 </div>
-                <div>${acaoHTML}</div>
+            `;
+
+            let btnPresenca = `<button class="btn" onclick="marcarTratamentoPresente('${t.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; grid-column: 1 / 3;">⚪ Confirmar Presença</button>`;
+
+            let rightInfo = `
+                <div style="${buttonsContainerStyle}">
+                    ${btnPresenca}
+                    <!-- Edit Button -->
+                    <button class="btn" onclick="abrirEdicaoAtendimento('${f.id}', '${f.nome_completo.replace(/'/g, "\\'")}', '${(f.endereco_completo||'').replace(/'/g, "\\'")}', '${f.telefone||''}')" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 14px; grid-column: 1 / 2;">✏️</button>
+                    <!-- Delete Button -->
+                    <button class="btn" onclick="excluirSolicitacao('${f.id}')" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 10px; font-size: 14px; grid-column: 2 / 3;">🗑️</button>
+                </div>
+            `;
+
+            card.innerHTML = `
+                <div style="flex: 1; min-width: 0;">${leftInfo}</div>
+                ${rightInfo}
             `;
             lista.appendChild(card);
         });
     } catch (err) {
         console.error(err);
-        lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar fila de presenças.</span>';
+        lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar Fila Geral.</span>';
     }
 };
 
-window.registrarPresencaFluidico = async function (tratamentoId) {
+window.carregarEsperaTratamentoDesktop = async function () {
+    const lista = document.getElementById('listaAten');
+    if (!lista) return;
+    lista.innerHTML = '<div style="color: var(--text-muted); font-size: 14px;">Carregando Sala de Espera...</div>';
+
     try {
-        const { error } = await db.from('app_atendimento_presencas').insert([{
+        const { data: tratamentos, error } = await db
+            .from('app_atendimento_tratamentos')
+            .select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone)')
+            .eq('status', 'Ativo')
+            .eq('presente', true)
+            .order('tipo');
+
+        if (error) throw error;
+
+        lista.innerHTML = '';
+        if (!tratamentos || tratamentos.length === 0) {
+            lista.innerHTML = '<div style="padding: 24px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);">Sala de Espera vazia.</div>';
+            return;
+        }
+
+        lista.style.display = 'grid';
+        lista.style.gridTemplateColumns = 'repeat(auto-fill, minmax(400px, 1fr))';
+        lista.style.gap = '12px';
+
+        tratamentos.forEach(t => {
+            const f = t.app_atendimento_fraterno;
+            const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
+            const card = document.createElement('div');
+            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;';
+
+            let acaoHTML = '';
+            if (t.tipo === 'Fluídico') {
+                acaoHTML = `<button onclick="confirmarSessaoTratamento('${t.id}', 'Fluídico')" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px; font-weight: 600; background: #3b82f6; color: white; border-radius: 8px; width: 100%;">Confirmar Atendimento</button>`;
+            } else {
+                acaoHTML = `
+                    <button onclick="confirmarSessaoTratamento('${t.id}', 'Espiritual')" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px; font-weight: 600; background: #8b5cf6; color: white; border-radius: 8px; width: 100%;">Confirmar Atendimento</button>
+                `;
+            }
+
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <strong style="font-size: 16px; color: var(--text-main); margin-bottom: 2px;">${f.nome_completo.toUpperCase()}</strong>
+                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white;">${t.tipo.toUpperCase()}</span>
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted);">📍 ${f.endereco_completo || 'Sem endereço'}</div>
+                    </div>
+                    <button class="btn" onclick="marcarTratamentoPresente('${t.id}', false)" style="padding: 6px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; font-size: 11px;">Desfazer Presente</button>
+                </div>
+                ${acaoHTML}
+            `;
+            lista.appendChild(card);
+        });
+    } catch (err) {
+        console.error(err);
+        lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar Sala de Espera.</span>';
+    }
+};
+
+window.marcarTratamentoPresente = async function(id, statusPresente) {
+    try {
+        const { error } = await db.from('app_atendimento_tratamentos').update({ presente: statusPresente }).eq('id', id);
+        if (error) throw error;
+        
+        if (currentAtendimentoSubTab === 'presencas') carregarFilaPresencasDesktop();
+        else if (currentAtendimentoSubTab === 'espera_tratamento') carregarEsperaTratamentoDesktop();
+    } catch (err) {
+        console.error(err);
+        Swal.fire('Erro', 'Não foi possível alterar a presença', 'error');
+    }
+};
+
+window.confirmarSessaoTratamento = async function(tratamentoId, tipo) {
+    if (tipo === 'Espiritual') {
+        Swal.fire({
+            title: 'Confirmar Atendimento Espiritual',
+            input: 'textarea',
+            inputLabel: 'Observações da Sessão (Opcional)',
+            inputPlaceholder: 'Relate informações relevantes do atendimento...',
+            showCancelButton: true,
+            confirmButtonColor: '#8b5cf6',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Confirmar',
+            background: 'var(--bg-panel)',
+            color: 'var(--text-main)',
+            inputAttributes: {
+                style: 'background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border); border-radius: 8px;'
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                processarSessaoTratamento(tratamentoId, result.value || '');
+            }
+        });
+    } else {
+        processarSessaoTratamento(tratamentoId, '');
+    }
+};
+
+async function processarSessaoTratamento(tratamentoId, observacoes) {
+    try {
+        // Registra presença
+        let payload = {
             tratamento_id: tratamentoId,
             data: new Date().toISOString().split('T')[0]
-        }]);
+        };
+        if (observacoes) payload.observacoes = observacoes.trim();
 
-        if (error) throw error;
-        carregarFilaPresencasDesktop();
+        const { error: err1 } = await db.from('app_atendimento_presencas').insert([payload]);
+        if (err1) throw err1;
+
+        // Tira o tratamento da sala de espera para amanhã (ou hoje já concluído)
+        const { error: err2 } = await db.from('app_atendimento_tratamentos').update({ presente: false }).eq('id', tratamentoId);
+        if (err2) throw err2;
+
+        Swal.fire({
+            title: 'Sucesso',
+            text: 'Atendimento registrado com sucesso!',
+            icon: 'success',
+            background: 'var(--bg-panel)',
+            color: 'var(--text-main)',
+            timer: 1500,
+            showConfirmButton: false
+        });
+
+        carregarEsperaTratamentoDesktop();
     } catch (err) {
-        alert('Erro ao registrar presença: ' + err.message);
+        console.error(err);
+        Swal.fire('Erro', 'Erro ao confirmar atendimento: ' + err.message, 'error');
     }
-};
-
-window.registrarPresencaEspiritual = async function (tratamentoId) {
-    const obsInput = document.getElementById('obs_' + tratamentoId);
-    const obs = obsInput ? obsInput.value.trim() : '';
-
-    try {
-        const { error } = await db.from('app_atendimento_presencas').insert([{
-            tratamento_id: tratamentoId,
-            data: new Date().toISOString().split('T')[0],
-            observacoes: obs || null
-        }]);
-
-        if (error) throw error;
-        carregarFilaPresencasDesktop();
-    } catch (err) {
-        alert('Erro ao registrar presença: ' + err.message);
-    }
-};
+}
 
 window.carregarPainelSemanalDesktop = async function () {
     const lista = document.getElementById('listaAten');
