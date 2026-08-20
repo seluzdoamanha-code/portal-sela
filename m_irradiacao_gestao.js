@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarLista();
 });
 
-function voltarParaHub() {
+window.voltarParaHub = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const estruturaId = urlParams.get('id') || localStorage.getItem('estrutura_atual');
     if (estruturaId) {
@@ -83,7 +83,7 @@ function voltarParaHub() {
     }
 }
 
-function mudarAba(aba) {
+window.mudarAba = function(aba) {
     currentTab = aba;
 
     // Atualizar UI das abas
@@ -107,7 +107,7 @@ function mudarAba(aba) {
     }
 }
 
-function setDia(dia) {
+window.setDia = function(dia) {
     currentDia = dia;
 
     // Atualizar UI dos filtros
@@ -132,7 +132,7 @@ function formatDiaId(dia) {
     return '';
 }
 
-async function carregarLista() {
+window.carregarLista = async function() {
     const listaEl = document.getElementById('listaGestaoIrradiacoes');
     listaEl.innerHTML = '<div class="empty-state">Carregando dados...</div>';
 
@@ -328,7 +328,7 @@ function renderLista() {
 // ----------------------------------------------------
 // BOTTOM SHEET (EDICAO)
 // ----------------------------------------------------
-function abrirEdicao(id, nome, end, dias, semanas) {
+window.abrirEdicao = function(id, nome, end, dias, semanas) {
     const html = `
         <form onsubmit="window.salvarEdicaoIrradiacaoSideSheet(event, '${id}')" style="display: flex; flex-direction: column; gap: 16px;">
             <div>
@@ -392,7 +392,7 @@ window.salvarEdicaoIrradiacaoSideSheet = async function (event, id) {
 // ----------------------------------------------------
 // ACOES DIRETAS (Triagem, Excluir, Arquivar)
 // ----------------------------------------------------
-async function aprovar(id, nome, end, dias) {
+window.aprovar = async function(id, nome, end, dias) {
     if (!confirm(`Mover '${nome}' para o Painel de Leitura (Ativo)?`)) return;
 
     try {
@@ -406,7 +406,7 @@ async function aprovar(id, nome, end, dias) {
     }
 }
 
-async function excluir(id) {
+window.excluir = async function(id) {
     Swal.fire({
         title: 'Excluir Solicitação?',
         text: 'Tem certeza que deseja excluir esta solicitação permanentemente?',
@@ -431,7 +431,7 @@ async function excluir(id) {
     });
 }
 
-async function arquivar(id) {
+window.arquivar = async function(id) {
     Swal.fire({
         title: 'Forçar Arquivamento?',
         text: 'Forçar arquivamento (mover para histórico)?',
