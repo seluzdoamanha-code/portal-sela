@@ -137,8 +137,7 @@
         } else if (abaPrincipal === 'historico') {
             container.style.display = 'flex';
             container.innerHTML = `
-                <div class="sub-tab-pill ${subAba === 'mes' ? 'active' : ''}" onclick="switchSubTab('mes')">✨ Atendimentos no Mês</div>
-                <div class="sub-tab-pill ${subAba === 'historico_antigo' ? 'active' : ''}" onclick="switchSubTab('historico_antigo')">📚 Histórico Antigo</div>
+                <div class="sub-tab-pill ${subAba === 'historico_geral' ? 'active' : ''}" onclick="switchSubTab('historico_geral')" style="width: 100%;">📜 Histórico Geral</div>
             `;
         }
     }
@@ -240,13 +239,8 @@
                 filteredData = allData.filter(d => d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
                 renderAndamentoList(filteredData);
             } 
-            else if (subAba === 'mes') {
-                filteredData = allData.filter(item => {
-                    if (item.status !== 'Atendido' && item.status !== 'Em Tratamento') return false;
-                    const d = new Date(item.data_hora_atendimento || item.created_at);
-                    return d.getFullYear() === curYear && d.getMonth() === curMonth;
-                });
-                renderHistoricoList(filteredData);
+            else if (subAba === 'historico_geral') {
+                carregarHistoricoGeralMobile();
             } 
             else if (subAba === 'tratamentos') {
                 carregarTratamentosAtivos();
@@ -260,10 +254,7 @@
             else if (subAba === 'painel_semanal') {
                 carregarPainelSemanal();
             }
-            else if (subAba === 'historico_antigo') {
-                const ct = document.getElementById('listaAtendimento');
-                ct.innerHTML = '<div class="empty-state">📚 Área de Histórico Antigo e Estatísticas em desenvolvimento.</div>';
-            }
+
 
         } catch (e) {
             console.error("Erro ao carregar dados:", e);
@@ -631,9 +622,8 @@
 
         try {
             const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(app_pacientes(*), nome_completo, telefone)')
-                .eq('status', 'Ativo')
-                .order('created_at', { ascending: false });
+                .select('*, app_atendimento_fraterno(app_pacientes(*), nome_completo, telefone), app_atendimento_presencas(data)')
+                .eq('status', 'Ativo');
 
             if (error) throw error;
 
@@ -642,13 +632,25 @@
                 return;
             }
 
+            trats.sort((a, b) => {
+                const nameA = a.app_atendimento_fraterno?.app_pacientes?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '';
+                const nameB = b.app_atendimento_fraterno?.app_pacientes?.nome_completo || b.app_atendimento_fraterno?.nome_completo || '';
+                return nameA.localeCompare(nameB);
+            });
+
             trats.forEach(t => {
                 const card = document.createElement('div');
                 card.className = 'card-atendimento';
                 card.style.marginBottom = '12px';
                 
                 const dtInicio = t.data_inicio ? t.data_inicio.split('T')[0].split('-').reverse().join('/') : '';
-                const tipoCor = t.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
+                const tipoCor = t.tipo === 'Espiritual' ? '#8b5cf6' : '#3b82f6';
+                
+                let attendedToday = false;
+                if (t.app_atendimento_presencas) {
+                    const todayStr = new Date().toLocaleDateString('pt-BR');
+                    attendedToday = t.app_atendimento_presencas.some(p => new Date(p.data).toLocaleDateString('pt-BR') === todayStr);
+                }
 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -659,7 +661,10 @@
                     <div class="card-info"><strong>WhatsApp:</strong> ${t.app_atendimento_fraterno?.app_pacientes?.telefone || t.app_atendimento_fraterno?.telefone || '-'}</div>
 
                     <div style="margin-top:12px; display:flex; gap:8px;">
-                        <button onclick="confirmarSessaoTratamento('${t.id}', '${t.tipo}')" class="btn-action" style="background:${tipoCor}; color:white; border:none; width:100%;">Confirmar Atendimento</button>
+                        ${attendedToday
+                            ? `<button disabled class="btn-action" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px dashed var(--border); width:100%; font-size: 11px;">Atendimento já foi realizado HOJE!</button>`
+                            : `<button onclick="confirmarSessaoTratamento('${t.id}', '${t.tipo}')" class="btn-action" style="background:${tipoCor}; color:white; border:none; width:100%;">Confirmar Atendimento</button>`
+                        }
                     </div>
                     <div style="margin-top:8px; display:flex; gap:8px;">
                         <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" class="btn-action" style="background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2);">Concluir</button>
@@ -936,6 +941,156 @@
         }
     }
 
+    window.carregarHistoricoGeralMobile = async function() {
+        const lista = document.getElementById('listaAtendimento');
+        if (!lista) return;
+        lista.innerHTML = '<div class="empty-state">Carregando histórico unificado...</div>';
+
+        try {
+            // 1. Buscar todas as triagens atendidas
+            const pFraterno = db.from('app_atendimento_fraterno')
+                .select('*, atendente:pessoas!atendente_id(nome_completo), app_pacientes(*)')
+                .eq('status', 'Atendido');
+            
+            // 2. Buscar todos os tratamentos concluídos ou suspensos
+            const pTratamentos = db.from('app_atendimento_tratamentos')
+                .select('*, app_atendimento_fraterno(nome_completo, app_pacientes(*))')
+                .in('status', ['Concluído', 'Suspenso']);
+
+            const [reqFraterno, reqTratamentos] = await Promise.all([pFraterno, pTratamentos]);
+            
+            if (reqFraterno.error) throw reqFraterno.error;
+            if (reqTratamentos.error) throw reqTratamentos.error;
+
+            // 3. Unificar dados
+            let historico = [];
+            
+            reqFraterno.data.forEach(f => {
+                const dataFechamento = f.data_hora_atendimento || f.created_at;
+                historico.push({
+                    tipoDado: 'Fraterno',
+                    dataOrdenacao: new Date(dataFechamento),
+                    id: f.id,
+                    nome_paciente: f.app_pacientes?.nome_completo || f.nome_completo,
+                    infoAdicional: f.atendente ? `Atendente: ${f.atendente.nome_completo}` : '',
+                    status: f.status,
+                    paciente_id: f.id 
+                });
+            });
+
+            reqTratamentos.data.forEach(t => {
+                const dataFechamento = t.data_fim || t.created_at;
+                historico.push({
+                    tipoDado: t.tipo, 
+                    dataOrdenacao: new Date(dataFechamento),
+                    id: t.id,
+                    nome_paciente: t.app_atendimento_fraterno?.app_pacientes?.nome_completo || t.app_atendimento_fraterno?.nome_completo,
+                    infoAdicional: t.data_inicio ? `Início: ${t.data_inicio.split('T')[0].split('-').reverse().join('/')}` : '',
+                    status: t.status,
+                    paciente_id: t.fraterno_id 
+                });
+            });
+
+            // 4. Agrupar por Ano e Mês
+            const agrupado = {};
+            historico.forEach(item => {
+                const y = item.dataOrdenacao.getFullYear();
+                const m = item.dataOrdenacao.getMonth();
+                if (!agrupado[y]) agrupado[y] = {};
+                if (!agrupado[y][m]) agrupado[y][m] = [];
+                agrupado[y][m].push(item);
+            });
+
+            lista.innerHTML = '';
+            
+            if (Object.keys(agrupado).length === 0) {
+                lista.innerHTML = '<div class="empty-state">Nenhum histórico encontrado.</div>';
+                return;
+            }
+
+            const mesesNomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            const anosOrdenados = Object.keys(agrupado).sort((a,b) => b - a);
+
+            anosOrdenados.forEach((ano, indexAno) => {
+                const wrapperAno = document.createElement('div');
+                wrapperAno.style.marginBottom = '8px';
+
+                const headerAno = document.createElement('div');
+                headerAno.style.cssText = 'background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 8px; font-weight: bold; font-size: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: white; border: 1px solid var(--border);';
+                headerAno.innerHTML = `<span>📂 Ano ${ano}</span><span style="font-size: 12px; opacity: 0.5;">▼</span>`;
+                
+                const contentAno = document.createElement('div');
+                contentAno.style.cssText = 'padding: 8px 0 8px 12px; display: none;';
+                if (indexAno === 0) contentAno.style.display = 'block';
+
+                headerAno.onclick = () => {
+                    contentAno.style.display = contentAno.style.display === 'none' ? 'block' : 'none';
+                    headerAno.querySelector('span:last-child').textContent = contentAno.style.display === 'none' ? '▼' : '▲';
+                };
+
+                const mesesOrdem = Object.keys(agrupado[ano]).sort((a,b) => b - a);
+                mesesOrdem.forEach(mesIdx => {
+                    const listaMes = agrupado[ano][mesIdx];
+                    listaMes.sort((a,b) => b.dataOrdenacao - a.dataOrdenacao);
+
+                    const wrapperMes = document.createElement('div');
+                    wrapperMes.style.marginBottom = '8px';
+                    
+                    const headerMes = document.createElement('div');
+                    headerMes.style.cssText = 'background: rgba(255,255,255,0.02); padding: 10px 14px; border-radius: 6px; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-main); border: 1px solid rgba(255,255,255,0.05);';
+                    headerMes.innerHTML = `<span>📂 ${mesesNomes[mesIdx]} <span style="font-size: 11px; opacity: 0.5;">(${listaMes.length})</span></span><span style="font-size: 10px; opacity: 0.5;">▼</span>`;
+
+                    const contentMes = document.createElement('div');
+                    contentMes.style.cssText = 'padding: 8px 0; display: none;';
+
+                    headerMes.onclick = () => {
+                        contentMes.style.display = contentMes.style.display === 'none' ? 'block' : 'none';
+                        headerMes.querySelector('span:last-child').textContent = contentMes.style.display === 'none' ? '▼' : '▲';
+                    };
+
+                    listaMes.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'card-atendimento';
+                        div.style.marginBottom = '8px';
+                        
+                        let badgeBg = '#f59e0b';
+                        let badgeText = '🤝 TRIAGEM';
+                        if (item.tipoDado === 'Fluídico') { badgeBg = '#3b82f6'; badgeText = '💧 TRAT. FLUÍDICO'; }
+                        if (item.tipoDado === 'Espiritual') { badgeBg = '#8b5cf6'; badgeText = '✨ TRAT. ESPIRITUAL'; }
+
+                        const statusCor = item.status === 'Suspenso' ? '#ef4444' : (item.status === 'Concluído' ? '#10b981' : 'var(--text-muted)');
+
+                        div.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <span style="font-size:14px; font-weight:600; color:white;">${(item.nome_paciente || 'Desconhecido').toUpperCase()}</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px;">
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeBg}; color: white; display: inline-block; align-self: flex-start;">${badgeText}</span>
+                                <span style="font-size: 12px; color: var(--text-muted);">${item.infoAdicional}</span>
+                                <span style="font-size: 12px; color: ${statusCor}; font-weight: 500;">Status: ${item.status}</span>
+                            </div>
+                            <div style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 8px; padding-top: 8px; display: flex; justify-content: flex-end;">
+                                <button onclick="abrirFichaAtendimento('${item.paciente_id}')" class="btn-action" style="background:rgba(255,255,255,0.05); color:white; border:1px solid var(--border); width: 100%;">📝 Ficha Completa</button>
+                            </div>
+                        `;
+                        contentMes.appendChild(div);
+                    });
+
+                    wrapperMes.appendChild(headerMes);
+                    wrapperMes.appendChild(contentMes);
+                    contentAno.appendChild(wrapperMes);
+                });
+
+                wrapperAno.appendChild(headerAno);
+                wrapperAno.appendChild(contentAno);
+                lista.appendChild(wrapperAno);
+            });
+        } catch (e) {
+            console.error(e);
+            lista.innerHTML = '<div class="empty-state">Erro ao carregar histórico unificado.</div>';
+        }
+    };
+
     async function carregarEsperaTratamento() {
         const container = document.getElementById('listaAtendimento');
         container.innerHTML = '';
@@ -1072,103 +1227,158 @@
     // --- PAINEL SEMANAL DE ACOMPANHAMENTO ---
 
     async function carregarPainelSemanal() {
-        const container = document.getElementById('listaAtendimento');
-        container.innerHTML = '<div class="empty-state">Gerando painel semanal...</div>';
+        const lista = document.getElementById('listaAtendimento');
+        if (!lista) return;
+        lista.innerHTML = '<div class="empty-state">Gerando painel semanal...</div>';
 
         try {
-            // Obter tratamentos ativos
-            const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(nome_completo, app_pacientes(*))')
+            const { data: tratamentos, error } = await db.from('app_atendimento_tratamentos')
+                .select('*, app_atendimento_fraterno(nome_completo, telefone, id, app_pacientes(*)), app_atendimento_presencas(data)')
                 .eq('status', 'Ativo');
 
             if (error) throw error;
 
-            if (!trats || trats.length === 0) {
-                container.innerHTML = '<div class="empty-state">Nenhum necessitado em tratamento ativo nesta semana.</div>';
-                return;
-            }
+            lista.innerHTML = '';
 
-            // Obter presenças para calcular estatísticas
-            const { data: pres, error: errPres } = await db.from('app_atendimento_presencas').select('*');
-            if (errPres) throw errPres;
+            const totalAtivos = tratamentos.length;
+            const evangelhoCount = parseInt(localStorage.getItem('evangelhoCount') || '0', 10);
+            
+            let pacientesNaSemana = 0;
+            let abandonos = [];
+            
+            const now = new Date();
+            const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-            // Mapear número de presenças por tratamento
-            const presCount = {};
-            const ultimasPres = {};
+            tratamentos.forEach(t => {
+                const presencas = t.app_atendimento_presencas || [];
+                let presencaRecente = false;
+                let lastDateObj = null;
 
-            pres.forEach(p => {
-                presCount[p.tratamento_id] = (presCount[p.tratamento_id] || 0) + 1;
-                
-                // Salvar data mais recente
-                const dataVal = new Date(p.data);
-                if (!ultimasPres[p.tratamento_id] || dataVal > new Date(ultimasPres[p.tratamento_id])) {
-                    ultimasPres[p.tratamento_id] = p.data;
+                if (presencas.length > 0) {
+                    const datesObj = presencas.map(p => new Date(p.data)).sort((a, b) => b - a);
+                    lastDateObj = datesObj[0];
+                    if (lastDateObj >= oneWeekAgo) {
+                        presencaRecente = true;
+                        pacientesNaSemana++;
+                    }
+                }
+
+                if (t.status === 'Ativo' && (!lastDateObj || lastDateObj < twoWeeksAgo)) {
+                    abandonos.push({
+                        id: t.id,
+                        nome: t.app_atendimento_fraterno?.app_pacientes?.nome_completo || t.app_atendimento_fraterno?.nome_completo || 'Desconhecido',
+                        telefone: t.app_atendimento_fraterno?.app_pacientes?.telefone || t.app_atendimento_fraterno?.telefone,
+                        tipo: t.tipo,
+                        lastDate: lastDateObj ? lastDateObj.toLocaleDateString('pt-BR') : 'Nunca compareceu',
+                        faltasConsecutivas: lastDateObj ? Math.floor((now - lastDateObj) / (7 * 24 * 60 * 60 * 1000)) : 'Várias'
+                    });
                 }
             });
 
-            container.innerHTML = `
-                <div style="background:rgba(255,255,255,0.01); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:16px;">
-                    <h3 style="font-size:14px; font-weight:600; margin-bottom:4px; color:white;">📅 Organização das Sessões</h3>
-                    <p style="color:var(--text-muted); font-size:12px; line-height:1.4; margin:0;">
-                        Pacientes em tratamento ativo divididos por categoria. O acompanhamento padrão sugerido é de 4 semanas.
-                    </p>
+            const taxaFrequencia = totalAtivos > 0 ? Math.round((pacientesNaSemana / totalAtivos) * 100) : 0;
+
+            const painelHtml = document.createElement('div');
+            painelHtml.style.display = 'flex';
+            painelHtml.style.flexDirection = 'column';
+            painelHtml.style.gap = '20px';
+
+            let resumoHtml = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Ativos</div>
+                        <div style="font-size: 20px; font-weight: bold; color: var(--primary);">${totalAtivos}</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Na Semana</div>
+                        <div style="font-size: 20px; font-weight: bold; color: #10b981;">${pacientesNaSemana}</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Evangelho Lar</div>
+                        <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">${evangelhoCount}</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Frequência</div>
+                        <div style="font-size: 20px; font-weight: bold; color: #8b5cf6;">${taxaFrequencia}%</div>
+                    </div>
                 </div>
             `;
 
-            // Separar em Fluídico e Espiritual
-            const fluidicos = trats.filter(t => t.tipo === 'Fluídico');
-            const espirituais = trats.filter(t => t.tipo === 'Espiritual');
-
-            // Renderizar bloco Fluídico
-            if (fluidicos.length > 0) {
-                const header = document.createElement('div');
-                header.style.cssText = 'font-weight: bold; color: #10b981; font-size: 14px; margin-top: 10px; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;';
-                header.innerHTML = `💧 Tratamento Fluídico (${fluidicos.length})`;
-                container.appendChild(header);
-
-                fluidicos.forEach(f => {
-                    const count = presCount[f.id] || 0;
-                    const uData = ultimasPres[f.id] ? ultimasPres[f.id].split('T')[0].split('-').reverse().join('/') : 'Nenhuma';
-                    
-                    const card = document.createElement('div');
-                    card.style.cssText = 'background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; padding:10px; margin-bottom:8px; font-size:13px;';
-                    card.innerHTML = `
-                        <div style="font-weight:bold; color:white; margin-bottom:4px;">${(f.app_atendimento_fraterno?.app_pacientes?.nome_completo || f.app_atendimento_fraterno?.nome_completo || '').toUpperCase()}</div>
-                        <div style="display:flex; justify-content:space-between; color:var(--text-muted);">
-                            <span>Realizados: <strong>${count} de 4</strong></span>
-                            <span>Último: <strong>${uData}</strong></span>
+            let abandonosHtml = '';
+            if (abandonos.length > 0) {
+                abandonosHtml = `
+                    <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 12px;">
+                        <h4 style="margin-top: 0; color: #ef4444; margin-bottom: 8px; font-size: 13px;">⚠️ Risco de Abandono (${abandonos.length})</h4>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            ${abandonos.map(a => `
+                                <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(239,68,68,0.1); border-radius: 6px; padding: 10px;">
+                                    <div style="font-size: 13px; font-weight: bold; color: white;">${a.nome.toUpperCase()} <span style="font-size: 9px; padding: 2px 4px; border-radius: 8px; background: rgba(255,255,255,0.1); color: var(--text-muted);">${a.tipo}</span></div>
+                                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; margin-bottom: 8px;">Faltas: ${a.faltasConsecutivas} sem. | Última: ${a.lastDate}</div>
+                                    ${a.telefone ? `<a href="https://wa.me/55${a.telefone.replace(/\D/g, '')}" target="_blank" class="btn" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); text-decoration: none; padding: 6px; font-size: 11px; border-radius: 6px; display: block; text-align: center;">Chamar no WhatsApp</a>` : '<span style="font-size: 11px; color: var(--text-muted);">Sem Telefone</span>'}
+                                </div>
+                            `).join('')}
                         </div>
-                        <div style="width:100%; height:6px; background:rgba(255,255,255,0.05); border-radius:3px; margin-top:8px; overflow:hidden;">
-                            <div style="width:${Math.min((count / 4) * 100, 100)}%; height:100%; background:#10b981; border-radius:3px;"></div>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
+                    </div>
+                `;
             }
 
-            // Renderizar bloco Espiritual
-            if (espirituais.length > 0) {
-                const header = document.createElement('div');
-                header.style.cssText = 'font-weight: bold; color: #818cf8; font-size: 14px; margin-top: 18px; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;';
-                header.innerHTML = `✨ Tratamento Energético / Espiritual (${espirituais.length})`;
-                container.appendChild(header);
+            let listaHtml = `<div><h4 style="margin-top: 0; color: var(--primary); margin-bottom: 12px; font-size: 14px;">Progresso dos Tratamentos</h4>`;
+            
+            if (tratamentos.length === 0) {
+                listaHtml += '<div style="color: var(--text-muted); font-size: 12px;">Nenhum tratamento ativo.</div>';
+            } else {
+                const sortedTrats = tratamentos.sort((a, b) => {
+                    const nameA = a.app_atendimento_fraterno?.app_pacientes?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '';
+                    const nameB = b.app_atendimento_fraterno?.app_pacientes?.nome_completo || b.app_atendimento_fraterno?.nome_completo || '';
+                    return nameA.localeCompare(nameB);
+                });
 
-                espirituais.forEach(e => {
-                    const count = presCount[e.id] || 0;
-                    const uData = ultimasPres[e.id] ? ultimasPres[e.id].split('T')[0].split('-').reverse().join('/') : 'Nenhuma';
+                listaHtml += `<div style="display: flex; flex-direction: column; gap: 8px;">`;
+                
+                sortedTrats.forEach(t => {
+                    const presencas = t.app_atendimento_presencas || [];
+                    const presCount = presencas.length;
+                    const limit = 4;
                     
-                    const card = document.createElement('div');
-                    card.style.cssText = 'background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; padding:10px; margin-bottom:8px; font-size:13px;';
-                    card.innerHTML = `
-                        <div style="font-weight:bold; color:white; margin-bottom:4px;">${(e.app_atendimento_fraterno?.app_pacientes?.nome_completo || e.app_atendimento_fraterno?.nome_completo || '').toUpperCase()}</div>
-                        <div style="display:flex; justify-content:space-between; color:var(--text-muted);">
-                            <span>Presenças: <strong>${count}</strong></span>
-                            <span>Último: <strong>${uData}</strong></span>
+                    let boxesHtml = '';
+                    for(let i = 0; i < limit; i++) {
+                        if (i < presCount) {
+                            boxesHtml += `<div style="width: 22px; height: 22px; border-radius: 4px; background: #10b981; border: 1px solid #059669; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px;">✓</div>`;
+                        } else {
+                            boxesHtml += `<div style="width: 22px; height: 22px; border-radius: 4px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 9px;">${i+1}</div>`;
+                        }
+                    }
+                    
+                    if (presCount > limit) {
+                        boxesHtml += `<div style="width: 22px; height: 22px; border-radius: 4px; background: rgba(16, 185, 129, 0.2); border: 1px dashed #10b981; display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 9px; font-weight: bold;">+${presCount - limit}</div>`;
+                    }
+
+                    const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
+                    
+                    listaHtml += `
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column;">
+                            <div style="font-size: 12px; font-weight: bold; color: var(--text-main); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${t.app_atendimento_fraterno?.app_pacientes?.nome_completo?.toUpperCase() || t.app_atendimento_fraterno?.nome_completo?.toUpperCase() || 'DESCONHECIDO'}
+                            </div>
+                            <div style="font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; display: inline-block; margin-bottom: 8px; align-self: flex-start;">${t.tipo.toUpperCase()}</div>
+                            <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; gap: 4px;">
+                                    ${boxesHtml}
+                                </div>
+                                <div style="display: flex; gap: 4px;">
+                                    <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" title="Concluir" style="padding: 4px; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center; min-width: 28px;">✔️</button>
+                                    <button onclick="mudarStatusTratamento('${t.id}', 'Suspenso')" title="Suspender" style="padding: 4px; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center; min-width: 28px;">❌</button>
+                                </div>
+                            </div>
                         </div>
                     `;
-                    container.appendChild(card);
                 });
+                listaHtml += `</div>`;
             }
+            listaHtml += `</div>`;
+
+            painelHtml.innerHTML = resumoHtml + abandonosHtml + listaHtml;
+            lista.appendChild(painelHtml);
 
         } catch(e) {
             container.innerHTML = `<div class="empty-state">Erro: ${e.message}</div>`;
