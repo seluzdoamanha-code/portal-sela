@@ -565,11 +565,11 @@
         }
 
         try {
-            const { data: { session } } = await db.auth.getSession();
+            const profStr = localStorage.getItem('sela_user_profile');
             let atendenteId = null;
-            if (session && session.user && session.user.email) {
-                const { data: pessoa } = await db.from('pessoas').select('id').eq('email', session.user.email).single();
-                if (pessoa) atendenteId = pessoa.id;
+            if (profStr) {
+                const prof = JSON.parse(profStr);
+                atendenteId = prof.id;
             }
 
             const { error: errSess } = await db.from('app_atendimento_sessoes').insert([{

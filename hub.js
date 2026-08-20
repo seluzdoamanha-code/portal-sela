@@ -883,7 +883,15 @@ async function salvarDocumento(e) {
 }
 
 window.excluirDocumento = async function (id) {
-    if (!confirm("Tem certeza que deseja excluir este documento? Os departamentos que o herdaram também perderão o acesso.")) return;
+    const { isConfirmed } = await Swal.fire({
+        title: 'Excluir documento?',
+        text: 'Os departamentos que o herdaram também perderão o acesso.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Sim, excluir'
+    });
+    if (!isConfirmed) return;
 
     try {
         // O Supabase (Cascade Delete) ou a exclusao direta da visibilidade primeiro
@@ -1059,7 +1067,15 @@ async function salvarEvento(e) {
 }
 
 window.excluirEventoAgenda = async (id) => {
-    if (!confirm("Tem certeza que deseja apagar este evento da agenda?")) return;
+    const { isConfirmed } = await Swal.fire({
+        title: 'Apagar evento?',
+        text: 'Tem certeza que deseja apagar este evento da agenda?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Sim, apagar'
+    });
+    if (!isConfirmed) return;
 
     try {
         const { error } = await db.from('agenda').delete().eq('id', id);
@@ -1231,7 +1247,15 @@ window.salvarAtividadeRegular = async function (event) {
 };
 
 window.excluirAtividadeRegular = async function (id) {
-    if (!confirm("Tem certeza que deseja apagar esta atividade regular?")) return;
+    const { isConfirmed } = await Swal.fire({
+        title: 'Apagar atividade?',
+        text: 'Tem certeza que deseja apagar esta atividade regular?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Sim, apagar'
+    });
+    if (!isConfirmed) return;
     try {
         const { error } = await db.from('atividades_regulares').delete().eq('id', id);
         if (error) throw error;
@@ -1372,7 +1396,15 @@ window.editarProjeto = (id) => {
 };
 
 window.excluirProjeto = async (id) => {
-    if (!confirm("Tem certeza que deseja excluir este item? Os documentos dentro dele não serão apagados, apenas ficarão 'soltos'.")) return;
+    const { isConfirmed } = await Swal.fire({
+        title: 'Excluir item?',
+        text: 'Os documentos dentro dele não serão apagados, apenas ficarão soltos.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Sim, excluir'
+    });
+    if (!isConfirmed) return;
 
     try {
         const { error } = await db.from('projetos_processos').delete().eq('id', id);
@@ -1693,7 +1725,15 @@ window.novaSolicitacaoIrr = function () {
 
 window.cancelarSolicitacaoIrr = async function () {
     if (window.lastInsertedIrrIds.length === 0) return;
-    if (!confirm("Tem certeza que deseja cancelar e apagar esta solicitação?")) return;
+    const { isConfirmed } = await Swal.fire({
+        title: 'Cancelar solicitação?',
+        text: 'Tem certeza que deseja cancelar e apagar esta solicitação?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Sim, cancelar'
+    });
+    if (!isConfirmed) return;
 
     const btn = document.getElementById('btnCancelIrr');
     btn.disabled = true;
@@ -2330,7 +2370,15 @@ window.unificarNomesIrr = async function (idx, arrayEncoded) {
         return;
     }
 
-    if (!confirm(`Tem certeza que deseja atualizar todos os registros deste grupo para o nome:\n\n"${selecionado}"\n\nEssa ação não afeta os endereços ou o andamento das leituras.`)) {
+    const { isConfirmed } = await Swal.fire({
+        title: 'Unificar Nomes?',
+        html: `Tem certeza que deseja atualizar todos os registros deste grupo para o nome:<br><br><strong>"${selecionado}"</strong><br><br>Essa ação não afeta os endereços ou o andamento das leituras.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ec4899',
+        confirmButtonText: 'Sim, unificar'
+    });
+    if (!isConfirmed) {
         return;
     }
 
@@ -2423,7 +2471,7 @@ window.confirmarTriagem = async function (id) {
 
     } catch (err) {
         console.error(err);
-        alert('Erro ao confirmar triagem. Verifique se a coluna semanas_alvo já foi criada no banco de dados. ' + (err.message || ''));
+        Swal.fire('Aviso', 'Erro ao confirmar triagem. Verifique se a coluna semanas_alvo já foi criada no banco de dados. ' + (err.message || ''), 'error');
         btn.disabled = false;
         btn.textContent = 'Aprovar Pedido';
     }
@@ -3413,19 +3461,19 @@ window.carregarListaAtendimento = async function () {
         if (statsContainer) {
             statsContainer.innerHTML = `
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
-                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">📂 Fila Ativa</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">📂 Fila p/ Atendimento</div>
                     <div style="font-size: 18px; font-weight: bold; color: var(--primary);">${allData.filter(d => d.status !== 'Atendido' && d.status !== 'Em Tratamento').length}</div>
                 </div>
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
-                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🛋️ Sala de Espera</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🛋️ Presentes (Espera)</div>
                     <div style="font-size: 18px; font-weight: bold; color: #f59e0b;">${allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length + allTratamentos.filter(t => t.presente).length}</div>
                 </div>
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
-                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🧑‍🤝‍🧑 Em Atendimento</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🧑‍🤝‍🧑 Em Atendimento (Sala)</div>
                     <div style="font-size: 18px; font-weight: bold; color: #3b82f6;">${allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length}</div>
                 </div>
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
-                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🩹 Tratando</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🩹 Em Tratamento (Ciclo)</div>
                     <div style="font-size: 18px; font-weight: bold; color: #10b981;">${activeTratCount}</div>
                 </div>
             `;
@@ -3832,7 +3880,7 @@ window.salvarEdicaoAtendimentoSideSheet = async function (e, id) {
         window.fecharSideSheet();
         carregarListaAtendimento();
     } catch (err) {
-        alert('Erro ao salvar edição: ' + err.message);
+        Swal.fire('Aviso', 'Erro ao salvar edição: ' + err.message, 'error');
     }
 };
 
@@ -3888,7 +3936,7 @@ window.salvarTriagemAtendimentoSideSheet = async function (e, id) {
     const atendenteId = document.getElementById('sideSelectAtendenteAtendimento').value;
 
     if (!atendenteId) {
-        alert('Por favor, selecione um atendente.');
+        Swal.fire('Aviso', 'Por favor, selecione um atendente.', 'warning');
         return;
     }
 
@@ -3906,7 +3954,7 @@ window.salvarTriagemAtendimentoSideSheet = async function (e, id) {
         window.fecharSideSheet();
         carregarListaAtendimento();
     } catch (err) {
-        alert('Erro ao salvar triagem: ' + err.message);
+        Swal.fire('Erro', 'Erro ao salvar triagem: ' + err.message, 'error');
     }
 };
 
@@ -3926,7 +3974,7 @@ window.salvarConcluirAtendimento = async function (e) {
     const dataHora = document.getElementById('concluirAtenDataHora').value;
 
     if (!dataHora) {
-        alert('Por favor, informe a data/hora.');
+        Swal.fire('Aviso', 'Por favor, informe a data/hora.', 'warning');
         return;
     }
 
@@ -3943,7 +3991,7 @@ window.salvarConcluirAtendimento = async function (e) {
         document.getElementById('modalConcluirAtendimento').style.display = 'none';
         carregarListaAtendimento();
     } catch (err) {
-        alert('Erro ao concluir atendimento: ' + err.message);
+        Swal.fire('Erro', 'Erro ao concluir atendimento: ' + err.message, 'error');
     }
 };
 
@@ -4341,19 +4389,23 @@ window.salvarFichaAtendimentoSideSheet = async function () {
     const evangelhoLar = document.getElementById('sideChkEvangelhoLar').checked;
 
     if (!sintomas) {
-        alert('Por favor, informe os sintomas e orientações desta sessão.');
+        Swal.fire('Aviso', 'Por favor, informe os sintomas e orientações desta sessão.', 'warning');
         return;
     }
 
     if (!tratFluidico && !tratEspiritual && !apenasConversa) {
-        alert('Por favor, selecione ao menos um Tratamento ou marque Apenas Conversa Fraterna.');
+        Swal.fire('Aviso', 'Por favor, selecione ao menos um Tratamento ou marque Apenas Conversa Fraterna.', 'warning');
         return;
     }
 
     try {
         // Obter usuário logado atual
-        const sess = JSON.parse(localStorage.getItem('portal_sela_sessao') || '{}');
-        let atendenteId = sess.pessoa_id || null;
+        const profStr = localStorage.getItem('sela_user_profile');
+        let atendenteId = null;
+        if (profStr) {
+            const prof = JSON.parse(profStr);
+            atendenteId = prof.id;
+        }
 
         // Registrar Sessão
         const { error: errSess } = await db.from('app_atendimento_sessoes').insert([{
@@ -4395,11 +4447,11 @@ window.salvarFichaAtendimentoSideSheet = async function () {
         }).eq('id', activeFichaAtendimentoId);
         if (errAten) throw errAten;
 
-        alert('Sessão gravada e tratamentos prescritos com sucesso!');
+        Swal.fire('Sucesso', 'Sessão gravada e tratamentos prescritos com sucesso!', 'success');
         window.fecharSideSheet();
         carregarListaAtendimento();
     } catch (err) {
-        alert('Erro ao gravar sessão: ' + err.message);
+        Swal.fire('Erro', 'Erro ao gravar sessão: ' + err.message, 'error');
     }
 };
 
@@ -5031,57 +5083,169 @@ window.carregarPainelSemanalDesktop = async function () {
     lista.innerHTML = '<div style="color: var(--text-muted); font-size: 14px;">Carregando painel semanal...</div>';
 
     try {
-        const { data: tratamentos, error } = await db
+        const { data: tratamentos, error: errTrat } = await db
             .from('app_atendimento_tratamentos')
-            .select('*, app_atendimento_fraterno(nome_completo), app_atendimento_presencas(data)')
+            .select('*, app_atendimento_fraterno(nome_completo, telefone), app_atendimento_presencas(data)')
             .eq('status', 'Ativo');
+            
+        if (errTrat) throw errTrat;
 
-        if (error) throw error;
+        // Número de Evangelho no Lar indicados
+        const { count: evangelhoCount, error: errEv } = await db
+            .from('app_atendimento_sessoes')
+            .select('*', { count: 'exact', head: true })
+            .eq('evangelho_lar', true);
+
+        if (errEv) throw errEv;
 
         lista.innerHTML = '';
-        if (!tratamentos || tratamentos.length === 0) {
-            lista.innerHTML = '<div style="padding: 24px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);">Nenhum tratamento ativo para exibir estatísticas semanais.</div>';
-            return;
-        }
+
+        // Estatísticas Básicas
+        const totalAtivos = tratamentos ? tratamentos.length : 0;
+        
+        let pacientesNaSemana = 0;
+        let abandonos = [];
+        
+        // Determinar "Esta Semana" (últimos 7 dias)
+        const now = new Date();
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
         tratamentos.forEach(t => {
             const presencas = t.app_atendimento_presencas || [];
-            const presCount = presencas.length;
-            const progressPct = Math.min((presCount / 4) * 100, 100);
+            let presencaRecente = false;
+            let lastDateObj = null;
 
-            let lastDate = 'Nenhuma';
             if (presencas.length > 0) {
-                // Ordenar datas
-                const datesStr = presencas.map(p => p.data).sort((a, b) => b.localeCompare(a));
-                lastDate = datesStr[0].split('T')[0].split('-').reverse().join('/');
+                const datesObj = presencas.map(p => new Date(p.data)).sort((a, b) => b - a);
+                lastDateObj = datesObj[0];
+                if (lastDateObj >= oneWeekAgo) {
+                    presencaRecente = true;
+                    pacientesNaSemana++;
+                }
             }
 
-            const card = document.createElement('div');
-            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 8px;';
+            // Risco de Abandono (Nenhuma presença nas últimas 2 semanas, mas tem tratamento ativo)
+            if (t.status === 'Ativo' && (!lastDateObj || lastDateObj < twoWeeksAgo)) {
+                abandonos.push({
+                    id: t.id,
+                    nome: t.app_atendimento_fraterno?.nome_completo || 'Desconhecido',
+                    telefone: t.app_atendimento_fraterno?.telefone,
+                    tipo: t.tipo,
+                    lastDate: lastDateObj ? lastDateObj.toLocaleDateString('pt-BR') : 'Nunca compareceu',
+                    faltasConsecutivas: lastDateObj ? Math.floor((now - lastDateObj) / (7 * 24 * 60 * 60 * 1000)) : 'Várias'
+                });
+            }
+        });
 
-            const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
+        const taxaFrequencia = totalAtivos > 0 ? Math.round((pacientesNaSemana / totalAtivos) * 100) : 0;
 
-            card.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 12px;">
-                    <div>
-                        <strong style="font-size: 15px; color: var(--text-main);">${t.app_atendimento_fraterno?.nome_completo.toUpperCase()}</strong>
-                        <span style="font-size: 10px; font-weight: bold; margin-left: 8px; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white;">${t.tipo.toUpperCase()}</span>
-                    </div>
-                    <div style="font-size: 13px; color: var(--text-muted);">Última presença: <strong>${lastDate}</strong></div>
+        // Montar UI Geral
+        const painelHtml = document.createElement('div');
+        painelHtml.style.display = 'flex';
+        painelHtml.style.flexDirection = 'column';
+        painelHtml.style.gap = '24px';
+
+        // 1. CARDS DE RESUMO
+        let resumoHtml = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center;">
+                    <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Tratamentos Ativos</div>
+                    <div style="font-size: 24px; font-weight: bold; color: var(--primary);">${totalAtivos}</div>
                 </div>
-                
-                <div>
-                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">
-                        <span>Frequência: ${presCount} semanas realizadas</span>
-                        <span>Progresso sugerido (4 semanas): ${presCount}/4</span>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.05); height: 8px; border-radius: 4px; overflow: hidden; width: 100%;">
-                        <div style="background: var(--primary); height: 100%; width: ${progressPct}%; border-radius: 4px; transition: width 0.3s ease;"></div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center;">
+                    <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Presentes na Semana</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #10b981;">${pacientesNaSemana}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center;">
+                    <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Evangelho no Lar (Indicados)</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">${evangelhoCount}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center;">
+                    <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Taxa de Frequência</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #8b5cf6;">${taxaFrequencia}%</div>
+                </div>
+            </div>
+        `;
+
+        // 2. ALERTAS DE ABANDONO
+        let abandonosHtml = '';
+        if (abandonos.length > 0) {
+            abandonosHtml = `
+                <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 16px;">
+                    <h4 style="margin-top: 0; color: #ef4444; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        ⚠️ Risco de Abandono (${abandonos.length} pacientes)
+                    </h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Estes pacientes não comparecem há 2 semanas ou mais.</p>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        ${abandonos.map(a => `
+                            <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(239,68,68,0.1); border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong style="color: var(--text-main); font-size: 14px;">${a.nome.toUpperCase()}</strong>
+                                    <span style="font-size: 10px; margin-left: 8px; padding: 2px 6px; border-radius: 12px; background: rgba(255,255,255,0.1); color: var(--text-muted);">${a.tipo}</span>
+                                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Faltas: ${a.faltasConsecutivas} semanas | Última vez: ${a.lastDate}</div>
+                                </div>
+                                ${a.telefone ? `
+                                    <a href="https://wa.me/55${a.telefone.replace(/\D/g, '')}" target="_blank" class="btn" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); text-decoration: none; padding: 8px 12px; font-size: 12px; border-radius: 6px;">
+                                        WhatsApp
+                                    </a>
+                                ` : '<span style="font-size: 11px; color: var(--text-muted);">Sem Telefone</span>'}
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
-            lista.appendChild(card);
-        });
+        }
+
+        // 3. ACOMPANHAMENTO DETALHADO (LISTA COM CAIXINHAS)
+        let listaHtml = `<div><h4 style="margin-top: 0; color: var(--primary); margin-bottom: 16px;">Progresso dos Tratamentos</h4>`;
+        
+        if (tratamentos.length === 0) {
+            listaHtml += '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhum tratamento ativo no momento.</div>';
+        } else {
+            const sortedTrats = tratamentos.sort((a, b) => {
+                const pA = a.app_atendimento_presencas ? a.app_atendimento_presencas.length : 0;
+                const pB = b.app_atendimento_presencas ? b.app_atendimento_presencas.length : 0;
+                return pB - pA;
+            });
+
+            listaHtml += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px;">`;
+            
+            sortedTrats.forEach(t => {
+                const presencas = t.app_atendimento_presencas || [];
+                const presCount = presencas.length;
+                const limit = 4;
+                
+                let boxesHtml = '';
+                for(let i = 0; i < limit; i++) {
+                    if (i < presCount) {
+                        boxesHtml += `<div style="width: 24px; height: 24px; border-radius: 4px; background: #10b981; border: 1px solid #059669; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">✓</div>`;
+                    } else {
+                        boxesHtml += `<div style="width: 24px; height: 24px; border-radius: 4px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 10px;">${i+1}</div>`;
+                    }
+                }
+                
+                const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
+                
+                listaHtml += `
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+                        <div style="font-size: 13px; font-weight: bold; color: var(--text-main); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            ${t.app_atendimento_fraterno?.nome_completo.toUpperCase()}
+                        </div>
+                        <div style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; display: inline-block; margin-bottom: 12px;">${t.tipo.toUpperCase()}</div>
+                        <div style="display: flex; gap: 8px; margin-top: auto;">
+                            ${boxesHtml}
+                        </div>
+                    </div>
+                `;
+            });
+            listaHtml += `</div>`;
+        }
+        listaHtml += `</div>`;
+
+        painelHtml.innerHTML = resumoHtml + abandonosHtml + listaHtml;
+        lista.appendChild(painelHtml);
+
     } catch (err) {
         console.error(err);
         lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar painel semanal.</span>';
