@@ -3893,7 +3893,6 @@ window.salvarTriagemAtendimentoSideSheet = async function (e, id) {
     try {
         const { error } = await db
             .from('app_atendimento_fraterno')
-            .select('*, pessoas(nome_completo), app_pacientes(*)')
             .update({
                 atendente_id: atendenteId,
                 status: 'Planejado'
