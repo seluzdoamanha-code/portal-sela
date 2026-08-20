@@ -4279,12 +4279,22 @@ window.abrirFichaAtendimento = async function (id) {
                 </div>
                 <div style="display: flex; gap: 24px; margin-bottom: 16px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="sideChkTratFluidico" style="width: 18px; height: 18px; accent-color: var(--primary);">
+                        <input type="checkbox" id="sideChkTratFluidico" style="width: 18px; height: 18px; accent-color: var(--primary);" onchange="if(this.checked) document.getElementById('sideChkApenasConversa').checked = false;">
                         <span>Prescrever Tratamento Fluídico</span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="sideChkTratEspiritual" style="width: 18px; height: 18px; accent-color: var(--primary);">
+                        <input type="checkbox" id="sideChkTratEspiritual" style="width: 18px; height: 18px; accent-color: var(--primary);" onchange="if(this.checked) document.getElementById('sideChkApenasConversa').checked = false;">
                         <span>Prescrever Tratamento Espiritual</span>
+                    </label>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="sideChkApenasConversa" style="width: 18px; height: 18px; accent-color: #f59e0b;" onchange="if(this.checked) { document.getElementById('sideChkTratFluidico').checked = false; document.getElementById('sideChkTratEspiritual').checked = false; }">
+                        <span style="color: #f59e0b; font-weight: 500;">Apenas Conversa Fraterna</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="sideChkEvangelhoLar" style="width: 18px; height: 18px; accent-color: #10b981;">
+                        <span style="color: #10b981; font-weight: 500;">Implantação de Evangelho no Lar</span>
                     </label>
                 </div>
             </div>
@@ -4314,13 +4324,16 @@ window.salvarFichaAtendimentoSideSheet = async function () {
     const tratFluidico = document.getElementById('sideChkTratFluidico').checked;
     const tratEspiritual = document.getElementById('sideChkTratEspiritual').checked;
 
+    const apenasConversa = document.getElementById('sideChkApenasConversa').checked;
+    const evangelhoLar = document.getElementById('sideChkEvangelhoLar').checked;
+
     if (!sintomas) {
         alert('Por favor, informe os sintomas e orientações desta sessão.');
         return;
     }
 
-    if (!tratFluidico && !tratEspiritual) {
-        alert('Por favor, selecione ao menos um tratamento (Fluídico ou Espiritual).');
+    if (!tratFluidico && !tratEspiritual && !apenasConversa) {
+        alert('Por favor, selecione ao menos um Tratamento ou marque Apenas Conversa Fraterna.');
         return;
     }
 
@@ -4333,7 +4346,9 @@ window.salvarFichaAtendimentoSideSheet = async function () {
         const { error: errSess } = await db.from('app_atendimento_sessoes').insert([{
             atendimento_id: activeFichaAtendimentoId,
             atendente_id: atendenteId,
-            sintomas_orientacoes: sintomas
+            sintomas_orientacoes: sintomas,
+            apenas_conversa: apenasConversa,
+            evangelho_lar: evangelhoLar
         }]);
         if (errSess) throw errSess;
 

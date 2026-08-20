@@ -490,12 +490,22 @@
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" id="sideChkTratFluidico" ${chkF ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);">
+                            <input type="checkbox" id="sideChkTratFluidico" ${chkF ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);" onchange="if(this.checked) document.getElementById('sideChkApenasConversa').checked = false;">
                             <span>Prescrever Tratamento Fluídico</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" id="sideChkTratEspiritual" ${chkE ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);">
+                            <input type="checkbox" id="sideChkTratEspiritual" ${chkE ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);" onchange="if(this.checked) document.getElementById('sideChkApenasConversa').checked = false;">
                             <span>Prescrever Tratamento Espiritual</span>
+                        </label>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="sideChkApenasConversa" style="width: 18px; height: 18px; accent-color: #f59e0b;" onchange="if(this.checked) { document.getElementById('sideChkTratFluidico').checked = false; document.getElementById('sideChkTratEspiritual').checked = false; }">
+                            <span style="color: #f59e0b; font-weight: 500;">Apenas Conversa Fraterna</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="sideChkEvangelhoLar" style="width: 18px; height: 18px; accent-color: #10b981;">
+                            <span style="color: #10b981; font-weight: 500;">Implantação de Evangelho no Lar</span>
                         </label>
                     </div>
                 </div>
@@ -527,9 +537,16 @@
         const anotacoes = document.getElementById('sideTxtSintomasOrientacoes').value.trim();
         const querFluidico = document.getElementById('sideChkTratFluidico').checked;
         const querEspiritual = document.getElementById('sideChkTratEspiritual').checked;
+        const apenasConversa = document.getElementById('sideChkApenasConversa').checked;
+        const evangelhoLar = document.getElementById('sideChkEvangelhoLar').checked;
 
         if (!anotacoes) {
             Swal.fire('Aviso', 'Por favor, preencha os sintomas/orientações da sessão.', 'warning');
+            return;
+        }
+
+        if (!querFluidico && !querEspiritual && !apenasConversa) {
+            Swal.fire('Aviso', 'Por favor, selecione ao menos um Tratamento ou marque Apenas Conversa Fraterna.', 'warning');
             return;
         }
 
@@ -545,7 +562,9 @@
                 atendimento_id: pacienteAtualFichaId,
                 data: new Date().toISOString().split('T')[0],
                 atendente_id: atendenteId,
-                sintomas_orientacoes: anotacoes
+                sintomas_orientacoes: anotacoes,
+                apenas_conversa: apenasConversa,
+                evangelho_lar: evangelhoLar
             }]);
             if (errSess) throw errSess;
 
@@ -635,10 +654,10 @@
                         <button onclick="encaminharParaNovaTriagemMobile('${t.app_atendimento_fraterno?.id}')" class="btn-action" style="width:100%; background:rgba(139, 92, 246, 0.1); color:#8b5cf6; border:1px solid rgba(139, 92, 246, 0.3);">📋 Novo Atendimento</button>
                     </div>
                     <div style="margin-top:8px;">
-                        <button onclick="toggleEvolucaoInlineMobile('${t.app_atendimento_fraterno?.id}')" class="btn-action" style="width:100%; background:rgba(255,255,255,0.05); color:white; border:1px solid var(--border);">📝 Evolução & Prontuário</button>
+                        <button onclick="toggleEvolucaoInlineMobile('${t.app_atendimento_fraterno ? t.app_atendimento_fraterno.id : ''}')" class="btn-action" style="width:100%; background:rgba(255,255,255,0.05); color:white; border:1px solid var(--border);">📝 Evolução & Prontuário</button>
                     </div>
                     
-                    <div id="panel_evolucao_m_${t.app_atendimento_fraterno?.id}" style="display: none; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;"></div>
+                    <div id="panel_evolucao_m_${t.app_atendimento_fraterno ? t.app_atendimento_fraterno.id : 'none'}" style="display: none; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;"></div>
                 `;
                 container.appendChild(card);
             });
@@ -648,6 +667,10 @@
     }
 
     window.toggleEvolucaoInlineMobile = async function (id) {
+        if (!id || id === 'undefined' || id === 'none') {
+            Swal.fire('Aviso', 'Ficha original de triagem não encontrada ou desvinculada. Não é possível carregar a evolução.', 'info');
+            return;
+        }
         const panel = document.getElementById('panel_evolucao_m_' + id);
         if (!panel) return;
 
