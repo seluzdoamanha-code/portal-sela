@@ -4341,93 +4341,103 @@ window.abrirFichaAtendimento = async function (id) {
 
         let infoHtml = `
             <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-                <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Dados do Necessitado</h4>
-                <strong>Nome:</strong> ${paciente.nome_completo.toUpperCase()}<br>
+                <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">${paciente.nome_completo.toUpperCase()}</h4>
                 <strong>Endereço:</strong> ${paciente.endereco_completo || 'Não informado'}<br>
                 <strong>WhatsApp:</strong> ${paciente.telefone || 'Não informado'}
             </div>
         `;
 
+        let eventos = [];
+
+        // Fetch Sessions
         const { data: sessoes, error: errSess } = await db
             .from('app_atendimento_sessoes')
             .select('*, pessoas!atendente_id(nome_completo, nome_curto)')
-            .eq('atendimento_id', id)
-            .order('data', { ascending: false })
-            .limit(4);
+            .eq('atendimento_id', id);
 
         if (errSess) throw errSess;
-
-        let sessoesHtml = '<div style="margin-bottom: 24px;"><h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Últimas Sessões</h4>';
-        if (!sessoes || sessoes.length === 0) {
-            sessoesHtml += '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhuma sessão anterior registrada.</div>';
-        } else {
-            sessoesHtml += sessoes.map(s => {
-                const dt = s.data ? s.data.split('T')[0].split('-').reverse().join('/') : '';
-                return `
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 13px; margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <div>
-                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase;">FRATERNO</span>
-                                <strong style="color: var(--primary); margin-left: 4px;">${dt}</strong>
-                            </div>
-                            <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_curto || s.pessoas?.nome_completo || 'Desconhecido'}</span>
-                        </div>
-                        <div style="color: var(--text-main); white-space: pre-wrap;">${s.sintomas_orientacoes}</div>
-                    </div>
-                `;
-            }).join('');
+        if (sessoes) {
+            sessoes.forEach(s => {
+                eventos.push({
+                    tipo: 'SESSAO',
+                    data: obterDataPrecisa(s.data, s.created_at),
+                    obj: s,
+                    atendente_nome: s.pessoas?.nome_curto || s.pessoas?.nome_completo || 'Desconhecido'
+                });
+            });
         }
-        sessoesHtml += '</div>';
 
+        // Fetch Treatments and Presences
         const { data: trats, error: errTrats } = await db.from('app_atendimento_tratamentos').select('id, tipo, status').eq('atendimento_id', id);
         if (errTrats) throw errTrats;
 
-        let presHtml = '<div style="margin-bottom: 24px;"><h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Presenças em Tratamentos</h4>';
-        if (!trats || trats.length === 0) {
-            presHtml += '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhum tratamento cadastrado para este paciente.</div>';
-        } else {
+        if (trats && trats.length > 0) {
             const tratIds = trats.map(t => t.id);
             const { data: pres, error: errPres } = await db
                 .from('app_atendimento_presencas')
                 .select('*')
-                .in('tratamento_id', tratIds)
-                .order('data', { ascending: false });
+                .in('tratamento_id', tratIds);
 
             if (errPres) throw errPres;
-
             if (pres) {
-                pres.sort((a, b) => {
-                    const tA = trats.find(t => t.id === a.tratamento_id)?.tipo || '';
-                    const tB = trats.find(t => t.id === b.tratamento_id)?.tipo || '';
-                    if (tA === 'Fluídico' && tB === 'Espiritual') return -1;
-                    if (tA === 'Espiritual' && tB === 'Fluídico') return 1;
-                    const dA = new Date(a.data || 0);
-                    const dB = new Date(b.data || 0);
-                    return dB - dA;
+                pres.forEach(p => {
+                    const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
+                    eventos.push({
+                        tipo: 'PRESENCA',
+                        data: obterDataPrecisa(p.data, p.created_at),
+                        obj: p,
+                        trat: trat
+                    });
                 });
             }
+        }
 
-            if (!pres || pres.length === 0) {
-                presHtml += '<div style="color: var(--text-muted); font-style: italic; font-size: 13px;">Nenhuma presença de tratamento registrada ainda.</div>';
-            } else {
-                presHtml += '<div style="max-height: 150px; overflow-y: auto;">';
-                presHtml += pres.map(p => {
-                    const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
-                    const dt = p.data ? p.data.split('T')[0].split('-').reverse().join('/') : '';
-                    const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
-                    const badgeColor = trat?.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
-                    return `
-                        <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 4px;">
-                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase;">${trat?.tipo || 'TRAT.'}</span>
-                            <strong style="color: #3b82f6; margin-left: 4px;">${dt}</strong>
-                            ${obs}
+        eventos.sort((a, b) => b.data - a.data);
+
+        let sessoesHtml = '<div style="margin-bottom: 24px;"><h4 style="margin-top:0; color:var(--primary); margin-bottom:16px;">Histórico de Atendimento</h4>';
+        
+        if (eventos.length === 0) {
+            sessoesHtml += '<div style="color:var(--text-muted); font-size:13px; font-style: italic;">Nenhum registro encontrado para esta ficha.</div>';
+        } else {
+            sessoesHtml += '<div style="display:flex; flex-direction:column; gap:12px; position:relative; padding-left:16px; border-left: 2px solid rgba(255,255,255,0.1); padding-bottom: 8px;">';
+            eventos.forEach(ev => {
+                const dateStr = ev.data.toLocaleDateString('pt-BR');
+                if (ev.tipo === 'SESSAO') {
+                    sessoesHtml += `
+                        <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                            <div style="position:absolute; left:-25px; top:14px; width:10px; height:10px; border-radius:50%; background: #f59e0b; border:2px solid var(--bg-panel);"></div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                <div>
+                                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                                    <div style="font-weight:bold; color:var(--primary); font-size:14px;">🤝 Sessão Fraterno</div>
+                                </div>
+                                <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.atendente_nome}</span>
+                            </div>
+                            <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
                         </div>
                     `;
-                }).join('');
-                presHtml += '</div>';
-            }
+                } else if (ev.tipo === 'PRESENCA') {
+                    const isEsp = ev.trat?.tipo === 'Espiritual';
+                    const badgeColor = isEsp ? '#818cf8' : '#3b82f6';
+                    const badgeText = isEsp ? '✨ ESPIRITUAL' : '💧 FLUÍDICO';
+                    sessoesHtml += `
+                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                            <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px;">${badgeText}</span>
+                                Presença Registrada
+                            </div>
+                            ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+            sessoesHtml += '</div>';
         }
-        presHtml += '</div>';
+        sessoesHtml += '</div>';
+
+        let presHtml = '';
 
         let formHtml = '';
         if (paciente.status !== 'Atendido') {
@@ -5797,7 +5807,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                 <div>
                                     <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                                    <div style="font-weight:bold; color:var(--primary); font-size:14px;">📝 Sessão (Prontuário)</div>
+                                    <div style="font-weight:bold; color:var(--primary); font-size:14px;">🤝 Sessão Fraterno</div>
                                 </div>
                                 <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.atendente_nome}</span>
                             </div>
