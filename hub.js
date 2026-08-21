@@ -3533,7 +3533,7 @@ window.carregarListaAtendimento = async function () {
             const trats = allTratamentos.filter(d => isFila ? !d.presente : d.presente)
                 .map(d => ({
                     id: d.id,
-                    fraterno_id: d.fraterno_id,
+                    fraterno_id: d.atendimento_id,
                     unified_type: d.tipo,
                     nome_completo: d.app_atendimento_fraterno?.nome_completo || '',
                     endereco_completo: d.app_atendimento_fraterno?.endereco_completo || '',
@@ -5360,7 +5360,7 @@ window.carregarHistoricoGeralDesktop = async function () {
                 id: t.id,
                 nome: nome,
                 status: t.status, // Concluído | Suspenso
-                fraterno_id: t.fraterno_id,
+                fraterno_id: t.atendimento_id,
                 telefone: t.app_atendimento_fraterno?.telefone,
                 data_inicio: t.data_inicio
             });
