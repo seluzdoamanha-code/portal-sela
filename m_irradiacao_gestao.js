@@ -415,7 +415,7 @@ window.excluir = async function(id) {
         confirmButtonColor: '#ef4444',
         cancelButtonText: 'Cancelar',
         confirmButtonText: 'Excluir',
-        background: 'var(--bg-panel)',
+        background: 'var(--bg-card)',
         color: 'var(--text-main)'
     }).then(async (result) => {
         if (result.isConfirmed) {
@@ -440,7 +440,7 @@ window.arquivar = async function(id) {
         confirmButtonColor: '#f59e0b',
         cancelButtonText: 'Cancelar',
         confirmButtonText: 'Arquivar',
-        background: 'var(--bg-panel)',
+        background: 'var(--bg-card)',
         color: 'var(--text-main)'
     }).then(async (result) => {
         if (result.isConfirmed) {
@@ -527,7 +527,7 @@ window.marcarLeituraIrrMobile = async function (btnElement, id, leituras_atuais,
                     cancelButtonColor: '#f59e0b',
                     confirmButtonText: 'Renovar',
                     cancelButtonText: 'Arquivar',
-                    background: 'var(--bg-panel)',
+                    background: 'var(--bg-card)',
                     color: 'var(--text-main)'
                 });
 
