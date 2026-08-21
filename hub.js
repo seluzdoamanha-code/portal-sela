@@ -193,8 +193,8 @@ async function carregarDadosHome(estData) {
             appsGrid.innerHTML += `
                 <div class="card-agenda" style="background: rgba(245, 158, 11, 0.02); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
-                        <div style="font-weight: 600; color: #f59e0b; font-size: 14px; margin-bottom: 6px;">🤝 ATENDIMENTO FRATERNO</div>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Gestão de triagem de voluntários, fila de espera, presença física e encerramento de atendimentos.</div>
+                        <div style="font-weight: 600; color: #f59e0b; font-size: 14px; margin-bottom: 6px;">🤝 ATENDIMENTOS ESPIRITUAIS</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Gestão de Atendimento Fraterno e Tratamentos Fluídicos e Espiritual.</div>
                     </div>
                     <button class="btn" onclick="mudarAbaAtalho('abaApps')" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 12px; padding: 6px 12px;">Abrir Painel ➔</button>
                 </div>
