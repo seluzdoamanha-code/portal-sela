@@ -3946,7 +3946,7 @@ window.abrirTriagemAtendimento = async function (id) {
     try {
         const { data, error } = await db
             .from('pessoas')
-            .select('id, nome_completo')
+            .select('id, nome_completo, nome_curto')
             .contains('perfis', ['Atendente Fraterno']);
 
         if (error) throw error;
@@ -3959,10 +3959,10 @@ window.abrirTriagemAtendimento = async function (id) {
             return;
         }
 
-        data.sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
+        data.sort((a, b) => (a.nome_curto || a.nome_completo).localeCompare(b.nome_curto || b.nome_completo));
 
         select.innerHTML = '<option value="">Selecione um atendente...</option>' +
-            data.map(p => `<option value="${p.id}">${p.nome_completo}</option>`).join('');
+            data.map(p => `<option value="${p.id}">${p.nome_curto || p.nome_completo}</option>`).join('');
     } catch (err) {
         console.error(err);
         const select = document.getElementById('sideSelectAtendenteAtendimento');
