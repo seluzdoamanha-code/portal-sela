@@ -4472,7 +4472,7 @@ window.abrirFichaAtendimento = async function (id) {
                 
                 <div style="padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
                     <button type="button" onclick="window.fecharSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border);">Cancelar</button>
-                    <button type="button" onclick="salvarFichaAtendimentoSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Gravar Sessão e Tratamentos</button>
+                    <button type="button" onclick="salvarFichaAtendimentoSideSheet(this)" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Gravar Sessão e Tratamentos</button>
                 </div>
             `;
         } else {
@@ -4500,7 +4500,7 @@ window.abrirFichaAtendimento = async function (id) {
         document.getElementById('globalSideSheetContent').innerHTML = '<div style="padding: 24px; color: #ef4444;">Erro ao carregar dados da ficha.</div>';
     }
 };
-window.salvarFichaAtendimentoSideSheet = async function () {
+window.salvarFichaAtendimentoSideSheet = async function (btn) {
     const sintomas = document.getElementById('sideTxtSintomasOrientacoes').value.trim();
     const tratFluidico = document.getElementById('sideChkTratFluidico').checked;
     const tratEspiritual = document.getElementById('sideChkTratEspiritual').checked;
@@ -4516,6 +4516,13 @@ window.salvarFichaAtendimentoSideSheet = async function () {
     if (!tratFluidico && !tratEspiritual && !apenasConversa) {
         Swal.fire('Aviso', 'Por favor, selecione ao menos um Tratamento ou marque Apenas Conversa Fraterna.', 'warning');
         return;
+    }
+
+    const btnOriginalText = btn ? btn.innerHTML : 'Gravar Sessão e Tratamentos';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Gravando...';
+        btn.style.opacity = '0.7';
     }
 
     try {
@@ -4568,6 +4575,11 @@ window.salvarFichaAtendimentoSideSheet = async function () {
         carregarListaAtendimento();
     } catch (err) {
         Swal.fire('Erro', 'Erro ao gravar sessão: ' + err.message, 'error');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = btnOriginalText;
+            btn.style.opacity = '1';
+        }
     }
 };
 
