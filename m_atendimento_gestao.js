@@ -509,7 +509,7 @@
                     
                     <div style="padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
                         <button type="button" onclick="window.fecharSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border);">Cancelar</button>
-                        <button type="button" onclick="salvarFichaAtendimentoSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Gravar</button>
+                        <button type="button" onclick="salvarFichaAtendimentoSideSheet(this)" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Gravar</button>
                     </div>
                 `;
             } else {
@@ -536,7 +536,7 @@
         }
     };
 
-    window.salvarFichaAtendimentoSideSheet = async function() {
+    window.salvarFichaAtendimentoSideSheet = async function(btn) {
         if (!pacienteAtualFichaId) return;
 
         const anotacoes = document.getElementById('sideTxtSintomasOrientacoes').value.trim();
@@ -553,6 +553,13 @@
         if (!querFluidico && !querEspiritual && !apenasConversa) {
             Swal.fire('Aviso', 'Por favor, selecione ao menos um Tratamento ou marque Apenas Conversa Fraterna.', 'warning');
             return;
+        }
+
+        const btnOriginalText = btn ? btn.innerHTML : 'Gravar';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Gravando...';
+            btn.style.opacity = '0.7';
         }
 
         try {
@@ -611,6 +618,11 @@
 
         } catch(e) {
             Swal.fire('Erro', 'Erro ao gravar: ' + e.message, 'error');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = btnOriginalText;
+                btn.style.opacity = '1';
+            }
         }
     };
 
