@@ -5596,7 +5596,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
         // Fetch all Fraternos by exact name
         const { data: atendimentos, error: errA } = await db
             .from('app_atendimento_fraterno')
-            .select('*')
+            .select('*, pessoas!atendente_id(nome_completo)')
             .ilike('nome_completo', p.nome_completo);
             
         if (errA) throw errA;
@@ -5638,10 +5638,14 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                 
             if (!errS && sessoes) {
                 sessoes.forEach(s => {
+                    const parentAten = allAtendimentos.find(a => a.id === s.atendimento_id);
+                    const atendenteNomeFallback = parentAten?.pessoas?.nome_completo || 'Desconhecido';
+                    
                     eventos.push({
                         tipo: 'SESSAO',
                         data: new Date(s.data || s.created_at),
-                        obj: s
+                        obj: s,
+                        atendente_nome: s.pessoas?.nome_completo || atendenteNomeFallback
                     });
                 });
             }
@@ -5684,7 +5688,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                                     <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                                     <div style="font-weight:bold; color:var(--primary); font-size:14px;">📝 Sessão (Prontuário)</div>
                                 </div>
-                                <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.obj.pessoas?.nome_completo || 'Desconhecido'}</span>
+                                <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.atendente_nome}</span>
                             </div>
                             <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
                         </div>
