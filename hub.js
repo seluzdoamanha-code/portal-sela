@@ -4350,7 +4350,7 @@ window.abrirFichaAtendimento = async function (id) {
 
         const { data: sessoes, error: errSess } = await db
             .from('app_atendimento_sessoes')
-            .select('*, pessoas!atendente_id(nome_completo)')
+            .select('*, pessoas!atendente_id(nome_completo, nome_curto)')
             .eq('atendimento_id', id)
             .order('data', { ascending: false })
             .limit(4);
@@ -4370,7 +4370,7 @@ window.abrirFichaAtendimento = async function (id) {
                                 <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase;">FRATERNO</span>
                                 <strong style="color: var(--primary); margin-left: 4px;">${dt}</strong>
                             </div>
-                            <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_completo || 'Desconhecido'}</span>
+                            <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_curto || s.pessoas?.nome_completo || 'Desconhecido'}</span>
                         </div>
                         <div style="color: var(--text-main); white-space: pre-wrap;">${s.sintomas_orientacoes}</div>
                     </div>
@@ -4508,7 +4508,6 @@ window.salvarFichaAtendimentoSideSheet = async function () {
         return;
     }
 
-    try {
     try {
         // Obter sempre o Atendente designado no Fraterno (pois a secretária pode estar preenchendo a ficha por ele)
         const { data: atenData } = await db.from('app_atendimento_fraterno').select('atendente_id').eq('id', activeFichaAtendimentoId).single();
@@ -4727,7 +4726,7 @@ window.toggleEvolucaoInline = async function (id) {
         // Obter sessões anteriores
         const { data: sessoes, error: errSess } = await db
             .from('app_atendimento_sessoes')
-            .select('*, pessoas!atendente_id(nome_completo)')
+            .select('*, pessoas!atendente_id(nome_completo, nome_curto)')
             .eq('atendimento_id', id)
             .order('data', { ascending: false })
             .limit(4);
@@ -4795,7 +4794,7 @@ window.toggleEvolucaoInline = async function (id) {
                                 <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase;">FRATERNO</span>
                                 <strong style="color: var(--primary); margin-left: 4px;">${dt}</strong>
                             </div>
-                            <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_completo || 'Desconhecido'}</span>
+                            <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_curto || s.pessoas?.nome_completo || 'Desconhecido'}</span>
                         </div>
                         <div style="color: var(--text-main); white-space: pre-wrap;">${s.sintomas_orientacoes}</div>
                     </div>
@@ -5695,7 +5694,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
         // Fetch all Fraternos by exact name
         const { data: atendimentos, error: errA } = await db
             .from('app_atendimento_fraterno')
-            .select('*, pessoas!atendente_id(nome_completo)')
+            .select('*, pessoas!atendente_id(nome_completo, nome_curto)')
             .ilike('nome_completo', p.nome_completo);
             
         if (errA) throw errA;
@@ -5732,19 +5731,19 @@ window.abrirModalFicharioCompleto = async function(safeId) {
             // Fetch all Sessões
             const { data: sessoes, error: errS } = await db
                 .from('app_atendimento_sessoes')
-                .select('*, pessoas!atendente_id(nome_completo)')
+                .select('*, pessoas!atendente_id(nome_completo, nome_curto)')
                 .in('atendimento_id', fraternoIds);
                 
             if (!errS && sessoes) {
                 sessoes.forEach(s => {
                     const parentAten = allAtendimentos.find(a => a.id === s.atendimento_id);
-                    const atendenteNomeFallback = parentAten?.pessoas?.nome_completo || 'Desconhecido';
+                    const atendenteNomeFallback = parentAten?.pessoas?.nome_curto || parentAten?.pessoas?.nome_completo || 'Desconhecido';
                     
                     eventos.push({
                         tipo: 'SESSAO',
                         data: obterDataPrecisa(s.data, s.created_at),
                         obj: s,
-                        atendente_nome: s.pessoas?.nome_completo || atendenteNomeFallback
+                        atendente_nome: s.pessoas?.nome_curto || s.pessoas?.nome_completo || atendenteNomeFallback
                     });
                 });
             }
