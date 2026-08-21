@@ -4204,7 +4204,38 @@ async function salvarFormularioAtendimento(e) {
             pacienteId = window.pessoasSugestoesAten[nomeUpper].id;
         } else {
             // 2. Se não existir, criar um NOVO paciente na tabela PESSOAS com CPF Provisório
-            const fakeCpf = 'PROV' + Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+            // Buscar CPFs provisórios já usados (que começam com 111111)
+            const { data: usedData } = await db.from('pessoas')
+                .select('cpf_cnpj')
+                .like('cpf_cnpj', '111111%');
+            
+            const usedSet = new Set(usedData ? usedData.map(d => d.cpf_cnpj.replace(/\D/g, '')) : []);
+            
+            let fakeCpf = null;
+            for (let i = 1; i <= 999; i++) {
+                const base9 = '111111' + i.toString().padStart(3, '0');
+                
+                // Cálculo do 1º dígito
+                let sum1 = 0;
+                for(let j=0; j<9; j++) sum1 += parseInt(base9[j]) * (10 - j);
+                let d1 = 11 - (sum1 % 11);
+                if(d1 >= 10) d1 = 0;
+                
+                // Cálculo do 2º dígito
+                const base10 = base9 + d1.toString();
+                let sum2 = 0;
+                for(let j=0; j<10; j++) sum2 += parseInt(base10[j]) * (11 - j);
+                let d2 = 11 - (sum2 % 11);
+                if(d2 >= 10) d2 = 0;
+                
+                const candidate = base10 + d2.toString();
+                if (!usedSet.has(candidate)) {
+                    fakeCpf = candidate;
+                    break;
+                }
+            }
+            
+            if (!fakeCpf) fakeCpf = '11111199999'; // Fallback absurdo se esgotar 999
             
             const { data: novaPessoa, error: errPac } = await db.from('pessoas').insert([{
                 nome_completo: nome,
