@@ -5792,8 +5792,6 @@ window.abrirModalFicharioCompleto = async function(safeId) {
             }
         }
         
-        }
-        
         // Push cycle completion events guaranteed to be at the top of their respective cycles
         allAtendimentos.forEach(a => {
             if (a.status === 'Concluído' || a.status === 'Cancelado') {
