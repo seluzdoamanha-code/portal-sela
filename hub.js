@@ -11,6 +11,18 @@ function parseDataLocal(val) {
     return new Date(val);
 }
 
+function obterDataPrecisa(dataStr, createdAtStr) {
+    if (!dataStr) return new Date(createdAtStr);
+    const createdLocal = new Date(createdAtStr);
+    const tzOffset = createdLocal.getTimezoneOffset() * 60000;
+    const localISO = new Date(createdLocal.getTime() - tzOffset).toISOString().split('T')[0];
+    
+    if (String(dataStr).startsWith(localISO)) {
+        return new Date(createdAtStr); // Mesmo dia, usa precisão de minutos/segundos
+    }
+    return parseDataLocal(dataStr);
+}
+
 function formatarCelular(v) {
     if (!v) return '';
     v = v.replace(/\D/g, '');
@@ -5696,7 +5708,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
         allAtendimentos.forEach(a => {
             eventos.push({
                 tipo: 'ATENDIMENTO',
-                data: new Date(a.created_at),
+                data: new Date(a.data_hora_atendimento || a.created_at),
                 obj: a
             });
         });
@@ -5714,7 +5726,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                 tratamentos.forEach(t => {
                     eventos.push({
                         tipo: 'TRATAMENTO',
-                        data: new Date(t.created_at),
+                        data: obterDataPrecisa(t.data_inicio, t.created_at),
                         obj: t
                     });
                 });
@@ -5733,7 +5745,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                     
                     eventos.push({
                         tipo: 'SESSAO',
-                        data: parseDataLocal(s.data || s.created_at),
+                        data: obterDataPrecisa(s.data, s.created_at),
                         obj: s,
                         atendente_nome: s.pessoas?.nome_completo || atendenteNomeFallback
                     });
