@@ -129,6 +129,7 @@ body {
 .app-container {
     display: flex;
     height: 100dvh; /* Usa dynamic viewport height para não brigar com a barra do Safari */
+    overflow: hidden;
 }
 
 /* Sidebar */
