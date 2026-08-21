@@ -11,6 +11,33 @@ function formatarCelular(v) {
     return v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
 }
 
+function formatarCPF(v) {
+    if (!v) return '';
+    v = v.replace(/\D/g, '');
+    if (v.length === 11) {
+        return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+    return v;
+}
+
+function formatarCEP(v) {
+    if (!v) return '';
+    v = v.replace(/\D/g, '');
+    if (v.length === 8) {
+        return v.replace(/(\d{5})(\d{3})/, '$1-$2');
+    }
+    return v;
+}
+
+function calcularIdade(dataStr) {
+    if (!dataStr) return '';
+    const hoje = new Date();
+    const nasc = new Date(dataStr);
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    const m = hoje.getMonth() - nasc.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+    return idade;
+}
 
 const urlParams = new URLSearchParams(window.location.search);
 const estruturaId = urlParams.get('id');
@@ -3431,7 +3458,7 @@ window.carregarListaAtendimento = async function () {
 
     try {
         const [fraternoReq, tratamentosReq] = await Promise.all([
-            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo), paciente:pessoas!paciente_id(nome_completo, celular, endereco, data_nascimento)'),
+            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo, nome_curto), paciente:pessoas!paciente_id(nome_completo, nome_curto, celular, endereco, cep, cpf_cnpj, data_nascimento)'),
             db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)').eq('status', 'Ativo')
         ]);
         if (fraternoReq.error) throw fraternoReq.error;
@@ -3443,10 +3470,12 @@ window.carregarListaAtendimento = async function () {
         if (allData) {
             allData = allData.map(f => {
                 if (f.paciente) {
-                    f.nome_completo = f.paciente.nome_completo || f.nome_completo;
+                    f.nome_completo = f.paciente.nome_curto || f.paciente.nome_completo || f.nome_completo;
                     f.telefone = f.paciente.celular || f.telefone;
                     f.endereco_completo = f.paciente.endereco || f.endereco_completo;
                     f.data_nascimento = f.paciente.data_nascimento || f.data_nascimento;
+                    f.cpf_cnpj = f.paciente.cpf_cnpj || null;
+                    f.cep = f.paciente.cep || null;
                 }
                 return f;
             });
@@ -3710,9 +3739,10 @@ function renderizarCardAtendimentoItem(container, item) {
     let leftInfo = `
         <div style="display: flex; flex-direction: column; gap: 6px;">
             <strong style="font-size: 16px; color: var(--text-main); margin-bottom: 2px;">${item.nome_completo.toUpperCase()}</strong>
-            <div style="font-size: 13px; color: var(--text-muted);">📍 ${item.endereco_completo || 'Sem endereço'}</div>
-            <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${item.data_nascimento ? item.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
-            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">📱 Celular: ${item.telefone || 'Não informado'} ${whatsLink}</div>
+            <div style="font-size: 13px; color: var(--text-muted);">📍 ${item.endereco_completo || 'Sem endereço'}${item.cep ? ' - CEP: ' + formatarCEP(item.cep) : ''}</div>
+            <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${item.data_nascimento ? item.data_nascimento.split('-').reverse().join('/') + ` (${calcularIdade(item.data_nascimento)} anos)` : 'Não informada'}</div>
+            <div style="font-size: 13px; color: var(--text-muted);">📄 CPF: ${item.cpf_cnpj ? formatarCPF(item.cpf_cnpj) : 'Não informado'}</div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">📱 Celular: ${item.telefone ? formatarCelular(item.telefone) : 'Não informado'} ${whatsLink}</div>
             <div style="font-size: 11px; margin-top: 4px; padding: 4px 8px; background: rgba(255,255,255,0.05); border-radius: 12px; color: var(--text-muted); display: inline-block; width: fit-content;">Em ${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</div>
             ${infoExtra}
         </div>
@@ -5375,7 +5405,7 @@ window.carregarHistoricoGeralDesktop = async function () {
 
     try {
         const [fraternoReq, tratamentosReq] = await Promise.all([
-            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo), app_pacientes(*)').eq('status', 'Atendido'),
+            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo, nome_curto), paciente:pessoas!paciente_id(nome_completo, nome_curto, celular, endereco, cep, cpf_cnpj, data_nascimento)').eq('status', 'Atendido'),
             db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)').in('status', ['Concluído', 'Suspenso'])
         ]);
 
@@ -5387,7 +5417,7 @@ window.carregarHistoricoGeralDesktop = async function () {
         // Map Fraternos (Triagem/Conversa)
         (fraternoReq.data || []).forEach(f => {
             if (!f.data_hora_atendimento) return;
-            const nome = f.app_pacientes?.nome_completo || f.nome_completo;
+            const nome = f.paciente?.nome_completo || f.nome_completo;
             itens.push({
                 tipo: 'Fraterno',
                 data: f.data_hora_atendimento,
@@ -5395,9 +5425,10 @@ window.carregarHistoricoGeralDesktop = async function () {
                 nome: nome,
                 atendente: f.pessoas?.nome_completo || 'Sem Atendente',
                 fraterno_id: f.id,
-                telefone: f.app_pacientes?.telefone || f.telefone
+                telefone: f.paciente?.celular || f.telefone
             });
         });
+
 
         // Map Tratamentos
         (tratamentosReq.data || []).forEach(t => {
@@ -5706,9 +5737,9 @@ window.abrirModalFicharioCompleto = async function(safeId) {
         let html = `
             <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
                 <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">${p.nome_completo.toUpperCase()}</h4>
-                <strong>Telefone:</strong> ${p.telefone || 'Não informado'}<br>
+                <strong>Telefone:</strong> ${p.telefone ? formatarCelular(p.telefone) : 'Não informado'}<br>
                 <strong>Endereço:</strong> ${p.endereco || 'Não informado'}<br>
-                <strong>Nascimento:</strong> ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') : 'Não informado'}
+                <strong>Nascimento:</strong> ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') + ' (' + calcularIdade(p.data_nascimento) + ' anos)' : 'Não informado'}
             </div>
             <h4 style="color: var(--primary); margin-bottom: 16px;">Linha do Tempo</h4>
         `;
