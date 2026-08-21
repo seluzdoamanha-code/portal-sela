@@ -5588,34 +5588,55 @@ window.abrirModalFicharioCompleto = async function(safeId) {
     const p = window['fichario_' + safeId];
     if(!p) return;
     
-    window.abrirSideSheet('Histórico Consolidado', '<div style="padding: 24px;">Carregando histórico completo...</div>');
+    window.abrirSideSheet('Histórico Consolidado', '<div style="padding: 24px;">Carregando histórico completo do banco de dados...</div>');
     
     let eventos = [];
-    p.atendimentos.forEach(a => {
-        eventos.push({
-            tipo: 'ATENDIMENTO',
-            data: new Date(a.created_at),
-            obj: a
+    
+    try {
+        // Fetch all Fraternos by exact name
+        const { data: atendimentos, error: errA } = await db
+            .from('app_atendimento_fraterno')
+            .select('*')
+            .ilike('nome_completo', p.nome_completo);
+            
+        if (errA) throw errA;
+        
+        const allAtendimentos = atendimentos || [];
+        
+        allAtendimentos.forEach(a => {
+            eventos.push({
+                tipo: 'ATENDIMENTO',
+                data: new Date(a.created_at),
+                obj: a
+            });
         });
-    });
-    p.tratamentos.forEach(t => {
-        eventos.push({
-            tipo: 'TRATAMENTO',
-            data: new Date(t.created_at),
-            obj: t
-        });
-    });
-
-    // Buscar Sessões/Prontuários reais
-    const fraternoIds = p.atendimentos.map(a => a.id);
-    if (fraternoIds.length > 0) {
-        try {
-            const { data: sessoes, error } = await db
+        
+        const fraternoIds = allAtendimentos.map(a => a.id);
+        
+        if (fraternoIds.length > 0) {
+            // Fetch all Tratamentos regardless of status
+            const { data: tratamentos, error: errT } = await db
+                .from('app_atendimento_tratamentos')
+                .select('*')
+                .in('atendimento_id', fraternoIds);
+                
+            if (!errT && tratamentos) {
+                tratamentos.forEach(t => {
+                    eventos.push({
+                        tipo: 'TRATAMENTO',
+                        data: new Date(t.created_at),
+                        obj: t
+                    });
+                });
+            }
+            
+            // Fetch all Sessões
+            const { data: sessoes, error: errS } = await db
                 .from('app_atendimento_sessoes')
                 .select('*, pessoas!atendente_id(nome_completo)')
                 .in('atendimento_id', fraternoIds);
-            
-            if (!error && sessoes) {
+                
+            if (!errS && sessoes) {
                 sessoes.forEach(s => {
                     eventos.push({
                         tipo: 'SESSAO',
@@ -5624,70 +5645,73 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                     });
                 });
             }
-        } catch (e) {
-            console.error('Erro ao carregar sessões no fichário', e);
         }
-    }
-    
-    eventos.sort((a, b) => b.data - a.data); // newest first
-    
-    let html = `
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-            <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">${p.nome_completo.toUpperCase()}</h4>
-            <strong>Telefone:</strong> ${p.telefone || 'Não informado'}<br>
-            <strong>Endereço:</strong> ${p.endereco || 'Não informado'}<br>
-            <strong>Nascimento:</strong> ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') : 'Não informado'}
-        </div>
-        <h4 style="color: var(--primary); margin-bottom: 16px;">Linha do Tempo</h4>
-    `;
-    
-    if (eventos.length === 0) {
-        html += '<div style="color:var(--text-muted); font-size:13px;">Nenhum evento registrado.</div>';
-    } else {
-        html += '<div style="display:flex; flex-direction:column; gap:12px; position:relative; padding-left:16px; border-left: 2px solid rgba(255,255,255,0.1);">';
-        eventos.forEach(ev => {
-            const dateStr = ev.data.toLocaleDateString('pt-BR');
-            if (ev.tipo === 'ATENDIMENTO') {
-                const badgeColor = ev.obj.status === 'Atendido' ? '#10b981' : '#f59e0b';
-                html += `
-                    <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
-                        <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
-                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                        <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Atendimento Fraterno</div>
-                        <div style="font-size:12px; color:var(--text-muted);">Status: <span style="color:${badgeColor}">${ev.obj.status}</span></div>
-                    </div>
-                `;
-            } else if (ev.tipo === 'SESSAO') {
-                html += `
-                    <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
-                        <div style="position:absolute; left:-25px; top:14px; width:10px; height:10px; border-radius:50%; background: #f59e0b; border:2px solid var(--bg-panel);"></div>
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                            <div>
-                                <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                                <div style="font-weight:bold; color:var(--primary); font-size:14px;">📝 Sessão de Atendimento Fraterno</div>
-                            </div>
-                            <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.obj.pessoas?.nome_completo || 'Desconhecido'}</span>
+        
+        eventos.sort((a, b) => b.data - a.data); // newest first
+        
+        let html = `
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">${p.nome_completo.toUpperCase()}</h4>
+                <strong>Telefone:</strong> ${p.telefone || 'Não informado'}<br>
+                <strong>Endereço:</strong> ${p.endereco || 'Não informado'}<br>
+                <strong>Nascimento:</strong> ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') : 'Não informado'}
+            </div>
+            <h4 style="color: var(--primary); margin-bottom: 16px;">Linha do Tempo</h4>
+        `;
+        
+        if (eventos.length === 0) {
+            html += '<div style="color:var(--text-muted); font-size:13px;">Nenhum evento registrado.</div>';
+        } else {
+            html += '<div style="display:flex; flex-direction:column; gap:12px; position:relative; padding-left:16px; border-left: 2px solid rgba(255,255,255,0.1); padding-bottom: 24px;">';
+            eventos.forEach(ev => {
+                const dateStr = ev.data.toLocaleDateString('pt-BR');
+                if (ev.tipo === 'ATENDIMENTO') {
+                    const badgeColor = ev.obj.status === 'Atendido' ? '#10b981' : (ev.obj.status === 'Em Tratamento' ? '#3b82f6' : '#f59e0b');
+                    html += `
+                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                            <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Solicitação de Atendimento Fraterno</div>
+                            <div style="font-size:12px; color:var(--text-muted);">Status da Ficha: <span style="color:${badgeColor}">${ev.obj.status}</span></div>
                         </div>
-                        <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
-                    </div>
-                `;
-            } else {
-                const badgeColor = ev.obj.tipo === 'Espiritual' ? '#818cf8' : '#3b82f6';
-                html += `
-                    <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
-                        <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
-                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                        <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Tratamento ${ev.obj.tipo}</div>
-                        <div style="font-size:12px; color:var(--text-muted);">Status: <span style="color:${ev.obj.status === 'Ativo' ? '#10b981' : 'var(--text-muted)'}">${ev.obj.status}</span></div>
-                        ${ev.obj.observacoes ? '<div style="margin-top:6px; font-size:11px; color:rgba(255,255,255,0.6);">' + ev.obj.observacoes + '</div>' : ''}
-                    </div>
-                `;
-            }
-        });
-        html += '</div>';
+                    `;
+                } else if (ev.tipo === 'SESSAO') {
+                    html += `
+                        <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                            <div style="position:absolute; left:-25px; top:14px; width:10px; height:10px; border-radius:50%; background: #f59e0b; border:2px solid var(--bg-panel);"></div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                <div>
+                                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                                    <div style="font-weight:bold; color:var(--primary); font-size:14px;">📝 Sessão (Prontuário)</div>
+                                </div>
+                                <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.obj.pessoas?.nome_completo || 'Desconhecido'}</span>
+                            </div>
+                            <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
+                        </div>
+                    `;
+                } else {
+                    const badgeColor = ev.obj.tipo === 'Espiritual' ? '#818cf8' : '#3b82f6';
+                    const statusColor = ev.obj.status === 'Ativo' ? '#10b981' : 'var(--text-muted)';
+                    html += `
+                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                            <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Tratamento ${ev.obj.tipo}</div>
+                            <div style="font-size:12px; color:var(--text-muted);">Status do Tratamento: <span style="color:${statusColor}">${ev.obj.status}</span></div>
+                            ${ev.obj.observacoes ? '<div style="margin-top:6px; font-size:11px; color:rgba(255,255,255,0.6);">' + ev.obj.observacoes + '</div>' : ''}
+                        </div>
+                    `;
+                }
+            });
+            html += '</div>';
+        }
+        
+        document.getElementById('globalSideSheetContent').innerHTML = html;
+        
+    } catch(err) {
+        console.error(err);
+        document.getElementById('globalSideSheetContent').innerHTML = '<div style="padding:24px;color:#ef4444;">Erro ao carregar histórico.</div>';
     }
-    
-    document.getElementById('globalSideSheetContent').innerHTML = html;
 };
 
 window.iniciarNovoAtendimentoFichario = function(safeId) {
