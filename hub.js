@@ -5650,7 +5650,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
         html += '</div>';
     }
     
-    document.getElementById('sideSheetContent').innerHTML = html;
+    document.getElementById('globalSideSheetContent').innerHTML = html;
 };
 
 window.iniciarNovoAtendimentoFichario = function(safeId) {
