@@ -4478,10 +4478,7 @@ window.abrirFichaAtendimento = async function (id) {
         } else {
             formHtml = `
                 <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 12px; align-items: center;">
-                    <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Este atendimento já foi concluído.</p>
-                    <button type="button" onclick="window.fecharSideSheet(); encaminharParaNovaTriagem('${id}');" class="btn" style="padding: 12px 24px; border-radius: 8px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); font-weight: 600; width: 100%;">
-                        📋 Iniciar Novo Atendimento
-                    </button>
+                    <p style="color: var(--text-muted); font-size: 13px; text-align: center; margin-bottom: 0;">✅ Este Ciclo do Fraterno já foi concluído e seu histórico está consolidado.</p>
                 </div>
             `;
         }
