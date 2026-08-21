@@ -669,3 +669,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .no-scrollbar::-webkit-scrollbar {
     display: none;  /* Chrome, Safari and Opera */
 }
+
+.side-sheet.expanded {
+    width: 900px;
+    max-width: 95vw;
+}

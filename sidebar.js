@@ -101,7 +101,10 @@
             <div id="globalSideSheet" class="side-sheet">
                 <div class="side-sheet-header">
                     <h3 id="globalSideSheetTitle">Analisar Solicitação</h3>
-                    <button class="btn-close" onclick="fecharSideSheet()" style="background:transparent; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">&times;</button>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn-expand" onclick="toggleExpandSideSheet()" style="background:transparent; border:none; color:var(--text-muted); font-size:18px; cursor:pointer; margin-right: 4px;" title="Expandir Tela">⛶</button>
+                        <button class="btn-close" onclick="fecharSideSheet()" style="background:transparent; border:none; color:var(--text-muted); font-size:24px; cursor:pointer; line-height: 1;">&times;</button>
+                    </div>
                 </div>
                 <div id="globalSideSheetContent" class="side-sheet-content">
                 </div>
@@ -145,7 +148,17 @@
             const contentEl = document.getElementById('globalSideSheetContent');
             if(contentEl) {
                 // optional small delay to clear content after animation
-                setTimeout(() => contentEl.innerHTML = '', 300);
+                setTimeout(() => {
+                    contentEl.innerHTML = '';
+                    if(sheet) sheet.classList.remove('expanded'); // Reset expansion state
+                }, 300);
+            }
+        };
+
+        window.toggleExpandSideSheet = function() {
+            const sheet = document.getElementById('globalSideSheet');
+            if(sheet) {
+                sheet.classList.toggle('expanded');
             }
         };
 
