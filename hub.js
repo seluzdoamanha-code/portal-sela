@@ -4134,7 +4134,7 @@ window.pessoasSugestoesAten = {};
 async function carregarAutocompleteAtendimento() {
     try {
         const { data, error } = await db.from('pessoas')
-            .select('nome_completo, data_nascimento, celular, endereco, bairro, cidade, estado')
+            .select('id, nome_completo, data_nascimento, celular, endereco, bairro, cidade, estado')
             .eq('tipo_pessoa', 'Física')
             .order('nome_completo');
 
@@ -4159,6 +4159,7 @@ async function carregarAutocompleteAtendimento() {
                     if (cidEst) endCompleto += (endCompleto ? ' - ' : '') + cidEst;
 
                     window.pessoasSugestoesAten[n] = {
+                        id: p.id,
                         endereco: endCompleto,
                         nascimento: p.data_nascimento || '',
                         telefone: p.celular || ''
@@ -4180,10 +4181,10 @@ async function salvarFormularioAtendimento(e) {
     btn.disabled = true;
     btn.textContent = 'Enviando...';
 
-    const nome = document.getElementById('inAtenNome').value;
-    const endereco = document.getElementById('inAtenEndereco').value;
+    const nome = document.getElementById('inAtenNome').value.trim();
+    const endereco = document.getElementById('inAtenEndereco').value.trim();
     const nascimento = document.getElementById('inAtenNasc').value || null;
-    const whats = document.getElementById('inAtenWhats').value;
+    const whats = document.getElementById('inAtenWhats').value.trim();
 
     try {
         let criadoPor = 'Desconhecido';
@@ -4195,17 +4196,35 @@ async function salvarFormularioAtendimento(e) {
             }
         } catch (e) { }
 
-        const { data: novoPaciente, error: errPac } = await db.from('app_pacientes').insert([{
-            nome_completo: nome,
-            telefone: whats,
-            data_nascimento: nascimento,
-            endereco_completo: endereco
-        }]).select().single();
-        
-        if (errPac) throw errPac;
+        let pacienteId = null;
+        const nomeUpper = nome.toUpperCase();
+
+        // 1. Verificar se o nome digitado foi escolhido do Autocomplete
+        if (window.pessoasSugestoesAten && window.pessoasSugestoesAten[nomeUpper]) {
+            pacienteId = window.pessoasSugestoesAten[nomeUpper].id;
+        } else {
+            // 2. Se não existir, criar um NOVO paciente na tabela PESSOAS com CPF Provisório
+            const fakeCpf = 'PROV' + Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+            
+            const { data: novaPessoa, error: errPac } = await db.from('pessoas').insert([{
+                nome_completo: nome,
+                nome_curto: nome.split(' ')[0],
+                celular: whats,
+                data_nascimento: nascimento,
+                endereco: endereco,
+                tipo_pessoa: 'Física',
+                perfis: ['Paciente Externo'],
+                cpf_cnpj: fakeCpf,
+                cpf_provisorio: true,
+                status: 'Ativo'
+            }]).select().single();
+            
+            if (errPac) throw errPac;
+            pacienteId = novaPessoa.id;
+        }
 
         const { error } = await db.from('app_atendimento_fraterno').insert([{
-            paciente_id: novoPaciente.id,
+            paciente_id: pacienteId,
             nome_completo: nome,
             endereco_completo: endereco,
             data_nascimento: nascimento,
