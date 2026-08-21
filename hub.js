@@ -5605,6 +5605,29 @@ window.abrirModalFicharioCompleto = async function(safeId) {
             obj: t
         });
     });
+
+    // Buscar Sessões/Prontuários reais
+    const fraternoIds = p.atendimentos.map(a => a.id);
+    if (fraternoIds.length > 0) {
+        try {
+            const { data: sessoes, error } = await db
+                .from('app_atendimento_sessoes')
+                .select('*, pessoas!atendente_id(nome_completo)')
+                .in('atendimento_id', fraternoIds);
+            
+            if (!error && sessoes) {
+                sessoes.forEach(s => {
+                    eventos.push({
+                        tipo: 'SESSAO',
+                        data: new Date(s.data || s.created_at),
+                        obj: s
+                    });
+                });
+            }
+        } catch (e) {
+            console.error('Erro ao carregar sessões no fichário', e);
+        }
+    }
     
     eventos.sort((a, b) => b.data - a.data); // newest first
     
@@ -5632,6 +5655,20 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                         <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                         <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Atendimento Fraterno</div>
                         <div style="font-size:12px; color:var(--text-muted);">Status: <span style="color:${badgeColor}">${ev.obj.status}</span></div>
+                    </div>
+                `;
+            } else if (ev.tipo === 'SESSAO') {
+                html += `
+                    <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                        <div style="position:absolute; left:-25px; top:14px; width:10px; height:10px; border-radius:50%; background: #f59e0b; border:2px solid var(--bg-panel);"></div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                                <div style="font-weight:bold; color:var(--primary); font-size:14px;">📝 Sessão de Atendimento Fraterno</div>
+                            </div>
+                            <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.obj.pessoas?.nome_completo || 'Desconhecido'}</span>
+                        </div>
+                        <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
                     </div>
                 `;
             } else {
