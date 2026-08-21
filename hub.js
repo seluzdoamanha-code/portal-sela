@@ -4546,7 +4546,7 @@ window.salvarFichaAtendimentoSideSheet = async function () {
         // Atualizar status do Atendimento Fraterno para 'Em Tratamento'
 
 
-        const novoStatus = (tratFluidico || tratEspiritual) ? 'Em Tratamento' : 'Atendido';
+        const novoStatus = (tratFluidico || tratEspiritual) ? 'Em Tratamento' : 'Concluído';
         const { error: errAten } = await db.from('app_atendimento_fraterno').update({
             status: novoStatus,
             data_hora_atendimento: new Date().toISOString()
@@ -4933,12 +4933,22 @@ window.mudarStatusTratamento = async function (id, status) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
+                const { data: tData } = await db.from('app_atendimento_tratamentos').select('atendimento_id').eq('id', id).single();
+
                 const { error } = await db.from('app_atendimento_tratamentos').update({
                     status: status,
                     data_fim: new Date().toISOString().split('T')[0]
                 }).eq('id', id);
 
                 if (error) throw error;
+                
+                // Auto-concluir Atendimento Fraterno se todos os tratamentos estiverem encerrados
+                if (tData && tData.atendimento_id) {
+                    const { data: restantes } = await db.from('app_atendimento_tratamentos').select('id').eq('atendimento_id', tData.atendimento_id).eq('status', 'Ativo');
+                    if (!restantes || restantes.length === 0) {
+                        await db.from('app_atendimento_fraterno').update({ status: 'Concluído' }).eq('id', tData.atendimento_id);
+                    }
+                }
                 
                 Swal.fire({
                     title: 'Atualizado!',
@@ -5520,13 +5530,13 @@ window.carregarHistoricoGeralDesktop = async function () {
                     let descHtml = `Atendente: ${r.atendente}`;
                     
                     if (r.tipo === 'Fluídico') {
-                        badgeConfig = { color: '#3b82f6', text: '💧 TRAT. FLUÍDICO' };
+                        badgeConfig = { color: '#3b82f6', text: '💧 FLUÍDICO' };
                         const statusColor = r.status === 'Concluído' ? '#10b981' : '#ef4444';
                         const inicioStr = r.data_inicio ? new Date(r.data_inicio).toLocaleDateString('pt-BR') : '?';
                         const fimStr = r.data ? new Date(r.data).toLocaleDateString('pt-BR') : '?';
                         descHtml = `Período: ${inicioStr} até ${fimStr} — <strong style="color: ${statusColor}">${r.status}</strong>`;
                     } else if (r.tipo === 'Espiritual') {
-                        badgeConfig = { color: '#8b5cf6', text: '✨ TRAT. ESPIRITUAL' };
+                        badgeConfig = { color: '#8b5cf6', text: '✨ ESPIRITUAL' };
                         const statusColor = r.status === 'Concluído' ? '#10b981' : '#ef4444';
                         const inicioStr = r.data_inicio ? new Date(r.data_inicio).toLocaleDateString('pt-BR') : '?';
                         const fimStr = r.data ? new Date(r.data).toLocaleDateString('pt-BR') : '?';
