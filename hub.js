@@ -3075,7 +3075,7 @@ let currentAtendimentoSubTab = 'fila';
 
 window.mudarAbaPrincipalAtendimento = function (mainTab) {
     currentAtendimentoMainTab = mainTab;
-    const mains = ['triagem', 'atendimento', 'acompanhamento', 'historico'];
+    const mains = ['triagem', 'fichario', 'atendimento', 'acompanhamento', 'historico'];
     mains.forEach(m => {
         const btn = document.getElementById('btnMainAten' + m.charAt(0).toUpperCase() + m.slice(1));
         if (btn) {
@@ -3085,9 +3085,10 @@ window.mudarAbaPrincipalAtendimento = function (mainTab) {
     });
 
     if (mainTab === 'triagem') currentAtendimentoSubTab = 'fila';
+    else if (mainTab === 'fichario') currentAtendimentoSubTab = 'A';
     else if (mainTab === 'atendimento') currentAtendimentoSubTab = 'andamento';
     else if (mainTab === 'acompanhamento') currentAtendimentoSubTab = 'tratamentos';
-    else if (mainTab === 'historico') currentAtendimentoSubTab = 'mes';
+    else if (mainTab === 'historico') currentAtendimentoSubTab = 'historico_geral';
 
     renderizarSubAbasAtendimento();
     carregarListaAtendimento();
@@ -3113,6 +3114,14 @@ function renderizarSubAbasAtendimento() {
             <button onclick="mudarSubAbaAtendimento('fila')" style="${currentAtendimentoSubTab === 'fila' ? activeStyle : inactiveStyle}">📂 Fila Geral</button>
             <button onclick="mudarSubAbaAtendimento('espera')" style="${currentAtendimentoSubTab === 'espera' ? activeStyle : inactiveStyle}">🛋️ Sala de Espera</button>
         `;
+    } else if (currentAtendimentoMainTab === 'fichario') {
+        container.style.display = 'flex';
+        let html = '';
+        const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        letras.forEach(L => {
+            html += `<button onclick="mudarSubAbaAtendimento('${L}')" style="${currentAtendimentoSubTab === L ? activeStyle : inactiveStyle}">${L}</button>`;
+        });
+        container.innerHTML = html;
     } else if (currentAtendimentoMainTab === 'atendimento') {
         container.style.display = 'none';
     } else if (currentAtendimentoMainTab === 'acompanhamento') {
@@ -3124,8 +3133,8 @@ function renderizarSubAbasAtendimento() {
     } else if (currentAtendimentoMainTab === 'historico') {
         container.style.display = 'flex';
         container.innerHTML = `
-            <button onclick="mudarSubAbaAtendimento('estatisticas')" style="${currentAtendimentoSubTab === 'estatisticas' ? activeStyle : inactiveStyle}">📈 Estatísticas</button>
             <button onclick="mudarSubAbaAtendimento('historico_geral')" style="${currentAtendimentoSubTab === 'historico_geral' ? activeStyle : inactiveStyle}">📜 Histórico Geral</button>
+            <button onclick="mudarSubAbaAtendimento('estatisticas')" style="${currentAtendimentoSubTab === 'estatisticas' ? activeStyle : inactiveStyle}">📈 Estatísticas</button>
         `;
     }
 }
@@ -3278,6 +3287,7 @@ window.carregarPainelGestaoAtendimento = function () {
             <!-- Abas Principais -->
             <div class="no-scrollbar" style="display: flex; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; overflow-x: auto;">
                 <button onclick="mudarAbaPrincipalAtendimento('triagem')" id="btnMainAtenTriagem" class="btn" style="white-space: nowrap; border-radius: 8px; background: var(--primary); color: white; padding: 10px 20px;">📋 Triagem</button>
+                <button onclick="mudarAbaPrincipalAtendimento('fichario')" id="btnMainAtenFichario" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🗂️ Fichário</button>
                 <button onclick="mudarAbaPrincipalAtendimento('atendimento')" id="btnMainAtenAtendimento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🧑‍🤝‍🧑 Atendimento Fraterno</button>
                 <button onclick="mudarAbaPrincipalAtendimento('acompanhamento')" id="btnMainAtenAcompanhamento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🔎 Tratamentos Fluídico e Espiritual</button>
                 <button onclick="mudarAbaPrincipalAtendimento('historico')" id="btnMainAtenHistorico" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">📊 Histórico</button>
@@ -3566,6 +3576,10 @@ window.carregarListaAtendimento = async function () {
         } else if (currentAtendimentoSubTab === 'painelsemanal') {
             document.getElementById('loadingAten').style.display = 'none';
             carregarPainelSemanalDesktop();
+            return;
+        } else if (currentAtendimentoMainTab === 'fichario') {
+            document.getElementById('loadingAten').style.display = 'none';
+            carregarFicharioDesktop(allData, allTratamentos);
             return;
         }
 
@@ -5465,4 +5479,222 @@ window.carregarHistoricoGeralDesktop = async function () {
         console.error(err);
         lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar histórico geral.</span>';
     }
+};
+
+window.carregarFicharioDesktop = function(allData, allTratamentos) {
+    const lista = document.getElementById('listaAten');
+    lista.innerHTML = '';
+    
+    const patientsMap = new Map();
+    const letter = currentAtendimentoSubTab;
+    
+    allData.forEach(d => {
+        const nome = (d.nome_completo || 'Sem Nome').trim().toUpperCase();
+        const initial = nome.charAt(0);
+        if (initial === letter) {
+            if (!patientsMap.has(nome)) {
+                patientsMap.set(nome, {
+                    nome_completo: (d.nome_completo || 'Sem Nome').trim(),
+                    telefone: d.telefone || '',
+                    data_nascimento: d.data_nascimento || '',
+                    endereco: d.endereco_completo || '',
+                    paciente_id: d.paciente_id || null,
+                    atendimentos: [],
+                    tratamentos: []
+                });
+            }
+            if(d.paciente_id && !patientsMap.get(nome).paciente_id) {
+                patientsMap.get(nome).paciente_id = d.paciente_id;
+            }
+            patientsMap.get(nome).atendimentos.push(d);
+        }
+    });
+    
+    allTratamentos.forEach(t => {
+        const f = t.app_atendimento_fraterno;
+        if (!f) return;
+        const nome = (f.nome_completo || 'Sem Nome').trim().toUpperCase();
+        const initial = nome.charAt(0);
+        if (initial === letter) {
+            if (!patientsMap.has(nome)) {
+                patientsMap.set(nome, {
+                    nome_completo: (f.nome_completo || 'Sem Nome').trim(),
+                    telefone: f.telefone || '',
+                    data_nascimento: f.data_nascimento || '',
+                    endereco: f.endereco_completo || '',
+                    paciente_id: f.paciente_id || null,
+                    atendimentos: [],
+                    tratamentos: []
+                });
+            }
+            if(f.paciente_id && !patientsMap.get(nome).paciente_id) {
+                patientsMap.get(nome).paciente_id = f.paciente_id;
+            }
+            patientsMap.get(nome).tratamentos.push(t);
+        }
+    });
+
+    const patientsArray = Array.from(patientsMap.values());
+    patientsArray.sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
+
+    if (patientsArray.length === 0) {
+        const emptyEl = document.createElement('div');
+        emptyEl.style.cssText = 'padding: 24px; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);';
+        emptyEl.textContent = 'Nenhum paciente encontrado com a letra ' + letter;
+        lista.appendChild(emptyEl);
+        return;
+    }
+
+    lista.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;';
+
+    patientsArray.forEach(p => {
+        const card = document.createElement('div');
+        card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column;';
+        
+        const countA = p.atendimentos.length;
+        const countT = p.tratamentos.length;
+
+        const safeId = 'p_' + Math.random().toString(36).substr(2, 9);
+        window['fichario_' + safeId] = p;
+
+        card.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 20px; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
+                    ${p.nome_completo.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: white; font-size: 15px;">${p.nome_completo}</div>
+                    <div style="color: var(--text-muted); font-size: 12px;">${p.telefone || 'Sem telefone'}</div>
+                </div>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; flex: 1;">
+                <div><strong>Nascimento:</strong> ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') : 'Não informado'}</div>
+                <div style="margin-top: 4px;"><strong>Registros:</strong> ${countA} Atendimentos, ${countT} Tratamentos</div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-direction: column;">
+                <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); width: 100%; font-size: 12px; padding: 8px; cursor:pointer;">
+                    <span style="margin-right:4px;">📜</span> Abrir Histórico Completo
+                </button>
+                <button onclick="iniciarNovoAtendimentoFichario('${safeId}')" class="btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); width: 100%; font-size: 12px; padding: 8px; cursor:pointer;">
+                    <span style="margin-right:4px;">➕</span> Iniciar Novo Atendimento
+                </button>
+            </div>
+        `;
+        lista.appendChild(card);
+    });
+};
+
+window.abrirModalFicharioCompleto = async function(safeId) {
+    const p = window['fichario_' + safeId];
+    if(!p) return;
+    
+    window.abrirSideSheet('Histórico Consolidado', '<div style="padding: 24px;">Carregando histórico completo...</div>');
+    
+    let eventos = [];
+    p.atendimentos.forEach(a => {
+        eventos.push({
+            tipo: 'ATENDIMENTO',
+            data: new Date(a.created_at),
+            obj: a
+        });
+    });
+    p.tratamentos.forEach(t => {
+        eventos.push({
+            tipo: 'TRATAMENTO',
+            data: new Date(t.created_at),
+            obj: t
+        });
+    });
+    
+    eventos.sort((a, b) => b.data - a.data); // newest first
+    
+    let html = `
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+            <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">${p.nome_completo.toUpperCase()}</h4>
+            <strong>Telefone:</strong> ${p.telefone || 'Não informado'}<br>
+            <strong>Endereço:</strong> ${p.endereco || 'Não informado'}<br>
+            <strong>Nascimento:</strong> ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') : 'Não informado'}
+        </div>
+        <h4 style="color: var(--primary); margin-bottom: 16px;">Linha do Tempo</h4>
+    `;
+    
+    if (eventos.length === 0) {
+        html += '<div style="color:var(--text-muted); font-size:13px;">Nenhum evento registrado.</div>';
+    } else {
+        html += '<div style="display:flex; flex-direction:column; gap:12px; position:relative; padding-left:16px; border-left: 2px solid rgba(255,255,255,0.1);">';
+        eventos.forEach(ev => {
+            const dateStr = ev.data.toLocaleDateString('pt-BR');
+            if (ev.tipo === 'ATENDIMENTO') {
+                const badgeColor = ev.obj.status === 'Atendido' ? '#10b981' : '#f59e0b';
+                html += `
+                    <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                        <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Atendimento Fraterno</div>
+                        <div style="font-size:12px; color:var(--text-muted);">Status: <span style="color:${badgeColor}">${ev.obj.status}</span></div>
+                    </div>
+                `;
+            } else {
+                const badgeColor = ev.obj.tipo === 'Espiritual' ? '#818cf8' : '#3b82f6';
+                html += `
+                    <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                        <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Tratamento ${ev.obj.tipo}</div>
+                        <div style="font-size:12px; color:var(--text-muted);">Status: <span style="color:${ev.obj.status === 'Ativo' ? '#10b981' : 'var(--text-muted)'}">${ev.obj.status}</span></div>
+                        ${ev.obj.observacoes ? '<div style="margin-top:6px; font-size:11px; color:rgba(255,255,255,0.6);">' + ev.obj.observacoes + '</div>' : ''}
+                    </div>
+                `;
+            }
+        });
+        html += '</div>';
+    }
+    
+    document.getElementById('sideSheetContent').innerHTML = html;
+};
+
+window.iniciarNovoAtendimentoFichario = function(safeId) {
+    const p = window['fichario_' + safeId];
+    if(!p) return;
+    
+    Swal.fire({
+        title: 'Novo Atendimento',
+        text: 'Deseja iniciar um novo Atendimento Fraterno para ' + p.nome_completo + '?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, iniciar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                let criadoPor = 'Desconhecido';
+                try {
+                    const profStr = localStorage.getItem('sela_user_profile');
+                    if (profStr) {
+                        const prof = JSON.parse(profStr);
+                        criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || 'Desconhecido';
+                    }
+                } catch (e) { }
+
+                const { error } = await db.from('app_atendimento_fraterno').insert([{
+                    paciente_id: p.paciente_id || null,
+                    nome_completo: p.nome_completo,
+                    telefone: p.telefone,
+                    data_nascimento: p.data_nascimento,
+                    endereco_completo: p.endereco,
+                    status: 'Pendente',
+                    criado_por: criadoPor,
+                    presente: false
+                }]);
+                
+                if (error) throw error;
+                
+                Swal.fire('Sucesso!', 'Paciente adicionado à fila de Triagem (Pendente).', 'success');
+                carregarListaAtendimento();
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Erro', 'Não foi possível iniciar o atendimento.', 'error');
+            }
+        }
+    });
 };
