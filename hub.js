@@ -4509,13 +4509,10 @@ window.salvarFichaAtendimentoSideSheet = async function () {
     }
 
     try {
-        // Obter usuário logado atual
-        const profStr = localStorage.getItem('sela_user_profile');
-        let atendenteId = null;
-        if (profStr) {
-            const prof = JSON.parse(profStr);
-            atendenteId = prof.id;
-        }
+    try {
+        // Obter sempre o Atendente designado no Fraterno (pois a secretária pode estar preenchendo a ficha por ele)
+        const { data: atenData } = await db.from('app_atendimento_fraterno').select('atendente_id').eq('id', activeFichaAtendimentoId).single();
+        const atendenteId = atenData?.atendente_id || null;
 
         // Registrar Sessão
         const { error: errSess } = await db.from('app_atendimento_sessoes').insert([{
