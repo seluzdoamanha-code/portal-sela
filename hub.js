@@ -5440,7 +5440,7 @@ window.carregarHistoricoGeralDesktop = async function () {
                 data: f.data_hora_atendimento,
                 id: f.id,
                 nome: nome,
-                atendente: f.pessoas?.nome_completo || 'Sem Atendente',
+                atendente: f.pessoas?.nome_curto || f.pessoas?.nome_completo || 'Sem Atendente',
                 fraterno_id: f.id,
                 telefone: f.paciente?.celular || f.telefone
             });
@@ -5516,7 +5516,7 @@ window.carregarHistoricoGeralDesktop = async function () {
                 `;
 
                 registros.forEach(r => {
-                    let badgeConfig = { color: '#f59e0b', text: '🤝 TRIAGEM' };
+                    let badgeConfig = { color: '#f59e0b', text: '🤝 FRATERNO' };
                     let descHtml = `Atendente: ${r.atendente}`;
                     
                     if (r.tipo === 'Fluídico') {
@@ -5691,11 +5691,14 @@ window.abrirModalFicharioCompleto = async function(safeId) {
     let eventos = [];
     
     try {
-        // Fetch all Fraternos by exact name
-        const { data: atendimentos, error: errA } = await db
-            .from('app_atendimento_fraterno')
-            .select('*, pessoas!atendente_id(nome_completo, nome_curto)')
-            .ilike('nome_completo', p.nome_completo);
+        let query = db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(nome_completo, nome_curto)');
+        if (p.paciente_id) {
+            query = query.eq('paciente_id', p.paciente_id);
+        } else {
+            query = query.ilike('nome_completo', p.nome_completo);
+        }
+        
+        const { data: atendimentos, error: errA } = await query;
             
         if (errA) throw errA;
         
