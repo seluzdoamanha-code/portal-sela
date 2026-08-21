@@ -3521,15 +3521,15 @@ window.carregarListaAtendimento = async function () {
             statsContainer.innerHTML = `
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                     <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">📂 Fila p/ Atendimento</div>
-                    <div style="font-size: 18px; font-weight: bold; color: var(--primary);">${allData.filter(d => d.status !== 'Atendido' && d.status !== 'Em Tratamento').length}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: var(--primary);">${allData.filter(d => d.status !== 'Atendido' && d.status !== 'Em Tratamento' && d.status !== 'Concluído').length}</div>
                 </div>
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                     <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🛋️ Presentes (Espera)</div>
-                    <div style="font-size: 18px; font-weight: bold; color: #f59e0b;">${allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length + allTratamentos.filter(t => t.presente).length}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #f59e0b;">${allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento' && d.status !== 'Concluído').length + allTratamentos.filter(t => t.presente).length}</div>
                 </div>
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                     <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🧑‍🤝‍🧑 Em Atendimento (Sala)</div>
-                    <div style="font-size: 18px; font-weight: bold; color: #3b82f6;">${allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #3b82f6;">${allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento' && d.status !== 'Concluído').length}</div>
                 </div>
                 <div style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                     <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🩹 Em Tratamento (Ciclo)</div>
@@ -3577,7 +3577,7 @@ window.carregarListaAtendimento = async function () {
         if (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera') {
             const isFila = currentAtendimentoSubTab === 'fila';
 
-            const frats = allData.filter(d => isFila ? (!d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento') : (d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento'))
+            const frats = allData.filter(d => isFila ? (!d.presente && !d.atendente_id && !['Atendido', 'Em Tratamento', 'Concluído'].includes(d.status)) : (d.presente && !d.atendente_id && !['Atendido', 'Em Tratamento', 'Concluído'].includes(d.status)))
                 .map(d => ({ ...d, unified_type: 'Fraterno' }));
             
             const trats = allTratamentos.filter(d => isFila ? !d.presente : d.presente)
@@ -3606,7 +3606,7 @@ window.carregarListaAtendimento = async function () {
             });
 
         } else if (currentAtendimentoSubTab === 'andamento') {
-            data = allData.filter(d => d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
+            data = allData.filter(d => d.atendente_id && !['Atendido', 'Em Tratamento', 'Concluído'].includes(d.status));
         } else if (currentAtendimentoSubTab === 'historico_geral') {
             document.getElementById('loadingAten').style.display = 'none';
             carregarHistoricoGeralDesktop();
@@ -5432,7 +5432,7 @@ window.carregarHistoricoGeralDesktop = async function () {
 
     try {
         const [fraternoReq, tratamentosReq] = await Promise.all([
-            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo, nome_curto), paciente:pessoas!paciente_id(nome_completo, nome_curto, celular, endereco, cep, cpf_cnpj, data_nascimento)').eq('status', 'Atendido'),
+            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo, nome_curto), paciente:pessoas!paciente_id(nome_completo, nome_curto, celular, endereco, cep, cpf_cnpj, data_nascimento)').in('status', ['Atendido', 'Concluído']),
             db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)').in('status', ['Concluído', 'Suspenso'])
         ]);
 
