@@ -3431,7 +3431,7 @@ window.carregarListaAtendimento = async function () {
 
     try {
         const [fraternoReq, tratamentosReq] = await Promise.all([
-            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo), app_pacientes(*)'),
+            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo), paciente:pessoas!paciente_id(nome_completo, celular, endereco, data_nascimento)'),
             db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)').eq('status', 'Ativo')
         ]);
         if (fraternoReq.error) throw fraternoReq.error;
@@ -3442,11 +3442,11 @@ window.carregarListaAtendimento = async function () {
 
         if (allData) {
             allData = allData.map(f => {
-                if (f.app_pacientes) {
-                    f.nome_completo = f.app_pacientes.nome_completo || f.nome_completo;
-                    f.telefone = f.app_pacientes.telefone || f.telefone;
-                    f.endereco_completo = f.app_pacientes.endereco_completo || f.endereco_completo;
-                    f.data_nascimento = f.app_pacientes.data_nascimento || f.data_nascimento;
+                if (f.paciente) {
+                    f.nome_completo = f.paciente.nome_completo || f.nome_completo;
+                    f.telefone = f.paciente.celular || f.telefone;
+                    f.endereco_completo = f.paciente.endereco || f.endereco_completo;
+                    f.data_nascimento = f.paciente.data_nascimento || f.data_nascimento;
                 }
                 return f;
             });
