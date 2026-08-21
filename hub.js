@@ -5751,6 +5751,26 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                 });
             }
             
+            // Fetch all Presenças
+            const tratIds = tratamentos ? tratamentos.map(t => t.id) : [];
+            if (tratIds.length > 0) {
+                const { data: pres, error: errPres } = await db
+                    .from('app_atendimento_presencas')
+                    .select('*')
+                    .in('tratamento_id', tratIds);
+                if (!errPres && pres) {
+                    pres.forEach(p => {
+                        const trat = tratamentos.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
+                        eventos.push({
+                            tipo: 'PRESENCA',
+                            data: obterDataPrecisa(p.data, p.created_at),
+                            obj: p,
+                            trat: trat
+                        });
+                    });
+                }
+            }
+            
             // Fetch all Sessões
             const { data: sessoes, error: errS } = await db
                 .from('app_atendimento_sessoes')
@@ -5814,16 +5834,30 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                             <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
                         </div>
                     `;
-                } else {
+                } else if (ev.tipo === 'TRATAMENTO') {
                     const badgeColor = ev.obj.tipo === 'Espiritual' ? '#818cf8' : '#3b82f6';
                     const statusColor = ev.obj.status === 'Ativo' ? '#10b981' : 'var(--text-muted)';
                     html += `
                         <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Tratamento ${ev.obj.tipo}</div>
-                            <div style="font-size:12px; color:var(--text-muted);">Status do Tratamento: <span style="color:${statusColor}">${ev.obj.status}</span></div>
-                            ${ev.obj.observacoes ? '<div style="margin-top:6px; font-size:11px; color:rgba(255,255,255,0.6);">' + ev.obj.observacoes + '</div>' : ''}
+                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Início Tratamento ${ev.obj.tipo}</div>
+                            <div style="font-size:12px; color:var(--text-muted);">Status do Ciclo: <span style="color:${statusColor}">${ev.obj.status}</span></div>
+                        </div>
+                    `;
+                } else if (ev.tipo === 'PRESENCA') {
+                    const isEsp = ev.trat?.tipo === 'Espiritual';
+                    const badgeColor = isEsp ? '#818cf8' : '#3b82f6';
+                    const badgeText = isEsp ? '✨ ESPIRITUAL' : '💧 FLUÍDICO';
+                    html += `
+                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                            <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px;">${badgeText}</span>
+                                Presença Registrada
+                            </div>
+                            ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
                         </div>
                     `;
                 }
