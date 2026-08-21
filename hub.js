@@ -2,6 +2,15 @@ const SUPABASE_URL = 'https://aymdooyafimliiggxeqs.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5bWRvb3lhZmltbGlpZ2d4ZXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDUxNDksImV4cCI6MjEwMDY4MTE0OX0.-NBhiyGDlrWq4QKNLx9Ll5GlIk0mV_rBWnr0vdbUCOU';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+function parseDataLocal(val) {
+    if (!val) return new Date();
+    const str = String(val);
+    if (str.length === 10 && str.indexOf('-') === 4) {
+        return new Date(str + 'T12:00:00'); // Fuso horário seguro para forçar dia correto local
+    }
+    return new Date(val);
+}
+
 function formatarCelular(v) {
     if (!v) return '';
     v = v.replace(/\D/g, '');
@@ -5453,14 +5462,14 @@ window.carregarHistoricoGeralDesktop = async function () {
         }
 
         // Ordenar do mais recente para o mais antigo
-        itens.sort((a, b) => new Date(b.data) - new Date(a.data));
+        itens.sort((a, b) => parseDataLocal(b.data) - parseDataLocal(a.data));
 
         // Agrupar por Ano e Mês
         const grupos = {};
         const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         
         itens.forEach(item => {
-            const d = new Date(item.data);
+            const d = parseDataLocal(item.data);
             const ano = d.getFullYear();
             const mesIdx = d.getMonth();
             const mesStr = monthNames[mesIdx];
@@ -5724,7 +5733,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                     
                     eventos.push({
                         tipo: 'SESSAO',
-                        data: new Date(s.data || s.created_at),
+                        data: parseDataLocal(s.data || s.created_at),
                         obj: s,
                         atendente_nome: s.pessoas?.nome_completo || atendenteNomeFallback
                     });
