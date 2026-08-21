@@ -5726,8 +5726,8 @@ window.abrirModalFicharioCompleto = async function(safeId) {
         
         allAtendimentos.forEach(a => {
             eventos.push({
-                tipo: 'ATENDIMENTO',
-                data: new Date(a.data_hora_atendimento || a.created_at),
+                tipo: 'ATENDIMENTO', // Representa a Solicitação
+                data: new Date(a.created_at),
                 obj: a
             });
         });
@@ -5792,6 +5792,26 @@ window.abrirModalFicharioCompleto = async function(safeId) {
             }
         }
         
+        }
+        
+        // Push cycle completion events guaranteed to be at the top of their respective cycles
+        allAtendimentos.forEach(a => {
+            if (a.status === 'Concluído' || a.status === 'Cancelado') {
+                // Find the max date of all events associated with this Fraterno
+                let maxDate = new Date(a.created_at);
+                eventos.forEach(ev => {
+                    if (ev.obj.atendimento_id === a.id || ev.obj.id === a.id || ev.trat?.atendimento_id === a.id) {
+                        if (ev.data > maxDate) maxDate = ev.data;
+                    }
+                });
+                eventos.push({
+                    tipo: 'ATENDIMENTO_FIM',
+                    data: new Date(maxDate.getTime() + 1000), // +1 sec to ensure it stays on top
+                    obj: a
+                });
+            }
+        });
+        
         eventos.sort((a, b) => b.data - a.data); // newest first
         
         let html = `
@@ -5811,13 +5831,23 @@ window.abrirModalFicharioCompleto = async function(safeId) {
             eventos.forEach(ev => {
                 const dateStr = ev.data.toLocaleDateString('pt-BR');
                 if (ev.tipo === 'ATENDIMENTO') {
-                    const badgeColor = ev.obj.status === 'Atendido' ? '#10b981' : (ev.obj.status === 'Em Tratamento' ? '#3b82f6' : '#f59e0b');
+                    const badgeColor = ev.obj.status === 'Atendido' ? '#10b981' : (ev.obj.status === 'Em Tratamento' ? '#3b82f6' : (ev.obj.status === 'Cancelado' ? '#ef4444' : '#f59e0b'));
                     html += `
                         <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                             <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Solicitação de Atendimento Fraterno</div>
-                            <div style="font-size:12px; color:var(--text-muted);">Status da Ficha: <span style="color:${badgeColor}">${ev.obj.status}</span></div>
+                            <div style="font-size:12px; color:var(--text-muted);">Por ${ev.obj.criado_por || 'Sistema'}</div>
+                        </div>
+                    `;
+                } else if (ev.tipo === 'ATENDIMENTO_FIM') {
+                    const badgeColor = ev.obj.status === 'Concluído' ? '#10b981' : '#ef4444';
+                    const icon = ev.obj.status === 'Concluído' ? '✅' : '❌';
+                    html += `
+                        <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px dashed ${badgeColor}; padding: 12px; border-radius: 8px; opacity: 0.8;">
+                            <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                            <div style="font-weight:bold; color:${badgeColor}; font-size:13px;">${icon} Ciclo do Fraterno ${ev.obj.status}</div>
                         </div>
                     `;
                 } else if (ev.tipo === 'SESSAO') {
