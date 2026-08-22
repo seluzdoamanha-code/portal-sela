@@ -553,36 +553,96 @@ function calcularIdade(dataStr) {
                 </div>
             `;
 
-            // Histórico de sessões anteriores
-            const { data: sessoes, error: errSess } = await db.from('app_atendimento_sessoes')
-                .select('*, pessoas!atendente_id(nome_completo)')
-                .eq('atendimento_id', id)
-                .order('data', { ascending: false })
-                .limit(10); // increased limit to show more history
+            
+            let eventos = [];
+
+            // Fetch Sessions
+            const { data: sessoes, error: errSess } = await db
+                .from('app_atendimento_sessoes')
+                .select('*, pessoas!atendente_id(nome_completo, nome_curto)')
+                .eq('atendimento_id', id);
 
             if (errSess) throw errSess;
-
-            let sessoesHtml = '<div style="margin-bottom: 24px;"><h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Histórico de Atendimentos Fraternos</h4>';
-            if (sessoes && sessoes.length > 0) {
-                sessoes.forEach((s, idx) => {
-                    const dt = s.data ? s.data.split('T')[0].split('-').reverse().join('/') : '';
-                    sessoesHtml += `
-                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; font-size: 13px; margin-bottom: 8px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-weight:bold; color:var(--text-main);">
-                                <div>
-                                    <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase;">FRATERNO</span>
-                                    <span style="margin-left: 4px;">Sessão de ${dt}</span>
-                                </div>
-                                <span style="color:var(--primary); font-size:11px;">Atendente: ${s.pessoas?.nome_completo || 'N/A'}</span>
-                            </div>
-                            <div style="color:var(--text-muted); line-height:1.4; white-space:pre-wrap;">${s.sintomas_orientacoes}</div>
-                        </div>
-                    `;
+            if (sessoes) {
+                sessoes.forEach(s => {
+                    eventos.push({
+                        tipo: 'SESSAO',
+                        data: new Date(s.data || s.created_at),
+                        obj: s,
+                        atendente_nome: s.pessoas?.nome_curto || s.pessoas?.nome_completo || 'Desconhecido'
+                    });
                 });
-            } else {
-                sessoesHtml += '<div style="font-size:12px; color:var(--text-muted); font-style:italic;">Nenhuma sessão anterior gravada.</div>';
             }
-            sessoesHtml += '</div>';
+
+            // Fetch Treatments and Presences
+            const { data: trats, error: errTrats } = await db.from('app_atendimento_tratamentos').select('id, tipo, status').eq('atendimento_id', id);
+            if (errTrats) throw errTrats;
+
+            if (trats && trats.length > 0) {
+                const tratIds = trats.map(t => t.id);
+                const { data: pres, error: errPres } = await db
+                    .from('app_atendimento_presencas')
+                    .select('*')
+                    .in('tratamento_id', tratIds);
+
+                if (errPres) throw errPres;
+                if (pres) {
+                    pres.forEach(p => {
+                        const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
+                        eventos.push({
+                            tipo: 'PRESENCA',
+                            data: new Date(p.data || p.created_at),
+                            obj: p,
+                            trat: trat
+                        });
+                    });
+                }
+            }
+
+            eventos.sort((a, b) => b.data - a.data);
+
+            let sessoesHtml = '<div style="margin-bottom: 24px;"><h4 style="margin-top:0; color:var(--primary); margin-bottom:16px;">Histórico de Atendimento</h4>';
+            
+            if (eventos.length === 0) {
+                sessoesHtml += '<div style="color:var(--text-muted); font-size:13px; font-style: italic;">Nenhum registro encontrado para esta ficha.</div>';
+            } else {
+                sessoesHtml += '<div style="display:flex; flex-direction:column; gap:12px; position:relative; padding-left:16px; border-left: 2px solid rgba(255,255,255,0.1); padding-bottom: 8px;">';
+                eventos.forEach(ev => {
+                    const dateStr = ev.data.toLocaleDateString('pt-BR');
+                    if (ev.tipo === 'SESSAO') {
+                        sessoesHtml += `
+                            <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                                <div style="position:absolute; left:-25px; top:14px; width:10px; height:10px; border-radius:50%; background: #f59e0b; border:2px solid var(--bg-panel);"></div>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                    <div>
+                                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                                        <div style="font-weight:bold; color:var(--primary); font-size:14px;">🤝 Sessão Fraterno</div>
+                                    </div>
+                                    <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.atendente_nome}</span>
+                                </div>
+                                <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
+                            </div>
+                        `;
+                    } else if (ev.tipo === 'PRESENCA') {
+                        const isEsp = ev.trat?.tipo === 'Espiritual';
+                        const badgeColor = isEsp ? '#818cf8' : '#3b82f6';
+                        const badgeText = isEsp ? '✨ ESPIRITUAL' : '💧 FLUÍDICO';
+                        sessoesHtml += `
+                            <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                                <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                                <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
+                                    <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px;">${badgeText}</span>
+                                    Presença Registrada
+                                </div>
+                                ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
+                            </div>
+                        `;
+                    }
+                });
+                sessoesHtml += '</div>';
+            }
+
 
             const finalHtml = `
                 <div style="display: flex; flex-direction: column; gap: 8px; padding-bottom: 32px;">
