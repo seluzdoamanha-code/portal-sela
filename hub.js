@@ -3490,7 +3490,7 @@ window.carregarListaAtendimento = async function () {
 
     try {
         const [fraternoReq, tratamentosReq] = await Promise.all([
-            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo, nome_curto), paciente:pessoas!paciente_id(nome_completo, nome_curto, celular, endereco, cep, cpf_cnpj, data_nascimento)'),
+            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo, nome_curto), paciente:pessoas!paciente_id(nome_completo, nome_curto, celular, endereco, bairro, cidade, estado, cep, cpf_cnpj, data_nascimento)'),
             db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, status, created_at, paciente:pessoas!paciente_id(*))').eq('status', 'Ativo')
         ]);
         if (fraternoReq.error) throw fraternoReq.error;
@@ -3506,6 +3506,10 @@ window.carregarListaAtendimento = async function () {
                     f.nome_curto = f.paciente.nome_curto || f.nome_completo.split(' ')[0];
                     f.telefone = f.paciente.celular || f.telefone;
                     f.endereco_completo = f.paciente.endereco || f.endereco_completo;
+                    f.endereco = f.paciente.endereco || f.endereco_completo;
+                    f.bairro = f.paciente.bairro || null;
+                    f.cidade = f.paciente.cidade || null;
+                    f.estado = f.paciente.estado || null;
                     f.data_nascimento = f.paciente.data_nascimento || f.data_nascimento;
                     f.cpf_cnpj = f.paciente.cpf_cnpj || null;
                     f.cep = f.paciente.cep || null;
@@ -3631,6 +3635,10 @@ window.carregarListaAtendimento = async function () {
                         nome_completo: pac.nome_completo || d.app_atendimento_fraterno?.nome_completo || '',
                         nome_curto: pac.nome_curto || '',
                         endereco_completo: pac.endereco || '',
+                        endereco: pac.endereco || '',
+                        bairro: pac.bairro || '',
+                        cidade: pac.cidade || '',
+                        estado: pac.estado || '',
                         telefone: pac.celular || '',
                         data_nascimento: pac.data_nascimento || '',
                         cpf_cnpj: pac.cpf_cnpj || '',
@@ -3810,6 +3818,16 @@ function renderizarCardAtendimentoItem(container, item) {
     }
 
     const shortName = item.nome_curto || (item.nome_completo ? item.nome_completo.split(' ')[0] : 'Sem nome');
+    const endPartes = [];
+    if (item.endereco) endPartes.push(item.endereco);
+    else if (item.endereco_completo) endPartes.push(item.endereco_completo);
+    if (item.bairro) endPartes.push(item.bairro);
+    let cidEst = [];
+    if (item.cidade) cidEst.push(item.cidade);
+    if (item.estado) cidEst.push(item.estado);
+    if (cidEst.length > 0) endPartes.push(cidEst.join('/'));
+    const endFull = endPartes.length > 0 ? endPartes.join(', ') : 'Sem endereço';
+
     let leftInfo = `
         <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
             <div style="display: flex; flex-direction: column; margin-bottom: 4px;">
@@ -3820,7 +3838,7 @@ function renderizarCardAtendimentoItem(container, item) {
                 <span style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">${shortName}</span>
             </div>
             
-            <div style="font-size: 13px; color: var(--text-muted);">📍 ${item.endereco_completo || 'Sem endereço'}${item.cep ? ' - CEP: ' + formatarCEP(item.cep) : ''}</div>
+            <div style="font-size: 13px; color: var(--text-muted);">📍 ${endFull}${item.cep ? ' - CEP: ' + formatarCEP(item.cep) : ''}</div>
             <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${item.data_nascimento ? item.data_nascimento.split('-').reverse().join('/') + ` (${calcularIdade(item.data_nascimento)} anos)` : 'Não informada'}</div>
             <div style="font-size: 13px; color: var(--text-muted);">📄 CPF: ${item.cpf_cnpj ? formatarCPF(item.cpf_cnpj) : 'Não informado'}</div>
             <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); margin-top: 2px;">
