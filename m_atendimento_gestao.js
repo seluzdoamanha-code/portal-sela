@@ -1332,9 +1332,8 @@ function obterDataPrecisa(dataStr, createdAtStr) {
 
         try {
             const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(id, nome_completo, paciente:pessoas!paciente_id(*))')
-                .eq('status', 'Ativo')
-                .eq('presente', true);
+                .select('*, app_atendimento_fraterno(id, nome_completo, paciente:pessoas!paciente_id(*)), app_atendimento_presencas(data)')
+                .eq('status', 'Ativo');
 
             if (error) throw error;
 
@@ -1347,11 +1346,12 @@ function obterDataPrecisa(dataStr, createdAtStr) {
 
             trats.forEach(t => {
                 const f = t.app_atendimento_fraterno;
+                if (!f) return;
                 const card = document.createElement('div');
                 card.className = 'card-atendimento';
                 card.style.marginBottom = '12px';
                 
-                const badgeColor = t.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
+                const badgeColor = t.tipo === 'Espiritual' ? '#818cf8' : '#3b82f6';
 
                 let ageInfo = '';
                 const nasc = f.paciente?.data_nascimento || f.data_nascimento;
@@ -1361,6 +1361,33 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                     ageInfo = ` (${age} anos)`;
                 }
 
+                let attendedToday = false;
+                if (t.app_atendimento_presencas) {
+                    const now = new Date();
+                    const tzOffset = now.getTimezoneOffset() * 60000;
+                    const todayLocal = new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
+                    
+                    attendedToday = t.app_atendimento_presencas.some(p => {
+                        if (!p.data) return false;
+                        return p.data.split('T')[0] === todayLocal;
+                    });
+                }
+
+                const labelHtml = attendedToday 
+                    ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); white-space: nowrap;">✅ Atendido Hoje</span>' 
+                    : (t.presente 
+                        ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); white-space: nowrap;">🟢 Presente na Casa</span>' 
+                        : '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); white-space: nowrap;">🟡 Aguardando Chegada</span>'
+                    );
+                    
+                const btnHtml = attendedToday
+                    ? `<button disabled class="btn-action" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px dashed var(--border); width:100%; padding:10px; border-radius: 8px; font-weight: 600;">Já Realizado Hoje</button>`
+                    : `<button onclick="confirmarSessaoTratamentoMobile('${t.id}', '${t.tipo}')" class="btn-action" style="background:${badgeColor}; color:white; border:none; width:100%; padding:10px; border-radius: 8px; font-weight: 600;">Confirmar Atendimento</button>`;
+
+                const actionDesfazer = (!attendedToday && t.presente) 
+                    ? `<button onclick="marcarTratamentoPresenteMobile('${t.id}', false)" class="btn-action" style="padding: 4px 8px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; font-size: 11px; margin-top: 4px;">Desfazer Presente</button>`
+                    : ``;
+
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
                         <div>
@@ -1369,14 +1396,15 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                             <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">🎂 Nascimento: ${nasc ? nasc.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
                             <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📱 Celular: ${f.paciente?.celular || f.telefone || 'Não informado'}</div>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-                            <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44; white-space: nowrap;">${t.tipo}</span>
-                            <button onclick="marcarTratamentoPresenteMobile('${t.id}', false)" class="btn-action" style="padding: 4px 8px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; font-size: 11px;">Desfazer Presente</button>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                            <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44; white-space: nowrap; text-transform: uppercase;">${t.tipo}</span>
+                            ${labelHtml}
+                            ${actionDesfazer}
                         </div>
                     </div>
                     
                     <div style="margin-top:12px;">
-                        <button onclick="confirmarSessaoTratamentoMobile('${t.id}', '${t.tipo}')" class="btn-action" style="background:${badgeColor}; color:white; border:none; width:100%; padding:10px; border-radius: 8px; font-weight: 600;">Confirmar Atendimento</button>
+                        ${btnHtml}
                     </div>
                 `;
                 container.appendChild(card);
