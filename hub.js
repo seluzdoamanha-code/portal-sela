@@ -6126,12 +6126,24 @@ window.abrirFichaPacienteFichario = async function(pacienteId) {
             nascHtml = `${partes.reverse().join('/')} (${age} anos)`;
         }
 
+        let avatarHtml = '';
+        if (p.foto_url) {
+            avatarHtml = `<img src="${p.foto_url}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 30px; display: block;">`;
+        } else {
+            const partes = (p.nome_completo || ' ').trim().split(' ');
+            let iniciais = partes[0].charAt(0);
+            if (partes.length > 1) {
+                iniciais += partes[partes.length - 1].charAt(0);
+            }
+            const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4'];
+            const colorIndex = (p.nome_completo || '').length % colors.length;
+            avatarHtml = `<div style="width: 60px; height: 60px; border-radius: 30px; background: ${colors[colorIndex]}; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white;">${iniciais.toUpperCase()}</div>`;
+        }
+
         const html = `
             <div style="padding: 24px; color: var(--text-main);">
                 <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
-                    <div style="width: 60px; height: 60px; border-radius: 30px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white;">
-                        ${(p.nome_curto || p.nome_completo || ' ').charAt(0).toUpperCase()}
-                    </div>
+                    ${avatarHtml}
                     <div>
                         <h2 style="margin: 0; font-size: 20px;">${p.nome_completo || 'Sem Nome'}</h2>
                         <div style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">${p.nome_curto || ''}</div>
@@ -6183,7 +6195,7 @@ window.abrirFichaPacienteFichario = async function(pacienteId) {
                 </div>
                 
                 <div style="margin-top: 24px;">
-                    <a href="pessoas.html?id=${pacienteId}" target="_blank" class="btn btn-primary" style="width: 100%; text-align: center; text-decoration: none;">Abrir Cadastro Completo no Portal ↗</a>
+                    <a href="perfil.html?id=${pacienteId}" target="_blank" class="btn btn-primary" style="width: 100%; text-align: center; text-decoration: none;">Abrir Cadastro Completo no Portal ↗</a>
                 </div>
             </div>
         `;
