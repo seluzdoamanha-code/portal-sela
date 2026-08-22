@@ -5679,12 +5679,17 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
 
     // Renderiza totalizadores no topo
     const summaryHtml = `
-        <div style="display: flex; gap: 12px; margin-bottom: 20px; font-size: 13px; align-items: center; justify-content: center; flex-wrap: wrap;">
-            <div style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); padding: 8px 16px; border-radius: 8px; color: var(--primary); font-weight: 500;">
-                🗂️ Fichário Acervo: <strong>${totalGeral} Ficha${totalGeral !== 1 ? 's' : ''}</strong>
+        <div style="background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%); border: 1px solid rgba(99,102,241,0.2); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 8px 32px rgba(0,0,0,0.2); backdrop-filter: blur(8px);">
+            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                Fichário Geral
             </div>
-            <div style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; color: var(--text-main); font-weight: 500;">
-                Letra ${letter}: <strong>${totalLetra} Ficha${totalLetra !== 1 ? 's' : ''}</strong>
+            <div style="font-size: 36px; font-weight: 800; margin-bottom: 12px; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1;">
+                ${totalGeral} <span style="font-size: 20px; font-weight: 600; opacity: 0.9;">Ficha${totalGeral !== 1 ? 's' : ''}</span>
+            </div>
+            <div style="font-size: 14px; color: var(--text-main); font-weight: 500; background: rgba(0,0,0,0.2); padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 6px;">
+                <span>Atualmente mostrando <strong>${totalLetra}</strong> na letra</span>
+                <span style="background: var(--primary); color: white; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-weight: bold; font-size: 12px;">${letter}</span>
             </div>
         </div>
     `;
