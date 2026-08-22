@@ -17,6 +17,37 @@
     let subAba = 'fila';
     let pacienteAtualFichaId = null;
 
+function formatarCPF(v) {
+    if (!v) return '-';
+    v = v.replace(/\D/g, '');
+    if (v.length === 11) {
+        return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    }
+    return v;
+}
+
+function formatarCelular(v) {
+    if (!v) return '-';
+    v = v.replace(/\D/g, '');
+    if (v.length === 11) {
+        return v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (v.length === 10) {
+        return v.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    }
+    return v;
+}
+
+function calcularIdade(dataStr) {
+    if (!dataStr) return '';
+    const hoje = new Date();
+    const nasc = new Date(dataStr);
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    const m = hoje.getMonth() - nasc.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+    return idade;
+}
+
+
     document.addEventListener('DOMContentLoaded', () => {
         // Inject Side-Sheet if not present
         if (!document.getElementById('globalSideSheet')) {
@@ -342,7 +373,7 @@
         let nascimentoInfo = 'Não informada';
         if (item.data_nascimento) {
             const nascAno = item.data_nascimento.split('-')[0];
-            const age = new Date().getFullYear() - parseInt(nascAno);
+            const age = calcularIdade(nasc);
             nascimentoInfo = `${item.data_nascimento.split('-').reverse().join('/')} (${age} anos)`;
         }
 
@@ -960,7 +991,7 @@
                 const nasc = f.paciente?.data_nascimento || f.data_nascimento;
                 if (nasc) {
                     const anoNasc = nasc.split('-')[0];
-                    const age = new Date().getFullYear() - parseInt(anoNasc);
+                    const age = calcularIdade(nasc);
                     ageInfo = ` (${age} anos)`;
                 }
 
@@ -1175,7 +1206,7 @@
                 const nasc = f.paciente?.data_nascimento || f.data_nascimento;
                 if (nasc) {
                     const anoNasc = nasc.split('-')[0];
-                    const age = new Date().getFullYear() - parseInt(anoNasc);
+                    const age = calcularIdade(nasc);
                     ageInfo = ` (${age} anos)`;
                 }
 
