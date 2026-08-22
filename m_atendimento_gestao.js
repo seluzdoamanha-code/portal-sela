@@ -89,13 +89,13 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             const styleSheet = `
                 <style>
                     .side-sheet-overlay {
-                        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                        position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
                         background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px);
                         z-index: 1050; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
                     }
                     .side-sheet-overlay.show { opacity: 1; pointer-events: auto; }
                     .side-sheet {
-                        position: fixed; top: 0; right: 0; width: 400px; max-width: 90vw; height: 100vh;
+                        position: fixed; top: 0; right: 0; width: 400px; max-width: 90vw; height: 100dvh;
                         background: var(--bg-card, #1e293b); box-shadow: -4px 0 15px rgba(0,0,0,0.1);
                         z-index: 1100; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                         display: flex; flex-direction: column;
@@ -106,7 +106,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                         display: flex; align-items: center; justify-content: space-between;
                     }
                     .side-sheet-header h3 { margin: 0; font-size: 18px; color: var(--accent); }
-                    .side-sheet-content { padding: 24px; flex: 1; overflow-y: auto; }
+                    .side-sheet-content { padding: 24px; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 120px; }
                 </style>
             `;
             const sideSheetHTML = `
