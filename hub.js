@@ -5612,6 +5612,18 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
     const lista = document.getElementById('listaAten');
     lista.innerHTML = '';
     
+    // Calcula o total geral de fichas ÚNICAS
+    const allPatientsSet = new Set();
+    allData.forEach(d => {
+        const nome = (d.nome_completo || 'Sem Nome').trim().toUpperCase();
+        allPatientsSet.add(nome);
+    });
+    allTratamentos.forEach(t => {
+        const f = t.app_atendimento_fraterno;
+        if(f) allPatientsSet.add((f.nome_completo || 'Sem Nome').trim().toUpperCase());
+    });
+    const totalGeral = allPatientsSet.size;
+    
     const patientsMap = new Map();
     const letter = currentAtendimentoSubTab;
     
@@ -5663,6 +5675,21 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
 
     const patientsArray = Array.from(patientsMap.values());
     patientsArray.sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
+    const totalLetra = patientsArray.length;
+
+    // Renderiza totalizadores no topo
+    const summaryHtml = `
+        <div style="display: flex; gap: 12px; margin-bottom: 20px; font-size: 13px; align-items: center; justify-content: center; flex-wrap: wrap;">
+            <div style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); padding: 8px 16px; border-radius: 8px; color: var(--primary); font-weight: 500;">
+                🗂️ Fichário Acervo: <strong>${totalGeral} Ficha${totalGeral !== 1 ? 's' : ''}</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; color: var(--text-main); font-weight: 500;">
+                Letra ${letter}: <strong>${totalLetra} Ficha${totalLetra !== 1 ? 's' : ''}</strong>
+            </div>
+        </div>
+    `;
+    
+    lista.innerHTML = summaryHtml;
 
     if (patientsArray.length === 0) {
         const emptyEl = document.createElement('div');
