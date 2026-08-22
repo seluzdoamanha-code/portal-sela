@@ -904,6 +904,7 @@
                     // Inserir nova ficha
                     const { error: errI } = await db.from('app_atendimento_fraterno').insert([{
                         paciente_id: oldData.paciente_id,
+                        nome_completo: oldData.nome_completo,
                         status: 'Pendente' // Vai para a Triagem
                     }]);
 

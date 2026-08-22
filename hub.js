@@ -4363,9 +4363,6 @@ async function salvarFormularioAtendimento(e) {
         const { error } = await db.from('app_atendimento_fraterno').insert([{
             paciente_id: pacienteId,
             nome_completo: nome,
-            endereco_completo: endereco,
-            data_nascimento: nascimento,
-            telefone: whats,
             status: 'Pendente',
             criado_por: criadoPor
         }]);
@@ -4585,10 +4582,14 @@ window.salvarFichaAtendimentoSideSheet = async function (btn) {
         const { data: atenData } = await db.from('app_atendimento_fraterno').select('atendente_id').eq('id', activeFichaAtendimentoId).single();
         const atendenteId = atenData?.atendente_id || null;
 
+        const d = new Date();
+        const localDateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
         // Registrar Sessão
         const { error: errSess } = await db.from('app_atendimento_sessoes').insert([{
             atendimento_id: activeFichaAtendimentoId,
             atendente_id: atendenteId,
+            data: localDateStr,
             sintomas_orientacoes: sintomas,
             apenas_conversa: apenasConversa,
             evangelho_lar: evangelhoLar
@@ -4600,7 +4601,8 @@ window.salvarFichaAtendimentoSideSheet = async function (btn) {
             const { error: errTratF } = await db.from('app_atendimento_tratamentos').insert([{
                 atendimento_id: activeFichaAtendimentoId,
                 tipo: 'Fluídico',
-                status: 'Ativo'
+                status: 'Ativo',
+                data_inicio: localDateStr
             }]);
             if (errTratF) throw errTratF;
         }
@@ -4610,7 +4612,8 @@ window.salvarFichaAtendimentoSideSheet = async function (btn) {
             const { error: errTratE } = await db.from('app_atendimento_tratamentos').insert([{
                 atendimento_id: activeFichaAtendimentoId,
                 tipo: 'Espiritual',
-                status: 'Ativo'
+                status: 'Ativo',
+                data_inicio: localDateStr
             }]);
             if (errTratE) throw errTratE;
         }
@@ -4971,9 +4974,6 @@ window.encaminharParaNovaTriagem = async function(fraterno_id) {
                 const { error: errI } = await db.from('app_atendimento_fraterno').insert([{
                     paciente_id: oldData.paciente_id,
                     nome_completo: oldData.nome_completo,
-                    endereco_completo: oldData.endereco_completo,
-                    telefone: oldData.telefone,
-                    data_nascimento: oldData.data_nascimento,
                     status: 'Pendente' // Vai para a Triagem
                 }]);
 
@@ -6072,11 +6072,8 @@ window.iniciarNovoAtendimentoFichario = function(safeId) {
                 } catch (e) { }
 
                 const { error } = await db.from('app_atendimento_fraterno').insert([{
-                    paciente_id: p.paciente_id || null,
+                    paciente_id: p.paciente_id || p.id || null, // ensure we fallback to p.id if it's from pessoas
                     nome_completo: p.nome_completo,
-                    telefone: p.telefone,
-                    data_nascimento: p.data_nascimento,
-                    endereco_completo: p.endereco,
                     status: 'Pendente',
                     criado_por: criadoPor,
                     presente: false

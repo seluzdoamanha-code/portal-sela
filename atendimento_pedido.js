@@ -31,13 +31,62 @@
                 }
             } catch(e) {}
 
+            let pacienteId = null;
+            
+            // Tentar match exato por nome e data de nascimento
+            if (nascimento) {
+                const { data: pes } = await db.from('pessoas')
+                    .select('id')
+                    .ilike('nome_completo', nome)
+                    .eq('data_nascimento', nascimento)
+                    .limit(1);
+                if (pes && pes.length > 0) pacienteId = pes[0].id;
+            }
+            
+            // Se não achou por data de nascimento, tentar por telefone
+            if (!pacienteId && telefone) {
+                const { data: pes2 } = await db.from('pessoas')
+                    .select('id')
+                    .ilike('nome_completo', nome)
+                    .eq('celular', telefone)
+                    .limit(1);
+                if (pes2 && pes2.length > 0) pacienteId = pes2[0].id;
+            }
+
+            if (!pacienteId) {
+                const { data: usedData } = await db.from('pessoas').select('cpf_cnpj').like('cpf_cnpj', '111111%');
+                const usedSet = new Set(usedData ? usedData.map(d => d.cpf_cnpj.replace(/\D/g, '')) : []);
+                let fakeCpf = null;
+                for (let i = 1; i <= 9999; i++) {
+                    const candidate = '111111' + String(i).padStart(5, '0');
+                    if (!usedSet.has(candidate)) {
+                        fakeCpf = candidate;
+                        break;
+                    }
+                }
+                if (!fakeCpf) fakeCpf = '11111199999';
+
+                const { data: novaPessoa, error: errPac } = await db.from('pessoas').insert([{
+                    nome_completo: nome,
+                    nome_curto: nome.split(' ')[0],
+                    celular: telefone,
+                    data_nascimento: nascimento || null,
+                    endereco: endereco,
+                    cpf_cnpj: fakeCpf,
+                    cpf_provisorio: true,
+                    criado_por: criadoPor
+                }]).select('id').single();
+
+                if (errPac) throw errPac;
+                pacienteId = novaPessoa.id;
+            }
+
             const { error } = await db.from('app_atendimento_fraterno').insert([{
+                paciente_id: pacienteId,
                 nome_completo: nome,
-                endereco_completo: endereco,
-                data_nascimento: nascimento,
-                telefone: telefone,
                 status: 'Pendente',
-                criado_por: criadoPor
+                criado_por: criadoPor,
+                presente: false
             }]);
 
             if (error) throw error;
