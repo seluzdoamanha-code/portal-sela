@@ -354,63 +354,98 @@
             infoExtra = `<div style="font-size: 13px; color: var(--primary); margin-top: 6px;">📅 Atribuído a: ${item.pessoas.nome_completo}</div>`;
         }
 
+        const dVal = new Date(item.created_at);
+        const dateStr = `${String(dVal.getDate()).padStart(2, '0')}/${String(dVal.getMonth()+1).padStart(2, '0')}/${dVal.getFullYear()}, ${String(dVal.getHours()).padStart(2, '0')}:${String(dVal.getMinutes()).padStart(2, '0')}`;
+        
+        let whatsLink = '';
+        if (item.telefone) {
+            const nums = item.telefone.replace(/\D/g, '');
+            whatsLink = `
+                <a href="https://wa.me/55${nums}" target="_blank" style="padding: 4px 8px; font-size: 12px; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    WhatsApp
+                </a>
+            `;
+        }
+
         const btnPresenca = item.presente ? 
-            `<button class="btn-action" onclick="alternarPresenca('${item.id}', false)" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Não Presente';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.2)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
-            `<button class="btn-action" onclick="alternarPresenca('${item.id}', true)" style="background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); transition: all 0.2s;">Confirmar Presença</button>`;
+            `<button class="btn-action" onclick="alternarPresenca('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s; font-weight: 600;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
+            `<button class="btn-action" onclick="alternarPresenca('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; transition: all 0.2s; font-weight: 500;">⚪ Confirmar Presença</button>`;
 
         const div = document.createElement('div');
-        div.className = 'card-atendimento';
-        div.style.marginBottom = '12px';
-        div.innerHTML = `
-            <div class="card-header">
-                <div>
-                    <div class="card-title">${item.nome_completo ? item.nome_completo.toUpperCase() : 'Sem Nome'}</div>
-                    <div class="card-date">Criado em: ${dataCriacao}${item.criado_por ? ' por ' + item.criado_por : ''}</div>
+        div.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;';
+        
+        const shortName = item.nome_completo ? item.nome_completo.split(' ')[0] : 'Sem nome';
+
+        let buttonsHtml = '';
+        const buttonsContainerStyle = 'display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; min-width: 140px; flex: 1;';
+        
+        if (subAba === 'fila' || subAba === 'espera') {
+            if (item.is_tratamento) {
+                const btnPresencaTrat = item.presente ? 
+                    `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; font-weight: 600;">🟢 Presente</button>` :
+                    `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: 500;">⚪ Confirmar Presença</button>`;
+                buttonsHtml = `<div style="${buttonsContainerStyle}">${btnPresencaTrat}</div>`;
+            } else {
+                buttonsHtml = `
+                    <div style="${buttonsContainerStyle}">
+                        ${item.status !== 'Atendido' ? btnPresenca : '<div></div>'}
+                        
+                        ${(item.status === 'Pendente' || item.status === 'Planejado') ? `
+                            <button class="btn-action" onclick="abrirTriagem('${item.id}')" style="font-size: 12px; padding: 8px; background: rgba(146, 96, 52, 0.4); color: #fbbf24; border: 1px solid rgba(146, 96, 52, 0.6); border-radius: 8px; width: 100%; font-weight: 600;">🤝 Triagem</button>
+                        ` : ''}
+
+                        <div style="display: flex; gap: 8px; width: 100%; justify-content: center; margin-top: 2px;">
+                            ${item.status !== 'Atendido' ? `
+                                <button class="btn-action" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="font-size: 14px; padding: 8px; background: transparent; color: #fbbf24; border: 1px solid #fbbf24; border-radius: 8px; flex: 1; display: flex; justify-content: center;">✏️</button>
+                            ` : ''}
+                            <button class="btn-action" onclick="excluirPedido('${item.id}')" style="font-size: 14px; padding: 8px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; flex: 1; display: flex; justify-content: center;">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            // andamento / historico
+            buttonsHtml = `
+                <div style="${buttonsContainerStyle}">
+                    ${item.status !== 'Atendido' ? btnPresenca : ''}
+                    ${item.status === 'Planejado' && item.presente ? `
+                        <button class="btn-action" onclick="abrirFichaAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">📝 Ficha</button>
+                    ` : ''}
+                    ${item.status === 'Atendido' ? `
+                        <button class="btn-action" onclick="abrirFichaAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">📝 Ficha</button>
+                    ` : ''}
+                    ${item.status === 'Planejado' ? `
+                        <button class="btn-action" onclick="desatribuirAtendente('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px;">👤✕ Desatribuir</button>
+                    ` : ''}
+                    ${item.status === 'Atendido' ? `
+                        <button class="btn-action" onclick="encaminharParaNovaTriagemMobile('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px;">📋 Novo Atendimento</button>
+                    ` : ''}
                 </div>
+            `;
+        }
+
+        div.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 6px; flex: 2; min-width: 200px;">
+                <div style="display: flex; flex-direction: column; margin-bottom: 4px;">
+                    <strong style="font-size: 15px; color: var(--text-main); line-height: 1.2;">${item.nome_completo ? item.nome_completo.toUpperCase() : 'SEM NOME'}</strong>
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">${shortName}</span>
+                </div>
+                
+                <div style="font-size: 13px; color: var(--text-muted);">📍 ${item.endereco_completo || 'Sem endereço'}</div>
+                <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${nascimentoInfo}</div>
+                <div style="font-size: 13px; color: var(--text-muted);">📄 CPF: ${item.cpf_cnpj ? formatarCPF(item.cpf_cnpj) : 'Não informado'}</div>
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+                    <span>📱 Celular: ${item.telefone ? formatarCelular(item.telefone) : 'Não informado'}</span>
+                    ${whatsLink}
+                </div>
+                <div style="font-size: 11px; margin-top: 6px; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 12px; color: var(--text-muted); display: inline-block; width: fit-content;">Em ${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</div>
+                ${infoExtra}
             </div>
             
-            <div class="card-info"><strong>Endereço:</strong> ${item.endereco_completo || '-'}</div>
-            <div class="card-info"><strong>Nascimento:</strong> ${nascimentoInfo}</div>
-            <div class="card-info"><strong>WhatsApp:</strong> 
-                ${item.telefone ? `<a href="https://wa.me/55${item.telefone.replace(/\D/g, '')}" target="_blank" style="color:var(--primary); text-decoration:none;">${item.telefone}</a>` : '-'}
-            </div>
-            ${infoExtra}
-
-            <div class="card-actions" style="flex-wrap: wrap; margin-top: 12px; gap: 8px;">
-                ${item.is_tratamento ? `
-                    ${item.presente ? 
-                        `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', false)" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); width: 100%;">🔴 Remover Presença</button>` :
-                        `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', true)" style="background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); width: 100%;">⚪ Confirmar Presença</button>`
-                    }
-                ` : `
-                    ${item.status !== 'Atendido' ? btnPresenca : ''}
-                    
-                    ${item.status === 'Pendente' || (item.status === 'Planejado' && subAba !== 'andamento') ? `
-                        <button class="btn-action" onclick="abrirTriagem('${item.id}')" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">🤝 Triagem</button>
-                    ` : ''}
-
-                    ${item.status === 'Planejado' && item.presente ? `
-                        <button class="btn-action" onclick="abrirFichaAtendimento('${item.id}')" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">📝 Ficha</button>
-                    ` : ''}
-
-                    ${item.status === 'Atendido' ? `
-                        <button class="btn-action" onclick="abrirFichaAtendimento('${item.id}')" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">📝 Ficha</button>
-                    ` : ''}
-
-                    ${item.status === 'Planejado' ? `
-                        <button class="btn-action" onclick="desatribuirAtendente('${item.id}')" style="background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">👤✕ Desatribuir</button>
-                    ` : ''}
-
-                    <div style="display: flex; gap: 8px; flex: none; width: auto; min-width: 44px; margin-left: auto;">
-                        ${item.status === 'Atendido' ? `
-                        <button class="btn-action" onclick="encaminharParaNovaTriagemMobile('${item.id}')" style="flex: none; width: auto; padding: 10px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3);">📋 Novo Atendimento</button>
-                        ` : ''}
-                        <button class="btn-action" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="flex: none; width: auto; min-width: 44px; padding: 10px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);">✏️</button>
-                        <button class="btn-action btn-delete" onclick="excluirPedido('${item.id}')" style="flex: none; width: auto; min-width: 44px; padding: 10px;">🗑️</button>
-                    </div>
-                `}
-            </div>
+            ${buttonsHtml}
         `;
+        
         return div;
     }
 

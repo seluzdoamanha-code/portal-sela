@@ -3751,20 +3751,28 @@ function renderizarCardAtendimentoItem(container, item) {
     }
 
     const btnPresenca = item.presente ?
-        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
-        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s;">⚪ Confirmar Presença</button>`;
+        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s; font-weight: 600;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
+        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; transition: all 0.2s; font-weight: 500;">⚪ Confirmar Presença</button>`;
 
     // Container for buttons: giving much more space to the left side (data)
-    const buttonsContainerStyle = 'display: grid; grid-template-columns: 1fr 44px; gap: 8px; flex-shrink: 0; min-width: 160px;';
+    const buttonsContainerStyle = 'display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; min-width: 170px;';
 
+    const shortName = item.nome_completo ? item.nome_completo.split(' ')[0] : 'Sem nome';
     let leftInfo = `
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-            <strong style="font-size: 16px; color: var(--text-main); margin-bottom: 2px;">${item.nome_completo.toUpperCase()}</strong>
+        <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+            <div style="display: flex; flex-direction: column; margin-bottom: 4px;">
+                <strong style="font-size: 16px; color: var(--text-main); line-height: 1.2;">${item.nome_completo.toUpperCase()}</strong>
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">${shortName}</span>
+            </div>
+            
             <div style="font-size: 13px; color: var(--text-muted);">📍 ${item.endereco_completo || 'Sem endereço'}${item.cep ? ' - CEP: ' + formatarCEP(item.cep) : ''}</div>
             <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${item.data_nascimento ? item.data_nascimento.split('-').reverse().join('/') + ` (${calcularIdade(item.data_nascimento)} anos)` : 'Não informada'}</div>
             <div style="font-size: 13px; color: var(--text-muted);">📄 CPF: ${item.cpf_cnpj ? formatarCPF(item.cpf_cnpj) : 'Não informado'}</div>
-            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">📱 Celular: ${item.telefone ? formatarCelular(item.telefone) : 'Não informado'} ${whatsLink}</div>
-            <div style="font-size: 11px; margin-top: 4px; padding: 4px 8px; background: rgba(255,255,255,0.05); border-radius: 12px; color: var(--text-muted); display: inline-block; width: fit-content;">Em ${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</div>
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+                <span>📱 Celular: ${item.telefone ? formatarCelular(item.telefone) : 'Não informado'}</span>
+                ${whatsLink}
+            </div>
+            <div style="font-size: 11px; margin-top: 10px; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 12px; color: var(--text-muted); display: inline-block; width: fit-content;">Em ${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</div>
             ${infoExtra}
         </div>
     `;
@@ -3774,24 +3782,30 @@ function renderizarCardAtendimentoItem(container, item) {
     if (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera') {
         if (item.is_tratamento) {
             const btnPresencaTrat = item.presente ?
-                `<button class="btn" onclick="marcarTratamentoPresente('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
-                `<button class="btn" onclick="marcarTratamentoPresente('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s;">⚪ Confirmar Presença</button>`;
+                `<button class="btn" onclick="marcarTratamentoPresente('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s; font-weight: 600;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
+                `<button class="btn" onclick="marcarTratamentoPresente('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; transition: all 0.2s; font-weight: 500;">⚪ Confirmar Presença</button>`;
             
             buttonsHtml = `
-                ${btnPresencaTrat}
+                <div style="${buttonsContainerStyle}">
+                    ${btnPresencaTrat}
+                </div>
             `;
         } else {
             buttonsHtml = `
-                ${item.status !== 'Atendido' ? btnPresenca : '<div></div>'}
-                ${item.status !== 'Atendido' ? `
-                    <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="font-size: 14px; padding: 10px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;">✏️</button>
-                ` : '<div></div>'}
-                
-                ${(item.status === 'Pendente' || item.status === 'Planejado') ? `
-                    <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px;">🤝 Triagem</button>
-                ` : '<div></div>'}
-                
-                <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 14px; padding: 10px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">🗑️</button>
+                <div style="${buttonsContainerStyle}">
+                    ${item.status !== 'Atendido' ? btnPresenca : '<div></div>'}
+                    
+                    ${(item.status === 'Pendente' || item.status === 'Planejado') ? `
+                        <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(146, 96, 52, 0.4); color: #fbbf24; border: 1px solid rgba(146, 96, 52, 0.6); border-radius: 8px; width: 100%; font-weight: 600;">🤝 Triagem</button>
+                    ` : ''}
+
+                    <div style="display: flex; gap: 8px; width: 100%; justify-content: center; margin-top: 2px;">
+                        ${item.status !== 'Atendido' ? `
+                            <button class="btn" onclick="abrirEdicaoAtendimento('${item.id}', '${(item.nome_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.endereco_completo || '').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' ')}', '${(item.telefone || '').replace(/'/g, "\\'")}')" style="font-size: 14px; padding: 8px; background: transparent; color: #fbbf24; border: 1px solid #fbbf24; border-radius: 8px; flex: 1; display: flex; justify-content: center;">✏️</button>
+                        ` : ''}
+                        <button class="btn" onclick="excluirAtendimento('${item.id}')" style="font-size: 14px; padding: 8px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; flex: 1; display: flex; justify-content: center;">🗑️</button>
+                    </div>
+                </div>
             `;
         }
     } else if (currentAtendimentoSubTab === 'andamento') {
@@ -5679,17 +5693,22 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
 
     // Renderiza totalizadores no topo
     const summaryHtml = `
-        <div style="background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%); border: 1px solid rgba(99,102,241,0.2); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 8px 32px rgba(0,0,0,0.2); backdrop-filter: blur(8px);">
-            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                Fichário Geral
+        <div style="background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%); border: 1px solid rgba(99,102,241,0.2); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); backdrop-filter: blur(8px);">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid rgba(255,255,255,0.1);">
+                <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 8px;">
+                    Fichário Acervo
+                </div>
+                <div style="font-size: 36px; font-weight: 800; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1;">
+                    ${totalGeral} <span style="font-size: 16px; font-weight: 600; opacity: 0.8;">Fichas</span>
+                </div>
             </div>
-            <div style="font-size: 36px; font-weight: 800; margin-bottom: 12px; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1;">
-                ${totalGeral} <span style="font-size: 20px; font-weight: 600; opacity: 0.9;">Ficha${totalGeral !== 1 ? 's' : ''}</span>
-            </div>
-            <div style="font-size: 14px; color: var(--text-main); font-weight: 500; background: rgba(0,0,0,0.2); padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 6px;">
-                <span>Atualmente mostrando <strong>${totalLetra}</strong> na letra</span>
-                <span style="background: var(--primary); color: white; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-weight: bold; font-size: 12px;">${letter}</span>
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 8px;">
+                    Nesta Letra
+                </div>
+                <div style="font-size: 28px; font-weight: 700; color: white; line-height: 1.1;">
+                    <span style="color: #818cf8;">Letra ${letter}:</span> ${totalLetra} <span style="font-size: 14px; color: var(--text-muted);">fichas</span>
+                </div>
             </div>
         </div>
     `;
