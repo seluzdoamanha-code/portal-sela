@@ -375,7 +375,7 @@
         const div = document.createElement('div');
         div.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;';
         
-        const shortName = item.nome_completo ? item.nome_completo.split(' ')[0] : 'Sem nome';
+        const shortName = item.nome_curto || (item.nome_completo ? item.nome_completo.split(' ')[0] : 'Sem nome');
 
         let buttonsHtml = '';
         const buttonsContainerStyle = 'display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; min-width: 140px; flex: 1;';

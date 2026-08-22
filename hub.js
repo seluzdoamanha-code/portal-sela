@@ -3491,12 +3491,15 @@ window.carregarListaAtendimento = async function () {
         if (allData) {
             allData = allData.map(f => {
                 if (f.paciente) {
-                    f.nome_completo = f.paciente.nome_curto || f.paciente.nome_completo || f.nome_completo;
+                    f.nome_completo = f.paciente.nome_completo || f.nome_completo;
+                    f.nome_curto = f.paciente.nome_curto || f.nome_completo.split(' ')[0];
                     f.telefone = f.paciente.celular || f.telefone;
                     f.endereco_completo = f.paciente.endereco || f.endereco_completo;
                     f.data_nascimento = f.paciente.data_nascimento || f.data_nascimento;
                     f.cpf_cnpj = f.paciente.cpf_cnpj || null;
                     f.cep = f.paciente.cep || null;
+                } else {
+                    f.nome_curto = f.nome_completo ? f.nome_completo.split(' ')[0] : 'Sem nome';
                 }
                 return f;
             });
@@ -3757,7 +3760,7 @@ function renderizarCardAtendimentoItem(container, item) {
     // Container for buttons: giving much more space to the left side (data)
     const buttonsContainerStyle = 'display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; min-width: 170px;';
 
-    const shortName = item.nome_completo ? item.nome_completo.split(' ')[0] : 'Sem nome';
+    const shortName = item.nome_curto || (item.nome_completo ? item.nome_completo.split(' ')[0] : 'Sem nome');
     let leftInfo = `
         <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
             <div style="display: flex; flex-direction: column; margin-bottom: 4px;">
