@@ -1652,8 +1652,8 @@ function obterDataPrecisa(dataStr, createdAtStr) {
 
     window.abrirTriagem = async function(id) {
         const html = `
-            <form onsubmit="salvarTriagemSideSheet(event, '${id}')" style="display: flex; flex-direction: column; gap: 16px; height: 100%;">
-                <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+            <form onsubmit="salvarTriagemSideSheet(event, '${id}')" style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
                     <div class="form-group">
                         <label style="color: var(--text-muted); font-size: 13px;">Atendente Fraterno</label>
                         <select id="sideSelectAtendenteAtendimento" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">
@@ -1662,7 +1662,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                     </div>
                 </div>
 
-                <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
+                <div style="padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
                     <button type="button" onclick="window.fecharSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border);">Cancelar</button>
                     <button type="submit" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Atribuir</button>
                 </div>
