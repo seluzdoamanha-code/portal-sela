@@ -57,6 +57,31 @@ function calcularIdade(dataStr) {
     return idade;
 }
 
+function parseDataLocal(dataStr) {
+    if (!dataStr) return new Date();
+    if (dataStr.includes('Z') || dataStr.includes('+') || (dataStr.includes('-') && dataStr.split('-').length > 3)) {
+        return new Date(dataStr);
+    }
+    let iso = dataStr;
+    if (iso.includes(' ')) iso = iso.replace(' ', 'T');
+    const tzOffset = new Date().getTimezoneOffset();
+    const diffHours = tzOffset / 60;
+    const d = new Date(iso);
+    return new Date(d.getTime() + (diffHours * 60 * 60 * 1000));
+}
+
+function obterDataPrecisa(dataStr, createdAtStr) {
+    if (!dataStr) return new Date(createdAtStr);
+    const createdLocal = new Date(createdAtStr);
+    const tzOffset = createdLocal.getTimezoneOffset() * 60000;
+    const localISO = new Date(createdLocal.getTime() - tzOffset).toISOString().split('T')[0];
+    
+    if (String(dataStr).startsWith(localISO)) {
+        return new Date(createdAtStr);
+    }
+    return parseDataLocal(dataStr);
+}
+
 
     document.addEventListener('DOMContentLoaded', () => {
         // Inject Side-Sheet if not present
@@ -567,7 +592,7 @@ function calcularIdade(dataStr) {
                 sessoes.forEach(s => {
                     eventos.push({
                         tipo: 'SESSAO',
-                        data: new Date(s.data || s.created_at),
+                        data: obterDataPrecisa(s.data, s.created_at),
                         obj: s,
                         atendente_nome: s.pessoas?.nome_curto || s.pessoas?.nome_completo || 'Desconhecido'
                     });
@@ -591,7 +616,7 @@ function calcularIdade(dataStr) {
                         const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
                         eventos.push({
                             tipo: 'PRESENCA',
-                            data: new Date(p.data || p.created_at),
+                            data: obterDataPrecisa(p.data, p.created_at),
                             obj: p,
                             trat: trat
                         });
@@ -1110,7 +1135,7 @@ function calcularIdade(dataStr) {
                 const dataFechamento = f.data_hora_atendimento || f.created_at;
                 historico.push({
                     tipoDado: 'Fraterno',
-                    dataOrdenacao: new Date(dataFechamento),
+                    dataOrdenacao: parseDataLocal(dataFechamento),
                     id: f.id,
                     nome_paciente: f.paciente?.nome_completo || f.nome_completo,
                     infoAdicional: f.pessoas ? `Atendente: ${f.pessoas.nome_curto || f.pessoas.nome_completo}` : '',
@@ -1123,7 +1148,7 @@ function calcularIdade(dataStr) {
                 const dataFechamento = t.data_fim || t.created_at;
                 historico.push({
                     tipoDado: t.tipo, 
-                    dataOrdenacao: new Date(dataFechamento),
+                    dataOrdenacao: parseDataLocal(dataFechamento),
                     id: t.id,
                     nome_paciente: t.app_atendimento_fraterno?.paciente?.nome_completo || t.app_atendimento_fraterno?.nome_completo,
                     infoAdicional: t.data_inicio ? `Início: ${t.data_inicio.split('T')[0].split('-').reverse().join('/')}` : '',
@@ -1208,7 +1233,7 @@ function calcularIdade(dataStr) {
                             if (item.tipoDado === 'Fluídico') { badgeBg = '#3b82f6'; badgeText = '💧 FLUÍDICO'; }
                             if (item.tipoDado === 'Espiritual') { badgeBg = '#8b5cf6'; badgeText = '✨ ESPIRITUAL'; }
                             
-                            const inicioStr = item.data_inicio ? item.data_inicio.split('T')[0].split('-').reverse().join('/') : '?';
+                            const inicioStr = item.data_inicio ? parseDataLocal(item.data_inicio).toLocaleDateString('pt-BR') : '?';
                             const fimStr = dtDisplay;
                             descHtml = `Período: ${inicioStr} até ${fimStr} &mdash; <strong style="color: ${statusCor}">${item.status}</strong>`;
                         } else {
