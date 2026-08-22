@@ -546,7 +546,7 @@ async function carregarEquipe() {
                 </div>
                 ${pessoa.perfis && pessoa.perfis.length > 0 ?
                     `<div style="margin-top: 12px; display: flex; gap: 4px; flex-wrap: wrap;">
-                        ${pessoa.perfis.map(t => `<span style="background: rgba(129, 140, 248, 0.1); color: #818cf8; padding: 2px 8px; border-radius: 12px; font-size: 10px;">${t}</span>`).join('')}
+                        ${pessoa.perfis.map(t => `<span style="background: rgba(129, 140, 248, 0.1); color: #818cf8; padding: 2px 8px; border-radius: 12px; font-size: 10px; white-space: nowrap;">${t}</span>`).join('')}
                     </div>`
                     : ''}
             </div>
@@ -1010,7 +1010,7 @@ async function carregarAgenda() {
             const horaFormatada = dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
             const isGlobal = ev.visibilidade === 'Global';
-            const badgeGloblal = isGlobal ? `<span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 8px;">GLOBAL</span>` : '';
+            const badgeGloblal = isGlobal ? `<span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 8px; white-space: nowrap;">GLOBAL</span>` : '';
             const organizador = isGlobal && ev.estruturas ? `Organizado por: ${ev.estruturas.nome}` : '';
 
             // Gerar Link Google Calendar (Formato: YYYYMMDDTHHMMSSZ)
@@ -2121,9 +2121,9 @@ async function carregarListaIrradiacao() {
                         const today = new Date();
                         const isToday = (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear());
                         if (isToday) {
-                            lastDateHtml = `<span style="margin-left: 8px; font-size: 11px; font-weight: 600; background: rgba(16,185,129,0.15); color: #10b981; padding: 2px 6px; border-radius: 4px; border: 1px solid #10b981;">(Hoje)</span>`;
+                            lastDateHtml = `<span style="margin-left: 8px; font-size: 11px; font-weight: 600; background: rgba(16,185,129,0.15); color: #10b981; padding: 2px 6px; border-radius: 4px; border: 1px solid #10b981; white-space: nowrap;">(Hoje)</span>`;
                         } else {
-                            lastDateHtml = `<span style="margin-left: 8px; font-size: 11px; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">Última: ${lastDateStr}</span>`;
+                            lastDateHtml = `<span style="margin-left: 8px; font-size: 11px; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; white-space: nowrap;">Última: ${lastDateStr}</span>`;
                         }
                     }
                 }
@@ -2386,7 +2386,7 @@ window.carregarLimpezaIrradiacao = async function () {
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid transparent;" onmouseover="this.style.border='1px solid var(--border)'" onmouseout="this.style.border='1px solid transparent'">
                         <input type="radio" name="grupo_${idx}" value="${nome}" style="accent-color: #ec4899;">
                         <span style="color: var(--text-main); font-size: 14px;">${nome}</span>
-                        <span style="background: rgba(255,255,255,0.1); color: var(--text-muted); padding: 2px 6px; border-radius: 10px; font-size: 11px; margin-left: auto;">${nomeCounts[nome]} registro(s)</span>
+                        <span style="background: rgba(255,255,255,0.1); color: var(--text-muted); padding: 2px 6px; border-radius: 10px; font-size: 11px; margin-left: auto; white-space: nowrap;">${nomeCounts[nome]} registro(s)</span>
                     </label>
                 `;
             });
@@ -3814,7 +3814,7 @@ function renderizarCardAtendimentoItem(container, item) {
 
     let badgeHtml = '';
     if (item.fraterno_status === 'Em Tratamento' || item.status === 'Em Tratamento') {
-        badgeHtml = `<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); margin-left: 8px; vertical-align: middle;">EM TRATAMENTO</span>`;
+        badgeHtml = `<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); margin-left: 8px; vertical-align: middle; white-space: nowrap;">EM TRATAMENTO</span>`;
     }
 
     const shortName = item.nome_curto || (item.nome_completo ? item.nome_completo.split(' ')[0] : 'Sem nome');
@@ -4509,7 +4509,7 @@ window.abrirFichaAtendimento = async function (id) {
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                             <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
-                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px;">${badgeText}</span>
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px; white-space: nowrap;">${badgeText}</span>
                                 Presença Registrada
                             </div>
                             ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
@@ -4782,8 +4782,8 @@ window.carregarTratamentosAtivosDesktop = async function () {
                 tratsHTML += `
                     <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.01); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.03);">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase;">${t.tipo}</span>
-                            ${isListActive ? (attendedToday ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">✅ Atendido Hoje</span>' : (t.presente ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">🟢 Presente na Casa</span>' : '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">🟡 Aguardando Chegada</span>')) : ''}
+                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${t.tipo}</span>
+                            ${isListActive ? (attendedToday ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); white-space: nowrap;">✅ Atendido Hoje</span>' : (t.presente ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); white-space: nowrap;">🟢 Presente na Casa</span>' : '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); white-space: nowrap;">🟡 Aguardando Chegada</span>')) : ''}
                             <span style="font-size: 13px; color: var(--text-muted);">${dtText}</span>
                         </div>
                         <div style="display: flex; gap: 8px;">
@@ -4881,7 +4881,7 @@ window.toggleEvolucaoInline = async function (id) {
                     const badgeColor = trat?.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
                     return `
                         <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 6px;">
-                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase;">${trat?.tipo || 'TRAT.'}</span>
+                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${trat?.tipo || 'TRAT.'}</span>
                             <strong style="color: #3b82f6; margin-left: 4px;">${dt}</strong>
                             ${obs}
                         </div>
@@ -4902,7 +4902,7 @@ window.toggleEvolucaoInline = async function (id) {
                     <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 6px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                             <div>
-                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase;">FRATERNO</span>
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase; white-space: nowrap;">FRATERNO</span>
                                 <strong style="color: var(--primary); margin-left: 4px;">${dt}</strong>
                             </div>
                             <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_curto || s.pessoas?.nome_completo || 'Desconhecido'}</span>
@@ -5127,7 +5127,7 @@ window.carregarFilaPresencasDesktop = async function () {
                 <div style="display: flex; flex-direction: column; gap: 6px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <strong style="font-size: 16px; color: var(--text-main); margin-bottom: 2px;">${f.nome_completo.toUpperCase()}</strong>
-                        <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white;">${badgeText}</span>
+                        <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; white-space: nowrap;">${badgeText}</span>
                     </div>
                     <div style="font-size: 13px; color: var(--text-muted);">📍 ${f.endereco_completo || 'Sem endereço'}</div>
                     <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${f.data_nascimento ? f.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
@@ -5211,7 +5211,7 @@ window.carregarEsperaTratamentoDesktop = async function () {
                     <div>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <strong style="font-size: 16px; color: var(--text-main); margin-bottom: 2px;">${f.nome_completo.toUpperCase()}</strong>
-                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white;">${t.tipo.toUpperCase()}</span>
+                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; white-space: nowrap;">${t.tipo.toUpperCase()}</span>
                         </div>
                         <div style="font-size: 13px; color: var(--text-muted);">📍 ${f.endereco_completo || 'Sem endereço'}</div>
                         <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${f.data_nascimento ? f.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
@@ -5408,7 +5408,7 @@ window.carregarPainelSemanalDesktop = async function () {
                             <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(239,68,68,0.1); border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <strong style="color: var(--text-main); font-size: 14px;">${a.nome.toUpperCase()}</strong>
-                                    <span style="font-size: 10px; margin-left: 8px; padding: 2px 6px; border-radius: 12px; background: rgba(255,255,255,0.1); color: var(--text-muted);">${a.tipo}</span>
+                                    <span style="font-size: 10px; margin-left: 8px; padding: 2px 6px; border-radius: 12px; background: rgba(255,255,255,0.1); color: var(--text-muted); white-space: nowrap;">${a.tipo}</span>
                                     <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Faltas: ${a.faltasConsecutivas} semanas | Última vez: ${a.lastDate}</div>
                                 </div>
                                 ${a.telefone ? `
@@ -5626,7 +5626,7 @@ window.carregarHistoricoGeralDesktop = async function () {
                 anoHtml += `
                     <div style="margin-bottom: 16px; margin-left: 16px; border-left: 2px solid var(--border); padding-left: 16px;">
                         <h4 style="color: var(--primary); font-size: 15px; margin-bottom: 12px; margin-top: 0; display: flex; align-items: center; gap: 8px;">
-                            📂 ${mes} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 12px;">${registros.length} registros</span>
+                            📂 ${mes} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 12px; white-space: nowrap;">${registros.length} registros</span>
                         </h4>
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                 `;
@@ -5655,7 +5655,7 @@ window.carregarHistoricoGeralDesktop = async function () {
                         <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                    <span style="font-size: 10px; font-weight: bold; background: ${badgeConfig.color}; color: white; padding: 2px 6px; border-radius: 4px;">${badgeConfig.text}</span>
+                                    <span style="font-size: 10px; font-weight: bold; background: ${badgeConfig.color}; color: white; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">${badgeConfig.text}</span>
                                     <strong style="color: var(--text-main); font-size: 14px;">${r.nome.toUpperCase()}</strong>
                                 </div>
                                 <div style="font-size: 12px; color: var(--text-muted); display: flex; gap: 12px; align-items: center;">
@@ -6049,7 +6049,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                             <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
-                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px;">${badgeText}</span>
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px; white-space: nowrap;">${badgeText}</span>
                                 Presença Registrada
                             </div>
                             ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}

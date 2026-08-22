@@ -465,7 +465,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
 
         let badgeHtml = '';
         if (item.fraterno_status === 'Em Tratamento' || item.status === 'Em Tratamento') {
-            badgeHtml = `<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); margin-left: 8px; vertical-align: middle;">EM TRATAMENTO</span>`;
+            badgeHtml = `<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); margin-left: 8px; vertical-align: middle; white-space: nowrap;">EM TRATAMENTO</span>`;
         }
 
         const endPartes = [];
@@ -657,7 +657,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                                 <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                                 <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                                 <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
-                                    <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px;">${badgeText}</span>
+                                    <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px; white-space: nowrap;">${badgeText}</span>
                                     Presença Registrada
                                 </div>
                                 ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
@@ -872,7 +872,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <span style="font-size:15px; font-weight:600; color:white;">${(t.app_atendimento_fraterno?.paciente?.nome_completo || t.app_atendimento_fraterno?.nome_completo || '').toUpperCase()}</span>
-                        <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${tipoCor}22; color:${tipoCor}; border:1px solid ${tipoCor}44;">${t.tipo}</span>
+                        <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${tipoCor}22; color:${tipoCor}; border:1px solid ${tipoCor}44; white-space: nowrap;">${t.tipo}</span>
                     </div>
                     <div class="card-info"><strong>Início em:</strong> ${dtInicio}</div>
                     <div class="card-info"><strong>WhatsApp:</strong> ${t.app_atendimento_fraterno?.paciente?.celular || t.app_atendimento_fraterno?.telefone || '-'}</div>
@@ -965,7 +965,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                         const badgeColor = trat?.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
                         return `
                             <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 6px;">
-                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase;">${trat?.tipo || 'TRAT.'}</span>
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${trat?.tipo || 'TRAT.'}</span>
                                 <strong style="color: #3b82f6; margin-left: 4px;">${dt}</strong>
                                 ${obs}
                             </div>
@@ -986,7 +986,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                         <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 6px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                 <div>
-                                    <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase;">FRATERNO</span>
+                                    <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase; white-space: nowrap;">FRATERNO</span>
                                     <strong style="color: var(--primary); margin-left: 4px;">${dt}</strong>
                                 </div>
                                 <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_completo || 'Desconhecido'}</span>
@@ -1139,7 +1139,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                             <div style="font-size: 11px; color: var(--text-muted);">Em ${dateStr}</div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-                            <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44;">${t.tipo}</span>
+                            <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44; white-space: nowrap;">${t.tipo}</span>
                             <div style="display: flex; gap: 8px;">
                                 <button class="btn-action" onclick="window.editarPacienteMobile('${f.id}')" style="padding: 8px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;">✏️</button>
                                 <button class="btn-action" onclick="excluirSolicitacao('${f.id}')" style="padding: 8px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; font-size: 14px;">🗑️</button>
@@ -1296,7 +1296,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap:8px;">
                                 <div>
                                     <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap;">
-                                        <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${badgeBg}; color: white;">${badgeText}</span>
+                                        <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${badgeBg}; color: white; white-space: nowrap;">${badgeText}</span>
                                         <span style="font-size:14px; font-weight:600; color:white;">${(item.nome_paciente || 'Desconhecido').toUpperCase()}</span>
                                     </div>
                                     <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
@@ -1370,7 +1370,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                             <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📱 Celular: ${f.paciente?.celular || f.telefone || 'Não informado'}</div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-                            <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44;">${t.tipo}</span>
+                            <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44; white-space: nowrap;">${t.tipo}</span>
                             <button onclick="marcarTratamentoPresenteMobile('${t.id}', false)" class="btn-action" style="padding: 4px 8px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; font-size: 11px;">Desfazer Presente</button>
                         </div>
                     </div>
