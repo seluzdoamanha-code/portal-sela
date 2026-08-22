@@ -1081,12 +1081,12 @@ function calcularIdade(dataStr) {
         try {
             // 1. Buscar todas as triagens atendidas
             const pFraterno = db.from('app_atendimento_fraterno')
-                .select('*, atendente:pessoas!atendente_id(nome_completo), paciente:pessoas!paciente_id(*)')
-                .eq('status', 'Atendido');
+                .select('*, pessoas!atendente_id(id, nome_completo, nome_curto), paciente:pessoas!paciente_id(*)')
+                .in('status', ['Atendido', 'Concluído']);
             
             // 2. Buscar todos os tratamentos concluídos ou suspensos
             const pTratamentos = db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(nome_completo, paciente:pessoas!paciente_id(*))')
+                .select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*))')
                 .in('status', ['Concluído', 'Suspenso']);
 
             const [reqFraterno, reqTratamentos] = await Promise.all([pFraterno, pTratamentos]);
@@ -1104,7 +1104,7 @@ function calcularIdade(dataStr) {
                     dataOrdenacao: new Date(dataFechamento),
                     id: f.id,
                     nome_paciente: f.paciente?.nome_completo || f.nome_completo,
-                    infoAdicional: f.atendente ? `Atendente: ${f.atendente.nome_completo}` : '',
+                    infoAdicional: f.pessoas ? `Atendente: ${f.pessoas.nome_curto || f.pessoas.nome_completo}` : '',
                     status: f.status,
                     paciente_id: f.id 
                 });
