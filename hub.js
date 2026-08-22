@@ -5706,8 +5706,8 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
                 <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 8px;">
                     Nesta Letra
                 </div>
-                <div style="font-size: 28px; font-weight: 700; color: white; line-height: 1.1;">
-                    <span style="color: #818cf8;">Letra ${letter}:</span> ${totalLetra} <span style="font-size: 14px; color: var(--text-muted);">fichas</span>
+                <div style="font-size: 36px; font-weight: 800; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1;">
+                    ${totalLetra} <span style="font-size: 16px; font-weight: 600; opacity: 0.8;">Letra ${letter}</span>
                 </div>
             </div>
         </div>
