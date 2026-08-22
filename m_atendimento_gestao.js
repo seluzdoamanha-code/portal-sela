@@ -1673,7 +1673,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
         try {
             const { data, error } = await db
                 .from('pessoas')
-                .select('id, nome_completo')
+                .select('id, nome_completo, nome_curto')
                 .contains('perfis', ['Atendente Fraterno']);
 
             if (error) throw error;
@@ -1686,10 +1686,10 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                 return;
             }
 
-            data.sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
+            data.sort((a, b) => (a.nome_curto || a.nome_completo).localeCompare(b.nome_curto || b.nome_completo));
 
             select.innerHTML = '<option value="">Selecione um atendente...</option>' +
-                data.map(p => `<option value="${p.id}">${p.nome_completo}</option>`).join('');
+                data.map(p => `<option value="${p.id}">${p.nome_curto || p.nome_completo}</option>`).join('');
         } catch(e) {
             Swal.fire('Erro!', 'Falha ao carregar atendentes: ' + e.message, 'error');
             const select = document.getElementById('sideSelectAtendenteAtendimento');
