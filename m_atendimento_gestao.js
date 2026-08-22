@@ -539,12 +539,17 @@ function calcularIdade(dataStr) {
             const { data: paciente, error } = await db.from('app_atendimento_fraterno').select('*, paciente:pessoas!paciente_id(*)').eq('id', id).single();
             if (error) throw error;
 
+            const nomeStr = (paciente.paciente?.nome_completo || paciente.nome_completo || '').toUpperCase();
+            const nascStr = paciente.paciente?.data_nascimento || paciente.data_nascimento;
+            const nascFormatado = nascStr ? `${nascStr.split('-').reverse().join('/')} (${calcularIdade(nascStr)} anos)` : '-';
+            const telStr = paciente.paciente?.celular || paciente.celular || '';
+            const telFormatado = telStr ? formatarCelular(telStr) : '-';
+
             let infoHtml = `
                 <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-                    <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Dados do Necessitado</h4>
-                    <strong>Nome:</strong> ${(paciente.paciente?.nome_completo || paciente.nome_completo || '').toUpperCase()}<br>
-                    <strong>Nascimento:</strong> ${paciente.paciente?.data_nascimento || paciente.data_nascimento ? (paciente.paciente?.data_nascimento || paciente.data_nascimento).split('-').reverse().join('/') : '-'}<br>
-                    <strong>Telefone:</strong> ${paciente.paciente?.celular || paciente.celular || '-'}
+                    <strong>Nome:</strong> ${nomeStr}<br>
+                    <strong>Nascimento:</strong> ${nascFormatado}<br>
+                    <strong>Telefone:</strong> ${telFormatado}
                 </div>
             `;
 
@@ -553,7 +558,7 @@ function calcularIdade(dataStr) {
                 .select('*, pessoas!atendente_id(nome_completo)')
                 .eq('atendimento_id', id)
                 .order('data', { ascending: false })
-                .limit(4);
+                .limit(10); // increased limit to show more history
 
             if (errSess) throw errSess;
 
@@ -579,66 +584,10 @@ function calcularIdade(dataStr) {
             }
             sessoesHtml += '</div>';
 
-            let chkF = false;
-            let chkE = false;
-            // Verificar se já possui tratamentos ativos prescritos
-            const { data: trats } = await db.from('app_atendimento_tratamentos').select('tipo').eq('atendimento_id', id).eq('status', 'Ativo');
-            if (trats) {
-                trats.forEach(t => {
-                    if (t.tipo === 'Fluídico') chkF = true;
-                    if (t.tipo === 'Espiritual') chkE = true;
-                });
-            }
-
-            let formHtml = '';
-            if (paciente.status !== 'Atendido') {
-                formHtml = `
-                    <div style="margin-bottom: 24px;">
-                        <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Registro de Atendimento</h4>
-                        <div class="form-group" style="margin-bottom: 16px;">
-                            <label style="color: var(--text-muted); font-size: 13px;">Sintomas e Orientações</label>
-                            <textarea id="sideTxtSintomasOrientacoes" class="input" rows="4" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;" placeholder="Descreva os sintomas apresentados..."></textarea>
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="sideChkTratFluidico" ${chkF ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);" onchange="if(this.checked) document.getElementById('sideChkApenasConversa').checked = false;">
-                                <span>Prescrever Tratamento Fluídico</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="sideChkTratEspiritual" ${chkE ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);" onchange="if(this.checked) document.getElementById('sideChkApenasConversa').checked = false;">
-                                <span>Prescrever Tratamento Espiritual</span>
-                            </label>
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="sideChkApenasConversa" style="width: 18px; height: 18px; accent-color: #f59e0b;" onchange="if(this.checked) { document.getElementById('sideChkTratFluidico').checked = false; document.getElementById('sideChkTratEspiritual').checked = false; }">
-                                <span style="color: #f59e0b; font-weight: 500;">Apenas Conversa Fraterna</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="sideChkEvangelhoLar" style="width: 18px; height: 18px; accent-color: #10b981;">
-                                <span style="color: #10b981; font-weight: 500;">Implantação de Evangelho no Lar</span>
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div style="padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 12px;">
-                        <button type="button" onclick="window.fecharSideSheet()" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border);">Cancelar</button>
-                        <button type="button" onclick="salvarFichaAtendimentoSideSheet(this)" class="btn" style="flex:1; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: 600;">Gravar</button>
-                    </div>
-                `;
-            } else {
-                formHtml = `
-                    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 12px; align-items: center;">
-                        <p style="color: var(--text-muted); font-size: 13px; text-align: center;">✅ Este Ciclo do Fraterno já foi concluído e seu histórico está consolidado.</p>
-                    </div>
-                `;
-            }
-
             const finalHtml = `
                 <div style="display: flex; flex-direction: column; gap: 8px; padding-bottom: 32px;">
                     ${infoHtml}
                     ${sessoesHtml}
-                    ${formHtml}
                 </div>
             `;
             document.getElementById('globalSideSheetContent').innerHTML = finalHtml;
