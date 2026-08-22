@@ -4495,7 +4495,10 @@ window.abrirFichaAtendimento = async function (id) {
         let presHtml = '';
 
         let formHtml = '';
-        if (paciente.status !== 'Atendido') {
+        
+        if (currentAtendimentoMainTab === 'historico' || currentAtendimentoSubTab === 'historico_geral') {
+            formHtml = '';
+        } else if (paciente.status !== 'Atendido' && paciente.status !== 'Concluído' && paciente.status !== 'Cancelado' && paciente.status !== 'Em Tratamento') {
             formHtml = `
                 <div style="margin-bottom: 24px;">
                     <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Registro de Atendimento Atual</h4>
