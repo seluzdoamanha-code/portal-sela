@@ -3491,7 +3491,7 @@ window.carregarListaAtendimento = async function () {
     try {
         const [fraternoReq, tratamentosReq] = await Promise.all([
             db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo, nome_curto), paciente:pessoas!paciente_id(nome_completo, nome_curto, celular, endereco, cep, cpf_cnpj, data_nascimento)'),
-            db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*))').eq('status', 'Ativo')
+            db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, status, created_at, paciente:pessoas!paciente_id(*))').eq('status', 'Ativo')
         ]);
         if (fraternoReq.error) throw fraternoReq.error;
         if (tratamentosReq.error) throw tratamentosReq.error;
