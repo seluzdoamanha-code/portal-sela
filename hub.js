@@ -5730,7 +5730,7 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
 
     patientsArray.forEach(p => {
         const card = document.createElement('div');
-        card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column;';
+        card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;';
         
         const countA = p.atendimentos.length;
         const countT = p.tratamentos.length;
@@ -5738,26 +5738,56 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
         const safeId = 'p_' + Math.random().toString(36).substr(2, 9);
         window['fichario_' + safeId] = p;
 
+        const shortName = p.nome_curto || (p.nome_completo ? p.nome_completo.split(' ')[0] : 'Sem nome');
+        let nascimentoInfo = 'Não informada';
+        if (p.data_nascimento) {
+            const nascAno = p.data_nascimento.split('-')[0];
+            const age = new Date().getFullYear() - parseInt(nascAno);
+            nascimentoInfo = `${p.data_nascimento.split('-').reverse().join('/')} (${age} anos)`;
+        }
+        
+        let whatsLink = '';
+        if (p.telefone) {
+            const nums = p.telefone.replace(/\D/g, '');
+            whatsLink = `
+                <a href="https://wa.me/55${nums}" target="_blank" style="padding: 4px 8px; font-size: 12px; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    WhatsApp
+                </a>
+            `;
+        }
+
         card.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                <div style="width: 40px; height: 40px; border-radius: 20px; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
-                    ${p.nome_completo.charAt(0).toUpperCase()}
+            <div>
+                <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+                    <div style="display: flex; flex-direction: column; margin-bottom: 4px;">
+                        <strong style="font-size: 16px; color: var(--text-main); line-height: 1.2;">${p.nome_completo ? p.nome_completo.toUpperCase() : 'SEM NOME'}</strong>
+                        <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">${shortName}</span>
+                    </div>
+                    
+                    <div style="font-size: 13px; color: var(--text-muted);">📍 ${p.endereco_completo || 'Sem endereço'}</div>
+                    <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${nascimentoInfo}</div>
+                    <div style="font-size: 13px; color: var(--text-muted);">📄 CPF: ${p.cpf_cnpj ? formatarCPF(p.cpf_cnpj) : 'Não informado'}</div>
+                    <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+                        <span>📱 Celular: ${p.telefone ? formatarCelular(p.telefone) : 'Não informado'}</span>
+                        ${whatsLink}
+                    </div>
                 </div>
-                <div>
-                    <div style="font-weight: 600; color: white; font-size: 15px;">${p.nome_completo}</div>
-                    <div style="color: var(--text-muted); font-size: 12px;">${p.telefone || 'Sem telefone'}</div>
+
+                <div style="margin-top: 12px; margin-bottom: 16px; font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; align-items: center;">
+                    <strong>Registros:</strong> 
+                    <span style="color: var(--primary);">${countA} Atendimentos</span>
+                    <span style="opacity: 0.3;">|</span>
+                    <span style="color: #10b981;">${countT} Tratamentos</span>
                 </div>
             </div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; flex: 1;">
-                <div><strong>Nascimento:</strong> ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') : 'Não informado'}</div>
-                <div style="margin-top: 4px;"><strong>Registros:</strong> ${countA} Atendimentos, ${countT} Tratamentos</div>
-            </div>
-            <div style="display: flex; gap: 8px; flex-direction: column;">
-                <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); width: 100%; font-size: 12px; padding: 8px; cursor:pointer;">
-                    <span style="margin-right:4px;">📜</span> Abrir Histórico Completo
+
+            <div style="display: flex; gap: 8px; flex-direction: row; margin-top: auto;">
+                <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="flex: 1; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); font-size: 12px; padding: 10px; cursor:pointer; border-radius: 8px; text-align: center;">
+                    📜 Histórico Completo
                 </button>
-                <button onclick="iniciarNovoAtendimentoFichario('${safeId}')" class="btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); width: 100%; font-size: 12px; padding: 8px; cursor:pointer;">
-                    <span style="margin-right:4px;">➕</span> Iniciar Novo Atendimento
+                <button onclick="iniciarNovoAtendimentoFichario('${safeId}')" class="btn" style="flex: 1; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-size: 12px; padding: 10px; cursor:pointer; border-radius: 8px; text-align: center;">
+                    ➕ Novo Atendimento
                 </button>
             </div>
         `;
