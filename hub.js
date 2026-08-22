@@ -4748,6 +4748,7 @@ window.carregarTratamentosAtivosDesktop = async function () {
                     <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.01); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.03);">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase;">${t.tipo}</span>
+                            ${isListActive ? (t.presente ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">🟢 Presente na Casa</span>' : '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">🟡 Aguardando Chegada</span>') : ''}
                             <span style="font-size: 13px; color: var(--text-muted);">${dtText}</span>
                         </div>
                         <div style="display: flex; gap: 8px;">
