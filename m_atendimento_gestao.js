@@ -17,6 +17,16 @@
     let subAba = 'fila';
     let pacienteAtualFichaId = null;
 
+
+function formatarCEP(v) {
+    if (!v) return '-';
+    v = v.replace(/\D/g, '');
+    if (v.length === 8) {
+        return v.replace(/(\d{5})(\d{3})/, "$1-$2");
+    }
+    return v;
+}
+
 function formatarCPF(v) {
     if (!v) return '-';
     v = v.replace(/\D/g, '');
@@ -494,11 +504,14 @@ function calcularIdade(dataStr) {
         div.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 6px; flex: 2; min-width: 200px;">
                 <div style="display: flex; flex-direction: column; margin-bottom: 4px;">
-                    <strong style="font-size: 15px; color: var(--text-main); line-height: 1.2;">${item.nome_completo ? item.nome_completo.toUpperCase() : 'SEM NOME'}</strong>
-                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">${shortName}</span>
+                    <div>
+                        <strong style="font-size: 15px; color: var(--text-main); line-height: 1.2; vertical-align: middle;">${item.nome_completo ? item.nome_completo.toUpperCase() : 'SEM NOME'}</strong>
+                        ${badgeHtml}
+                    </div>
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">${shortName}</span>
                 </div>
                 
-                <div style="font-size: 13px; color: var(--text-muted);">📍 ${item.endereco_completo || 'Sem endereço'}</div>
+                <div style="font-size: 13px; color: var(--text-muted);">📍 ${endFull}${item.cep ? ' - CEP: ' + formatarCEP(item.cep) : ''}</div>
                 <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${nascimentoInfo}</div>
                 <div style="font-size: 13px; color: var(--text-muted);">📄 CPF: ${item.cpf_cnpj ? formatarCPF(item.cpf_cnpj) : 'Não informado'}</div>
                 <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); margin-top: 2px;">
