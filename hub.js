@@ -3759,8 +3759,7 @@ function renderizarCardAtendimentoItem(container, item) {
 
     let ageInfo = '';
     if (item.data_nascimento) {
-        const anoNasc = item.data_nascimento.split('-')[0];
-        const age = new Date().getFullYear() - parseInt(anoNasc);
+        const age = calcularIdade(item.data_nascimento);
         ageInfo = ` (${age} anos)`;
     }
 
@@ -5080,8 +5079,7 @@ window.carregarFilaPresencasDesktop = async function () {
 
             let ageInfo = '';
             if (f.data_nascimento) {
-                const anoNasc = f.data_nascimento.split('-')[0];
-                const age = new Date().getFullYear() - parseInt(anoNasc);
+                const age = calcularIdade(f.data_nascimento);
                 ageInfo = ` (${age} anos)`;
             }
 
@@ -5171,8 +5169,7 @@ window.carregarEsperaTratamentoDesktop = async function () {
 
             let ageInfo = '';
             if (f.data_nascimento) {
-                const anoNasc = f.data_nascimento.split('-')[0];
-                const age = new Date().getFullYear() - parseInt(anoNasc);
+                const age = calcularIdade(f.data_nascimento);
                 ageInfo = ` (${age} anos)`;
             }
 
@@ -5785,8 +5782,7 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
         const shortName = p.nome_curto || (p.nome_completo ? p.nome_completo.split(' ')[0] : 'Sem nome');
         let nascimentoInfo = 'Não informada';
         if (p.data_nascimento) {
-            const nascAno = p.data_nascimento.split('-')[0];
-            const age = new Date().getFullYear() - parseInt(nascAno);
+            const age = calcularIdade(p.data_nascimento);
             nascimentoInfo = `${p.data_nascimento.split('-').reverse().join('/')} (${age} anos)`;
         }
         
@@ -6122,9 +6118,18 @@ window.abrirFichaPacienteFichario = async function(pacienteId) {
         let nascHtml = '-';
         if (p.data_nascimento) {
             const partes = p.data_nascimento.split('-');
-            const age = new Date().getFullYear() - parseInt(partes[0]);
+            const age = calcularIdade(p.data_nascimento);
             nascHtml = `${partes.reverse().join('/')} (${age} anos)`;
         }
+
+        const endPartes = [];
+        if (p.endereco) endPartes.push(p.endereco);
+        if (p.bairro) endPartes.push(p.bairro);
+        let cidEst = [];
+        if (p.cidade) cidEst.push(p.cidade);
+        if (p.estado) cidEst.push(p.estado);
+        if (cidEst.length > 0) endPartes.push(cidEst.join('/'));
+        const endFull = endPartes.length > 0 ? endPartes.join(', ') : '-';
 
         let avatarHtml = '';
         if (p.foto_url) {
@@ -6164,7 +6169,7 @@ window.abrirFichaPacienteFichario = async function(pacienteId) {
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                             <span style="color: var(--text-muted); font-size: 13px;">Endereço Completo</span>
-                            <strong style="font-size: 14px; line-height: 1.4;">${p.endereco || '-'}</strong>
+                            <strong style="font-size: 14px; line-height: 1.4;">${endFull}</strong>
                         </div>
                     </div>
 
