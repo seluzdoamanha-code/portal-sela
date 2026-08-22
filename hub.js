@@ -4765,9 +4765,7 @@ window.carregarTratamentosAtivosDesktop = async function () {
                 </div>
                 
                 <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
-                    <button onclick="encaminharParaNovaTriagem('${grupo.info.id}')" class="btn" style="padding: 6px 12px; font-size: 12px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                        📋 Novo Atendimento
-                    </button>
+                    <!-- Botão Novo Atendimento removido conforme solicitação -->
                     <button onclick="toggleEvolucaoInline('${grupo.info.id}')" class="btn" style="padding: 6px 12px; font-size: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                         📝 Evolução & Prontuário
                     </button>
