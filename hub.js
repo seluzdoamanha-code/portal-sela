@@ -5998,6 +5998,20 @@ window.iniciarNovoAtendimentoFichario = function(safeId) {
     const p = window['fichario_' + safeId];
     if(!p) return;
     
+    // Verifica se já existe atendimento fraterno em aberto ou tratamento ativo
+    const hasActiveFraterno = p.atendimentos.some(a => a.status !== 'Concluído' && a.status !== 'Cancelado');
+    const hasActiveTratamento = p.tratamentos.some(t => t.status === 'Ativo');
+
+    if (hasActiveFraterno || hasActiveTratamento) {
+        Swal.fire({
+            title: 'Ação Bloqueada',
+            text: 'Este paciente já possui um atendimento fraterno ou tratamento em andamento. Não é permitido iniciar um novo.',
+            icon: 'warning',
+            confirmButtonText: 'Entendi'
+        });
+        return;
+    }
+
     Swal.fire({
         title: 'Novo Atendimento',
         text: 'Deseja iniciar um novo Atendimento Fraterno para ' + p.nome_completo + '?',
