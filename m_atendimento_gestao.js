@@ -182,7 +182,7 @@ function calcularIdade(dataStr) {
         try {
             const [fraternoReq, tratamentosReq] = await Promise.all([
                 db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo), paciente:pessoas!paciente_id(*)'),
-                db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*))').eq('status', 'Ativo')
+                db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, status, created_at, paciente:pessoas!paciente_id(*))').eq('status', 'Ativo')
             ]);
             if (fraternoReq.error) throw fraternoReq.error;
             if (tratamentosReq.error) throw tratamentosReq.error;
@@ -199,9 +199,18 @@ function calcularIdade(dataStr) {
                 allData = allData.map(f => {
                     if (f.paciente) {
                         f.nome_completo = f.paciente.nome_completo || f.nome_completo;
+                        f.nome_curto = f.paciente.nome_curto || f.nome_completo.split(' ')[0];
                         f.telefone = f.paciente.celular || f.telefone;
                         f.endereco_completo = f.paciente.endereco || f.endereco_completo;
+                        f.endereco = f.paciente.endereco || f.endereco_completo;
+                        f.bairro = f.paciente.bairro || null;
+                        f.cidade = f.paciente.cidade || null;
+                        f.estado = f.paciente.estado || null;
                         f.data_nascimento = f.paciente.data_nascimento || f.data_nascimento;
+                        f.cpf_cnpj = f.paciente.cpf_cnpj || null;
+                        f.cep = f.paciente.cep || null;
+                    } else {
+                        f.nome_curto = f.nome_completo ? f.nome_completo.split(' ')[0] : 'Sem nome';
                     }
                     return f;
                 });
@@ -240,19 +249,30 @@ function calcularIdade(dataStr) {
                     .map(d => ({ ...d, unified_type: 'Fraterno' }));
 
                 const trats = allTratamentos.filter(d => isFila ? !d.presente : d.presente)
-                    .map(d => ({
-                        id: d.id,
-                        fraterno_id: d.fraterno_id,
-                        unified_type: d.tipo,
-                        nome_completo: d.app_atendimento_fraterno?.paciente?.nome_completo || d.app_atendimento_fraterno?.nome_completo || '',
-                        endereco_completo: d.app_atendimento_fraterno?.paciente?.endereco || d.app_atendimento_fraterno?.endereco_completo || '',
-                        telefone: d.app_atendimento_fraterno?.paciente?.celular || d.app_atendimento_fraterno?.telefone || '',
-                        data_nascimento: d.app_atendimento_fraterno?.paciente?.data_nascimento || d.app_atendimento_fraterno?.data_nascimento || '',
-                        created_at: d.app_atendimento_fraterno?.created_at || d.created_at,
-                        presente: d.presente,
-                        status: d.status,
-                        is_tratamento: true
-                    }));
+                    .map(d => {
+                        const pac = d.app_atendimento_fraterno?.paciente || {};
+                        return {
+                            id: d.id,
+                            fraterno_id: d.fraterno_id,
+                            unified_type: d.tipo,
+                            nome_completo: pac.nome_completo || d.app_atendimento_fraterno?.nome_completo || '',
+                            nome_curto: pac.nome_curto || '',
+                            endereco_completo: pac.endereco || '',
+                            endereco: pac.endereco || '',
+                            bairro: pac.bairro || '',
+                            cidade: pac.cidade || '',
+                            estado: pac.estado || '',
+                            telefone: pac.celular || '',
+                            data_nascimento: pac.data_nascimento || '',
+                            cpf_cnpj: pac.cpf_cnpj || '',
+                            cep: pac.cep || '',
+                            created_at: d.app_atendimento_fraterno?.created_at || d.created_at,
+                            presente: d.presente,
+                            status: d.status,
+                            fraterno_status: d.app_atendimento_fraterno?.status,
+                            is_tratamento: true
+                        };
+                    });
 
                 filteredData = [...frats, ...trats];
 
@@ -407,6 +427,21 @@ function calcularIdade(dataStr) {
         div.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;';
         
         const shortName = item.nome_curto || (item.nome_completo ? item.nome_completo.split(' ')[0] : 'Sem nome');
+
+        let badgeHtml = '';
+        if (item.fraterno_status === 'Em Tratamento' || item.status === 'Em Tratamento') {
+            badgeHtml = `<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); margin-left: 8px; vertical-align: middle;">EM TRATAMENTO</span>`;
+        }
+
+        const endPartes = [];
+        if (item.endereco) endPartes.push(item.endereco);
+        else if (item.endereco_completo) endPartes.push(item.endereco_completo);
+        if (item.bairro) endPartes.push(item.bairro);
+        let cidEst = [];
+        if (item.cidade) cidEst.push(item.cidade);
+        if (item.estado) cidEst.push(item.estado);
+        if (cidEst.length > 0) endPartes.push(cidEst.join('/'));
+        const endFull = endPartes.length > 0 ? endPartes.join(', ') : 'Sem endereço';
 
         let buttonsHtml = '';
         const buttonsContainerStyle = 'display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; min-width: 140px; flex: 1;';
