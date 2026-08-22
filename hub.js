@@ -3165,10 +3165,21 @@ function renderizarSubAbasAtendimento() {
     } else if (currentAtendimentoMainTab === 'fichario') {
         container.style.display = 'flex';
         let html = '';
-        const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        letras.forEach(L => {
-            html += `<button onclick="mudarSubAbaAtendimento('${L}')" style="${currentAtendimentoSubTab === L ? activeStyle : inactiveStyle}">${L}</button>`;
-        });
+        
+        if (window.ficharioAvailableLetters) {
+            const letras = Array.from(window.ficharioAvailableLetters).sort();
+            if (letras.length === 0) {
+                html = `<span style="font-size: 13px; color: var(--text-muted); margin: auto;">Nenhum registro no fichário.</span>`;
+            } else {
+                letras.forEach(L => {
+                    html += `<button onclick="mudarSubAbaAtendimento('${L}')" style="${currentAtendimentoSubTab === L ? activeStyle : inactiveStyle}">${L}</button>`;
+                });
+            }
+        } else {
+            // Placeholder while loading
+            html = `<span style="font-size: 13px; color: var(--text-muted); margin: auto;">Carregando fichário...</span>`;
+        }
+        
         container.innerHTML = html;
     } else if (currentAtendimentoMainTab === 'atendimento') {
         container.style.display = 'none';
@@ -3503,6 +3514,33 @@ window.carregarListaAtendimento = async function () {
                 }
                 return f;
             });
+        }
+
+        // Calculate available letters for Fichário
+        const ficharioSet = new Set();
+        (allData || []).forEach(d => {
+            if (d.nome_completo) ficharioSet.add(d.nome_completo.trim().toUpperCase());
+        });
+        (allTratamentos || []).forEach(t => {
+            if (t.app_atendimento_fraterno && t.app_atendimento_fraterno.nome_completo) {
+                ficharioSet.add(t.app_atendimento_fraterno.nome_completo.trim().toUpperCase());
+            }
+        });
+        
+        window.ficharioAvailableLetters = new Set();
+        ficharioSet.forEach(nome => {
+            if (nome) window.ficharioAvailableLetters.add(nome.charAt(0).toUpperCase());
+        });
+
+        // Auto-select valid letter if in Fichário
+        if (currentAtendimentoMainTab === 'fichario') {
+            if (!window.ficharioAvailableLetters.has(currentAtendimentoSubTab)) {
+                const letters = Array.from(window.ficharioAvailableLetters).sort();
+                if (letters.length > 0) {
+                    currentAtendimentoSubTab = letters[0];
+                }
+            }
+            renderizarSubAbasAtendimento();
         }
 
         // Month calculations for current/past filter
