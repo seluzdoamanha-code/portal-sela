@@ -373,7 +373,7 @@ function calcularIdade(dataStr) {
         let nascimentoInfo = 'Não informada';
         if (item.data_nascimento) {
             const nascAno = item.data_nascimento.split('-')[0];
-            const age = calcularIdade(nasc);
+            const age = calcularIdade(item.data_nascimento);
             nascimentoInfo = `${item.data_nascimento.split('-').reverse().join('/')} (${age} anos)`;
         }
 
