@@ -142,7 +142,7 @@ function calcularIdade(dataStr) {
                 if (abaPrincipal === 'triagem') subAba = 'fila';
                 else if (abaPrincipal === 'atendimento') subAba = 'andamento';
                 else if (abaPrincipal === 'acompanhamento') subAba = 'tratamentos';
-                else if (abaPrincipal === 'historico') subAba = 'mes';
+                else if (abaPrincipal === 'historico') subAba = 'historico_geral';
                 
                 renderSubTabs();
                 carregarLista();
