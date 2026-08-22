@@ -1119,7 +1119,7 @@ function calcularIdade(dataStr) {
                     nome_paciente: t.app_atendimento_fraterno?.paciente?.nome_completo || t.app_atendimento_fraterno?.nome_completo,
                     infoAdicional: t.data_inicio ? `Início: ${t.data_inicio.split('T')[0].split('-').reverse().join('/')}` : '',
                     status: t.status,
-                    paciente_id: t.fraterno_id 
+                    paciente_id: t.app_atendimento_fraterno?.id 
                 });
             });
 
