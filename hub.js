@@ -5773,7 +5773,7 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
         <div style="background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%); border: 1px solid rgba(99,102,241,0.2); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); backdrop-filter: blur(8px);">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid rgba(255,255,255,0.1);">
                 <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 8px;">
-                    Fichário Acervo
+                    Fichário
                 </div>
                 <div style="font-size: 36px; font-weight: 800; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1;">
                     ${totalGeral} <span style="font-size: 16px; font-weight: 600; opacity: 0.8;">Fichas</span>
@@ -5781,10 +5781,10 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
             </div>
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
                 <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 8px;">
-                    Nesta Letra
+                    Letra ${letter}
                 </div>
                 <div style="font-size: 36px; font-weight: 800; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1;">
-                    ${totalLetra} <span style="font-size: 16px; font-weight: 600; opacity: 0.8;">Letra ${letter}</span>
+                    ${totalLetra} <span style="font-size: 16px; font-weight: 600; opacity: 0.8;">Fichas</span>
                 </div>
             </div>
         </div>
