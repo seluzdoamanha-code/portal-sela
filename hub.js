@@ -5691,9 +5691,11 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
             if (!patientsMap.has(nome)) {
                 patientsMap.set(nome, {
                     nome_completo: (d.nome_completo || 'Sem Nome').trim(),
+                    nome_curto: d.nome_curto || (d.nome_completo || 'Sem Nome').trim().split(' ')[0],
                     telefone: d.telefone || '',
                     data_nascimento: d.data_nascimento || '',
                     endereco: d.endereco_completo || '',
+                    cpf_cnpj: d.cpf_cnpj || '',
                     paciente_id: d.paciente_id || null,
                     atendimentos: [],
                     tratamentos: []
@@ -5714,10 +5716,12 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
         if (initial === letter) {
             if (!patientsMap.has(nome)) {
                 patientsMap.set(nome, {
-                    nome_completo: (f.nome_completo || 'Sem Nome').trim(),
-                    telefone: f.telefone || '',
-                    data_nascimento: f.data_nascimento || '',
-                    endereco: f.endereco_completo || '',
+                    nome_completo: (f.paciente?.nome_completo || f.nome_completo || 'Sem Nome').trim(),
+                    nome_curto: f.paciente?.nome_curto || (f.nome_completo || 'Sem Nome').trim().split(' ')[0],
+                    telefone: f.paciente?.celular || '',
+                    data_nascimento: f.paciente?.data_nascimento || '',
+                    endereco: f.paciente?.endereco || '',
+                    cpf_cnpj: f.paciente?.cpf_cnpj || '',
                     paciente_id: f.paciente_id || null,
                     atendimentos: [],
                     tratamentos: []
@@ -5805,17 +5809,15 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
                         <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">${shortName}</span>
                     </div>
                     
-                    <div style="font-size: 13px; color: var(--text-muted);">📍 ${p.endereco_completo || 'Sem endereço'}</div>
                     <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${nascimentoInfo}</div>
                     <div style="font-size: 13px; color: var(--text-muted);">📄 CPF: ${p.cpf_cnpj ? formatarCPF(p.cpf_cnpj) : 'Não informado'}</div>
                     <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); margin-top: 2px;">
-                        <span>📱 Celular: ${p.telefone ? formatarCelular(p.telefone) : 'Não informado'}</span>
+                        <span>📱 Cel.: ${p.telefone ? formatarCelular(p.telefone) : 'Não informado'}</span>
                         ${whatsLink}
                     </div>
                 </div>
 
                 <div style="margin-top: 12px; margin-bottom: 16px; font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; align-items: center;">
-                    <strong>Registros:</strong> 
                     <span style="color: var(--primary);">${countA} Atendimentos</span>
                     <span style="opacity: 0.3;">|</span>
                     <span style="color: #10b981;">${countT} Tratamentos</span>
@@ -5823,8 +5825,11 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
             </div>
 
             <div style="display: flex; gap: 8px; flex-direction: row; margin-top: auto;">
+                <button onclick="abrirFichaPacienteFichario('${p.paciente_id}')" class="btn" style="flex: 1; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); font-size: 12px; padding: 10px; cursor:pointer; border-radius: 8px; text-align: center;">
+                    👤 Ficha
+                </button>
                 <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="flex: 1; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); font-size: 12px; padding: 10px; cursor:pointer; border-radius: 8px; text-align: center;">
-                    📜 Histórico Completo
+                    📜 Histórico
                 </button>
                 <button onclick="iniciarNovoAtendimentoFichario('${safeId}')" class="btn" style="flex: 1; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-size: 12px; padding: 10px; cursor:pointer; border-radius: 8px; text-align: center;">
                     ➕ Novo Atendimento
@@ -6089,4 +6094,102 @@ window.iniciarNovoAtendimentoFichario = function(safeId) {
             }
         }
     });
+};
+window.abrirFichaPacienteFichario = async function(pacienteId) {
+    if (!pacienteId) {
+        Swal.fire('Erro', 'Este paciente não possui um cadastro completo vinculado.', 'error');
+        return;
+    }
+    
+    window.abrirSideSheet('Ficha do Paciente', '<div style="padding: 24px; text-align: center;">Carregando dados cadastrais...</div>');
+    
+    try {
+        const { data: p, error } = await db.from('pessoas').select('*').eq('id', pacienteId).single();
+        if (error) throw error;
+        
+        const docFormatado = p.cpf_cnpj ? formatarCPF(p.cpf_cnpj) : '-';
+        let celularHtml = '-';
+        if (p.celular) {
+            const num = p.celular.replace(/\D/g, '');
+            celularHtml = `
+                <a href="https://wa.me/55${num}" target="_blank" style="color: #25D366; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    ${formatarCelular(p.celular)}
+                </a>
+            `;
+        }
+        
+        let nascHtml = '-';
+        if (p.data_nascimento) {
+            const partes = p.data_nascimento.split('-');
+            const age = new Date().getFullYear() - parseInt(partes[0]);
+            nascHtml = `${partes.reverse().join('/')} (${age} anos)`;
+        }
+
+        const html = `
+            <div style="padding: 24px; color: var(--text-main);">
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+                    <div style="width: 60px; height: 60px; border-radius: 30px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white;">
+                        ${(p.nome_curto || p.nome_completo || ' ').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <h2 style="margin: 0; font-size: 20px;">${p.nome_completo || 'Sem Nome'}</h2>
+                        <div style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">${p.nome_curto || ''}</div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                    <h4 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Dados de Contato</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 24px;">
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">Celular</span>
+                            <strong style="font-size: 14px;">${celularHtml}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">E-mail</span>
+                            <strong style="font-size: 14px;">${p.email || '-'}</strong>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">Endereço Completo</span>
+                            <strong style="font-size: 14px; line-height: 1.4;">${p.endereco || '-'}</strong>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Dados Pessoais</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">CPF</span>
+                            <strong style="font-size: 14px;">${docFormatado}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">Nascimento</span>
+                            <strong style="font-size: 14px;">${nascHtml}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">Sexo</span>
+                            <strong style="font-size: 14px;">${p.sexo || '-'}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">Estado Civil</span>
+                            <strong style="font-size: 14px;">${p.estado_civil || '-'}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">Profissão</span>
+                            <strong style="font-size: 14px;">${p.profissao || '-'}</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 24px;">
+                    <a href="pessoas.html?id=${pacienteId}" target="_blank" class="btn btn-primary" style="width: 100%; text-align: center; text-decoration: none;">Abrir Cadastro Completo no Portal ↗</a>
+                </div>
+            </div>
+        `;
+        window.abrirSideSheet('Ficha do Paciente', html);
+    } catch(err) {
+        console.error(err);
+        window.abrirSideSheet('Erro', '<div style="padding: 24px; color: #ef4444;">Erro ao carregar os dados.</div>');
+    }
 };
