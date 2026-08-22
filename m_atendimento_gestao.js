@@ -150,8 +150,8 @@
 
         try {
             const [fraternoReq, tratamentosReq] = await Promise.all([
-                db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo), app_pacientes(*)'),
-                db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, created_at, app_pacientes(*), paciente:pessoas!paciente_id(*))').eq('status', 'Ativo')
+                db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo), paciente:pessoas!paciente_id(*)'),
+                db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*), paciente:pessoas!paciente_id(*))').eq('status', 'Ativo')
             ]);
             if (fraternoReq.error) throw fraternoReq.error;
             if (tratamentosReq.error) throw tratamentosReq.error;
@@ -166,11 +166,11 @@
             // Estatísticas
             if (allData) {
                 allData = allData.map(f => {
-                    if (f.app_pacientes) {
-                        f.nome_completo = f.app_pacientes.nome_completo || f.nome_completo;
-                        f.telefone = f.app_pacientes.telefone || f.telefone;
-                        f.endereco_completo = f.app_pacientes.endereco_completo || f.endereco_completo;
-                        f.data_nascimento = f.app_pacientes.data_nascimento || f.data_nascimento;
+                    if (f.paciente) {
+                        f.nome_completo = f.paciente.nome_completo || f.nome_completo;
+                        f.telefone = f.paciente.celular || f.telefone;
+                        f.endereco_completo = f.paciente.endereco || f.endereco_completo;
+                        f.data_nascimento = f.paciente.data_nascimento || f.data_nascimento;
                     }
                     return f;
                 });
@@ -213,10 +213,10 @@
                         id: d.id,
                         fraterno_id: d.fraterno_id,
                         unified_type: d.tipo,
-                        nome_completo: d.app_atendimento_fraterno?.app_pacientes?.nome_completo || d.app_atendimento_fraterno?.nome_completo || '',
-                        endereco_completo: d.app_atendimento_fraterno?.app_pacientes?.endereco_completo || d.app_atendimento_fraterno?.endereco_completo || '',
-                        telefone: d.app_atendimento_fraterno?.app_pacientes?.telefone || d.app_atendimento_fraterno?.telefone || '',
-                        data_nascimento: d.app_atendimento_fraterno?.app_pacientes?.data_nascimento || d.app_atendimento_fraterno?.data_nascimento || '',
+                        nome_completo: d.app_atendimento_fraterno?.paciente?.nome_completo || d.app_atendimento_fraterno?.nome_completo || '',
+                        endereco_completo: d.app_atendimento_fraterno?.paciente?.endereco || d.app_atendimento_fraterno?.endereco_completo || '',
+                        telefone: d.app_atendimento_fraterno?.paciente?.celular || d.app_atendimento_fraterno?.telefone || '',
+                        data_nascimento: d.app_atendimento_fraterno?.paciente?.data_nascimento || d.app_atendimento_fraterno?.data_nascimento || '',
                         created_at: d.app_atendimento_fraterno?.created_at || d.created_at,
                         presente: d.presente,
                         status: d.status,
@@ -457,15 +457,15 @@
 
         try {
             // Detalhes do necessitado
-            const { data: paciente, error } = await db.from('app_atendimento_fraterno').select('*, app_pacientes(*)').eq('id', id).single();
+            const { data: paciente, error } = await db.from('app_atendimento_fraterno').select('*, paciente:pessoas!paciente_id(*)').eq('id', id).single();
             if (error) throw error;
 
             let infoHtml = `
                 <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
                     <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Dados do Necessitado</h4>
-                    <strong>Nome:</strong> ${(paciente.app_pacientes?.nome_completo || paciente.nome_completo || '').toUpperCase()}<br>
-                    <strong>Nascimento:</strong> ${paciente.app_pacientes?.data_nascimento || paciente.data_nascimento ? (paciente.app_pacientes?.data_nascimento || paciente.data_nascimento).split('-').reverse().join('/') : '-'}<br>
-                    <strong>Telefone:</strong> ${paciente.app_pacientes?.telefone || paciente.telefone || '-'}
+                    <strong>Nome:</strong> ${(paciente.paciente?.nome_completo || paciente.nome_completo || '').toUpperCase()}<br>
+                    <strong>Nascimento:</strong> ${paciente.paciente?.data_nascimento || paciente.data_nascimento ? (paciente.paciente?.data_nascimento || paciente.data_nascimento).split('-').reverse().join('/') : '-'}<br>
+                    <strong>Telefone:</strong> ${paciente.paciente?.celular || paciente.celular || '-'}
                 </div>
             `;
 
@@ -668,7 +668,7 @@
 
         try {
             const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(app_pacientes(*), nome_completo, paciente:pessoas!paciente_id(*)), app_atendimento_presencas(data)')
+                .select('*, app_atendimento_fraterno(paciente:pessoas!paciente_id(*), nome_completo, paciente:pessoas!paciente_id(*)), app_atendimento_presencas(data)')
                 .eq('status', 'Ativo');
 
             if (error) throw error;
@@ -679,8 +679,8 @@
             }
 
             trats.sort((a, b) => {
-                const nameA = a.app_atendimento_fraterno?.app_pacientes?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '';
-                const nameB = b.app_atendimento_fraterno?.app_pacientes?.nome_completo || b.app_atendimento_fraterno?.nome_completo || '';
+                const nameA = a.app_atendimento_fraterno?.paciente?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '';
+                const nameB = b.app_atendimento_fraterno?.paciente?.nome_completo || b.app_atendimento_fraterno?.nome_completo || '';
                 return nameA.localeCompare(nameB);
             });
 
@@ -706,11 +706,11 @@
 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="font-size:15px; font-weight:600; color:white;">${(t.app_atendimento_fraterno?.app_pacientes?.nome_completo || t.app_atendimento_fraterno?.nome_completo || '').toUpperCase()}</span>
+                        <span style="font-size:15px; font-weight:600; color:white;">${(t.app_atendimento_fraterno?.paciente?.nome_completo || t.app_atendimento_fraterno?.nome_completo || '').toUpperCase()}</span>
                         <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${tipoCor}22; color:${tipoCor}; border:1px solid ${tipoCor}44;">${t.tipo}</span>
                     </div>
                     <div class="card-info"><strong>Início em:</strong> ${dtInicio}</div>
-                    <div class="card-info"><strong>WhatsApp:</strong> ${t.app_atendimento_fraterno?.app_pacientes?.telefone || t.app_atendimento_fraterno?.telefone || '-'}</div>
+                    <div class="card-info"><strong>WhatsApp:</strong> ${t.app_atendimento_fraterno?.paciente?.celular || t.app_atendimento_fraterno?.telefone || '-'}</div>
 
                     <div style="margin-top:12px; display:flex; gap:8px;">
                         ${attendedToday
@@ -932,7 +932,7 @@
 
         try {
             const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(id, nome_completo, created_at, app_pacientes(*), paciente:pessoas!paciente_id(*))')
+                .select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*), paciente:pessoas!paciente_id(*))')
                 .eq('status', 'Ativo')
                 .eq('presente', false);
 
@@ -943,7 +943,7 @@
                 return;
             }
 
-            trats.sort((a,b) => (a.app_atendimento_fraterno?.app_pacientes?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '').localeCompare(b.app_atendimento_fraterno?.app_pacientes?.nome_completo || b.app_atendimento_fraterno?.nome_completo || ''));
+            trats.sort((a,b) => (a.app_atendimento_fraterno?.paciente?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '').localeCompare(b.app_atendimento_fraterno?.paciente?.nome_completo || b.app_atendimento_fraterno?.nome_completo || ''));
 
             trats.forEach(t => {
                 const f = t.app_atendimento_fraterno;
@@ -957,7 +957,7 @@
                 const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
                 let ageInfo = '';
-                const nasc = f.app_pacientes?.data_nascimento || f.data_nascimento;
+                const nasc = f.paciente?.data_nascimento || f.data_nascimento;
                 if (nasc) {
                     const anoNasc = nasc.split('-')[0];
                     const age = new Date().getFullYear() - parseInt(anoNasc);
@@ -967,10 +967,10 @@
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
                         <div>
-                            <span style="font-size:15px; font-weight:600; color:white; display:block; margin-bottom: 4px;">${(f.app_pacientes?.nome_completo || f.nome_completo || '').toUpperCase()}</span>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">📍 ${f.app_pacientes?.endereco_completo || f.endereco_completo || 'Sem endereço'}</div>
+                            <span style="font-size:15px; font-weight:600; color:white; display:block; margin-bottom: 4px;">${(f.paciente?.nome_completo || f.nome_completo || '').toUpperCase()}</span>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">📍 ${f.paciente?.endereco || f.endereco_completo || 'Sem endereço'}</div>
                             <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">🎂 Nascimento: ${nasc ? nasc.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📱 Celular: ${f.app_pacientes?.telefone || f.telefone || 'Não informado'}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📱 Celular: ${f.paciente?.celular || f.telefone || 'Não informado'}</div>
                             <div style="font-size: 11px; color: var(--text-muted);">Em ${dateStr}</div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
@@ -1002,12 +1002,12 @@
         try {
             // 1. Buscar todas as triagens atendidas
             const pFraterno = db.from('app_atendimento_fraterno')
-                .select('*, atendente:pessoas!atendente_id(nome_completo), app_pacientes(*)')
+                .select('*, atendente:pessoas!atendente_id(nome_completo), paciente:pessoas!paciente_id(*)')
                 .eq('status', 'Atendido');
             
             // 2. Buscar todos os tratamentos concluídos ou suspensos
             const pTratamentos = db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(nome_completo, app_pacientes(*))')
+                .select('*, app_atendimento_fraterno(nome_completo, paciente:pessoas!paciente_id(*))')
                 .in('status', ['Concluído', 'Suspenso']);
 
             const [reqFraterno, reqTratamentos] = await Promise.all([pFraterno, pTratamentos]);
@@ -1024,7 +1024,7 @@
                     tipoDado: 'Fraterno',
                     dataOrdenacao: new Date(dataFechamento),
                     id: f.id,
-                    nome_paciente: f.app_pacientes?.nome_completo || f.nome_completo,
+                    nome_paciente: f.paciente?.nome_completo || f.nome_completo,
                     infoAdicional: f.atendente ? `Atendente: ${f.atendente.nome_completo}` : '',
                     status: f.status,
                     paciente_id: f.id 
@@ -1037,7 +1037,7 @@
                     tipoDado: t.tipo, 
                     dataOrdenacao: new Date(dataFechamento),
                     id: t.id,
-                    nome_paciente: t.app_atendimento_fraterno?.app_pacientes?.nome_completo || t.app_atendimento_fraterno?.nome_completo,
+                    nome_paciente: t.app_atendimento_fraterno?.paciente?.nome_completo || t.app_atendimento_fraterno?.nome_completo,
                     infoAdicional: t.data_inicio ? `Início: ${t.data_inicio.split('T')[0].split('-').reverse().join('/')}` : '',
                     status: t.status,
                     paciente_id: t.fraterno_id 
@@ -1150,7 +1150,7 @@
 
         try {
             const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(id, nome_completo, app_pacientes(*), paciente:pessoas!paciente_id(*))')
+                .select('*, app_atendimento_fraterno(id, nome_completo, paciente:pessoas!paciente_id(*), paciente:pessoas!paciente_id(*))')
                 .eq('status', 'Ativo')
                 .eq('presente', true);
 
@@ -1161,7 +1161,7 @@
                 return;
             }
 
-            trats.sort((a,b) => (a.app_atendimento_fraterno?.app_pacientes?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '').localeCompare(b.app_atendimento_fraterno?.app_pacientes?.nome_completo || b.app_atendimento_fraterno?.nome_completo || ''));
+            trats.sort((a,b) => (a.app_atendimento_fraterno?.paciente?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '').localeCompare(b.app_atendimento_fraterno?.paciente?.nome_completo || b.app_atendimento_fraterno?.nome_completo || ''));
 
             trats.forEach(t => {
                 const f = t.app_atendimento_fraterno;
@@ -1172,7 +1172,7 @@
                 const badgeColor = t.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
 
                 let ageInfo = '';
-                const nasc = f.app_pacientes?.data_nascimento || f.data_nascimento;
+                const nasc = f.paciente?.data_nascimento || f.data_nascimento;
                 if (nasc) {
                     const anoNasc = nasc.split('-')[0];
                     const age = new Date().getFullYear() - parseInt(anoNasc);
@@ -1182,10 +1182,10 @@
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
                         <div>
-                            <span style="font-size:15px; font-weight:600; color:white; display:block; margin-bottom: 4px;">${(f.app_pacientes?.nome_completo || f.nome_completo || '').toUpperCase()}</span>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">📍 ${f.app_pacientes?.endereco_completo || f.endereco_completo || 'Sem endereço'}</div>
+                            <span style="font-size:15px; font-weight:600; color:white; display:block; margin-bottom: 4px;">${(f.paciente?.nome_completo || f.nome_completo || '').toUpperCase()}</span>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">📍 ${f.paciente?.endereco || f.endereco_completo || 'Sem endereço'}</div>
                             <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">🎂 Nascimento: ${nasc ? nasc.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📱 Celular: ${f.app_pacientes?.telefone || f.telefone || 'Não informado'}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📱 Celular: ${f.paciente?.celular || f.telefone || 'Não informado'}</div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
                             <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44;">${t.tipo}</span>
@@ -1287,7 +1287,7 @@
 
         try {
             const { data: tratamentos, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(nome_completo, id, app_pacientes(*), paciente:pessoas!paciente_id(*)), app_atendimento_presencas(data)')
+                .select('*, app_atendimento_fraterno(nome_completo, id, paciente:pessoas!paciente_id(*), paciente:pessoas!paciente_id(*)), app_atendimento_presencas(data)')
                 .eq('status', 'Ativo');
 
             if (error) throw error;
@@ -1321,8 +1321,8 @@
                 if (t.status === 'Ativo' && (!lastDateObj || lastDateObj < twoWeeksAgo)) {
                     abandonos.push({
                         id: t.id,
-                        nome: t.app_atendimento_fraterno?.app_pacientes?.nome_completo || t.app_atendimento_fraterno?.nome_completo || 'Desconhecido',
-                        telefone: t.app_atendimento_fraterno?.app_pacientes?.telefone || t.app_atendimento_fraterno?.telefone,
+                        nome: t.app_atendimento_fraterno?.paciente?.nome_completo || t.app_atendimento_fraterno?.nome_completo || 'Desconhecido',
+                        telefone: t.app_atendimento_fraterno?.paciente?.celular || t.app_atendimento_fraterno?.telefone,
                         tipo: t.tipo,
                         lastDate: lastDateObj ? lastDateObj.toLocaleDateString('pt-BR') : 'Nunca compareceu',
                         faltasConsecutivas: lastDateObj ? Math.floor((now - lastDateObj) / (7 * 24 * 60 * 60 * 1000)) : 'Várias'
@@ -1382,8 +1382,8 @@
                 listaHtml += '<div style="color: var(--text-muted); font-size: 12px;">Nenhum tratamento ativo.</div>';
             } else {
                 const sortedTrats = tratamentos.sort((a, b) => {
-                    const nameA = a.app_atendimento_fraterno?.app_pacientes?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '';
-                    const nameB = b.app_atendimento_fraterno?.app_pacientes?.nome_completo || b.app_atendimento_fraterno?.nome_completo || '';
+                    const nameA = a.app_atendimento_fraterno?.paciente?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '';
+                    const nameB = b.app_atendimento_fraterno?.paciente?.nome_completo || b.app_atendimento_fraterno?.nome_completo || '';
                     return nameA.localeCompare(nameB);
                 });
 
@@ -1412,7 +1412,7 @@
                     listaHtml += `
                         <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column;">
                             <div style="font-size: 12px; font-weight: bold; color: var(--text-main); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                ${t.app_atendimento_fraterno?.app_pacientes?.nome_completo?.toUpperCase() || t.app_atendimento_fraterno?.nome_completo?.toUpperCase() || 'DESCONHECIDO'}
+                                ${t.app_atendimento_fraterno?.paciente?.nome_completo?.toUpperCase() || t.app_atendimento_fraterno?.nome_completo?.toUpperCase() || 'DESCONHECIDO'}
                             </div>
                             <div style="font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; display: inline-block; margin-bottom: 8px; align-self: flex-start;">${t.tipo.toUpperCase()}</div>
                             <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between;">
@@ -1499,7 +1499,7 @@
         try {
             const { data: oldData } = await db.from('app_atendimento_fraterno').select('paciente_id').eq('id', id).single();
             if (oldData && oldData.paciente_id) {
-                await db.from('app_pacientes').update({
+                await db.from('pessoas').update({
                     nome_completo: nome,
                     endereco_completo: end,
                     telefone: fone
