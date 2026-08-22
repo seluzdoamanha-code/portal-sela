@@ -3622,19 +3622,26 @@ window.carregarListaAtendimento = async function () {
                 .map(d => ({ ...d, unified_type: 'Fraterno' }));
             
             const trats = allTratamentos.filter(d => isFila ? !d.presente : d.presente)
-                .map(d => ({
-                    id: d.id,
-                    fraterno_id: d.atendimento_id,
-                    unified_type: d.tipo,
-                    nome_completo: d.app_atendimento_fraterno?.nome_completo || '',
-                    endereco_completo: d.app_atendimento_fraterno?.endereco_completo || '',
-                    telefone: d.app_atendimento_fraterno?.telefone || '',
-                    data_nascimento: d.app_atendimento_fraterno?.data_nascimento || '',
-                    created_at: d.app_atendimento_fraterno?.created_at || d.created_at,
-                    presente: d.presente,
-                    status: d.status,
-                    is_tratamento: true
-                }));
+                .map(d => {
+                    const pac = d.app_atendimento_fraterno?.paciente || {};
+                    return {
+                        id: d.id,
+                        fraterno_id: d.atendimento_id,
+                        unified_type: d.tipo,
+                        nome_completo: pac.nome_completo || d.app_atendimento_fraterno?.nome_completo || '',
+                        nome_curto: pac.nome_curto || '',
+                        endereco_completo: pac.endereco || '',
+                        telefone: pac.celular || '',
+                        data_nascimento: pac.data_nascimento || '',
+                        cpf_cnpj: pac.cpf_cnpj || '',
+                        cep: pac.cep || '',
+                        created_at: d.app_atendimento_fraterno?.created_at || d.created_at,
+                        presente: d.presente,
+                        status: d.status,
+                        fraterno_status: d.app_atendimento_fraterno?.status,
+                        is_tratamento: true
+                    };
+                });
 
             data = [...frats, ...trats];
             
@@ -3797,12 +3804,20 @@ function renderizarCardAtendimentoItem(container, item) {
     // Container for buttons: giving much more space to the left side (data)
     const buttonsContainerStyle = 'display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; min-width: 170px;';
 
+    let badgeHtml = '';
+    if (item.fraterno_status === 'Em Tratamento' || item.status === 'Em Tratamento') {
+        badgeHtml = `<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); margin-left: 8px; vertical-align: middle;">EM TRATAMENTO</span>`;
+    }
+
     const shortName = item.nome_curto || (item.nome_completo ? item.nome_completo.split(' ')[0] : 'Sem nome');
     let leftInfo = `
         <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
             <div style="display: flex; flex-direction: column; margin-bottom: 4px;">
-                <strong style="font-size: 16px; color: var(--text-main); line-height: 1.2;">${item.nome_completo.toUpperCase()}</strong>
-                <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">${shortName}</span>
+                <div>
+                    <strong style="font-size: 16px; color: var(--text-main); line-height: 1.2; vertical-align: middle;">${item.nome_completo.toUpperCase()}</strong>
+                    ${badgeHtml}
+                </div>
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">${shortName}</span>
             </div>
             
             <div style="font-size: 13px; color: var(--text-muted);">📍 ${item.endereco_completo || 'Sem endereço'}${item.cep ? ' - CEP: ' + formatarCEP(item.cep) : ''}</div>
