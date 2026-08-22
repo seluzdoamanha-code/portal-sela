@@ -4716,8 +4716,8 @@ window.carregarTratamentosAtivosDesktop = async function () {
                     : `Período: ${dtIniStr} até ${dtFimStr} (${t.status})`;
 
                 let actionsHTML = '';
+                let attendedToday = false;
                 if (isListActive) {
-                    let attendedToday = false;
                     if (t.app_atendimento_presencas) {
                         const now = new Date();
                         const tzOffset = now.getTimezoneOffset() * 60000;
