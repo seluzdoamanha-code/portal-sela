@@ -3491,7 +3491,7 @@ window.carregarListaAtendimento = async function () {
     try {
         const [fraternoReq, tratamentosReq] = await Promise.all([
             db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo, nome_curto), paciente:pessoas!paciente_id(nome_completo, nome_curto, celular, endereco, cep, cpf_cnpj, data_nascimento)'),
-            db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)').eq('status', 'Ativo')
+            db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*))').eq('status', 'Ativo')
         ]);
         if (fraternoReq.error) throw fraternoReq.error;
         if (tratamentosReq.error) throw tratamentosReq.error;
@@ -4659,7 +4659,7 @@ window.carregarTratamentosAtivosDesktop = async function () {
 
         let selectQuery = db
             .from('app_atendimento_tratamentos')
-            .select('*, app_atendimento_fraterno(nome_completo, telefone, id), app_atendimento_presencas(data)')
+            .select('*, app_atendimento_fraterno(nome_completo, id, paciente:pessoas!paciente_id(celular)), app_atendimento_presencas(data)')
             .order('tipo');
 
         if (typeof queryStatus === 'string') {
@@ -4764,7 +4764,7 @@ window.carregarTratamentosAtivosDesktop = async function () {
             card.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
                     <strong style="font-size: 16px; color: var(--text-main);">${grupo.info.nome_completo.toUpperCase()}</strong>
-                    <span style="font-size: 13px; color: var(--text-muted);">📱 ${grupo.info.telefone || 'Sem telefone'}</span>
+                    <span style="font-size: 13px; color: var(--text-muted);">📱 ${grupo.info.paciente?.celular || 'Sem telefone'}</span>
                 </div>
                 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -5052,7 +5052,7 @@ window.carregarFilaPresencasDesktop = async function () {
     try {
         const { data: tratamentos, error } = await db
             .from('app_atendimento_tratamentos')
-            .select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)')
+            .select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*))')
             .eq('status', 'Ativo')
             .eq('presente', false)
             .order('tipo');
@@ -5137,7 +5137,7 @@ window.carregarEsperaTratamentoDesktop = async function () {
     try {
         const { data: tratamentos, error } = await db
             .from('app_atendimento_tratamentos')
-            .select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone)')
+            .select('*, app_atendimento_fraterno(id, nome_completo, paciente:pessoas!paciente_id(*))')
             .eq('status', 'Ativo')
             .eq('presente', true)
             .order('tipo');
@@ -5281,7 +5281,7 @@ window.carregarPainelSemanalDesktop = async function () {
     try {
         const { data: tratamentos, error: errTrat } = await db
             .from('app_atendimento_tratamentos')
-            .select('*, app_atendimento_fraterno(nome_completo, telefone), app_atendimento_presencas(data)')
+            .select('*, app_atendimento_fraterno(nome_completo, paciente:pessoas!paciente_id(celular)), app_atendimento_presencas(data)')
             .eq('status', 'Ativo');
             
         if (errTrat) throw errTrat;
@@ -5326,7 +5326,7 @@ window.carregarPainelSemanalDesktop = async function () {
                 abandonos.push({
                     id: t.id,
                     nome: t.app_atendimento_fraterno?.nome_completo || 'Desconhecido',
-                    telefone: t.app_atendimento_fraterno?.telefone,
+                    telefone: t.app_atendimento_fraterno?.paciente?.celular,
                     tipo: t.tipo,
                     lastDate: lastDateObj ? lastDateObj.toLocaleDateString('pt-BR') : 'Nunca compareceu',
                     faltasConsecutivas: lastDateObj ? Math.floor((now - lastDateObj) / (7 * 24 * 60 * 60 * 1000)) : 'Várias'
@@ -5509,7 +5509,7 @@ window.carregarHistoricoGeralDesktop = async function () {
     try {
         const [fraternoReq, tratamentosReq] = await Promise.all([
             db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo, nome_curto), paciente:pessoas!paciente_id(nome_completo, nome_curto, celular, endereco, cep, cpf_cnpj, data_nascimento)').in('status', ['Atendido', 'Concluído']),
-            db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)').in('status', ['Concluído', 'Suspenso'])
+            db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*))').in('status', ['Concluído', 'Suspenso'])
         ]);
 
         if (fraternoReq.error) throw fraternoReq.error;
