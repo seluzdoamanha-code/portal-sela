@@ -1127,6 +1127,7 @@ function calcularIdade(dataStr) {
                     id: t.id,
                     nome_paciente: t.app_atendimento_fraterno?.paciente?.nome_completo || t.app_atendimento_fraterno?.nome_completo,
                     infoAdicional: t.data_inicio ? `Início: ${t.data_inicio.split('T')[0].split('-').reverse().join('/')}` : '',
+                    data_inicio: t.data_inicio,
                     status: t.status,
                     paciente_id: t.app_atendimento_fraterno?.id 
                 });
@@ -1156,9 +1157,11 @@ function calcularIdade(dataStr) {
                 const wrapperAno = document.createElement('div');
                 wrapperAno.style.marginBottom = '8px';
 
+                let totalAno = 0;
+                Object.values(agrupado[ano]).forEach(m => totalAno += m.length);
                 const headerAno = document.createElement('div');
                 headerAno.style.cssText = 'background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 8px; font-weight: bold; font-size: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: white; border: 1px solid var(--border);';
-                headerAno.innerHTML = `<span>📂 Ano ${ano}</span><span style="font-size: 12px; opacity: 0.5;">▼</span>`;
+                headerAno.innerHTML = `<span>📂 Ano ${ano} <span style="font-size: 12px; opacity: 0.7; font-weight: normal; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 12px;">(${totalAno})</span></span><span style="font-size: 12px; opacity: 0.5;">▼</span>`;
                 
                 const contentAno = document.createElement('div');
                 contentAno.style.cssText = 'padding: 8px 0 8px 12px; display: none;';
@@ -1194,24 +1197,38 @@ function calcularIdade(dataStr) {
                         div.className = 'card-atendimento';
                         div.style.marginBottom = '8px';
                         
-                        let badgeBg = '#f59e0b';
-                        let badgeText = '🤝 TRIAGEM';
-                        if (item.tipoDado === 'Fluídico') { badgeBg = '#3b82f6'; badgeText = '💧 TRAT. FLUÍDICO'; }
-                        if (item.tipoDado === 'Espiritual') { badgeBg = '#8b5cf6'; badgeText = '✨ TRAT. ESPIRITUAL'; }
-
+                                                let badgeBg = '#f59e0b';
+                        let badgeText = '🤝 FRATERNO';
+                        let dtDisplay = item.dataOrdenacao.toLocaleDateString('pt-BR');
+                        let descHtml = item.infoAdicional; // e.g. Atendente: Nome
+                        
                         const statusCor = item.status === 'Suspenso' ? '#ef4444' : (item.status === 'Concluído' ? '#10b981' : 'var(--text-muted)');
 
+                        if (item.tipoDado === 'Fluídico' || item.tipoDado === 'Espiritual') {
+                            if (item.tipoDado === 'Fluídico') { badgeBg = '#3b82f6'; badgeText = '💧 FLUÍDICO'; }
+                            if (item.tipoDado === 'Espiritual') { badgeBg = '#8b5cf6'; badgeText = '✨ ESPIRITUAL'; }
+                            
+                            const inicioStr = item.data_inicio ? item.data_inicio.split('T')[0].split('-').reverse().join('/') : '?';
+                            const fimStr = dtDisplay;
+                            descHtml = `Período: ${inicioStr} até ${fimStr} &mdash; <strong style="color: ${statusCor}">${item.status}</strong>`;
+                        } else {
+                            descHtml = `${descHtml} &mdash; <strong style="color: ${statusCor}">${item.status}</strong>`;
+                        }
+
                         div.innerHTML = `
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                <span style="font-size:14px; font-weight:600; color:white;">${(item.nome_paciente || 'Desconhecido').toUpperCase()}</span>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap:8px;">
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap;">
+                                        <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${badgeBg}; color: white;">${badgeText}</span>
+                                        <span style="font-size:14px; font-weight:600; color:white;">${(item.nome_paciente || 'Desconhecido').toUpperCase()}</span>
+                                    </div>
+                                    <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                                        <span>📅 ${dtDisplay}</span> <span style="opacity:0.3">|</span> <span>${descHtml}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px;">
-                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeBg}; color: white; display: inline-block; align-self: flex-start;">${badgeText}</span>
-                                <span style="font-size: 12px; color: var(--text-muted);">${item.infoAdicional}</span>
-                                <span style="font-size: 12px; color: ${statusCor}; font-weight: 500;">Status: ${item.status}</span>
-                            </div>
-                            <div style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 8px; padding-top: 8px; display: flex; justify-content: flex-end;">
-                                <button onclick="abrirFichaAtendimento('${item.paciente_id}')" class="btn-action" style="background:rgba(255,255,255,0.05); color:white; border:1px solid var(--border); width: 100%;">📝 Ficha Completa</button>
+                            <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; display: flex; justify-content: flex-end;">
+                                <button onclick="abrirFichaAtendimento('${item.paciente_id}')" class="btn-action" style="background:rgba(255,255,255,0.05); color:var(--text-main); border:1px solid var(--border); padding: 6px 12px; font-size: 12px; border-radius: 6px;">📝 Ficha</button>
                             </div>
                         `;
                         contentMes.appendChild(div);
