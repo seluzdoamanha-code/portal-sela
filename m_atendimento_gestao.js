@@ -226,9 +226,9 @@ function calcularIdade(dataStr) {
                 });
             }
 
-            const totalFila = allData.filter(d => d.status !== 'Atendido' && d.status !== 'Em Tratamento').length;
-            const espera = allData.filter(d => d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length + allTratamentos.filter(t => t.presente).length;
-            const andamento = allData.filter(d => d.presente && d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento').length;
+            const totalFila = allData.filter(d => !['Atendido', 'Em Tratamento', 'Concluído'].includes(d.status)).length;
+            const espera = allData.filter(d => d.presente && !d.atendente_id && !['Atendido', 'Em Tratamento', 'Concluído'].includes(d.status)).length + allTratamentos.filter(t => t.presente).length;
+            const andamento = allData.filter(d => d.presente && d.atendente_id && !['Atendido', 'Em Tratamento', 'Concluído'].includes(d.status)).length;
             
             const totalTratamentos = allTratamentos ? allTratamentos.length : 0;
 
@@ -255,7 +255,7 @@ function calcularIdade(dataStr) {
             if (subAba === 'fila' || subAba === 'espera') {
                 const isFila = subAba === 'fila';
 
-                const frats = allData.filter(d => isFila ? (!d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento') : (d.presente && !d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento'))
+                const frats = allData.filter(d => isFila ? (!d.presente && !d.atendente_id && !['Atendido', 'Em Tratamento', 'Concluído'].includes(d.status)) : (d.presente && !d.atendente_id && !['Atendido', 'Em Tratamento', 'Concluído'].includes(d.status)))
                     .map(d => ({ ...d, unified_type: 'Fraterno' }));
 
                 const trats = allTratamentos.filter(d => isFila ? !d.presente : d.presente)
@@ -297,7 +297,7 @@ function calcularIdade(dataStr) {
                 renderNormalList(filteredData);
             } 
             else if (subAba === 'andamento') {
-                filteredData = allData.filter(d => d.atendente_id && d.status !== 'Atendido' && d.status !== 'Em Tratamento');
+                filteredData = allData.filter(d => d.atendente_id && !['Atendido', 'Em Tratamento', 'Concluído'].includes(d.status));
                 renderAndamentoList(filteredData);
             } 
             else if (subAba === 'historico_geral') {
