@@ -151,7 +151,7 @@
         try {
             const [fraternoReq, tratamentosReq] = await Promise.all([
                 db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo), paciente:pessoas!paciente_id(*)'),
-                db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*), paciente:pessoas!paciente_id(*))').eq('status', 'Ativo')
+                db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*))').eq('status', 'Ativo')
             ]);
             if (fraternoReq.error) throw fraternoReq.error;
             if (tratamentosReq.error) throw tratamentosReq.error;
@@ -668,7 +668,7 @@
 
         try {
             const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(paciente:pessoas!paciente_id(*), nome_completo, paciente:pessoas!paciente_id(*)), app_atendimento_presencas(data)')
+                .select('*, app_atendimento_fraterno(nome_completo, paciente:pessoas!paciente_id(*)), app_atendimento_presencas(data)')
                 .eq('status', 'Ativo');
 
             if (error) throw error;
@@ -932,7 +932,7 @@
 
         try {
             const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*), paciente:pessoas!paciente_id(*))')
+                .select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*))')
                 .eq('status', 'Ativo')
                 .eq('presente', false);
 
@@ -1150,7 +1150,7 @@
 
         try {
             const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(id, nome_completo, paciente:pessoas!paciente_id(*), paciente:pessoas!paciente_id(*))')
+                .select('*, app_atendimento_fraterno(id, nome_completo, paciente:pessoas!paciente_id(*))')
                 .eq('status', 'Ativo')
                 .eq('presente', true);
 
@@ -1287,7 +1287,7 @@
 
         try {
             const { data: tratamentos, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(nome_completo, id, paciente:pessoas!paciente_id(*), paciente:pessoas!paciente_id(*)), app_atendimento_presencas(data)')
+                .select('*, app_atendimento_fraterno(nome_completo, id, paciente:pessoas!paciente_id(*)), app_atendimento_presencas(data)')
                 .eq('status', 'Ativo');
 
             if (error) throw error;
