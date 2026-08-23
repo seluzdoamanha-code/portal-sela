@@ -1720,7 +1720,7 @@ window.carregarFicharioMobile = function(allData, allTratamentos) {
     
     const allPatientsSet = new Set();
     allData.forEach(d => {
-        const nome = (d.nome_completo || 'Sem Nome').trim().toUpperCase();
+        const nome = (d.paciente?.nome_completo || d.nome_completo || 'Sem Nome').trim().toUpperCase();
         allPatientsSet.add(nome);
     });
     allTratamentos.forEach(t => {
@@ -1731,19 +1731,31 @@ window.carregarFicharioMobile = function(allData, allTratamentos) {
     
     const patientsMap = new Map();
     const letter = subAba;
+
+    const buildAddress = (p) => {
+        if (!p) return null;
+        const endPartes = [];
+        if (p.endereco) endPartes.push(p.endereco);
+        if (p.bairro) endPartes.push(p.bairro);
+        let cidEst = [];
+        if (p.cidade) cidEst.push(p.cidade);
+        if (p.estado) cidEst.push(p.estado);
+        if (cidEst.length > 0) endPartes.push(cidEst.join('/'));
+        return endPartes.length > 0 ? endPartes.join(', ') : null;
+    };
     
     allData.forEach(d => {
-        const nome = (d.nome_completo || 'Sem Nome').trim().toUpperCase();
+        const nome = (d.paciente?.nome_completo || d.nome_completo || 'Sem Nome').trim().toUpperCase();
         const initial = nome.charAt(0);
         if (initial === letter) {
             if (!patientsMap.has(nome)) {
                 patientsMap.set(nome, {
-                    nome_completo: (d.nome_completo || 'Sem Nome').trim(),
-                    nome_curto: d.nome_curto || (d.nome_completo || 'Sem Nome').trim().split(' ')[0],
-                    telefone: d.telefone || '',
-                    data_nascimento: d.data_nascimento || '',
-                    endereco: d.endereco_completo || '',
-                    cpf_cnpj: d.cpf_cnpj || '',
+                    nome_completo: (d.paciente?.nome_completo || d.nome_completo || 'Sem Nome').trim(),
+                    nome_curto: d.paciente?.nome_curto || d.nome_curto || (d.nome_completo || 'Sem Nome').trim().split(' ')[0],
+                    telefone: d.paciente?.celular || d.telefone || '',
+                    data_nascimento: d.paciente?.data_nascimento || d.data_nascimento || '',
+                    endereco: buildAddress(d.paciente) || d.endereco_completo || '',
+                    cpf_cnpj: d.paciente?.cpf_cnpj || d.cpf_cnpj || '',
                     paciente_id: d.paciente_id || null,
                     atendimentos: [],
                     tratamentos: []
@@ -1765,11 +1777,11 @@ window.carregarFicharioMobile = function(allData, allTratamentos) {
             if (!patientsMap.has(nome)) {
                 patientsMap.set(nome, {
                     nome_completo: (f.paciente?.nome_completo || f.nome_completo || 'Sem Nome').trim(),
-                    nome_curto: f.paciente?.nome_curto || (f.nome_completo || 'Sem Nome').trim().split(' ')[0],
-                    telefone: f.paciente?.celular || '',
-                    data_nascimento: f.paciente?.data_nascimento || '',
-                    endereco: f.paciente?.endereco || '',
-                    cpf_cnpj: f.paciente?.cpf_cnpj || '',
+                    nome_curto: f.paciente?.nome_curto || f.nome_curto || (f.nome_completo || 'Sem Nome').trim().split(' ')[0],
+                    telefone: f.paciente?.celular || f.telefone || '',
+                    data_nascimento: f.paciente?.data_nascimento || f.data_nascimento || '',
+                    endereco: buildAddress(f.paciente) || f.endereco_completo || '',
+                    cpf_cnpj: f.paciente?.cpf_cnpj || f.cpf_cnpj || '',
                     paciente_id: f.paciente_id || null,
                     atendimentos: [],
                     tratamentos: []
@@ -1811,7 +1823,26 @@ window.carregarFicharioMobile = function(allData, allTratamentos) {
         const safeId = p.nome_completo.replace(/[^a-zA-Z0-9]/g, '_');
         window['fichario_' + safeId] = p;
 
-        const tel = p.telefone ? p.telefone : 'Sem telefone';
+        let nascimentoInfo = 'Não informado';
+        if (p.data_nascimento) {
+            const age = typeof calcularIdade === 'function' ? calcularIdade(p.data_nascimento) : '?';
+            nascimentoInfo = `${p.data_nascimento.split('-').reverse().join('/')} (${age} anos)`;
+        }
+
+        let whatsLink = '';
+        if (p.telefone) {
+            const nums = p.telefone.replace(/\D/g, '');
+            whatsLink = `
+                <a href="https://wa.me/55${nums}" target="_blank" style="padding: 4px 8px; font-size: 12px; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    WhatsApp
+                </a>
+            `;
+        }
+
+        const countA = p.atendimentos.length;
+        const countT = p.tratamentos.length;
+
         const card = document.createElement('div');
         card.className = 'card-atendimento';
         card.style.marginBottom = '12px';
@@ -1821,24 +1852,39 @@ window.carregarFicharioMobile = function(allData, allTratamentos) {
         card.style.padding = '16px';
 
         card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div style="flex: 1;">
-                    <strong style="color: var(--text-main); font-size: 15px; display: block; line-height: 1.3;">${p.nome_completo.toUpperCase()}</strong>
-                    <div style="color: var(--text-muted); font-size: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
-                        <span>📞 ${tel}</span>
-                        ${p.endereco ? `<span>📍 ${p.endereco}</span>` : ''}
+            <div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 8px;">
+                    <strong style="color: var(--text-main); font-size: 16px; line-height: 1.3;">${p.nome_completo.toUpperCase()}</strong>
+                    <span style="color: var(--text-muted); font-size: 12px; font-weight: 500;">${p.nome_curto || ''}</span>
+                </div>
+                
+                <div style="font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;">
+                    <div>🎂 Nascimento: ${nascimentoInfo}</div>
+                    <div>📄 CPF: ${p.cpf_cnpj ? formatarCPF(p.cpf_cnpj) : 'Não informado'}</div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
+                        <span>📱 Cel.: ${p.telefone ? formatarCelular(p.telefone) : 'Não informado'}</span>
+                        ${whatsLink}
                     </div>
+                    ${p.endereco ? `<div style="margin-top: 2px;">📍 Endereço: ${p.endereco}</div>` : ''}
+                </div>
+                
+                <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; align-items: center;">
+                    <span style="color: var(--primary);">${countA} Atendimentos</span>
+                    <span style="opacity: 0.3;">|</span>
+                    <span style="color: #10b981;">${countT} Tratamentos</span>
                 </div>
             </div>
-            <div style="display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; flex-wrap: wrap;">
-                <button onclick="abrirFichaPacienteFichario('${p.paciente_id}')" class="btn" style="flex: 1; min-width: 100px; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); font-size: 12px; padding: 8px; border-radius: 8px; font-weight: 600;">📝 Ficha</button>
-                <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="flex: 1; min-width: 100px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); font-size: 12px; padding: 8px; border-radius: 8px; font-weight: 600;">📜 Histórico</button>
-                <button onclick="iniciarNovoAtendimentoFichario('${safeId}')" class="btn" style="flex: 1; min-width: 100px; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-size: 12px; padding: 8px; border-radius: 8px; font-weight: 600;">➕ Novo</button>
+
+            <div style="display: flex; gap: 8px; flex-direction: row; margin-top: auto; flex-wrap: wrap;">
+                <button onclick="abrirFichaPacienteFichario('${p.paciente_id}')" class="btn" style="flex: 1; min-width: 90px; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); font-size: 12px; padding: 10px; border-radius: 8px; font-weight: 600;">📝 Ficha</button>
+                <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="flex: 1; min-width: 90px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); font-size: 12px; padding: 10px; border-radius: 8px; font-weight: 600;">📜 Histórico</button>
+                <button onclick="iniciarNovoAtendimentoFichario('${safeId}')" class="btn" style="flex: 1; min-width: 90px; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-size: 12px; padding: 10px; border-radius: 8px; font-weight: 600;">➕ Novo</button>
             </div>
         `;
         lista.appendChild(card);
     });
 };
+
 
 window.abrirModalFicharioCompleto = async function(safeId) {
     const p = window['fichario_' + safeId];
@@ -2095,7 +2141,7 @@ window.iniciarNovoAtendimentoFichario = function(safeId) {
 };
 
 window.abrirFichaPacienteFichario = async function(pacienteId) {
-    if (!pacienteId) {
+    if (!pacienteId || pacienteId === 'null' || pacienteId === 'undefined') {
         Swal.fire({
             title: 'Erro', 
             text: 'Este paciente não possui um cadastro completo vinculado (ID de Pessoa ausente).', 
