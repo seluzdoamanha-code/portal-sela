@@ -165,6 +165,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                 
                 // Definir subAba padrão baseada na Aba Principal
                 if (abaPrincipal === 'triagem') subAba = 'fila';
+                else if (abaPrincipal === 'fichario') subAba = 'A';
                 else if (abaPrincipal === 'atendimento') subAba = 'andamento';
                 else if (abaPrincipal === 'acompanhamento') subAba = 'tratamentos';
                 else if (abaPrincipal === 'historico') subAba = 'historico_geral';
@@ -192,6 +193,18 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                 <div class="sub-tab-pill ${subAba === 'fila' ? 'active' : ''}" onclick="switchSubTab('fila')">📂 Fila Geral</div>
                 <div class="sub-tab-pill ${subAba === 'espera' ? 'active' : ''}" onclick="switchSubTab('espera')">🛋️ Sala de Espera</div>
             `;
+        } else if (abaPrincipal === 'fichario') {
+            container.style.display = 'flex';
+            let html = '';
+            if (window.ficharioLetrasAvailable && window.ficharioLetrasAvailable.size > 0) {
+                const letras = Array.from(window.ficharioLetrasAvailable).sort();
+                letras.forEach(l => {
+                    html += `<div class="sub-tab-pill ${subAba === l ? 'active' : ''}" onclick="switchSubTab('${l}')" style="min-width: 40px; text-align: center;">${l}</div>`;
+                });
+            } else {
+                html = '<div style="color: var(--text-muted); font-size: 12px; padding: 4px;">Calculando letras...</div>';
+            }
+            container.innerHTML = html;
         } else if (abaPrincipal === 'atendimento') {
             container.style.display = 'none';
         } else if (abaPrincipal === 'acompanhamento') {
@@ -325,6 +338,30 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                 filteredData = allData.filter(d => d.atendente_id && !['Atendido', 'Em Tratamento', 'Concluído'].includes(d.status));
                 renderAndamentoList(filteredData);
             } 
+            else if (abaPrincipal === 'fichario') {
+                const ficharioSet = new Set();
+                allData.forEach(d => {
+                    if (d.nome_completo) ficharioSet.add(d.nome_completo.trim().toUpperCase());
+                });
+                allTratamentos.forEach(t => {
+                    const f = t.app_atendimento_fraterno;
+                    if (f && (f.paciente?.nome_completo || f.nome_completo)) {
+                        ficharioSet.add((f.paciente?.nome_completo || f.nome_completo).trim().toUpperCase());
+                    }
+                });
+                window.ficharioLetrasAvailable = new Set();
+                ficharioSet.forEach(nome => {
+                    if (nome) window.ficharioLetrasAvailable.add(nome.charAt(0).toUpperCase());
+                });
+
+                if (!window.ficharioLetrasAvailable.has(subAba)) {
+                    const letters = Array.from(window.ficharioLetrasAvailable).sort();
+                    if (letters.length > 0) subAba = letters[0];
+                }
+                
+                renderSubTabs();
+                window.carregarFicharioMobile(allData, allTratamentos);
+            }
             else if (subAba === 'historico_geral') {
                 carregarHistoricoGeralMobile();
             } 
@@ -1674,4 +1711,503 @@ window.carregarHistoricoGeralMobile = async function () {
         lista.innerHTML = `<span style="color:#ef4444;">Erro: ${err.message || JSON.stringify(err)}</span>`;
     }
 };
+
+
+
+window.carregarFicharioMobile = function(allData, allTratamentos) {
+    const lista = document.getElementById('listaAtendimento');
+    lista.innerHTML = '';
+    
+    const allPatientsSet = new Set();
+    allData.forEach(d => {
+        const nome = (d.nome_completo || 'Sem Nome').trim().toUpperCase();
+        allPatientsSet.add(nome);
+    });
+    allTratamentos.forEach(t => {
+        const f = t.app_atendimento_fraterno;
+        if(f) allPatientsSet.add((f.paciente?.nome_completo || f.nome_completo || 'Sem Nome').trim().toUpperCase());
+    });
+    const totalGeral = allPatientsSet.size;
+    
+    const patientsMap = new Map();
+    const letter = subAba;
+    
+    allData.forEach(d => {
+        const nome = (d.nome_completo || 'Sem Nome').trim().toUpperCase();
+        const initial = nome.charAt(0);
+        if (initial === letter) {
+            if (!patientsMap.has(nome)) {
+                patientsMap.set(nome, {
+                    nome_completo: (d.nome_completo || 'Sem Nome').trim(),
+                    nome_curto: d.nome_curto || (d.nome_completo || 'Sem Nome').trim().split(' ')[0],
+                    telefone: d.telefone || '',
+                    data_nascimento: d.data_nascimento || '',
+                    endereco: d.endereco_completo || '',
+                    cpf_cnpj: d.cpf_cnpj || '',
+                    paciente_id: d.paciente_id || null,
+                    atendimentos: [],
+                    tratamentos: []
+                });
+            }
+            if(d.paciente_id && !patientsMap.get(nome).paciente_id) {
+                patientsMap.get(nome).paciente_id = d.paciente_id;
+            }
+            patientsMap.get(nome).atendimentos.push(d);
+        }
+    });
+    
+    allTratamentos.forEach(t => {
+        const f = t.app_atendimento_fraterno;
+        if (!f) return;
+        const nome = (f.paciente?.nome_completo || f.nome_completo || 'Sem Nome').trim().toUpperCase();
+        const initial = nome.charAt(0);
+        if (initial === letter) {
+            if (!patientsMap.has(nome)) {
+                patientsMap.set(nome, {
+                    nome_completo: (f.paciente?.nome_completo || f.nome_completo || 'Sem Nome').trim(),
+                    nome_curto: f.paciente?.nome_curto || (f.nome_completo || 'Sem Nome').trim().split(' ')[0],
+                    telefone: f.paciente?.celular || '',
+                    data_nascimento: f.paciente?.data_nascimento || '',
+                    endereco: f.paciente?.endereco || '',
+                    cpf_cnpj: f.paciente?.cpf_cnpj || '',
+                    paciente_id: f.paciente_id || null,
+                    atendimentos: [],
+                    tratamentos: []
+                });
+            }
+            if(f.paciente_id && !patientsMap.get(nome).paciente_id) {
+                patientsMap.get(nome).paciente_id = f.paciente_id;
+            }
+            patientsMap.get(nome).tratamentos.push(t);
+        }
+    });
+
+    const patientsArray = Array.from(patientsMap.values());
+    patientsArray.sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
+    const totalLetra = patientsArray.length;
+
+    const summaryHtml = `
+        <div style="background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%); border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; padding: 16px; margin-bottom: 16px; display: flex; gap: 16px; align-items: center; justify-content: space-between;">
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total Fichário</div>
+                <div style="font-size: 24px; font-weight: 800; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${totalGeral}</div>
+            </div>
+            <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.1);"></div>
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Letra ${letter}</div>
+                <div style="font-size: 24px; font-weight: 800; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${totalLetra}</div>
+            </div>
+        </div>
+    `;
+    
+    lista.innerHTML = summaryHtml;
+
+    if (patientsArray.length === 0) {
+        lista.innerHTML += `<div class="empty-state">Nenhum paciente encontrado com a letra ${letter}</div>`;
+        return;
+    }
+
+    patientsArray.forEach(p => {
+        const safeId = p.nome_completo.replace(/[^a-zA-Z0-9]/g, '_');
+        window['fichario_' + safeId] = p;
+
+        const tel = p.telefone ? p.telefone : 'Sem telefone';
+        const card = document.createElement('div');
+        card.className = 'card-atendimento';
+        card.style.marginBottom = '12px';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.gap = '12px';
+        card.style.padding = '16px';
+
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="flex: 1;">
+                    <strong style="color: var(--text-main); font-size: 15px; display: block; line-height: 1.3;">${p.nome_completo.toUpperCase()}</strong>
+                    <div style="color: var(--text-muted); font-size: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
+                        <span>📞 ${tel}</span>
+                        ${p.endereco ? `<span>📍 ${p.endereco}</span>` : ''}
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; flex-wrap: wrap;">
+                <button onclick="abrirFichaPacienteFichario('${p.paciente_id}')" class="btn" style="flex: 1; min-width: 100px; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); font-size: 12px; padding: 8px; border-radius: 8px; font-weight: 600;">📝 Ficha</button>
+                <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="flex: 1; min-width: 100px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); font-size: 12px; padding: 8px; border-radius: 8px; font-weight: 600;">📜 Histórico</button>
+                <button onclick="iniciarNovoAtendimentoFichario('${safeId}')" class="btn" style="flex: 1; min-width: 100px; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-size: 12px; padding: 8px; border-radius: 8px; font-weight: 600;">➕ Novo</button>
+            </div>
+        `;
+        lista.appendChild(card);
+    });
+};
+
+window.abrirModalFicharioCompleto = async function(safeId) {
+    const p = window['fichario_' + safeId];
+    if(!p) return;
+    
+    window.abrirSideSheet('Histórico Consolidado', '<div style="padding: 24px;">Carregando histórico completo do banco de dados...</div>');
+    
+    let eventos = [];
+    
+    try {
+        let query = db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(nome_completo, nome_curto), paciente:pessoas!paciente_id(nome_completo, nome_curto)');
+        if (p.paciente_id) {
+            query = query.eq('paciente_id', p.paciente_id);
+        } else {
+            query = query.ilike('nome_completo', p.nome_completo);
+        }
+        
+        const { data: atendimentos, error: errA } = await query;
+        if (errA) throw errA;
+        
+        const allAtendimentos = atendimentos || [];
+        
+        allAtendimentos.forEach(a => {
+            eventos.push({
+                tipo: 'ATENDIMENTO', 
+                data: new Date(a.created_at),
+                obj: a
+            });
+        });
+        
+        const fraternoIds = allAtendimentos.map(a => a.id);
+        
+        if (fraternoIds.length > 0) {
+            const { data: tratamentos, error: errT } = await db
+                .from('app_atendimento_tratamentos')
+                .select('*')
+                .in('atendimento_id', fraternoIds);
+                
+            if (errT) throw errT;
+            
+            const trats = tratamentos || [];
+            
+            const tratIds = trats.map(t => t.id);
+            let sessoesData = [];
+            let presencasData = [];
+            
+            if (tratIds.length > 0) {
+                const [sessReq, presReq] = await Promise.all([
+                    db.from('app_atendimento_sessoes').select('*, pessoas!atendente_id(nome_curto, nome_completo)').in('atendimento_id', fraternoIds),
+                    db.from('app_atendimento_presencas').select('*').in('tratamento_id', tratIds)
+                ]);
+                
+                if (sessReq.error) throw sessReq.error;
+                if (presReq.error) throw presReq.error;
+                
+                sessoesData = sessReq.data || [];
+                presencasData = presReq.data || [];
+            } else {
+                const { data: sessoes, error: errS } = await db
+                    .from('app_atendimento_sessoes')
+                    .select('*, pessoas!atendente_id(nome_curto, nome_completo)')
+                    .in('atendimento_id', fraternoIds);
+                if (errS) throw errS;
+                sessoesData = sessoes || [];
+            }
+            
+            trats.forEach(t => {
+                eventos.push({
+                    tipo: 'TRATAMENTO_INICIADO',
+                    data: new Date(t.created_at),
+                    obj: t
+                });
+            });
+            
+            sessoesData.forEach(s => {
+                eventos.push({
+                    tipo: 'SESSAO_EVOLUCAO',
+                    data: new Date(s.created_at),
+                    obj: s
+                });
+            });
+            
+            presencasData.forEach(pr => {
+                eventos.push({
+                    tipo: 'PRESENCA_TRATAMENTO',
+                    data: new Date(pr.created_at),
+                    obj: pr
+                });
+            });
+        }
+        
+        eventos.sort((a, b) => b.data - a.data);
+        
+        if (eventos.length === 0) {
+            document.getElementById('sideSheetContent').innerHTML = `
+                <div style="padding: 24px; text-align: center; color: var(--text-muted);">
+                    Nenhum registro histórico encontrado.
+                </div>
+            `;
+            return;
+        }
+
+        let html = '<div style="padding: 16px;">';
+        
+        html += `
+            <div style="margin-bottom: 24px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 16px; border-radius: 12px;">
+                <h3 style="margin: 0 0 8px 0; color: var(--primary); font-size: 18px;">${p.nome_completo.toUpperCase()}</h3>
+                <div style="font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;">
+                    <span>📞 ${p.telefone || 'Sem telefone'}</span>
+                    ${p.endereco ? `<span>📍 ${p.endereco}</span>` : ''}
+                    <span>🎂 Nascimento: ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') : 'Não informado'}</span>
+                </div>
+            </div>
+        `;
+        
+        html += '<div style="position: relative; padding-left: 20px; border-left: 2px solid rgba(255,255,255,0.1);">';
+        
+        eventos.forEach((ev, index) => {
+            let icon = '';
+            let color = '';
+            let title = '';
+            let content = '';
+            
+            const localDate = ev.data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            
+            if (ev.tipo === 'ATENDIMENTO') {
+                icon = '🤝'; color = '#f59e0b'; title = 'Triagem / Atend. Fraterno';
+                content = `
+                    <div style="margin-top: 8px;">
+                        <strong>Status:</strong> ${ev.obj.status} <br>
+                        <strong>Motivo:</strong> ${ev.obj.motivo || '-'} <br>
+                        <strong>Atendente:</strong> ${ev.obj.pessoas?.nome_curto || ev.obj.pessoas?.nome_completo || 'Desconhecido'}
+                    </div>
+                `;
+            } 
+            else if (ev.tipo === 'TRATAMENTO_INICIADO') {
+                icon = ev.obj.tipo === 'Fluídico' ? '💧' : '✨';
+                color = ev.obj.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
+                title = `Início de Tratamento ${ev.obj.tipo}`;
+                content = `
+                    <div style="margin-top: 8px;">
+                        <strong>Status Atual:</strong> ${ev.obj.status} <br>
+                        <strong>Data Fim:</strong> ${ev.obj.data_fim ? new Date(ev.obj.data_fim).toLocaleDateString('pt-BR') : '-'}
+                    </div>
+                `;
+            }
+            else if (ev.tipo === 'SESSAO_EVOLUCAO') {
+                icon = '📝'; color = '#10b981'; title = 'Sessão / Evolução';
+                content = `
+                    <div style="margin-top: 8px;">
+                        <strong>Sintomas:</strong> ${ev.obj.sintomas_orientacoes} <br>
+                        <strong>Atendente:</strong> ${ev.obj.pessoas?.nome_curto || ev.obj.pessoas?.nome_completo || 'Desconhecido'} <br>
+                        ${ev.obj.apenas_conversa ? '<span style="font-size: 11px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block;">Apenas Conversa</span>' : ''}
+                    </div>
+                `;
+            }
+            else if (ev.tipo === 'PRESENCA_TRATAMENTO') {
+                icon = '🟢'; color = '#10b981'; title = 'Presença Registrada';
+                content = `
+                    <div style="margin-top: 8px;">
+                        <strong>Data:</strong> ${new Date(ev.obj.data).toLocaleDateString('pt-BR')} <br>
+                        <strong>Obs:</strong> ${ev.obj.observacoes || '-'}
+                    </div>
+                `;
+            }
+
+            html += `
+                <div style="position: relative; margin-bottom: 24px;">
+                    <div style="position: absolute; left: -32px; top: 0; width: 24px; height: 24px; border-radius: 50%; background: ${color}; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid var(--bg-panel);">
+                        ${icon}
+                    </div>
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                            <strong style="color: ${color}; font-size: 13px;">${title}</strong>
+                            <span style="font-size: 11px; color: var(--text-muted);">${localDate}</span>
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-main); line-height: 1.5;">
+                            ${content}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div></div>';
+        
+        document.getElementById('sideSheetContent').innerHTML = html;
+
+    } catch (e) {
+        document.getElementById('sideSheetContent').innerHTML = `
+            <div style="padding: 24px; color: #ef4444; text-align: center;">
+                Erro ao carregar histórico: ${e.message}
+            </div>
+        `;
+    }
+};
+
+window.iniciarNovoAtendimentoFichario = function(safeId) {
+    const p = window['fichario_' + safeId];
+    if(!p) return;
+
+    Swal.fire({
+        title: 'Nova Triagem',
+        html: `Deseja inserir o paciente <strong>${p.nome_completo}</strong> na fila de Triagem (Atendimento Fraterno)?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--primary)',
+        cancelButtonColor: 'rgba(255,255,255,0.1)',
+        confirmButtonText: 'Sim, iniciar nova Triagem',
+        cancelButtonText: 'Cancelar',
+        background: 'var(--bg-panel)',
+        color: 'var(--text-main)'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                let payload = {};
+                if (p.paciente_id) {
+                    payload = { paciente_id: p.paciente_id, status: 'Planejado' };
+                } else {
+                    payload = { 
+                        nome_completo: p.nome_completo,
+                        telefone: p.telefone,
+                        data_nascimento: p.data_nascimento,
+                        endereco_completo: p.endereco,
+                        cpf_cnpj: p.cpf_cnpj,
+                        status: 'Planejado'
+                    };
+                }
+
+                const { error } = await db.from('app_atendimento_fraterno').insert([payload]);
+                if (error) throw error;
+                
+                Swal.fire({
+                    title: 'Sucesso',
+                    text: 'Paciente inserido na fila de Triagem.',
+                    icon: 'success',
+                    background: 'var(--bg-panel)',
+                    color: 'var(--text-main)'
+                }).then(() => {
+                    abaPrincipal = 'triagem';
+                    subAba = 'fila';
+                    document.querySelectorAll('.m-tab').forEach(t => {
+                        if (t.dataset.main === 'triagem') t.classList.add('active');
+                        else t.classList.remove('active');
+                    });
+                    if (typeof renderSubTabs === 'function') renderSubTabs();
+                    if (typeof carregarLista === 'function') carregarLista();
+                });
+            } catch (e) {
+                Swal.fire('Erro', e.message, 'error');
+            }
+        }
+    });
+};
+
+window.abrirFichaPacienteFichario = async function(pacienteId) {
+    if (!pacienteId) {
+        Swal.fire({
+            title: 'Erro', 
+            text: 'Este paciente não possui um cadastro completo vinculado (ID de Pessoa ausente).', 
+            icon: 'error',
+            background: 'var(--bg-panel)',
+            color: 'var(--text-main)'
+        });
+        return;
+    }
+    
+    window.abrirSideSheet('Ficha do Paciente', '<div style="padding: 24px; text-align: center;">Carregando dados cadastrais...</div>');
+    
+    try {
+        const { data: p, error } = await db.from('pessoas').select('*').eq('id', pacienteId).single();
+        if (error) throw error;
+        
+        const docFormatado = p.cpf_cnpj ? formatarCPF(p.cpf_cnpj) : '-';
+        let celularHtml = '-';
+        if (p.celular) {
+            const num = p.celular.replace(/\D/g, '');
+            celularHtml = `
+                <a href="https://wa.me/55${num}" target="_blank" style="color: #25D366; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    ${formatarCelular(p.celular)}
+                </a>
+            `;
+        }
+        
+        let nascHtml = '-';
+        if (p.data_nascimento) {
+            const partes = p.data_nascimento.split('-');
+            const age = typeof calcularIdade === 'function' ? calcularIdade(p.data_nascimento) : '?';
+            nascHtml = `${partes.reverse().join('/')} (${age} anos)`;
+        }
+
+        const endPartes = [];
+        if (p.endereco) endPartes.push(p.endereco);
+        if (p.bairro) endPartes.push(p.bairro);
+        let cidEst = [];
+        if (p.cidade) cidEst.push(p.cidade);
+        if (p.estado) cidEst.push(p.estado);
+        if (cidEst.length > 0) endPartes.push(cidEst.join('/'));
+        const endFull = endPartes.length > 0 ? endPartes.join(', ') : '-';
+
+        let avatarHtml = '';
+        if (p.foto_url) {
+            avatarHtml = `<img src="${p.foto_url}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 30px; display: block;">`;
+        } else {
+            const partes = (p.nome_completo || ' ').trim().split(' ');
+            let iniciais = partes[0].charAt(0);
+            if (partes.length > 1) {
+                iniciais += partes[partes.length - 1].charAt(0);
+            }
+            const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4'];
+            const colorIndex = (p.nome_completo || '').length % colors.length;
+            avatarHtml = `<div style="width: 60px; height: 60px; border-radius: 30px; background: ${colors[colorIndex]}; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white;">${iniciais.toUpperCase()}</div>`;
+        }
+
+        const html = `
+            <div style="padding: 16px; color: var(--text-main);">
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+                    ${avatarHtml}
+                    <div>
+                        <h2 style="margin: 0; font-size: 18px;">${p.nome_completo || 'Sem Nome'}</h2>
+                        <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">${p.nome_curto || ''}</div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+                    <h4 style="margin-top: 0; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Dados de Contato</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">Celular</span>
+                            <strong style="font-size: 13px;">${celularHtml}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">E-mail</span>
+                            <strong style="font-size: 13px;">${p.email || '-'}</strong>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">Endereço</span>
+                            <strong style="font-size: 13px; line-height: 1.4;">${endFull}</strong>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 0; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Dados Pessoais</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">CPF</span>
+                            <strong style="font-size: 13px;">${docFormatado}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-muted); font-size: 13px;">Nascimento</span>
+                            <strong style="font-size: 13px;">${nascHtml}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('sideSheetContent').innerHTML = html;
+        
+    } catch (e) {
+        document.getElementById('sideSheetContent').innerHTML = `
+            <div style="padding: 24px; color: #ef4444; text-align: center;">
+                Erro ao carregar dados: ${e.message}
+            </div>
+        `;
+    }
+};
+
+
 })();
