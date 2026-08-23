@@ -160,9 +160,11 @@ body {
     align-items: center;
 }
 
+.sidebar.collapsed .sidebar-footer { padding: 16px 0 !important; } 
+
 .sidebar.collapsed #userProfileArea {
     background: transparent !important;
-    padding: 16px 0 !important;
+    margin-top: 0 !important; padding: 0 !important;
 }
 
 .sidebar.collapsed .logo-area {
