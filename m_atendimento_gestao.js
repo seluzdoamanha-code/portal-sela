@@ -1382,7 +1382,6 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             }
         });
     };
-})();
 
     window.mudarStatusTratamentoMobile = async function(id, novoStatus) {
         const res = await Swal.fire({
@@ -1675,3 +1674,4 @@ window.carregarHistoricoGeralMobile = async function () {
         lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar histórico geral.</span>';
     }
 };
+})();
