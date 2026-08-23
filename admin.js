@@ -207,7 +207,7 @@ async function carregarDashboardsPessoas() {
             "Assistida + Assistido", "Associado Efetivo", "Associado Proponente", 
             "Atendente Fraterno", "Colaborador + Colaboradora", "Conselheira + Conselheiro", 
             "Coordenador + Coordenadora", "Diretor + Diretora", "Empresa Parceira", "Estudante", 
-            "Evangelizador + Evangelizadora", "Evangelizanda + Evangelizando", "Ex-Associado + Fornecedor", 
+            "Evangelizador + Evangelizadora", "Evangelizanda + Evangelizando", "Ex-Associado", "Fornecedor",
             "Gestante", "Leitor", "Líder", "Membro da Família", "Paciente", "Paciente Externo", 
             "Palestrante", "Parceiro", "Passista", "Presidente + Presidenta", "Secretário + Secretária", 
             "Tarefeira + Tarefeiro", "Tesoureira + Tesoureiro", "Vice-Diretor + Vice-Diretora", 
@@ -219,7 +219,7 @@ async function carregarDashboardsPessoas() {
 
         // DADOS
         let dadosCounts = {
-            'Com CPF real': 0, 'Com CPF provisório': 0, 'Sem CPF': 0,
+            'Com CPF': 0, 'Com CPF provisório': 0,
             'Com celular': 0, 'Sem celular': 0,
             'Com data Nascimento': 0, 'Sem data Nascimento': 0,
             'Com E-mail': 0, 'Sem E-mail': 0,
@@ -254,10 +254,8 @@ async function carregarDashboardsPessoas() {
             });
 
             // Conta completude de dados
-            const hasCpf = p.cpf_cnpj && p.cpf_cnpj.trim() !== '';
-            if (!hasCpf) dadosCounts['Sem CPF']++;
-            else if (p.cpf_cnpj.includes('TEMP') || p.cpf_cnpj.includes('PROV')) dadosCounts['Com CPF provisório']++;
-            else dadosCounts['Com CPF real']++;
+            if (p.cpf_provisorio === true) dadosCounts['Com CPF provisório']++;
+            else if (p.cpf_cnpj && p.cpf_cnpj.trim() !== '') dadosCounts['Com CPF']++;
 
             if (p.celular && p.celular.trim() !== '') dadosCounts['Com celular']++; else dadosCounts['Sem celular']++;
             if (p.data_nascimento && p.data_nascimento.trim() !== '') dadosCounts['Com data Nascimento']++; else dadosCounts['Sem data Nascimento']++;
