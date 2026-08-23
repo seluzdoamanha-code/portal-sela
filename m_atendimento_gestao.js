@@ -1556,7 +1556,7 @@ window.carregarHistoricoGeralMobile = async function () {
                 id: t.id,
                 nome: nome,
                 status: t.status, // Concluído | Suspenso
-                fraterno_id: t.fraterno_id,
+                fraterno_id: t.atendimento_id,
                 telefone: t.app_atendimento_fraterno?.paciente?.celular,
                 data_inicio: t.data_inicio
             });
