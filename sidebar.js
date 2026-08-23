@@ -36,11 +36,9 @@
                     </div>
                     
                     ${window.isAdminGlobal && window.isAdminGlobal() ? `
-                <a href="admin.html" class="bottom-nav-item ${currentPage === 'admin.html' ? 'active' : ''}">
-                    <span class="bottom-nav-icon">🛠️</span>
-                    <span class="bottom-nav-text">Admin</span>
-                </a>
-                ` : ''}
+                    <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 8px 16px;" class="desktop-only"></div>
+                    <a href="admin.html" class="nav-item ${currentPage === 'admin.html' ? 'active' : ''}" title="Administração Global">🛠️ <span class="nav-text">Admin Global</span></a>
+                    ` : ''}
                     ${window.isAdmin && window.isAdmin() ? `
                     <a href="config.html" class="nav-item ${currentPage === 'config.html' ? 'active' : ''}" title="Configurações">⚙️ <span class="nav-text">Configurações</span></a>
                     ` : ''}
@@ -90,14 +88,10 @@
                 ${window.isAdminGlobal && window.isAdminGlobal() ? `
                 <a href="admin.html" class="bottom-nav-item ${currentPage === 'admin.html' ? 'active' : ''}">
                     <span class="bottom-nav-icon">🛠️</span>
-                    <span class="bottom-nav-text">Admin</span>
+                    <span class="bottom-nav-text">Admin Global</span>
                 </a>
                 ` : ''}
-                    ${window.isAdmin && window.isAdmin() ? `
-                <a href="admin.html" class="bottom-nav-item ${currentPage === 'admin.html' ? 'active' : ''}">
-                    <span class="bottom-nav-icon">🛠️</span>
-                    <span class="bottom-nav-text">Admin</span>
-                </a>
+                ${window.isAdmin && window.isAdmin() ? `
                 <a href="config.html" class="bottom-nav-item ${currentPage === 'config.html' ? 'active' : ''}">
                     <span class="bottom-nav-icon">⚙️</span>
                     <span class="bottom-nav-text">Config.</span>
