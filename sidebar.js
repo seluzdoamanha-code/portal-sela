@@ -24,7 +24,7 @@
                     </div>
                     <button id="toggleSidebarBtn" class="toggle-sidebar-btn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; padding: 4px;">◀</button>
                 </div>
-                <nav class="main-nav" id="sidebarNav" style="flex: 1;">
+                <nav class="main-nav custom-scrollbar" id="sidebarNav" style="flex: 1; overflow-y: auto;">
                     <a href="index.html" class="nav-item ${currentPage === 'index.html' ? 'active' : ''}" title="Início / Mural">🏠 <span class="nav-text">Início / Mural</span></a>
                     <a href="atividades.html" class="nav-item ${currentPage === 'atividades.html' || currentPage === 'hub.html' ? 'active' : ''}" title="Atividades">📅 <span class="nav-text">Atividades</span></a>
                     <a href="pessoas.html" class="nav-item ${currentPage === 'pessoas.html' || currentPage === 'perfil.html' ? 'active' : ''}" title="Pessoas & Perfis">👥 <span class="nav-text">Pessoas & Perfis</span></a>
