@@ -1979,7 +1979,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
         eventos.sort((a, b) => b.data - a.data);
         
         if (eventos.length === 0) {
-            document.getElementById('sideSheetContent').innerHTML = `
+            document.getElementById('globalSideSheetContent').innerHTML = `
                 <div style="padding: 24px; text-align: center; color: var(--text-muted);">
                     Nenhum registro histórico encontrado.
                 </div>
@@ -2071,10 +2071,10 @@ window.abrirModalFicharioCompleto = async function(safeId) {
         
         html += '</div></div>';
         
-        document.getElementById('sideSheetContent').innerHTML = html;
+        document.getElementById('globalSideSheetContent').innerHTML = html;
 
     } catch (e) {
-        document.getElementById('sideSheetContent').innerHTML = `
+        document.getElementById('globalSideSheetContent').innerHTML = `
             <div style="padding: 24px; color: #ef4444; text-align: center;">
                 Erro ao carregar histórico: ${e.message}
             </div>
@@ -2244,10 +2244,10 @@ window.abrirFichaPacienteFichario = async function(pacienteId) {
             </div>
         `;
         
-        document.getElementById('sideSheetContent').innerHTML = html;
+        document.getElementById('globalSideSheetContent').innerHTML = html;
         
     } catch (e) {
-        document.getElementById('sideSheetContent').innerHTML = `
+        document.getElementById('globalSideSheetContent').innerHTML = `
             <div style="padding: 24px; color: #ef4444; text-align: center;">
                 Erro ao carregar dados: ${e.message}
             </div>
