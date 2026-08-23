@@ -1594,7 +1594,7 @@ window.carregarHistoricoGeralMobile = async function () {
             let anoHtml = `
                 <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 8px;">
                     <div onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'" style="padding: 16px; background: rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <strong style="color: var(--text-main); font-size: 16px;">📂 Ano ${ano}</strong>
+                        <strong style="color: var(--text-main); font-size: 16px;">📂 Ano ${ano} <span style="font-size: 12px; opacity: 0.7; font-weight: normal; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 12px;">(${Object.values(grupos[ano]).flat().length})</span></strong>
                         <span style="color: var(--text-muted); font-size: 12px;">Expandir/Recolher</span>
                     </div>
                     <div style="display: none; padding: 16px;">
@@ -1634,19 +1634,17 @@ window.carregarHistoricoGeralMobile = async function () {
                     const dtDisplay = new Date(r.data).toLocaleDateString('pt-BR');
 
                     anoHtml += `
-                        <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                    <span style="font-size: 10px; font-weight: bold; background: ${badgeConfig.color}; color: white; padding: 2px 6px; border-radius: 4px;">${badgeConfig.text}</span>
-                                    <strong style="color: var(--text-main); font-size: 14px;">${r.nome.toUpperCase()}</strong>
-                                </div>
-                                <div style="font-size: 12px; color: var(--text-muted); display: flex; gap: 12px; align-items: center;">
-                                    <span>📅 ${dtDisplay}</span>
-                                    <span style="opacity: 0.3">|</span>
-                                    <span>${descHtml}</span>
-                                </div>
+                        <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 2px;">
+                                <span style="font-size: 10px; font-weight: bold; background: ${badgeConfig.color}; color: white; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">${badgeConfig.text}</span>
+                                <strong style="color: var(--text-main); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${r.nome.toUpperCase()}</strong>
                             </div>
-                            <button onclick="abrirFichaAtendimento('${r.fraterno_id}')" class="btn" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border); padding: 6px 12px; font-size: 12px; border-radius: 6px;">📝 Ficha</button>
+                            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                                <span>📅 ${dtDisplay}</span> &mdash; <span>${descHtml}</span>
+                            </div>
+                            <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; display: flex; justify-content: flex-end;">
+                                <button onclick="abrirFichaAtendimento('${r.fraterno_id}')" class="btn" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border); padding: 6px 12px; font-size: 12px; border-radius: 6px; font-weight: 600;">📝 Ficha</button>
+                            </div>
                         </div>
                     `;
                 });
