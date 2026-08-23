@@ -1631,7 +1631,7 @@ window.carregarHistoricoGeralMobile = async function () {
             let anoHtml = `
                 <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 8px;">
                     <div onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'" style="padding: 16px; background: rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <strong style="color: var(--text-main); font-size: 16px;">📂 Ano ${ano} <span style="font-size: 12px; opacity: 0.7; font-weight: normal; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 12px;">(${Object.values(grupos[ano]).flat().length})</span></strong>
+                        <strong style="color: var(--text-main); font-size: 16px;">📂 Ano ${ano} <span style="font-size: 12px; opacity: 0.7; font-weight: normal; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 12px;">(${Object.values(grupos[ano]).flat().length} registros)</span></strong>
                         <span style="color: var(--text-muted); font-size: 12px;">Expandir/Recolher</span>
                     </div>
                     <div style="display: none; padding: 16px;">
@@ -1644,8 +1644,11 @@ window.carregarHistoricoGeralMobile = async function () {
                 const registros = grupos[ano][mes];
                 anoHtml += `
                     <div style="margin-bottom: 16px; margin-left: 16px; border-left: 2px solid var(--border); padding-left: 16px;">
-                        <h4 style="color: var(--primary); font-size: 15px; margin-bottom: 12px; margin-top: 0; display: flex; align-items: center; gap: 8px;">
-                            📂 ${mes} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 12px;">${registros.length} registros</span>
+                        <h4 onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'flex' : 'none'" style="color: var(--primary); font-size: 15px; margin-bottom: 12px; margin-top: 0; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                📂 ${mes} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 12px;">${registros.length} registros</span>
+                            </div>
+                            <span style="color: var(--text-muted); font-size: 12px; font-weight: normal; opacity: 0.5;">▼</span>
                         </h4>
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                 `;
