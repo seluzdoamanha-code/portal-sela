@@ -78,7 +78,7 @@
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="auth_guard.js"></script>
+    <script src="auth_guard.js?v=4"></script>
     <link rel="icon" type="image/png" href="logo_sela.png">
 </head>
 <body>
@@ -107,6 +107,7 @@
                     <div class="admin-tabs" id="adminTabs">
                         <div class="admin-tab active" onclick="switchTab('home')">🏠 Home</div>
                         <div class="admin-tab" onclick="switchTab('associados')">🤝 Associados</div>
+                        <div class="admin-tab" onclick="switchTab('celular')">📱 Celular</div>
                         <div class="admin-tab" onclick="switchTab('mensalidades')">💳 Mensalidades</div>
                         <div class="admin-tab" onclick="switchTab('departamentos')">🏢 Departamentos</div>
                         <div class="admin-tab" onclick="switchTab('atividades')">🗓️ Atividades</div>
@@ -118,6 +119,64 @@
                 </div>
 
                 <!-- Conteúdos das Abas -->
+
+                <div id="tab-celular" class="tab-content">
+                    <div style="display: flex; flex-direction: column; gap: 24px;">
+                        
+                        <!-- Card do Celular -->
+                        <div style="background: linear-gradient(135deg, rgba(34,197,94,0.1) 0%, rgba(16,185,129,0.1) 100%); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 24px; display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <h3 style="color: #22c55e; margin: 0 0 4px 0; font-size: 20px;">📱 (47) 99211-3498</h3>
+                                <span style="color: var(--text-muted); font-size: 14px;">Plano Vivo - Créditos e Validade</span>
+                            </div>
+                            <div id="celularStatusAlert" style="display: none; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.4); padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                                🚨 Vencimento Próximo!
+                            </div>
+                        </div>
+
+                        <!-- Form para Novo Registro -->
+                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                            <h4 style="margin: 0 0 16px 0; color: var(--text-main);">➕ Registrar Nova Recarga</h4>
+                            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Data da Recarga</label>
+                                    <input type="date" id="celularData" class="form-control" style="width: 100%;">
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Prazo (Dias)</label>
+                                    <input type="number" id="celularPrazo" class="form-control" value="180" style="width: 100%;">
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Valor (R$)</label>
+                                    <input type="number" step="0.01" id="celularValor" class="form-control" placeholder="0.00" style="width: 100%;">
+                                </div>
+                                <div style="display: flex; align-items: flex-end;">
+                                    <button onclick="salvarRecargaCelular()" class="btn btn-primary" style="height: 38px; padding: 0 24px;">Salvar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabela de Histórico -->
+                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                                <thead>
+                                    <tr style="background: rgba(255,255,255,0.05); text-align: left; border-bottom: 1px solid var(--border);">
+                                        <th style="padding: 12px 16px; color: var(--text-muted); font-weight: 500;">Data Adicionado</th>
+                                        <th style="padding: 12px 16px; color: var(--text-muted); font-weight: 500;">Prazo</th>
+                                        <th style="padding: 12px 16px; color: var(--text-muted); font-weight: 500;">Valor (R$)</th>
+                                        <th style="padding: 12px 16px; color: var(--text-muted); font-weight: 500;">Vencimento Previsto</th>
+                                        <th style="padding: 12px 16px; color: var(--text-muted); font-weight: 500;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaCelularHistorico">
+                                    <!-- Injetado via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+
                 <div id="tab-home" class="tab-content active">
                     <div class="placeholder-card">
                         <h3 style="color: var(--text-main); margin-bottom: 8px;">Visão Geral do Sistema</h3>
@@ -126,10 +185,27 @@
                 </div>
 
                 <div id="tab-associados" class="tab-content">
-                    <div class="placeholder-card">
-                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Gestão de Associados</h3>
-                        <p>Aguardando detalhamento de conteúdo e formatação.</p>
+                    <h3 style="color: var(--text-main); margin-bottom: 16px;">🤝 Dashboard de Associados</h3>
+
+                    <div class="admin-subtabs" style="display: flex; gap: 8px; margin-bottom: 24px;">
+                        <button onclick="switchSubTab('associados', 'perfil')" class="btn btn-associados-perfil active" style="flex: 1; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px;">Cards Perfil</button>
+                        <button onclick="switchSubTab('associados', 'dados')" class="btn btn-associados-dados" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Cards Dados</button>
                     </div>
+
+                    <!-- Cards Perfil -->
+                    <div id="subtab-associados-perfil" class="subtab-content associados-subtab active" style="display: block;">
+                        <div id="dash-associados-perfil-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+                            <div style="grid-column: 1 / -1; color: var(--text-muted); text-align: center;">Carregando métricas...</div>
+                        </div>
+                    </div>
+
+                    <!-- Cards Dados -->
+                    <div id="subtab-associados-dados" class="subtab-content associados-subtab" style="display: none;">
+                        <div id="dash-associados-dados-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+                            <div style="grid-column: 1 / -1; color: var(--text-muted); text-align: center;">Carregando métricas...</div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div id="tab-mensalidades" class="tab-content">
@@ -154,10 +230,27 @@
                 </div>
 
                 <div id="tab-pessoas" class="tab-content">
-                    <div class="placeholder-card">
-                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Base Global de Pessoas</h3>
-                        <p>Aguardando detalhamento de conteúdo e formatação.</p>
+                    <h3 style="color: var(--text-main); margin-bottom: 16px;">👥 Dashboard Global de Pessoas</h3>
+
+                    <div class="admin-subtabs" style="display: flex; gap: 8px; margin-bottom: 24px;">
+                        <button onclick="switchSubTab('pessoas', 'perfil')" class="btn btn-pessoas-perfil active" style="flex: 1; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px;">Cards Perfil</button>
+                        <button onclick="switchSubTab('pessoas', 'dados')" class="btn btn-pessoas-dados" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Cards Dados</button>
                     </div>
+
+                    <!-- Cards Perfil -->
+                    <div id="subtab-pessoas-perfil" class="subtab-content pessoas-subtab active" style="display: block;">
+                        <div id="dash-pessoas-perfil-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+                            <div style="grid-column: 1 / -1; color: var(--text-muted); text-align: center;">Carregando métricas...</div>
+                        </div>
+                    </div>
+
+                    <!-- Cards Dados -->
+                    <div id="subtab-pessoas-dados" class="subtab-content pessoas-subtab" style="display: none;">
+                        <div id="dash-pessoas-dados-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+                            <div style="grid-column: 1 / -1; color: var(--text-muted); text-align: center;">Carregando métricas...</div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div id="tab-legais" class="tab-content">
@@ -185,7 +278,7 @@
         </main>
     </div>
 
-    <script src="admin.js"></script>
-    <script src="sidebar.js?v=3"></script>
+    <script src="admin.js?v=4"></script>
+    <script src="sidebar.js?v=4"></script>
 </body>
 </html>

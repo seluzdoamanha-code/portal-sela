@@ -91,13 +91,20 @@ async function checkAuth() {
     };
     localStorage.setItem('sela_user_profile', JSON.stringify(userProfile));
 
+    
     // Bloquear acesso a páginas de configurações para não-admins
-    if (filename === 'config.html' && userProfile.nivel_acesso !== 'admin') {
+    if (filename === 'config.html' && userProfile.nivel_acesso !== 'admin' && userProfile.nivel_acesso !== 'admin_global') {
         alert("Acesso restrito: Apenas administradores podem acessar as configurações.");
         window.location.replace('index.html');
         return;
     }
-    if (filename === 'm_config.html' && userProfile.nivel_acesso !== 'admin') {
+    if (filename === 'admin.html' && userProfile.nivel_acesso !== 'admin_global') {
+        alert("Acesso restrito: Apenas administradores globais podem acessar a Administração Global.");
+        window.location.replace('index.html');
+        return;
+    }
+
+    if (filename === 'm_config.html' && userProfile.nivel_acesso !== 'admin' && userProfile.nivel_acesso !== 'admin_global') {
         alert("Acesso restrito: Apenas administradores podem acessar as configurações.");
         window.location.replace('m_index.html');
         return;
@@ -113,7 +120,7 @@ window.isAdmin = function() {
         const profStr = localStorage.getItem('sela_user_profile');
         if (!profStr) return false;
         const prof = JSON.parse(profStr);
-        return prof.nivel_acesso === 'admin';
+        return prof.nivel_acesso === 'admin' || prof.nivel_acesso === 'admin_global';
     } catch(e) {
         return false;
     }
@@ -124,7 +131,7 @@ window.podeEditarPessoas = function() {
         const profStr = localStorage.getItem('sela_user_profile');
         if (!profStr) return false;
         const prof = JSON.parse(profStr);
-        return (prof.nivel_acesso === 'admin' || prof.nivel_acesso === 'secretaria');
+        return (prof.nivel_acesso === 'admin' || prof.nivel_acesso === 'admin_global' || prof.nivel_acesso === 'secretaria');
     } catch(e) {
         return false;
     }
@@ -136,7 +143,19 @@ window.podeEditarAssistidas = function() {
         if (!profStr) return false;
         const prof = JSON.parse(profStr);
         // Permite admin, secretaria e se precisarem adicionar grupo assistencia depois
-        return (prof.nivel_acesso === 'admin' || prof.nivel_acesso === 'secretaria' || prof.nivel_acesso === 'assistencia');
+        return (prof.nivel_acesso === 'admin' || prof.nivel_acesso === 'admin_global' || prof.nivel_acesso === 'secretaria' || prof.nivel_acesso === 'assistencia');
+    } catch(e) {
+        return false;
+    }
+};
+
+
+window.isAdminGlobal = function() {
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (!profStr) return false;
+        const prof = JSON.parse(profStr);
+        return prof.nivel_acesso === 'admin_global';
     } catch(e) {
         return false;
     }

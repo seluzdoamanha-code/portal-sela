@@ -35,9 +35,11 @@
                         <div style="padding: 16px; color: var(--text-muted); font-size: 12px; text-align: center;">Carregando Atalhos...</div>
                     </div>
                     
-                    ${window.isAdmin && window.isAdmin() ? `
+                    ${window.isAdminGlobal && window.isAdminGlobal() ? `
                     <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 8px 16px;" class="desktop-only"></div>
-                    <a href="admin.html" class="nav-item ${currentPage === 'admin.html' ? 'active' : ''}" title="Administração">🛠️ <span class="nav-text">Administração</span></a>
+                    <a href="admin.html" class="nav-item ${currentPage === 'admin.html' ? 'active' : ''}" title="Administração Global">🛠️ <span class="nav-text">Admin Global</span></a>
+                    ` : ''}
+                    ${window.isAdmin && window.isAdmin() ? `
                     <a href="config.html" class="nav-item ${currentPage === 'config.html' ? 'active' : ''}" title="Configurações">⚙️ <span class="nav-text">Configurações</span></a>
                     ` : ''}
                 </nav>
@@ -83,7 +85,11 @@
                     <span class="bottom-nav-icon">👥</span>
                     <span class="bottom-nav-text">Pessoas</span>
                 </a>
-                ${window.isAdmin && window.isAdmin() ? `
+                ${window.isAdminGlobal && window.isAdminGlobal() ? `
+                    <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 8px 16px;" class="desktop-only"></div>
+                    <a href="admin.html" class="nav-item ${currentPage === 'admin.html' ? 'active' : ''}" title="Administração Global">🛠️ <span class="nav-text">Admin Global</span></a>
+                    ` : ''}
+                    ${window.isAdmin && window.isAdmin() ? `
                 <a href="admin.html" class="bottom-nav-item ${currentPage === 'admin.html' ? 'active' : ''}">
                     <span class="bottom-nav-icon">🛠️</span>
                     <span class="bottom-nav-text">Admin</span>
