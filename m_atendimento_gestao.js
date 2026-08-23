@@ -1514,7 +1514,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
         }
     };
 window.carregarHistoricoGeralMobile = async function () {
-    const lista = document.getElementById('listaAten');
+    const lista = document.getElementById('listaAtendimento');
     if (!lista) return;
 
     lista.innerHTML = '<div style="color: var(--text-muted); font-size: 14px; padding: 24px; text-align: center;">Carregando histórico geral...</div>';
