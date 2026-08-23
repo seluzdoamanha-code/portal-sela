@@ -893,12 +893,15 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                         );
 
                     const btnConfirm = attendedToday
-                        ? `<button disabled style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed var(--border); border-radius: 6px; flex: 1;">Já Realizado Hoje</button>`
-                        : `<button onclick="confirmarSessaoTratamentoMobile('${t.id}', '${t.tipo}')" style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: ${badgeColor}; color: white; border: none; border-radius: 6px; flex: 1;">Confirmar Atendimento</button>`;
+                        ? `<button disabled style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed var(--border); border-radius: 4px; flex: 1;">Já Realizado Hoje</button>`
+                        : `<button onclick="confirmarSessaoTratamentoMobile('${t.id}', '${t.tipo}')" style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: ${badgeColor}; color: white; border: none; border-radius: 4px; flex: 1;">Confirmar Atendimento</button>`;
 
                     const btnDesfazer = (!attendedToday && t.presente) 
-                        ? `<button onclick="marcarTratamentoPresenteMobile('${t.id}', false)" style="padding: 6px 10px; font-size: 11px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px;">Desfazer Presente</button>`
+                        ? `<button onclick="marcarTratamentoPresenteMobile('${t.id}', false)" style="padding: 6px 10px; font-size: 11px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px;">Desfazer Presente</button>`
                         : ``;
+
+                    const btnConcluir = `<button onclick="mudarStatusTratamentoMobile('${t.id}', 'Concluído')" style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: #10b981; color: white; border: none; border-radius: 4px; flex: 1;">Concluir</button>`;
+                    const btnSuspender = `<button onclick="mudarStatusTratamentoMobile('${t.id}', 'Suspenso')" style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; flex: 1;">Suspender</button>`;
 
                     tratsHTML += `
                         <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
@@ -910,6 +913,10 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                             <div style="display: flex; gap: 8px; width: 100%;">
                                 ${btnConfirm}
                                 ${btnDesfazer}
+                            </div>
+                            <div style="display: flex; gap: 8px; width: 100%;">
+                                ${btnConcluir}
+                                ${btnSuspender}
                             </div>
                         </div>
                     `;
@@ -923,6 +930,12 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                     <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 4px;">
                         ${tratsHTML}
                     </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
+                        <button onclick="toggleEvolucaoInlineMobile('${grupo.info.id}')" style="padding: 6px 12px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; gap: 6px;">
+                            📝 Evolução & Prontuário
+                        </button>
+                    </div>
+                    <div id="panel_evolucao_mobile_${grupo.info.id}" style="display: none; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;"></div>
                 `;
                 container.appendChild(card);
             });
@@ -1370,3 +1383,77 @@ function obterDataPrecisa(dataStr, createdAtStr) {
         });
     };
 })();
+
+    window.mudarStatusTratamentoMobile = async function(id, novoStatus) {
+        const res = await Swal.fire({
+            title: novoStatus === 'Concluído' ? 'Concluir Tratamento?' : 'Suspender Tratamento?',
+            text: novoStatus === 'Concluído' ? 'Deseja encerrar este tratamento com sucesso?' : 'Deseja suspender temporariamente este tratamento?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: novoStatus === 'Concluído' ? '#10b981' : '#ef4444',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Sim',
+            background: 'var(--bg-panel)',
+            color: 'var(--text-main)'
+        });
+        if (!res.isConfirmed) return;
+
+        try {
+            const { error } = await db.from('app_atendimento_tratamentos').update({ status: novoStatus, presente: false }).eq('id', id);
+            if (error) throw error;
+            carregarTratamentosAtivos();
+        } catch (e) {
+            Swal.fire('Erro', e.message, 'error');
+        }
+    };
+
+    window.toggleEvolucaoInlineMobile = async function(id) {
+        const panel = document.getElementById('panel_evolucao_mobile_' + id);
+        if (!panel) return;
+
+        if (panel.style.display === 'block') {
+            panel.style.display = 'none';
+            return;
+        }
+
+        panel.style.display = 'block';
+        panel.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; padding: 8px;">Carregando histórico e prontuário de evolução...</div>';
+
+        try {
+            const { data, error } = await db.from('app_atendimento_presencas')
+                .select('data, observacoes, app_atendimento_tratamentos!inner(id, tipo, app_atendimento_fraterno_id)')
+                .eq('app_atendimento_tratamentos.app_atendimento_fraterno_id', id)
+                .order('data', { ascending: false });
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                panel.innerHTML = '<div style="font-size: 13px; color: var(--text-muted); padding: 8px;">Nenhum atendimento registrado ainda para este paciente.</div>';
+                return;
+            }
+
+            let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+            data.forEach(p => {
+                const tipo = p.app_atendimento_tratamentos.tipo;
+                const dt = p.data ? p.data.split('T')[0].split('-').reverse().join('/') : '';
+                const cor = tipo === 'Espiritual' ? '#8b5cf6' : '#3b82f6';
+                const obs = p.observacoes ? p.observacoes : '<i>Sem anotações</i>';
+
+                html += `
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                            <span style="font-size:11px; font-weight:bold; color:${cor};">${tipo.toUpperCase()}</span>
+                            <span style="font-size:11px; color:var(--text-muted);">${dt}</span>
+                        </div>
+                        <div style="font-size:13px; color:var(--text-main); line-height:1.4;">${obs}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            panel.innerHTML = html;
+
+        } catch (e) {
+            console.error(e);
+            panel.innerHTML = '<span style="color: #ef4444; font-size: 12px;">Erro ao carregar evolução.</span>';
+        }
+    };
