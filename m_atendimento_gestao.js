@@ -1509,6 +1509,169 @@ function obterDataPrecisa(dataStr, createdAtStr) {
 
         } catch (e) {
             console.error(e);
-            panel.innerHTML = '<span style="color: #ef4444; font-size: 12px;">Erro ao carregar evolução.</span>';
+            panel.innerHTML = `<span style="color: #ef4444; font-size: 12px;">Erro: ${e.message || JSON.stringify(e)}</span>`;
         }
     };
+window.carregarHistoricoGeralMobile = async function () {
+    const lista = document.getElementById('listaAten');
+    if (!lista) return;
+
+    lista.innerHTML = '<div style="color: var(--text-muted); font-size: 14px; padding: 24px; text-align: center;">Carregando histórico geral...</div>';
+
+    try {
+        const [fraternoReq, tratamentosReq] = await Promise.all([
+            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo), app_pacientes(*)').eq('status', 'Atendido'),
+            db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)').in('status', ['Concluído', 'Suspenso'])
+        ]);
+
+        if (fraternoReq.error) throw fraternoReq.error;
+        if (tratamentosReq.error) throw tratamentosReq.error;
+
+        const itens = [];
+
+        // Map Fraternos (Triagem/Conversa)
+        (fraternoReq.data || []).forEach(f => {
+            if (!f.data_hora_atendimento) return;
+            const nome = f.app_pacientes?.nome_completo || f.nome_completo;
+            itens.push({
+                tipo: 'Fraterno',
+                data: f.data_hora_atendimento,
+                id: f.id,
+                nome: nome,
+                atendente: f.pessoas?.nome_completo || 'Sem Atendente',
+                fraterno_id: f.id,
+                telefone: f.app_pacientes?.telefone || f.telefone
+            });
+        });
+
+        // Map Tratamentos
+        (tratamentosReq.data || []).forEach(t => {
+            const dateStr = t.data_fim || t.created_at;
+            if (!dateStr) return;
+            const nome = t.app_atendimento_fraterno?.nome_completo || 'Desconhecido';
+            itens.push({
+                tipo: t.tipo,
+                data: dateStr,
+                id: t.id,
+                nome: nome,
+                status: t.status, // Concluído | Suspenso
+                fraterno_id: t.fraterno_id,
+                telefone: t.app_atendimento_fraterno?.telefone,
+                data_inicio: t.data_inicio
+            });
+        });
+
+        if (itens.length === 0) {
+            lista.innerHTML = '<div style="padding: 24px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted);">Nenhum histórico encontrado.</div>';
+            return;
+        }
+
+        // Ordenar do mais recente para o mais antigo
+        itens.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+        // Agrupar por Ano e Mês
+        const grupos = {};
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        
+        itens.forEach(item => {
+            const d = new Date(item.data);
+            const ano = d.getFullYear();
+            const mesIdx = d.getMonth();
+            const mesStr = monthNames[mesIdx];
+
+            if (!grupos[ano]) grupos[ano] = {};
+            if (!grupos[ano][mesStr]) grupos[ano][mesStr] = [];
+            
+            grupos[ano][mesStr].push(item);
+        });
+
+        lista.innerHTML = '';
+        const container = document.createElement('div');
+        container.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
+
+        const renderAno = (ano) => {
+            let anoHtml = `
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 8px;">
+                    <div onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'" style="padding: 16px; background: rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <strong style="color: var(--text-main); font-size: 16px;">📂 Ano ${ano}</strong>
+                        <span style="color: var(--text-muted); font-size: 12px;">Expandir/Recolher</span>
+                    </div>
+                    <div style="display: none; padding: 16px;">
+            `;
+
+            // Sort months descending (Dezembro to Janeiro)
+            const sortedMonths = Object.keys(grupos[ano]).sort((a, b) => monthNames.indexOf(b) - monthNames.indexOf(a));
+            
+            sortedMonths.forEach(mes => {
+                const registros = grupos[ano][mes];
+                anoHtml += `
+                    <div style="margin-bottom: 16px; margin-left: 16px; border-left: 2px solid var(--border); padding-left: 16px;">
+                        <h4 style="color: var(--primary); font-size: 15px; margin-bottom: 12px; margin-top: 0; display: flex; align-items: center; gap: 8px;">
+                            📂 ${mes} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 12px;">${registros.length} registros</span>
+                        </h4>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                `;
+
+                registros.forEach(r => {
+                    let badgeConfig = { color: '#f59e0b', text: '🤝 TRIAGEM' };
+                    let descHtml = `Atendente: ${r.atendente}`;
+                    
+                    if (r.tipo === 'Fluídico') {
+                        badgeConfig = { color: '#3b82f6', text: '💧 TRAT. FLUÍDICO' };
+                        const statusColor = r.status === 'Concluído' ? '#10b981' : '#ef4444';
+                        const inicioStr = r.data_inicio ? new Date(r.data_inicio).toLocaleDateString('pt-BR') : '?';
+                        const fimStr = r.data ? new Date(r.data).toLocaleDateString('pt-BR') : '?';
+                        descHtml = `Período: ${inicioStr} até ${fimStr} — <strong style="color: ${statusColor}">${r.status}</strong>`;
+                    } else if (r.tipo === 'Espiritual') {
+                        badgeConfig = { color: '#8b5cf6', text: '✨ TRAT. ESPIRITUAL' };
+                        const statusColor = r.status === 'Concluído' ? '#10b981' : '#ef4444';
+                        const inicioStr = r.data_inicio ? new Date(r.data_inicio).toLocaleDateString('pt-BR') : '?';
+                        const fimStr = r.data ? new Date(r.data).toLocaleDateString('pt-BR') : '?';
+                        descHtml = `Período: ${inicioStr} até ${fimStr} — <strong style="color: ${statusColor}">${r.status}</strong>`;
+                    }
+
+                    const dtDisplay = new Date(r.data).toLocaleDateString('pt-BR');
+
+                    anoHtml += `
+                        <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <span style="font-size: 10px; font-weight: bold; background: ${badgeConfig.color}; color: white; padding: 2px 6px; border-radius: 4px;">${badgeConfig.text}</span>
+                                    <strong style="color: var(--text-main); font-size: 14px;">${r.nome.toUpperCase()}</strong>
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-muted); display: flex; gap: 12px; align-items: center;">
+                                    <span>📅 ${dtDisplay}</span>
+                                    <span style="opacity: 0.3">|</span>
+                                    <span>${descHtml}</span>
+                                </div>
+                            </div>
+                            <button onclick="abrirFichaAtendimento('${r.fraterno_id}')" class="btn" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border); padding: 6px 12px; font-size: 12px; border-radius: 6px;">📝 Ficha</button>
+                        </div>
+                    `;
+                });
+
+                anoHtml += `</div></div>`;
+            });
+
+            anoHtml += `</div></div>`;
+            return anoHtml;
+        };
+
+        const sortedYears = Object.keys(grupos).sort((a, b) => parseInt(b) - parseInt(a));
+        sortedYears.forEach((ano, idx) => {
+            const tmpDiv = document.createElement('div');
+            tmpDiv.innerHTML = renderAno(ano);
+            // Mostrar o primeiro ano já expandido
+            if (idx === 0) {
+                tmpDiv.firstElementChild.children[1].style.display = 'block';
+            }
+            container.appendChild(tmpDiv.firstElementChild);
+        });
+
+        lista.appendChild(container);
+
+    } catch (err) {
+        console.error(err);
+        lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar histórico geral.</span>';
+    }
+};
