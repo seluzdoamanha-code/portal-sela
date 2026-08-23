@@ -178,9 +178,10 @@
                 </div>
 
                 <div id="tab-home" class="tab-content active">
-                    <div class="placeholder-card">
-                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Visão Geral do Sistema</h3>
-                        <p>Painel central de controle. Em breve terá gráficos e atalhos rápidos.</p>
+                    <h3 style="color: var(--text-main); margin-bottom: 16px;">🏠 Painel Central</h3>
+                    
+                    <div id="homeDashContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px;">
+                        <div style="grid-column: 1 / -1; color: var(--text-muted); text-align: center; padding: 40px;">Carregando métricas principais...</div>
                     </div>
                 </div>
 
@@ -278,7 +279,7 @@
         </main>
     </div>
 
-    <script src="admin.js?v=5"></script>
+    <script src="admin.js?v=7"></script>
     <script src="sidebar.js?v=5"></script>
 </body>
 </html>
