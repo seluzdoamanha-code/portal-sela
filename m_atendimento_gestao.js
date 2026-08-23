@@ -1521,8 +1521,8 @@ window.carregarHistoricoGeralMobile = async function () {
 
     try {
         const [fraternoReq, tratamentosReq] = await Promise.all([
-            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo), app_pacientes(*)').eq('status', 'Atendido'),
-            db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, endereco_completo, data_nascimento, telefone, created_at)').in('status', ['Concluído', 'Suspenso'])
+            db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(id, nome_completo), paciente:pessoas!paciente_id(*)').in('status', ['Atendido', 'Concluído']),
+            db.from('app_atendimento_tratamentos').select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*))').in('status', ['Concluído', 'Suspenso'])
         ]);
 
         if (fraternoReq.error) throw fraternoReq.error;
@@ -1533,7 +1533,7 @@ window.carregarHistoricoGeralMobile = async function () {
         // Map Fraternos (Triagem/Conversa)
         (fraternoReq.data || []).forEach(f => {
             if (!f.data_hora_atendimento) return;
-            const nome = f.app_pacientes?.nome_completo || f.nome_completo;
+            const nome = f.paciente?.nome_completo || f.nome_completo;
             itens.push({
                 tipo: 'Fraterno',
                 data: f.data_hora_atendimento,
@@ -1541,7 +1541,7 @@ window.carregarHistoricoGeralMobile = async function () {
                 nome: nome,
                 atendente: f.pessoas?.nome_completo || 'Sem Atendente',
                 fraterno_id: f.id,
-                telefone: f.app_pacientes?.telefone || f.telefone
+                telefone: f.paciente?.celular || f.telefone
             });
         });
 
@@ -1557,7 +1557,7 @@ window.carregarHistoricoGeralMobile = async function () {
                 nome: nome,
                 status: t.status, // Concluído | Suspenso
                 fraterno_id: t.fraterno_id,
-                telefone: t.app_atendimento_fraterno?.telefone,
+                telefone: t.app_atendimento_fraterno?.paciente?.celular,
                 data_inicio: t.data_inicio
             });
         });
@@ -1673,7 +1673,7 @@ window.carregarHistoricoGeralMobile = async function () {
 
     } catch (err) {
         console.error(err);
-        lista.innerHTML = '<span style="color:#ef4444;">Erro ao carregar histórico geral.</span>';
+        lista.innerHTML = `<span style="color:#ef4444;">Erro: ${err.message || JSON.stringify(err)}</span>`;
     }
 };
 })();
