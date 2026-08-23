@@ -584,7 +584,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             // Fetch Sessions
             const { data: sessoes, error: errSess } = await db
                 .from('app_atendimento_sessoes')
-                .select('*, pessoas!atendente_id(nome_completo, nome_curto)')
+                .select('*, pessoas!atendente_id(nome_completo, nome_curto), app_atendimento_fraterno!atendimento_id(pessoas!atendente_id(nome_completo, nome_curto))')
                 .eq('atendimento_id', id);
 
             if (errSess) throw errSess;
@@ -1422,7 +1422,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             // Obter sessões anteriores
             const { data: sessoes, error: errSess } = await db
                 .from('app_atendimento_sessoes')
-                .select('*, pessoas!atendente_id(nome_completo, nome_curto)')
+                .select('*, pessoas!atendente_id(nome_completo, nome_curto), app_atendimento_fraterno!atendimento_id(pessoas!atendente_id(nome_completo, nome_curto))')
                 .eq('atendimento_id', id)
                 .order('data', { ascending: false })
                 .limit(4);
@@ -1483,6 +1483,8 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             } else {
                 sessoesHTML = sessoes.map(s => {
                     const dt = s.data ? s.data.split('T')[0].split('-').reverse().join('/') : '';
+                            const atendenteFallback = s.pessoas || (s.app_atendimento_fraterno && s.app_atendimento_fraterno.pessoas) || {};
+                            const nomeAtendente = atendenteFallback.nome_curto || atendenteFallback.nome_completo || 'Desconhecido';
                     return `
                         <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 6px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
@@ -1490,7 +1492,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                                     <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase; white-space: nowrap;">FRATERNO</span>
                                     <strong style="color: var(--primary); margin-left: 4px;">${dt}</strong>
                                 </div>
-                                <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_curto || s.pessoas?.nome_completo || 'Desconhecido'}</span>
+                                <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${nomeAtendente}</span>
                             </div>
                             <div style="color: var(--text-main); white-space: pre-wrap;">${s.sintomas_orientacoes}</div>
                         </div>
