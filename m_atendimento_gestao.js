@@ -1859,13 +1859,11 @@ window.carregarFicharioMobile = function(allData, allTratamentos) {
                 </div>
                 
                 <div style="font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;">
-                    <div>🎂 Nascimento: ${nascimentoInfo}</div>
                     <div>📄 CPF: ${p.cpf_cnpj ? formatarCPF(p.cpf_cnpj) : 'Não informado'}</div>
                     <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
                         <span>📱 Cel.: ${p.telefone ? formatarCelular(p.telefone) : 'Não informado'}</span>
                         ${whatsLink}
                     </div>
-                    ${p.endereco ? `<div style="margin-top: 2px;">📍 Endereço: ${p.endereco}</div>` : ''}
                 </div>
                 
                 <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; align-items: center;">
