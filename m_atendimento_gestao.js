@@ -827,508 +827,9 @@ function obterDataPrecisa(dataStr, createdAtStr) {
 
     // --- GESTÃO DE TRATAMENTOS ATIVOS ---
 
-    async function carregarTratamentosAtivos() {
+        async function carregarTratamentosAtivos() {
         const container = document.getElementById('listaAtendimento');
-        container.innerHTML = '';
-
-        try {
-            const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(nome_completo, paciente:pessoas!paciente_id(*)), app_atendimento_presencas(data)')
-                .eq('status', 'Ativo');
-
-            if (error) throw error;
-
-            if (!trats || trats.length === 0) {
-                container.innerHTML = '<div class="empty-state">Nenhum tratamento ativo no momento.</div>';
-                return;
-            }
-
-            trats.sort((a, b) => {
-                const nameA = a.app_atendimento_fraterno?.paciente?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '';
-                const nameB = b.app_atendimento_fraterno?.paciente?.nome_completo || b.app_atendimento_fraterno?.nome_completo || '';
-                return nameA.localeCompare(nameB);
-            });
-
-            trats.forEach(t => {
-                const card = document.createElement('div');
-                card.className = 'card-atendimento';
-                card.style.marginBottom = '12px';
-                
-                const dtInicio = t.data_inicio ? t.data_inicio.split('T')[0].split('-').reverse().join('/') : '';
-                const tipoCor = t.tipo === 'Espiritual' ? '#8b5cf6' : '#3b82f6';
-                
-                let attendedToday = false;
-                if (t.app_atendimento_presencas) {
-                    const now = new Date();
-                    const tzOffset = now.getTimezoneOffset() * 60000;
-                    const todayLocal = new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
-                    
-                    attendedToday = t.app_atendimento_presencas.some(p => {
-                        if (!p.data) return false;
-                        return p.data.split('T')[0] === todayLocal;
-                    });
-                }
-
-                card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="font-size:15px; font-weight:600; color:white;">${(t.app_atendimento_fraterno?.paciente?.nome_completo || t.app_atendimento_fraterno?.nome_completo || '').toUpperCase()}</span>
-                        <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${tipoCor}22; color:${tipoCor}; border:1px solid ${tipoCor}44; white-space: nowrap;">${t.tipo}</span>
-                    </div>
-                    <div class="card-info"><strong>Início em:</strong> ${dtInicio}</div>
-                    <div class="card-info"><strong>WhatsApp:</strong> ${t.app_atendimento_fraterno?.paciente?.celular || t.app_atendimento_fraterno?.telefone || '-'}</div>
-
-                    <div style="margin-top:12px; display:flex; gap:8px;">
-                        ${attendedToday
-                            ? `<button disabled class="btn-action" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px dashed var(--border); width:100%; font-size: 11px;">Atendimento já foi realizado HOJE!</button>`
-                            : `<button onclick="confirmarSessaoTratamento('${t.id}', '${t.tipo}')" class="btn-action" style="background:${tipoCor}; color:white; border:none; width:100%;">Confirmar Atendimento</button>`
-                        }
-                    </div>
-                    <div style="margin-top:8px; display:flex; gap:8px;">
-                        <button onclick="mudarStatusTratamento('${t.id}', 'Concluído')" class="btn-action" style="background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2);">Concluir</button>
-                        <button onclick="mudarStatusTratamento('${t.id}', 'Suspenso')" class="btn-action" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);">Suspender</button>
-                    </div>
-                    <div style="margin-top:8px;">
-                        <button onclick="encaminharParaNovaTriagemMobile('${t.app_atendimento_fraterno?.id}')" class="btn-action" style="width:100%; background:rgba(139, 92, 246, 0.1); color:#8b5cf6; border:1px solid rgba(139, 92, 246, 0.3);">📋 Novo Atendimento</button>
-                    </div>
-                    <div style="margin-top:8px;">
-                        <button onclick="toggleEvolucaoInlineMobile('${t.app_atendimento_fraterno ? t.app_atendimento_fraterno.id : ''}')" class="btn-action" style="width:100%; background:rgba(255,255,255,0.05); color:white; border:1px solid var(--border);">📝 Evolução & Prontuário</button>
-                    </div>
-                    
-                    <div id="panel_evolucao_m_${t.app_atendimento_fraterno ? t.app_atendimento_fraterno.id : 'none'}" style="display: none; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;"></div>
-                `;
-                container.appendChild(card);
-            });
-        } catch (e) {
-            container.innerHTML = `<div class="empty-state">Erro: ${e.message}</div>`;
-        }
-    }
-
-    window.toggleEvolucaoInlineMobile = async function (id) {
-        if (!id || id === 'undefined' || id === 'none') {
-            Swal.fire('Aviso', 'Ficha original de triagem não encontrada ou desvinculada. Não é possível carregar a evolução.', 'info');
-            return;
-        }
-        const panel = document.getElementById('panel_evolucao_m_' + id);
-        if (!panel) return;
-
-        if (panel.style.display === 'block') {
-            panel.style.display = 'none';
-            return;
-        }
-
-        panel.style.display = 'block';
-        panel.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; padding: 8px;">Carregando histórico e prontuário de evolução...</div>';
-
-        try {
-            const { data: sessoes, error: errSess } = await db
-                .from('app_atendimento_sessoes')
-                .select('*, pessoas!atendente_id(nome_completo)')
-                .eq('atendimento_id', id)
-                .order('data', { ascending: false })
-                .limit(4);
-
-            if (errSess) throw errSess;
-
-            const { data: trats, error: errTrats } = await db.from('app_atendimento_tratamentos').select('id, tipo, status').eq('atendimento_id', id);
-            if (errTrats) throw errTrats;
-
-            let presencasHTML = '';
-            if (trats && trats.length > 0) {
-                const tratIds = trats.map(t => t.id);
-                const { data: pres, error: errPres } = await db
-                    .from('app_atendimento_presencas')
-                    .select('*')
-                    .in('tratamento_id', tratIds)
-                    .order('data', { ascending: false });
-
-                if (errPres) throw errPres;
-
-                if (pres) {
-                    pres.sort((a, b) => {
-                        const tA = trats.find(t => t.id === a.tratamento_id)?.tipo || '';
-                        const tB = trats.find(t => t.id === b.tratamento_id)?.tipo || '';
-                        if (tA === 'Fluídico' && tB === 'Espiritual') return -1;
-                        if (tA === 'Espiritual' && tB === 'Fluídico') return 1;
-                        const dA = new Date(a.data || 0);
-                        const dB = new Date(b.data || 0);
-                        return dB - dA;
-                    });
-                }
-
-                if (!pres || pres.length === 0) {
-                    presencasHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 12px; padding: 4px;">Nenhuma presença registrada ainda.</div>';
-                } else {
-                    presencasHTML = pres.map(p => {
-                        const trat = trats.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
-                        const dt = p.data ? p.data.split('T')[0].split('-').reverse().join('/') : '';
-                        const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
-                        const badgeColor = trat?.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
-                        return `
-                            <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 6px;">
-                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${trat?.tipo || 'TRAT.'}</span>
-                                <strong style="color: #3b82f6; margin-left: 4px;">${dt}</strong>
-                                ${obs}
-                            </div>
-                        `;
-                    }).join('');
-                }
-            } else {
-                presencasHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 12px; padding: 4px;">Nenhum tratamento registrado para esta ficha.</div>';
-            }
-
-            let sessoesHTML = '';
-            if (!sessoes || sessoes.length === 0) {
-                sessoesHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 12px; padding: 4px;">Nenhuma sessão de atendimento registrada.</div>';
-            } else {
-                sessoesHTML = sessoes.map(s => {
-                    const dt = s.data ? s.data.split('T')[0].split('-').reverse().join('/') : '';
-                    return `
-                        <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 6px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                <div>
-                                    <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase; white-space: nowrap;">FRATERNO</span>
-                                    <strong style="color: var(--primary); margin-left: 4px;">${dt}</strong>
-                                </div>
-                                <span style="color: var(--text-muted); font-size: 11px;">Atendente: ${s.pessoas?.nome_completo || 'Desconhecido'}</span>
-                            </div>
-                            <div style="color: var(--text-main); white-space: pre-wrap;">${s.sintomas_orientacoes}</div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            panel.innerHTML = `
-                <div style="display: flex; flex-direction: column; gap: 16px; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 6px;">
-                    <div>
-                        <h5 style="margin: 0 0 8px 0; font-size: 13px; color: var(--primary); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">📜 Histórico de Atendimentos Fraternos</h5>
-                        <div style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
-                            ${sessoesHTML}
-                        </div>
-                    </div>
-                    <div>
-                        <h5 style="margin: 0 0 8px 0; font-size: 13px; color: #3b82f6; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">🗓️ Histórico de Tratamentos</h5>
-                        <div style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
-                            ${presencasHTML}
-                        </div>
-                    </div>
-                </div>
-            `;
-        } catch (err) {
-            console.error(err);
-            panel.innerHTML = '<span style="color: #ef4444; font-size: 12px;">Erro ao carregar evolução.</span>';
-        }
-    };
-
-    window.mudarStatusTratamento = async function(id, status) {
-        Swal.fire({
-            title: `${status} Tratamento?`,
-            text: `Confirmar alteração de status para ${status}.`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#10b981',
-            cancelButtonText: 'Cancelar',
-            background: 'var(--bg-panel)',
-            color: 'white'
-        }).then(async (res) => {
-            if (res.isConfirmed) {
-                try {
-                    const { error } = await db.from('app_atendimento_tratamentos').update({
-                        status: status,
-                        data_fim: new Date().toISOString().split('T')[0]
-                    }).eq('id', id);
-
-                    if (error) throw error;
-                    Swal.fire('Sucesso!', 'Tratamento atualizado.', 'success');
-                    carregarLista();
-                } catch(e) {
-                    Swal.fire('Erro', 'Erro ao atualizar tratamento.', 'error');
-                }
-            }
-        });
-    };
-
-    window.encaminharParaNovaTriagemMobile = async function(fraterno_id) {
-        Swal.fire({
-            title: 'Novo Atendimento?',
-            text: 'Isto criará uma nova ficha para este paciente e o enviará para a Triagem.',
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonColor: '#8b5cf6',
-            cancelButtonColor: 'var(--text-muted)',
-            confirmButtonText: 'Sim, criar',
-            cancelButtonText: 'Cancelar',
-            background: 'var(--bg-panel)',
-            color: 'white'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    // Obter dados pessoais da ficha antiga
-                    const { data: oldData, error: errF } = await db.from('app_atendimento_fraterno').select('*').eq('id', fraterno_id).single();
-                    if (errF) throw errF;
-
-                    // Inserir nova ficha
-                    const { error: errI } = await db.from('app_atendimento_fraterno').insert([{
-                        paciente_id: oldData.paciente_id,
-                        nome_completo: oldData.nome_completo,
-                        status: 'Pendente' // Vai para a Triagem
-                    }]);
-
-                    if (errI) throw errI;
-
-                    Swal.fire({
-                        title: 'Ficha Criada!',
-                        text: 'Paciente encaminhado para a fila de Triagem.',
-                        icon: 'success',
-                        background: 'var(--bg-panel)',
-                        color: 'white'
-                    });
-                } catch(e) {
-                    Swal.fire('Erro', 'Falha ao criar nova ficha: ' + e.message, 'error');
-                }
-            }
-        });
-    };
-
-    // --- FILA DE PRESENÇAS (TERÇAS E QUINTAS) ---
-
-    async function carregarFilaPresencas() {
-        const container = document.getElementById('listaAtendimento');
-        container.innerHTML = '';
-
-        try {
-            const { data: trats, error } = await db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*))')
-                .eq('status', 'Ativo')
-                .eq('presente', false);
-
-            if (error) throw error;
-
-            if (!trats || trats.length === 0) {
-                container.innerHTML = '<div class="empty-state">Nenhum necessitado em tratamento ativo na Fila Geral.</div>';
-                return;
-            }
-
-            trats.sort((a,b) => (a.app_atendimento_fraterno?.paciente?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '').localeCompare(b.app_atendimento_fraterno?.paciente?.nome_completo || b.app_atendimento_fraterno?.nome_completo || ''));
-
-            trats.forEach(t => {
-                const f = t.app_atendimento_fraterno;
-                const card = document.createElement('div');
-                card.className = 'card-atendimento';
-                card.style.marginBottom = '12px';
-                
-                const badgeColor = t.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
-
-                const d = new Date(f.created_at);
-                const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-
-                let ageInfo = '';
-                const nasc = f.paciente?.data_nascimento || f.data_nascimento;
-                if (nasc) {
-                    const anoNasc = nasc.split('-')[0];
-                    const age = calcularIdade(nasc);
-                    ageInfo = ` (${age} anos)`;
-                }
-
-                card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                        <div>
-                            <span style="font-size:15px; font-weight:600; color:white; display:block; margin-bottom: 4px;">${(f.paciente?.nome_completo || f.nome_completo || '').toUpperCase()}</span>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">📍 ${f.paciente?.endereco || f.endereco_completo || 'Sem endereço'}</div>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">🎂 Nascimento: ${nasc ? nasc.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📱 Celular: ${f.paciente?.celular || f.telefone || 'Não informado'}</div>
-                            <div style="font-size: 11px; color: var(--text-muted);">Em ${dateStr}</div>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-                            <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44; white-space: nowrap;">${t.tipo}</span>
-                            <div style="display: flex; gap: 8px;">
-                                <button class="btn-action" onclick="window.editarPacienteMobile('${f.id}')" style="padding: 8px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;">✏️</button>
-                                <button class="btn-action" onclick="excluirSolicitacao('${f.id}')" style="padding: 8px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; font-size: 14px;">🗑️</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top:12px;">
-                        <button onclick="marcarTratamentoPresenteMobile('${t.id}', true)" class="btn-action" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px solid var(--border); width:100%; padding:10px; border-radius: 8px;">⚪ Confirmar Presença</button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-
-        } catch(e) {
-            container.innerHTML = `<div class="empty-state">Erro: ${e.message}</div>`;
-        }
-    }
-
-    window.carregarHistoricoGeralMobile = async function() {
-        const lista = document.getElementById('listaAtendimento');
-        if (!lista) return;
-        lista.innerHTML = '<div class="empty-state">Carregando histórico unificado...</div>';
-
-        try {
-            // 1. Buscar todas as triagens atendidas
-            const pFraterno = db.from('app_atendimento_fraterno')
-                .select('*, pessoas!atendente_id(id, nome_completo, nome_curto), paciente:pessoas!paciente_id(*)')
-                .in('status', ['Atendido', 'Concluído']);
-            
-            // 2. Buscar todos os tratamentos concluídos ou suspensos
-            const pTratamentos = db.from('app_atendimento_tratamentos')
-                .select('*, app_atendimento_fraterno(id, nome_completo, created_at, paciente:pessoas!paciente_id(*))')
-                .in('status', ['Concluído', 'Suspenso']);
-
-            const [reqFraterno, reqTratamentos] = await Promise.all([pFraterno, pTratamentos]);
-            
-            if (reqFraterno.error) throw reqFraterno.error;
-            if (reqTratamentos.error) throw reqTratamentos.error;
-
-            // 3. Unificar dados
-            let historico = [];
-            
-            reqFraterno.data.forEach(f => {
-                const dataFechamento = f.data_hora_atendimento || f.created_at;
-                historico.push({
-                    tipoDado: 'Fraterno',
-                    dataOrdenacao: parseDataLocal(dataFechamento),
-                    id: f.id,
-                    nome_paciente: f.paciente?.nome_completo || f.nome_completo,
-                    infoAdicional: f.pessoas ? `Atendente: ${f.pessoas.nome_curto || f.pessoas.nome_completo}` : '',
-                    status: f.status,
-                    paciente_id: f.id 
-                });
-            });
-
-            reqTratamentos.data.forEach(t => {
-                const dataFechamento = t.data_fim || t.created_at;
-                historico.push({
-                    tipoDado: t.tipo, 
-                    dataOrdenacao: parseDataLocal(dataFechamento),
-                    id: t.id,
-                    nome_paciente: t.app_atendimento_fraterno?.paciente?.nome_completo || t.app_atendimento_fraterno?.nome_completo,
-                    infoAdicional: t.data_inicio ? `Início: ${t.data_inicio.split('T')[0].split('-').reverse().join('/')}` : '',
-                    data_inicio: t.data_inicio,
-                    status: t.status,
-                    paciente_id: t.app_atendimento_fraterno?.id 
-                });
-            });
-
-            // 4. Agrupar por Ano e Mês
-            const agrupado = {};
-            historico.forEach(item => {
-                const y = item.dataOrdenacao.getFullYear();
-                const m = item.dataOrdenacao.getMonth();
-                if (!agrupado[y]) agrupado[y] = {};
-                if (!agrupado[y][m]) agrupado[y][m] = [];
-                agrupado[y][m].push(item);
-            });
-
-            lista.innerHTML = '';
-            
-            if (Object.keys(agrupado).length === 0) {
-                lista.innerHTML = '<div class="empty-state">Nenhum histórico encontrado.</div>';
-                return;
-            }
-
-            const mesesNomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-            const anosOrdenados = Object.keys(agrupado).sort((a,b) => b - a);
-
-            anosOrdenados.forEach((ano, indexAno) => {
-                const wrapperAno = document.createElement('div');
-                wrapperAno.style.marginBottom = '8px';
-
-                let totalAno = 0;
-                Object.values(agrupado[ano]).forEach(m => totalAno += m.length);
-                const headerAno = document.createElement('div');
-                headerAno.style.cssText = 'background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 8px; font-weight: bold; font-size: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: white; border: 1px solid var(--border);';
-                headerAno.innerHTML = `<span>📂 Ano ${ano} <span style="font-size: 12px; opacity: 0.7; font-weight: normal; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 12px;">(${totalAno})</span></span><span style="font-size: 12px; opacity: 0.5;">▼</span>`;
-                
-                const contentAno = document.createElement('div');
-                contentAno.style.cssText = 'padding: 8px 0 8px 12px; display: none;';
-                if (indexAno === 0) contentAno.style.display = 'block';
-
-                headerAno.onclick = () => {
-                    contentAno.style.display = contentAno.style.display === 'none' ? 'block' : 'none';
-                    headerAno.querySelector('span:last-child').textContent = contentAno.style.display === 'none' ? '▼' : '▲';
-                };
-
-                const mesesOrdem = Object.keys(agrupado[ano]).sort((a,b) => b - a);
-                mesesOrdem.forEach(mesIdx => {
-                    const listaMes = agrupado[ano][mesIdx];
-                    listaMes.sort((a,b) => b.dataOrdenacao - a.dataOrdenacao);
-
-                    const wrapperMes = document.createElement('div');
-                    wrapperMes.style.marginBottom = '8px';
-                    
-                    const headerMes = document.createElement('div');
-                    headerMes.style.cssText = 'background: rgba(255,255,255,0.02); padding: 10px 14px; border-radius: 6px; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-main); border: 1px solid rgba(255,255,255,0.05);';
-                    headerMes.innerHTML = `<span>📂 ${mesesNomes[mesIdx]} <span style="font-size: 11px; opacity: 0.5;">(${listaMes.length})</span></span><span style="font-size: 10px; opacity: 0.5;">▼</span>`;
-
-                    const contentMes = document.createElement('div');
-                    contentMes.style.cssText = 'padding: 8px 0; display: none;';
-
-                    headerMes.onclick = () => {
-                        contentMes.style.display = contentMes.style.display === 'none' ? 'block' : 'none';
-                        headerMes.querySelector('span:last-child').textContent = contentMes.style.display === 'none' ? '▼' : '▲';
-                    };
-
-                    listaMes.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'card-atendimento';
-                        div.style.marginBottom = '8px';
-                        
-                                                let badgeBg = '#f59e0b';
-                        let badgeText = '🤝 FRATERNO';
-                        let dtDisplay = item.dataOrdenacao.toLocaleDateString('pt-BR');
-                        let descHtml = item.infoAdicional; // e.g. Atendente: Nome
-                        
-                        const statusCor = item.status === 'Suspenso' ? '#ef4444' : (item.status === 'Concluído' ? '#10b981' : 'var(--text-muted)');
-
-                        if (item.tipoDado === 'Fluídico' || item.tipoDado === 'Espiritual') {
-                            if (item.tipoDado === 'Fluídico') { badgeBg = '#3b82f6'; badgeText = '💧 FLUÍDICO'; }
-                            if (item.tipoDado === 'Espiritual') { badgeBg = '#8b5cf6'; badgeText = '✨ ESPIRITUAL'; }
-                            
-                            const inicioStr = item.data_inicio ? parseDataLocal(item.data_inicio).toLocaleDateString('pt-BR') : '?';
-                            const fimStr = dtDisplay;
-                            descHtml = `Período: ${inicioStr} até ${fimStr} &mdash; <strong style="color: ${statusCor}">${item.status}</strong>`;
-                        } else {
-                            descHtml = `${descHtml} &mdash; <strong style="color: ${statusCor}">${item.status}</strong>`;
-                        }
-
-                        div.innerHTML = `
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap:8px;">
-                                <div>
-                                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap;">
-                                        <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${badgeBg}; color: white; white-space: nowrap;">${badgeText}</span>
-                                        <span style="font-size:14px; font-weight:600; color:white;">${(item.nome_paciente || 'Desconhecido').toUpperCase()}</span>
-                                    </div>
-                                    <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
-                                        <span>📅 ${dtDisplay}</span> <span style="opacity:0.3">|</span> <span>${descHtml}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; display: flex; justify-content: flex-end;">
-                                <button onclick="abrirFichaAtendimento('${item.paciente_id}')" class="btn-action" style="background:rgba(255,255,255,0.05); color:var(--text-main); border:1px solid var(--border); padding: 6px 12px; font-size: 12px; border-radius: 6px;">📝 Ficha</button>
-                            </div>
-                        `;
-                        contentMes.appendChild(div);
-                    });
-
-                    wrapperMes.appendChild(headerMes);
-                    wrapperMes.appendChild(contentMes);
-                    contentAno.appendChild(wrapperMes);
-                });
-
-                wrapperAno.appendChild(headerAno);
-                wrapperAno.appendChild(contentAno);
-                lista.appendChild(wrapperAno);
-            });
-        } catch (e) {
-            console.error(e);
-            lista.innerHTML = '<div class="empty-state">Erro ao carregar histórico unificado.</div>';
-        }
-    };
-
-    async function carregarEsperaTratamento() {
-        const container = document.getElementById('listaAtendimento');
-        container.innerHTML = '';
+        container.innerHTML = '<div class="empty-state">Carregando tratamentos...</div>';
 
         try {
             const { data: trats, error } = await db.from('app_atendimento_tratamentos')
@@ -1338,73 +839,89 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             if (error) throw error;
 
             if (!trats || trats.length === 0) {
-                container.innerHTML = '<div class="empty-state">Sala de Espera de Tratamentos vazia.</div>';
+                container.innerHTML = '<div class="empty-state">Nenhum tratamento ativo encontrado.</div>';
                 return;
             }
 
-            trats.sort((a,b) => (a.app_atendimento_fraterno?.paciente?.nome_completo || a.app_atendimento_fraterno?.nome_completo || '').localeCompare(b.app_atendimento_fraterno?.paciente?.nome_completo || b.app_atendimento_fraterno?.nome_completo || ''));
+            container.innerHTML = '';
 
+            // Group by paciente
+            const pacienteGrupos = {};
             trats.forEach(t => {
                 const f = t.app_atendimento_fraterno;
                 if (!f) return;
+                if (!pacienteGrupos[f.id]) {
+                    pacienteGrupos[f.id] = { info: f, tratamentos: [] };
+                }
+                pacienteGrupos[f.id].tratamentos.push(t);
+            });
+
+            const sortedPacIds = Object.keys(pacienteGrupos).sort((a, b) => {
+                const nA = (pacienteGrupos[a].info.paciente?.nome_completo || pacienteGrupos[a].info.nome_completo || '');
+                const nB = (pacienteGrupos[b].info.paciente?.nome_completo || pacienteGrupos[b].info.nome_completo || '');
+                return nA.localeCompare(nB);
+            });
+
+            sortedPacIds.forEach(pacId => {
+                const grupo = pacienteGrupos[pacId];
                 const card = document.createElement('div');
                 card.className = 'card-atendimento';
                 card.style.marginBottom = '12px';
-                
-                const badgeColor = t.tipo === 'Espiritual' ? '#818cf8' : '#3b82f6';
+                card.style.padding = '16px';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+                card.style.gap = '12px';
 
-                let ageInfo = '';
-                const nasc = f.paciente?.data_nascimento || f.data_nascimento;
-                if (nasc) {
-                    const anoNasc = nasc.split('-')[0];
-                    const age = calcularIdade(nasc);
-                    ageInfo = ` (${age} anos)`;
-                }
-
-                let attendedToday = false;
-                if (t.app_atendimento_presencas) {
-                    const now = new Date();
-                    const tzOffset = now.getTimezoneOffset() * 60000;
-                    const todayLocal = new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
+                let tratsHTML = '';
+                grupo.tratamentos.forEach(t => {
+                    const badgeColor = t.tipo === 'Espiritual' ? '#818cf8' : '#3b82f6';
+                    const dtIniStr = t.data_inicio ? t.data_inicio.split('T')[0].split('-').reverse().join('/') : '';
                     
-                    attendedToday = t.app_atendimento_presencas.some(p => {
-                        if (!p.data) return false;
-                        return p.data.split('T')[0] === todayLocal;
-                    });
-                }
+                    let attendedToday = false;
+                    if (t.app_atendimento_presencas) {
+                        const now = new Date();
+                        const tzOffset = now.getTimezoneOffset() * 60000;
+                        const todayLocal = new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
+                        attendedToday = t.app_atendimento_presencas.some(p => p.data && p.data.split('T')[0] === todayLocal);
+                    }
 
-                const labelHtml = attendedToday 
-                    ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); white-space: nowrap;">✅ Atendido Hoje</span>' 
-                    : (t.presente 
-                        ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); white-space: nowrap;">🟢 Presente na Casa</span>' 
-                        : '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); white-space: nowrap;">🟡 Aguardando Chegada</span>'
-                    );
-                    
-                const btnHtml = attendedToday
-                    ? `<button disabled class="btn-action" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px dashed var(--border); width:100%; padding:10px; border-radius: 8px; font-weight: 600;">Já Realizado Hoje</button>`
-                    : `<button onclick="confirmarSessaoTratamentoMobile('${t.id}', '${t.tipo}')" class="btn-action" style="background:${badgeColor}; color:white; border:none; width:100%; padding:10px; border-radius: 8px; font-weight: 600;">Confirmar Atendimento</button>`;
+                    const labelHtml = attendedToday 
+                        ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); white-space: nowrap;">✅ Atendido Hoje</span>' 
+                        : (t.presente 
+                            ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); white-space: nowrap;">🟢 Presente na Casa</span>' 
+                            : '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); white-space: nowrap;">🟡 Aguardando Chegada</span>'
+                        );
 
-                const actionDesfazer = (!attendedToday && t.presente) 
-                    ? `<button onclick="marcarTratamentoPresenteMobile('${t.id}', false)" class="btn-action" style="padding: 4px 8px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; font-size: 11px; margin-top: 4px;">Desfazer Presente</button>`
-                    : ``;
+                    const btnConfirm = attendedToday
+                        ? `<button disabled style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed var(--border); border-radius: 6px; flex: 1;">Já Realizado Hoje</button>`
+                        : `<button onclick="confirmarSessaoTratamentoMobile('${t.id}', '${t.tipo}')" style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: ${badgeColor}; color: white; border: none; border-radius: 6px; flex: 1;">Confirmar Atendimento</button>`;
+
+                    const btnDesfazer = (!attendedToday && t.presente) 
+                        ? `<button onclick="marcarTratamentoPresenteMobile('${t.id}', false)" style="padding: 6px 10px; font-size: 11px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px;">Desfazer Presente</button>`
+                        : ``;
+
+                    tratsHTML += `
+                        <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${t.tipo}</span>
+                                ${labelHtml}
+                                <span style="font-size: 12px; color: var(--text-muted);">Início: ${dtIniStr}</span>
+                            </div>
+                            <div style="display: flex; gap: 8px; width: 100%;">
+                                ${btnConfirm}
+                                ${btnDesfazer}
+                            </div>
+                        </div>
+                    `;
+                });
 
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                        <div>
-                            <span style="font-size:15px; font-weight:600; color:white; display:block; margin-bottom: 4px;">${(f.paciente?.nome_completo || f.nome_completo || '').toUpperCase()}</span>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">📍 ${f.paciente?.endereco || f.endereco_completo || 'Sem endereço'}</div>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 2px;">🎂 Nascimento: ${nasc ? nasc.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📱 Celular: ${f.paciente?.celular || f.telefone || 'Não informado'}</div>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
-                            <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:${badgeColor}22; color:${badgeColor}; border:1px solid ${badgeColor}44; white-space: nowrap; text-transform: uppercase;">${t.tipo}</span>
-                            ${labelHtml}
-                            ${actionDesfazer}
-                        </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                        <strong style="font-size: 15px; color: white;">${(grupo.info.paciente?.nome_completo || grupo.info.nome_completo || '').toUpperCase()}</strong>
+                        <span style="font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px;">📱 ${grupo.info.paciente?.celular || grupo.info.telefone || 'Sem telefone'}</span>
                     </div>
-                    
-                    <div style="margin-top:12px;">
-                        ${btnHtml}
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 4px;">
+                        ${tratsHTML}
                     </div>
                 `;
                 container.appendChild(card);
