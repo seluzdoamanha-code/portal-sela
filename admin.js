@@ -1,3 +1,18 @@
+
+function formatCpf(cpf) {
+    if (!cpf) return '-';
+    let val = cpf.replace(/\D/g, '');
+    if (val.length === 11) return val.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    if (val.length === 14) return val.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    return cpf;
+}
+function formatCel(cel) {
+    if (!cel) return '-';
+    let val = cel.replace(/\D/g, '');
+    if (val.length === 11) return val.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    if (val.length === 10) return val.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    return cel;
+}
 const SUPABASE_URL = 'https://aymdooyafimliiggxeqs.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5bWRvb3lhZmltbGlpZ2d4ZXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDUxNDksImV4cCI6MjEwMDY4MTE0OX0.-NBhiyGDlrWq4QKNLx9Ll5GlIk0mV_rBWnr0vdbUCOU';
 const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
@@ -908,12 +923,12 @@ window.carregarTabelaListaAssociados = async function() {
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
         tr.innerHTML = `
-            <td style="padding: 10px 8px; color: var(--text-main); font-family: monospace;">${p.cpf_cnpj || '-'}</td>
+            <td style="padding: 10px 8px; color: var(--text-main); font-family: monospace;">${formatCpf(p.cpf_cnpj)}</td>
             <td style="padding: 10px 8px;">
                 <div style="color: var(--text-main); font-weight: 500;">${p.nome_completo || '-'}</div>
                 <div style="color: var(--text-muted); font-size: 11px;">${p.nome_curto || '-'}</div>
             </td>
-            <td style="padding: 10px 8px; color: var(--text-muted);">${p.celular || '-'}</td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${formatCel(p.celular)}</td>
             <td style="padding: 10px 8px; color: var(--text-muted);">${p.email || '-'}</td>
             <td style="padding: 10px 8px; color: var(--text-muted);">${p.data_nascimento ? new Date(p.data_nascimento).toLocaleDateString('pt-BR') : '-'} (${idade})</td>
             <td style="padding: 10px 8px; color: var(--text-muted);">${p.sexo || '-'}</td>
@@ -976,10 +991,10 @@ window.imprimirListaPessoas = function() {
         
         html += `
             <tr>
-                <td>${p.cpf_cnpj || ''}</td>
+                <td>${formatCpf(p.cpf_cnpj)}</td>
                 <td>${p.nome_completo || ''}</td>
                 <td>${p.nome_curto || ''}</td>
-                <td>${p.celular || ''}</td>
+                <td>${formatCel(p.celular)}</td>
                 <td>${p.email || ''}</td>
                 <td>${dt}</td>
                 <td>${idade}</td>
