@@ -1210,9 +1210,10 @@ window.carregarTabelaListaDepartamentos = async function() {
     const filtroId = select ? select.value : 'todos';
     
     let query = db.from('vinculos_estrutura').select(`
+        perfil,
         estrutura_id, 
         estruturas(id, nome, tipo),
-        pessoas(cpf_cnpj, nome_completo, nome_curto, celular, data_nascimento)
+        pessoas(cpf_cnpj, nome_completo, nome_curto, celular, email, data_nascimento, sexo)
     `);
     
     const { data, error } = await query;
@@ -1255,9 +1256,11 @@ window.carregarTabelaListaDepartamentos = async function() {
                 <div style="color: var(--text-main); font-weight: 500;">${p.nome_completo || '-'}</div>
                 <div style="color: var(--text-muted); font-size: 11px;">${p.nome_curto || '-'}</div>
             </td>
-            <td style="padding: 10px 8px; color: var(--text-main);">${v.estruturas.nome}</td>
             <td style="padding: 10px 8px; color: var(--text-muted);">${formatCel(p.celular)}</td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${p.email || '-'}</td>
             <td style="padding: 10px 8px; color: var(--text-muted);">${p.data_nascimento ? new Date(p.data_nascimento).toLocaleDateString('pt-BR') : '-'} (${idade})</td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${p.sexo || '-'}</td>
+            <td style="padding: 10px 8px; color: var(--text-main); font-weight: 600;">${v.perfil || '-'}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -1297,10 +1300,12 @@ window.imprimirListaDepartamentos = function() {
                     <th>CPF/CNPJ</th>
                     <th>Nome Completo</th>
                     <th>Nome Curto</th>
-                    <th>Departamento</th>
                     <th>Celular</th>
+                    <th>E-mail</th>
                     <th>Nascimento</th>
                     <th>Idade</th>
+                    <th>Sexo</th>
+                    <th>Perfil</th>
                 </tr>
             </thead>
             <tbody>
@@ -1323,10 +1328,12 @@ window.imprimirListaDepartamentos = function() {
                 <td>${formatCpf(p.cpf_cnpj)}</td>
                 <td>${p.nome_completo || ''}</td>
                 <td>${p.nome_curto || ''}</td>
-                <td>${v.estruturas.nome}</td>
                 <td>${formatCel(p.celular)}</td>
+                <td>${p.email || ''}</td>
                 <td>${dt}</td>
                 <td>${idade}</td>
+                <td>${p.sexo || ''}</td>
+                <td>${v.perfil || ''}</td>
             </tr>
         `;
     });
@@ -1372,9 +1379,10 @@ window.carregarTabelaListaAtividades = async function() {
     const filtroId = select ? select.value : 'todos';
     
     let query = db.from('vinculos_estrutura').select(`
+        perfil,
         estrutura_id, 
         estruturas(id, nome, tipo),
-        pessoas(cpf_cnpj, nome_completo, nome_curto, celular, data_nascimento)
+        pessoas(cpf_cnpj, nome_completo, nome_curto, celular, email, data_nascimento, sexo)
     `);
     
     const { data, error } = await query;
@@ -1417,9 +1425,11 @@ window.carregarTabelaListaAtividades = async function() {
                 <div style="color: var(--text-main); font-weight: 500;">${p.nome_completo || '-'}</div>
                 <div style="color: var(--text-muted); font-size: 11px;">${p.nome_curto || '-'}</div>
             </td>
-            <td style="padding: 10px 8px; color: var(--text-main);">${v.estruturas.nome}</td>
             <td style="padding: 10px 8px; color: var(--text-muted);">${formatCel(p.celular)}</td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${p.email || '-'}</td>
             <td style="padding: 10px 8px; color: var(--text-muted);">${p.data_nascimento ? new Date(p.data_nascimento).toLocaleDateString('pt-BR') : '-'} (${idade})</td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${p.sexo || '-'}</td>
+            <td style="padding: 10px 8px; color: var(--text-main); font-weight: 600;">${v.perfil || '-'}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -1459,10 +1469,12 @@ window.imprimirListaAtividades = function() {
                     <th>CPF/CNPJ</th>
                     <th>Nome Completo</th>
                     <th>Nome Curto</th>
-                    <th>Atividade</th>
                     <th>Celular</th>
+                    <th>E-mail</th>
                     <th>Nascimento</th>
                     <th>Idade</th>
+                    <th>Sexo</th>
+                    <th>Perfil</th>
                 </tr>
             </thead>
             <tbody>
@@ -1485,10 +1497,12 @@ window.imprimirListaAtividades = function() {
                 <td>${formatCpf(p.cpf_cnpj)}</td>
                 <td>${p.nome_completo || ''}</td>
                 <td>${p.nome_curto || ''}</td>
-                <td>${v.estruturas.nome}</td>
                 <td>${formatCel(p.celular)}</td>
+                <td>${p.email || ''}</td>
                 <td>${dt}</td>
                 <td>${idade}</td>
+                <td>${p.sexo || ''}</td>
+                <td>${v.perfil || ''}</td>
             </tr>
         `;
     });
