@@ -1,0 +1,63 @@
+import re
+
+filepath = '/Users/wagnercosta/Documents/antigravity/portal-sela/admin.html'
+with open(filepath, 'r') as f:
+    content = f.read()
+
+# Add button
+old_buttons = """                    <div class="admin-subtabs" style="display: flex; gap: 8px; margin-bottom: 24px;">
+                        <button onclick="switchSubTab('pessoas', 'perfil')" class="btn btn-pessoas-perfil active" style="flex: 1; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px;">Cards Perfil</button>
+                        <button onclick="switchSubTab('pessoas', 'dados')" class="btn btn-pessoas-dados" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Cards Dados</button>
+                    </div>"""
+new_buttons = """                    <div class="admin-subtabs" style="display: flex; gap: 8px; margin-bottom: 24px;">
+                        <button onclick="switchSubTab('pessoas', 'perfil')" class="btn btn-pessoas-perfil active" style="flex: 1; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px;">Cards Perfil</button>
+                        <button onclick="switchSubTab('pessoas', 'dados')" class="btn btn-pessoas-dados" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Cards Dados</button>
+                        <button onclick="switchSubTab('pessoas', 'lista')" class="btn btn-pessoas-lista" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Lista</button>
+                    </div>"""
+content = content.replace(old_buttons, new_buttons)
+
+# Add content area for list
+old_content = """                    <!-- Conteúdo: Cards Dados -->
+                    <div id="pessoas-dados" class="subtab-content" style="display: none;">
+                        <div id="gridPessoasDados" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px;"></div>
+                    </div>"""
+new_content = """                    <!-- Conteúdo: Cards Dados -->
+                    <div id="pessoas-dados" class="subtab-content" style="display: none;">
+                        <div id="gridPessoasDados" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px;"></div>
+                    </div>
+                    
+                    <!-- Conteúdo: Lista -->
+                    <div id="pessoas-lista" class="subtab-content" style="display: none; flex-direction: column;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h4 style="margin: 0; color: var(--text-main);">Lista de Pessoas</h4>
+                            <div style="display: flex; gap: 8px;">
+                                <select id="filtroListaPessoas" class="form-control" style="width: auto; padding: 4px 8px; font-size: 13px;" onchange="carregarTabelaListaPessoas()">
+                                    <option value="todos">Todos</option>
+                                    <option value="associados" selected>Associados Efetivos</option>
+                                </select>
+                                <button onclick="imprimirListaPessoas()" class="btn btn-secondary" style="height: 32px; font-size: 13px;">🖨️ Imprimir</button>
+                            </div>
+                        </div>
+                        <div style="overflow-x: auto; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); text-align: left;">
+                                        <th style="padding: 12px 8px;">CPF</th>
+                                        <th style="padding: 12px 8px;">Nome (Completo / Curto)</th>
+                                        <th style="padding: 12px 8px;">Celular</th>
+                                        <th style="padding: 12px 8px;">E-mail</th>
+                                        <th style="padding: 12px 8px;">Nascimento</th>
+                                        <th style="padding: 12px 8px;">Sexo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyListaPessoas">
+                                    <tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">Carregando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>"""
+content = content.replace(old_content, new_content)
+
+with open(filepath, 'w') as f:
+    f.write(content)
+print("admin.html patched")
