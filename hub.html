@@ -606,16 +606,17 @@
                         <div id="hubEqSugestoes" style="display:none; position: absolute; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3); width: 250px;"></div>
                     </div>
                     <div style="flex: 1; min-width: 120px;">
-                        <label style="font-size: 11px; color: var(--text-muted);">Papel / Função</label>
-                        <input type="text" id="hubEqPapel" class="form-control" placeholder="Ex: Colaborador" list="listaPapeisComunsHub">
+                        <label style="font-size: 11px; color: var(--text-muted);">Perfil</label>
+                        <input type="text" id="hubEqPapel" class="form-control" placeholder="Selecione ou digite..." list="listaPapeisComunsHub">
                         <datalist id="listaPapeisComunsHub">
-                            <option value="Diretor(a)">
-                            <option value="Vice-Diretor(a)">
-                            <option value="Coordenador(a)">
-                            <option value="Colaborador(a)">
-                            <option value="Voluntário(a)">
-                            <option value="Apoio">
+                            <!-- Carregado dinamicamente -->
                         </datalist>
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="font-size: 11px; color: var(--text-muted);">Responde a (Chefe Direto)</label>
+                        <select id="hubEqRespondeA" class="form-control" style="width: 100%;">
+                            <option value="">Ninguém (Nó Principal)</option>
+                        </select>
                     </div>
                     <div>
                         <button onclick="hubAdicionarMembroEquipe()" class="btn btn-primary" style="height: 38px;">Adicionar</button>
@@ -628,7 +629,8 @@
                     <thead>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); text-align: left;">
                             <th style="padding: 8px;">Nome</th>
-                            <th style="padding: 8px;">Papel na Equipe</th>
+                            <th style="padding: 8px;">Perfil</th>
+                            <th style="padding: 8px;">Responde a</th>
                             <th style="padding: 8px; text-align: right;">Ações</th>
                         </tr>
                     </thead>
