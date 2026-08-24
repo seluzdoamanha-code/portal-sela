@@ -455,9 +455,13 @@
                 </div>
 
                 <div id="tab-bd" class="tab-content">
-                    <div class="placeholder-card">
-                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Manutenção do Banco de Dados</h3>
-                        <p>Aguardando detalhamento de conteúdo e formatação.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h3 style="color: var(--text-main); margin: 0;">🗄️ Tabelas do Sistema (Registros)</h3>
+                        <button onclick="carregarEstatisticasBD()" class="btn btn-secondary" style="height: 32px; font-size: 13px;">🔄 Atualizar Dados</button>
+                    </div>
+                    
+                    <div id="gridBancoDados" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+                        <div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 40px;">Carregando tabelas...</div>
                     </div>
                 </div>
 
@@ -465,7 +469,7 @@
         </main>
     </div>
 
-    <script src="admin.js?v=26"></script>
+    <script src="admin.js?v=27"></script>
     <script src="sidebar.js?v=6"></script>
 
     <!-- Modal Gestão Plana de Equipes -->

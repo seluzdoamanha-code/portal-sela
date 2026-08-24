@@ -77,6 +77,12 @@ window.switchTab = function(tabId) {
     // Adiciona active no conteúdo alvo
     const targetContent = document.getElementById(`tab-${tabId}`);
     if (targetContent) targetContent.classList.add('active');
+    
+    if (tabId === 'bd') {
+        if (typeof window.carregarEstatisticasBD === 'function') {
+            window.carregarEstatisticasBD();
+        }
+    }
 };
 
 
