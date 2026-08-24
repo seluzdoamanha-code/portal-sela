@@ -565,7 +565,7 @@ let currentEstruturaId = null;
 let currentEstruturaNome = "";
 
 async function carregarDashboardsDepartamentosEAtividades() {
-    const { data: estruturas, error: errEst } = await db.from('estruturas').select('id, nome, tipo, icone, cor').order('nome');
+    const { data: estruturas, error: errEst } = await db.from('estruturas').select('id, nome, tipo').order('nome');
     const { data: vinculos, error: errVinc } = await db.from('vinculos_estrutura').select('estrutura_id');
     
     if (errEst || errVinc) {
@@ -587,8 +587,8 @@ async function carregarDashboardsDepartamentosEAtividades() {
     
     estruturas.forEach(est => {
         const qtd = contagem[est.id] || 0;
-        const icon = est.icone || '📁';
-        const color = est.cor || '#3b82f6';
+        const icon = est.tipo === 'Departamento' ? '🏢' : '📅';
+        const color = est.tipo === 'Departamento' ? '#3b82f6' : '#8b5cf6';
         
         const card = document.createElement('div');
         card.style.cssText = `background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border: 1px solid var(--border); border-radius: 12px; padding: 20px; border-left: 4px solid ${color}; cursor: pointer; transition: transform 0.2s; display: flex; flex-direction: column; gap: 12px;`;
