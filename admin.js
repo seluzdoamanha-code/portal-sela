@@ -626,7 +626,7 @@ async function inicializarBuscaPessoasEquipe() {
     if (!input) return;
     
     if (pessoasBuscaCache.length === 0) {
-        const { data } = await db.from('pessoas').select('id, nome_completo');
+        const { data } = await db.from('pessoas').select('id, nome_completo, perfis');
         if (data) pessoasBuscaCache = data;
     }
     
@@ -653,6 +653,29 @@ async function inicializarBuscaPessoasEquipe() {
                     input.value = p.nome_completo;
                     document.getElementById('eqPessoaId').value = p.id;
                     sugestoes.style.display = 'none';
+                    
+                    // Atualiza o datalist com os perfis da pessoa
+                    const list = document.getElementById('listaPapeisComuns');
+                    if (list) {
+                        list.innerHTML = '';
+                        let arr = [];
+                        if (Array.isArray(p.perfis)) {
+                            arr = p.perfis;
+                        } else if (typeof p.perfis === 'string') {
+                            arr = p.perfis.split(',').map(s => s.trim());
+                        }
+                        arr.forEach(perf => {
+                            if (perf) {
+                                const opt = document.createElement('option');
+                                opt.value = perf;
+                                list.appendChild(opt);
+                            }
+                        });
+                        
+                        // Limpar o input se ele não estiver na nova lista
+                        const eqPapel = document.getElementById('eqPapel');
+                        if (eqPapel) eqPapel.value = '';
+                    }
                 };
                 sugestoes.appendChild(div);
             });
@@ -670,28 +693,9 @@ async function inicializarBuscaPessoasEquipe() {
 }
 
 
-async function carregarListaPerfisDatalist() {
-    try {
-        const { data, error } = await db.from('configuracoes').select('valor').eq('chave', 'opcoes_perfis').single();
-        if (data && data.valor) {
-            const list = document.getElementById('listaPapeisComuns');
-            if (list) {
-                list.innerHTML = '';
-                const perfis = JSON.parse(data.valor);
-                perfis.forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p;
-                    list.appendChild(opt);
-                });
-            }
-        }
-    } catch (e) {
-        console.warn("Erro ao carregar opcoes de perfil", e);
-    }
-}
 
 window.abrirModalEquipePlana = async function(id, nome, tipo) {
-    carregarListaPerfisDatalist();
+
     currentEstruturaId = id;
     currentEstruturaNome = nome;
     
@@ -699,6 +703,11 @@ window.abrirModalEquipePlana = async function(id, nome, tipo) {
     document.getElementById('modalEquipePlanaSub').textContent = `Gerenciando estrutura tipo: ${tipo}`;
     
     document.getElementById('modalEquipePlana').style.display = 'flex';
+    document.getElementById('eqBuscaPessoa').value = '';
+    document.getElementById('eqPessoaId').value = '';
+    document.getElementById('eqPapel').value = '';
+    const list = document.getElementById('listaPapeisComuns');
+    if (list) list.innerHTML = '';
     
     await carregarListaMembrosPlana();
 };

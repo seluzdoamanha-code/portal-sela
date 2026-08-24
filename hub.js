@@ -6282,27 +6282,15 @@ window.abrirFichaPacienteFichario = async function(pacienteId) {
 // ==========================================
 
 
-async function carregarListaPerfisDatalistHub() {
-    try {
-        const { data, error } = await db.from('configuracoes').select('valor').eq('chave', 'opcoes_perfis').single();
-        if (data && data.valor) {
-            const list = document.getElementById('listaPapeisComunsHub');
-            if (list) {
-                list.innerHTML = '';
-                const perfis = JSON.parse(data.valor);
-                perfis.forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p;
-                    list.appendChild(opt);
-                });
-            }
-        }
-    } catch (e) {}
-}
 
 window.abrirHubModalEquipe = async function() {
-    carregarListaPerfisDatalistHub();
+
     document.getElementById('hubModalEquipePlana').style.display = 'flex';
+    document.getElementById('hubEqBuscaPessoa').value = '';
+    document.getElementById('hubEqPessoaId').value = '';
+    document.getElementById('hubEqPapel').value = '';
+    const list = document.getElementById('listaPapeisComunsHub');
+    if (list) list.innerHTML = '';
     inicializarBuscaPessoasHubEquipe();
     await carregarHubListaMembrosPlana();
 };
@@ -6379,7 +6367,7 @@ async function inicializarBuscaPessoasHubEquipe() {
     if (!input) return;
     
     if (hubPessoasBuscaCache.length === 0) {
-        const { data } = await db.from('pessoas').select('id, nome_completo');
+        const { data } = await db.from('pessoas').select('id, nome_completo, perfis');
         if (data) hubPessoasBuscaCache = data;
     }
     
@@ -6406,6 +6394,28 @@ async function inicializarBuscaPessoasHubEquipe() {
                     input.value = p.nome_completo;
                     document.getElementById('hubEqPessoaId').value = p.id;
                     sugestoes.style.display = 'none';
+                    
+                    // Atualiza o datalist com os perfis da pessoa
+                    const list = document.getElementById('listaPapeisComunsHub');
+                    if (list) {
+                        list.innerHTML = '';
+                        let arr = [];
+                        if (Array.isArray(p.perfis)) {
+                            arr = p.perfis;
+                        } else if (typeof p.perfis === 'string') {
+                            arr = p.perfis.split(',').map(s => s.trim());
+                        }
+                        arr.forEach(perf => {
+                            if (perf) {
+                                const opt = document.createElement('option');
+                                opt.value = perf;
+                                list.appendChild(opt);
+                            }
+                        });
+                        
+                        const eqPapel = document.getElementById('hubEqPapel');
+                        if (eqPapel) eqPapel.value = '';
+                    }
                 };
                 sugestoes.appendChild(div);
             });
