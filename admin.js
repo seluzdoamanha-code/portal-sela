@@ -626,7 +626,7 @@ async function inicializarBuscaPessoasEquipe() {
     if (!input) return;
     
     if (pessoasBuscaCache.length === 0) {
-        const { data } = await db.from('pessoas').select('id, nome_completo, perfis');
+        const { data } = await db.from('pessoas').select('id, nome_completo, nome_curto, perfis');
         if (data) pessoasBuscaCache = data;
     }
     
@@ -637,7 +637,14 @@ async function inicializarBuscaPessoasEquipe() {
             return;
         }
         
-        const filter = pessoasBuscaCache.filter(p => p.nome_completo && p.nome_completo.toLowerCase().includes(val)).slice(0, 8);
+        const filter = pessoasBuscaCache.filter(p => {
+            if (!p.nome_completo || !p.nome_completo.toLowerCase().includes(val)) return false;
+            let arr = [];
+            if (Array.isArray(p.perfis)) arr = p.perfis;
+            else if (typeof p.perfis === 'string') arr = p.perfis.split(',').map(s=>s.trim());
+            if (arr.includes('Outros')) return false;
+            return true;
+        }).slice(0, 8);
         
         if (filter.length > 0) {
             sugestoes.innerHTML = '';
@@ -646,11 +653,11 @@ async function inicializarBuscaPessoasEquipe() {
                 div.style.padding = '8px 12px';
                 div.style.cursor = 'pointer';
                 div.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
-                div.textContent = p.nome_completo;
+                div.textContent = p.nome_curto || p.nome_completo;
                 div.onmouseover = () => div.style.background = 'rgba(255,255,255,0.1)';
                 div.onmouseout = () => div.style.background = 'transparent';
                 div.onclick = () => {
-                    input.value = p.nome_completo;
+                    input.value = p.nome_curto || p.nome_completo;
                     document.getElementById('eqPessoaId').value = p.id;
                     sugestoes.style.display = 'none';
                     
@@ -721,7 +728,7 @@ async function carregarListaMembrosPlana() {
     const tbody = document.getElementById('eqListaMembros');
     tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:16px;">Carregando...</td></tr>';
     
-    const { data, error } = await db.from('vinculos_estrutura').select('id, perfil, parent_vinculo_id, pessoas(nome_completo)').eq('estrutura_id', currentEstruturaId);
+    const { data, error } = await db.from('vinculos_estrutura').select('id, perfil, parent_vinculo_id, pessoas(nome_completo, nome_curto)').eq('estrutura_id', currentEstruturaId);
     if (error) {
         tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#ef4444;">Erro ao carregar equipe.</td></tr>';
         return;
@@ -752,7 +759,7 @@ async function carregarListaMembrosPlana() {
         data.forEach(v => {
             const opt = document.createElement('option');
             opt.value = v.id; // o id do vinculo!
-            opt.textContent = v.pessoas ? v.pessoas.nome_completo : 'Desconhecido';
+            opt.textContent = v.pessoas ? (v.pessoas.nome_curto || v.pessoas.nome_completo) : 'Desconhecido';
             selResponde.appendChild(opt);
         });
     }
@@ -762,10 +769,10 @@ async function carregarListaMembrosPlana() {
         tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
         
         const parent = v.parent_vinculo_id ? data.find(x => x.id === v.parent_vinculo_id) : null;
-        const parentName = parent && parent.pessoas ? parent.pessoas.nome_completo : '-';
+        const parentName = parent && parent.pessoas ? (parent.pessoas.nome_curto || parent.pessoas.nome_completo) : '-';
         
         tr.innerHTML = `
-            <td style="padding: 10px 8px; color: var(--text-main); font-weight: 500;">${v.pessoas ? v.pessoas.nome_completo : 'Desconhecido'}</td>
+            <td style="padding: 10px 8px; color: var(--text-main); font-weight: 500;">${v.pessoas ? (v.pessoas.nome_curto || v.pessoas.nome_completo) : 'Desconhecido'}</td>
             <td style="padding: 10px 8px; color: var(--text-muted);">
                 <input type="text" value="${v.perfil || ''}" class="form-control" style="background:transparent; border:1px dashed rgba(255,255,255,0.2); height: 28px; width: 140px; font-size: 12px;" onchange="atualizarPapelEquipePlana('${v.id}', this.value)" title="Edite e aperte ENTER">
             </td>
