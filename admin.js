@@ -226,11 +226,11 @@ window.switchSubTab = function(target, tabName) {
         targetBtn.style.border = 'none';
     }
     
-    if (tabName === 'lista' && target === 'associados') {
-        if(typeof window.carregarTabelaListaAssociados === 'function') {
+    if (tabName === 'lista') {
+        if (target === 'associados' && typeof window.carregarTabelaListaAssociados === 'function') {
             window.carregarTabelaListaAssociados();
-        } else {
-            console.error('carregarTabelaListaAssociados function not found');
+        } else if (target === 'pessoas' && typeof window.carregarTabelaListaGlobalPessoas === 'function') {
+            window.carregarTabelaListaGlobalPessoas();
         }
     }
 };
