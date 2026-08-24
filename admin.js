@@ -371,6 +371,15 @@ async function carregarDashboardsHome() {
         // Vamos baixar os IDs e Perfis para ser rápido e poupar dados
         const { data: pessoasData } = await db.from('pessoas').select('tipo_pessoa, perfis');
         
+        const { data: estData } = await db.from('estruturas').select('tipo');
+        let countDept = 0, countAtiv = 0;
+        if (estData) {
+            estData.forEach(e => {
+                if (e.tipo === 'Departamento' || e.tipo === 'Administrativo') countDept++;
+                if (e.tipo === 'Atividade') countAtiv++;
+            });
+        }
+        
         let celularHtml = '';
         if (celData && celData.length > 0) {
             const ultimo = celData[0];
@@ -444,6 +453,43 @@ async function carregarDashboardsHome() {
         html += renderMetricCard('👤', 'Pessoas Físicas', pf, '#3b82f6');
         html += renderMetricCard('🏢', 'Pessoas Jurídicas', pj, '#f59e0b');
         html += renderMetricCard('👥', 'Total na Base', total, '#10b981');
+        
+        // Departamentos and Atividades
+        html += `
+            <div style="background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border: 1px solid var(--border); border-radius: 16px; padding: 20px; border-top: 4px solid #3b82f6; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchTab('departamentos')">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="font-size: 20px; background: rgba(255,255,255,0.05); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">🏢</div>
+                    <div style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Departamentos</div>
+                </div>
+                <div style="font-size: 32px; font-weight: 800; color: var(--text-main); margin-top: 8px; line-height: 1;">
+                    ${countDept}
+                </div>
+            </div>
+        `;
+        html += `
+            <div style="background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border: 1px solid var(--border); border-radius: 16px; padding: 20px; border-top: 4px solid #8b5cf6; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchTab('atividades')">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="font-size: 20px; background: rgba(255,255,255,0.05); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">📅</div>
+                    <div style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Atividades Regulares</div>
+                </div>
+                <div style="font-size: 32px; font-weight: 800; color: var(--text-main); margin-top: 8px; line-height: 1;">
+                    ${countAtiv}
+                </div>
+            </div>
+        `;
+        
+        // Custom card for Banco de Dados
+        html += `
+            <div style="background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border: 1px solid var(--border); border-radius: 16px; padding: 20px; border-top: 4px solid #ec4899; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchTab('bd')">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="font-size: 20px; background: rgba(255,255,255,0.05); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">🗄️</div>
+                    <div style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Tabelas (Supabase)</div>
+                </div>
+                <div style="font-size: 32px; font-weight: 800; color: var(--text-main); margin-top: 8px; line-height: 1;">
+                    34
+                </div>
+            </div>
+        `;
         
         container.innerHTML = html;
         
@@ -1528,3 +1574,54 @@ window.imprimirListaAtividades = function() {
     win.document.close();
 };
 
+
+window.carregarEstatisticasBD = async function() {
+    const grid = document.getElementById('gridBancoDados');
+    if (!grid) return;
+    
+    grid.innerHTML = '<div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 40px;">Contando registros...</div>';
+    
+    const tables = [
+        "agenda", "app_admin_celular_creditos", "app_atendimento_fraterno", "app_atendimento_presencas",
+        "app_atendimento_sessoes", "app_atendimento_tratamentos", "app_irradiacao_solicitacoes", 
+        "app_mensagem_luz", "app_pacientes", "app_pagina_luz", "app_tesouraria_envios",
+        "ass_cesta_composicao", "ass_cestas_modelos", "ass_entregas", "ass_familias", 
+        "ass_itens_cesta", "ass_membros_familia", "ass_metas", "ass_ocorrencias", 
+        "ass_planejamento_mes", "atividades_regulares", "configuracoes", "documentos", 
+        "documentos_visibilidade", "emprestimos_portal", "estruturas", "fin_config_mensalidades", 
+        "livros_catalogo", "pessoas", "posts", "projetos_processos", "reservas_site", 
+        "usuario_atalhos", "vinculos_estrutura"
+    ];
+    
+    const promises = tables.map(async (table) => {
+        try {
+            const { count, error } = await db.from(table).select('*', { count: 'exact', head: true });
+            if (error) return { table, count: 'Erro', error };
+            return { table, count };
+        } catch(e) {
+            return { table, count: 'Erro' };
+        }
+    });
+    
+    const results = await Promise.all(promises);
+    
+    results.sort((a, b) => {
+        if (typeof a.count === 'number' && typeof b.count === 'number') {
+            if (a.count !== b.count) return b.count - a.count;
+        }
+        return a.table.localeCompare(b.table);
+    });
+    
+    grid.innerHTML = '';
+    results.forEach(res => {
+        const card = document.createElement('div');
+        const color = typeof res.count === 'number' && res.count > 0 ? '#10b981' : '#6b7280';
+        card.style.cssText = `background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border: 1px solid var(--border); border-radius: 12px; padding: 20px; border-left: 4px solid ${color}; display: flex; flex-direction: column; gap: 8px;`;
+        
+        card.innerHTML = `
+            <div style="font-size: 13px; font-weight: 600; color: var(--text-main); word-break: break-all;">${res.table}</div>
+            <div style="font-size: 28px; font-weight: 700; color: ${color}; margin-top: auto;">${res.count}</div>
+        `;
+        grid.appendChild(card);
+    });
+};
