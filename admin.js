@@ -1026,9 +1026,9 @@ window.carregarTabelaListaGlobalPessoas = async function() {
     const select = document.getElementById('filtroListaGlobalPessoas');
     if (select && select.options.length <= 8) {
         try {
-            const { data } = await db.from('configuracoes').select('valor').eq('chave', 'opcoes_perfis').single();
+            const { data } = await db.from('configuracoes').select('valor').eq('chave', 'perfis_pessoas').single();
             if (data && data.valor) {
-                const perfis = JSON.parse(data.valor);
+                const perfis = data.valor.split(',').map(s => s.trim()).filter(Boolean);
                 const currentVal = select.value;
                 select.innerHTML = '<option value="todos">Todos</option>';
                 perfis.forEach(p => {
@@ -1039,7 +1039,7 @@ window.carregarTabelaListaGlobalPessoas = async function() {
                 });
                 select.value = currentVal;
             }
-        } catch(e) {}
+        } catch(e) { console.error('Erro ao buscar perfis:', e); }
     }
     
     const filtro = select ? select.value : 'todos';
