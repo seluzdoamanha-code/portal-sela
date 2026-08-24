@@ -1017,3 +1017,165 @@ window.imprimirListaPessoas = function() {
     win.document.write(html);
     win.document.close();
 };
+
+window.carregarTabelaListaGlobalPessoas = async function() {
+    const tbody = document.getElementById('tbodyListaGlobalPessoas');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">Carregando...</td></tr>';
+    
+    const select = document.getElementById('filtroListaGlobalPessoas');
+    if (select && select.options.length <= 8) {
+        try {
+            const { data } = await db.from('configuracoes').select('valor').eq('chave', 'opcoes_perfis').single();
+            if (data && data.valor) {
+                const perfis = JSON.parse(data.valor);
+                const currentVal = select.value;
+                select.innerHTML = '<option value="todos">Todos</option>';
+                perfis.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    opt.textContent = p;
+                    select.appendChild(opt);
+                });
+                select.value = currentVal;
+            }
+        } catch(e) {}
+    }
+    
+    const filtro = select ? select.value : 'todos';
+    let query = db.from('pessoas').select('cpf_cnpj, nome_completo, nome_curto, celular, email, data_nascimento, sexo, perfis').order('nome_completo');
+    
+    const { data, error } = await query;
+    if (error) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#ef4444;">Erro ao carregar lista.</td></tr>';
+        return;
+    }
+    
+    let filtrados = data;
+    if (filtro !== 'todos') {
+        filtrados = data.filter(p => {
+            if (!p.perfis) return false;
+            const perfStr = Array.isArray(p.perfis) ? p.perfis.join(',') : p.perfis;
+            return perfStr.includes(filtro);
+        });
+    }
+    
+    if (filtrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Nenhum registro encontrado.</td></tr>';
+        return;
+    }
+    
+    window.pessoasGlobalListaCacheParaImpressao = filtrados;
+    window.pessoasGlobalListaFiltroAtual = filtro;
+    
+    tbody.innerHTML = '';
+    filtrados.forEach(p => {
+        let idade = '-';
+        if (p.data_nascimento) {
+            const birth = new Date(p.data_nascimento);
+            const diff = Date.now() - birth.getTime();
+            const ageDate = new Date(diff); 
+            idade = Math.abs(ageDate.getUTCFullYear() - 1970) + ' anos';
+        }
+        
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+        tr.innerHTML = `
+            <td style="padding: 10px 8px; color: var(--text-main); font-family: monospace;">${formatCpf(p.cpf_cnpj)}</td>
+            <td style="padding: 10px 8px;">
+                <div style="color: var(--text-main); font-weight: 500;">${p.nome_completo || '-'}</div>
+                <div style="color: var(--text-muted); font-size: 11px;">${p.nome_curto || '-'}</div>
+            </td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${formatCel(p.celular)}</td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${p.email || '-'}</td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${p.data_nascimento ? new Date(p.data_nascimento).toLocaleDateString('pt-BR') : '-'} (${idade})</td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${p.sexo || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+};
+
+window.imprimirListaGlobalPessoas = function() {
+    const data = window.pessoasGlobalListaCacheParaImpressao || [];
+    if (data.length === 0) {
+        alert("Não há dados para imprimir.");
+        return;
+    }
+    const filtroStr = (window.pessoasGlobalListaFiltroAtual === 'todos') ? 'Todas as Pessoas' : window.pessoasGlobalListaFiltroAtual;
+    
+    let html = `
+    <html>
+    <head>
+        <title>Relatório de Pessoas - SELA</title>
+        <style>
+            body { font-family: sans-serif; color: #333; margin: 20px; }
+            h2 { text-align: center; margin-bottom: 20px; }
+            h4 { text-align: center; margin-bottom: 20px; color: #666; font-weight: normal; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+            th { background-color: #f5f5f5; font-weight: bold; }
+            @media print {
+                @page { margin: 1cm; size: landscape; }
+                body { margin: 0; }
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Lista de Pessoas - SELA</h2>
+        <h4>Filtro: ${filtroStr} (${data.length} registros)</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>CPF/CNPJ</th>
+                    <th>Nome Completo</th>
+                    <th>Nome Curto</th>
+                    <th>Celular</th>
+                    <th>E-mail</th>
+                    <th>Nascimento</th>
+                    <th>Idade</th>
+                    <th>Sexo</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    data.forEach(p => {
+        let idade = '-';
+        let dt = '-';
+        if (p.data_nascimento) {
+            const birth = new Date(p.data_nascimento);
+            const diff = Date.now() - birth.getTime();
+            const ageDate = new Date(diff); 
+            idade = Math.abs(ageDate.getUTCFullYear() - 1970);
+            dt = birth.toLocaleDateString('pt-BR');
+        }
+        
+        html += `
+            <tr>
+                <td>${formatCpf(p.cpf_cnpj)}</td>
+                <td>${p.nome_completo || ''}</td>
+                <td>${p.nome_curto || ''}</td>
+                <td>${formatCel(p.celular)}</td>
+                <td>${p.email || ''}</td>
+                <td>${dt}</td>
+                <td>${idade}</td>
+                <td>${p.sexo || ''}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+        <script>
+            window.onload = function() { window.print(); }
+        </script>
+    </body>
+    </html>
+    `;
+    
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+};
+
