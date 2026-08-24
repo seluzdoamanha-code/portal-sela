@@ -1252,6 +1252,7 @@ window.carregarTabelaListaDepartamentos = async function() {
         tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
         tr.innerHTML = `
             <td style="padding: 10px 8px; color: var(--text-main); font-family: monospace;">${formatCpf(p.cpf_cnpj)}</td>
+            <td style="padding: 10px 8px; color: var(--text-main); font-weight: 600;">${v.perfil || '-'}</td>
             <td style="padding: 10px 8px;">
                 <div style="color: var(--text-main); font-weight: 500;">${p.nome_completo || '-'}</div>
                 <div style="color: var(--text-muted); font-size: 11px;">${p.nome_curto || '-'}</div>
@@ -1260,7 +1261,6 @@ window.carregarTabelaListaDepartamentos = async function() {
             <td style="padding: 10px 8px; color: var(--text-muted);">${p.email || '-'}</td>
             <td style="padding: 10px 8px; color: var(--text-muted);">${p.data_nascimento ? new Date(p.data_nascimento).toLocaleDateString('pt-BR') : '-'} (${idade})</td>
             <td style="padding: 10px 8px; color: var(--text-muted);">${p.sexo || '-'}</td>
-            <td style="padding: 10px 8px; color: var(--text-main); font-weight: 600;">${v.perfil || '-'}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -1298,6 +1298,7 @@ window.imprimirListaDepartamentos = function() {
             <thead>
                 <tr>
                     <th>CPF/CNPJ</th>
+                    <th>Perfil</th>
                     <th>Nome Completo</th>
                     <th>Nome Curto</th>
                     <th>Celular</th>
@@ -1305,7 +1306,6 @@ window.imprimirListaDepartamentos = function() {
                     <th>Nascimento</th>
                     <th>Idade</th>
                     <th>Sexo</th>
-                    <th>Perfil</th>
                 </tr>
             </thead>
             <tbody>
@@ -1326,6 +1326,7 @@ window.imprimirListaDepartamentos = function() {
         html += `
             <tr>
                 <td>${formatCpf(p.cpf_cnpj)}</td>
+                <td>${v.perfil || ''}</td>
                 <td>${p.nome_completo || ''}</td>
                 <td>${p.nome_curto || ''}</td>
                 <td>${formatCel(p.celular)}</td>
@@ -1333,7 +1334,6 @@ window.imprimirListaDepartamentos = function() {
                 <td>${dt}</td>
                 <td>${idade}</td>
                 <td>${p.sexo || ''}</td>
-                <td>${v.perfil || ''}</td>
             </tr>
         `;
     });
@@ -1421,6 +1421,7 @@ window.carregarTabelaListaAtividades = async function() {
         tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
         tr.innerHTML = `
             <td style="padding: 10px 8px; color: var(--text-main); font-family: monospace;">${formatCpf(p.cpf_cnpj)}</td>
+            <td style="padding: 10px 8px; color: var(--text-main); font-weight: 600;">${v.perfil || '-'}</td>
             <td style="padding: 10px 8px;">
                 <div style="color: var(--text-main); font-weight: 500;">${p.nome_completo || '-'}</div>
                 <div style="color: var(--text-muted); font-size: 11px;">${p.nome_curto || '-'}</div>
@@ -1429,7 +1430,6 @@ window.carregarTabelaListaAtividades = async function() {
             <td style="padding: 10px 8px; color: var(--text-muted);">${p.email || '-'}</td>
             <td style="padding: 10px 8px; color: var(--text-muted);">${p.data_nascimento ? new Date(p.data_nascimento).toLocaleDateString('pt-BR') : '-'} (${idade})</td>
             <td style="padding: 10px 8px; color: var(--text-muted);">${p.sexo || '-'}</td>
-            <td style="padding: 10px 8px; color: var(--text-main); font-weight: 600;">${v.perfil || '-'}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -1467,6 +1467,7 @@ window.imprimirListaAtividades = function() {
             <thead>
                 <tr>
                     <th>CPF/CNPJ</th>
+                    <th>Perfil</th>
                     <th>Nome Completo</th>
                     <th>Nome Curto</th>
                     <th>Celular</th>
@@ -1474,7 +1475,6 @@ window.imprimirListaAtividades = function() {
                     <th>Nascimento</th>
                     <th>Idade</th>
                     <th>Sexo</th>
-                    <th>Perfil</th>
                 </tr>
             </thead>
             <tbody>
@@ -1495,6 +1495,7 @@ window.imprimirListaAtividades = function() {
         html += `
             <tr>
                 <td>${formatCpf(p.cpf_cnpj)}</td>
+                <td>${v.perfil || ''}</td>
                 <td>${p.nome_completo || ''}</td>
                 <td>${p.nome_curto || ''}</td>
                 <td>${formatCel(p.celular)}</td>
@@ -1502,7 +1503,6 @@ window.imprimirListaAtividades = function() {
                 <td>${dt}</td>
                 <td>${idade}</td>
                 <td>${p.sexo || ''}</td>
-                <td>${v.perfil || ''}</td>
             </tr>
         `;
     });
