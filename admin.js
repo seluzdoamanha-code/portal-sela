@@ -201,7 +201,7 @@ window.excluirRecargaCelular = async function(id) {
 // ==========================================
 
 window.switchSubTab = function(target, tabName) {
-    const tabs = ['perfil', 'dados', 'lista'];
+    const tabs = ['perfil', 'dados', 'lista', 'cards'];
     tabs.forEach(t => {
         const el = document.getElementById(`subtab-${target}-${t}`) || document.getElementById(`${target}-${t}`);
         if (el) el.style.display = 'none';
@@ -216,7 +216,7 @@ window.switchSubTab = function(target, tabName) {
     });
     
     const targetEl = document.getElementById(`subtab-${target}-${tabName}`) || document.getElementById(`${target}-${tabName}`);
-    if (targetEl) targetEl.style.display = tabName === 'lista' ? 'flex' : (tabName === 'dados' ? 'grid' : 'block');
+    if (targetEl) targetEl.style.display = tabName === 'lista' ? 'flex' : 'block';
     
     const targetBtn = document.querySelector(`.btn-${target}-${tabName}`);
     if (targetBtn) {
@@ -231,6 +231,10 @@ window.switchSubTab = function(target, tabName) {
             window.carregarTabelaListaAssociados();
         } else if (target === 'pessoas' && typeof window.carregarTabelaListaGlobalPessoas === 'function') {
             window.carregarTabelaListaGlobalPessoas();
+        } else if (target === 'departamentos' && typeof window.carregarTabelaListaDepartamentos === 'function') {
+            window.carregarTabelaListaDepartamentos();
+        } else if (target === 'atividades' && typeof window.carregarTabelaListaAtividades === 'function') {
+            window.carregarTabelaListaAtividades();
         }
     }
 };
@@ -1160,6 +1164,331 @@ window.imprimirListaGlobalPessoas = function() {
                 <td>${dt}</td>
                 <td>${idade}</td>
                 <td>${p.sexo || ''}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+        <script>
+            window.onload = function() { window.print(); }
+        </script>
+    </body>
+    </html>
+    `;
+    
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+};
+
+
+window.carregarTabelaListaDepartamentos = async function() {
+    const tbody = document.getElementById('tbodyListaDepartamentos');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">Carregando...</td></tr>';
+    
+    const select = document.getElementById('filtroListaDepartamentos');
+    if (select && select.options.length <= 1) {
+        try {
+            const { data } = await db.from('estruturas').select('id, nome').in('tipo', ['Departamento', 'Administrativo']).order('nome');
+            if (data) {
+                const currentVal = select.value;
+                select.innerHTML = '<option value="todos">Todos os Departamentos</option>';
+                data.forEach(est => {
+                    const opt = document.createElement('option');
+                    opt.value = est.id;
+                    opt.textContent = est.nome;
+                    select.appendChild(opt);
+                });
+                select.value = currentVal;
+            }
+        } catch(e) {}
+    }
+    
+    const filtroId = select ? select.value : 'todos';
+    
+    let query = db.from('vinculos_estrutura').select(`
+        estrutura_id, 
+        estruturas(id, nome, tipo),
+        pessoas(cpf_cnpj, nome_completo, nome_curto, celular, data_nascimento)
+    `);
+    
+    const { data, error } = await query;
+    if (error) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#ef4444;">Erro ao carregar lista.</td></tr>';
+        return;
+    }
+    
+    let filtrados = data.filter(v => v.estruturas && (v.estruturas.tipo === 'Departamento' || v.estruturas.tipo === 'Administrativo') && v.pessoas);
+    if (filtroId !== 'todos') {
+        filtrados = filtrados.filter(v => String(v.estrutura_id) === String(filtroId));
+    }
+    
+    filtrados.sort((a, b) => (a.pessoas.nome_completo || '').localeCompare(b.pessoas.nome_completo || ''));
+    
+    if (filtrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Nenhum registro encontrado.</td></tr>';
+        return;
+    }
+    
+    window.deptListaCacheParaImpressao = filtrados;
+    window.deptListaFiltroAtual = select && select.options[select.selectedIndex] ? select.options[select.selectedIndex].textContent : 'Todos os Departamentos';
+    
+    tbody.innerHTML = '';
+    filtrados.forEach(v => {
+        const p = v.pessoas;
+        let idade = '-';
+        if (p.data_nascimento) {
+            const birth = new Date(p.data_nascimento);
+            const diff = Date.now() - birth.getTime();
+            const ageDate = new Date(diff); 
+            idade = Math.abs(ageDate.getUTCFullYear() - 1970) + ' anos';
+        }
+        
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+        tr.innerHTML = `
+            <td style="padding: 10px 8px; color: var(--text-main); font-family: monospace;">${formatCpf(p.cpf_cnpj)}</td>
+            <td style="padding: 10px 8px;">
+                <div style="color: var(--text-main); font-weight: 500;">${p.nome_completo || '-'}</div>
+                <div style="color: var(--text-muted); font-size: 11px;">${p.nome_curto || '-'}</div>
+            </td>
+            <td style="padding: 10px 8px; color: var(--text-main);">${v.estruturas.nome}</td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${formatCel(p.celular)}</td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${p.data_nascimento ? new Date(p.data_nascimento).toLocaleDateString('pt-BR') : '-'} (${idade})</td>
+        `;
+        tbody.appendChild(tr);
+    });
+};
+
+window.imprimirListaDepartamentos = function() {
+    const data = window.deptListaCacheParaImpressao || [];
+    if (data.length === 0) {
+        alert("Não há dados para imprimir.");
+        return;
+    }
+    const filtroStr = window.deptListaFiltroAtual || 'Todos os Departamentos';
+    
+    let html = `
+    <html>
+    <head>
+        <title>Relatório de Departamentos - SELA</title>
+        <style>
+            body { font-family: sans-serif; color: #333; margin: 20px; }
+            h2 { text-align: center; margin-bottom: 20px; }
+            h4 { text-align: center; margin-bottom: 20px; color: #666; font-weight: normal; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+            th { background-color: #f5f5f5; font-weight: bold; }
+            @media print {
+                @page { margin: 1cm; size: landscape; }
+                body { margin: 0; }
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Lista de Membros por Departamento - SELA</h2>
+        <h4>Filtro: ${filtroStr} (${data.length} registros)</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>CPF/CNPJ</th>
+                    <th>Nome Completo</th>
+                    <th>Nome Curto</th>
+                    <th>Departamento</th>
+                    <th>Celular</th>
+                    <th>Nascimento</th>
+                    <th>Idade</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    data.forEach(v => {
+        const p = v.pessoas;
+        let idade = '-';
+        let dt = '-';
+        if (p.data_nascimento) {
+            const birth = new Date(p.data_nascimento);
+            const diff = Date.now() - birth.getTime();
+            const ageDate = new Date(diff); 
+            idade = Math.abs(ageDate.getUTCFullYear() - 1970);
+            dt = birth.toLocaleDateString('pt-BR');
+        }
+        
+        html += `
+            <tr>
+                <td>${formatCpf(p.cpf_cnpj)}</td>
+                <td>${p.nome_completo || ''}</td>
+                <td>${p.nome_curto || ''}</td>
+                <td>${v.estruturas.nome}</td>
+                <td>${formatCel(p.celular)}</td>
+                <td>${dt}</td>
+                <td>${idade}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+        <script>
+            window.onload = function() { window.print(); }
+        </script>
+    </body>
+    </html>
+    `;
+    
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+};
+
+window.carregarTabelaListaAtividades = async function() {
+    const tbody = document.getElementById('tbodyListaAtividades');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">Carregando...</td></tr>';
+    
+    const select = document.getElementById('filtroListaAtividades');
+    if (select && select.options.length <= 1) {
+        try {
+            const { data } = await db.from('estruturas').select('id, nome').eq('tipo', 'Atividade').order('nome');
+            if (data) {
+                const currentVal = select.value;
+                select.innerHTML = '<option value="todos">Todas as Atividades</option>';
+                data.forEach(est => {
+                    const opt = document.createElement('option');
+                    opt.value = est.id;
+                    opt.textContent = est.nome;
+                    select.appendChild(opt);
+                });
+                select.value = currentVal;
+            }
+        } catch(e) {}
+    }
+    
+    const filtroId = select ? select.value : 'todos';
+    
+    let query = db.from('vinculos_estrutura').select(`
+        estrutura_id, 
+        estruturas(id, nome, tipo),
+        pessoas(cpf_cnpj, nome_completo, nome_curto, celular, data_nascimento)
+    `);
+    
+    const { data, error } = await query;
+    if (error) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#ef4444;">Erro ao carregar lista.</td></tr>';
+        return;
+    }
+    
+    let filtrados = data.filter(v => v.estruturas && v.estruturas.tipo === 'Atividade' && v.pessoas);
+    if (filtroId !== 'todos') {
+        filtrados = filtrados.filter(v => String(v.estrutura_id) === String(filtroId));
+    }
+    
+    filtrados.sort((a, b) => (a.pessoas.nome_completo || '').localeCompare(b.pessoas.nome_completo || ''));
+    
+    if (filtrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Nenhum registro encontrado.</td></tr>';
+        return;
+    }
+    
+    window.ativListaCacheParaImpressao = filtrados;
+    window.ativListaFiltroAtual = select && select.options[select.selectedIndex] ? select.options[select.selectedIndex].textContent : 'Todas as Atividades';
+    
+    tbody.innerHTML = '';
+    filtrados.forEach(v => {
+        const p = v.pessoas;
+        let idade = '-';
+        if (p.data_nascimento) {
+            const birth = new Date(p.data_nascimento);
+            const diff = Date.now() - birth.getTime();
+            const ageDate = new Date(diff); 
+            idade = Math.abs(ageDate.getUTCFullYear() - 1970) + ' anos';
+        }
+        
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+        tr.innerHTML = `
+            <td style="padding: 10px 8px; color: var(--text-main); font-family: monospace;">${formatCpf(p.cpf_cnpj)}</td>
+            <td style="padding: 10px 8px;">
+                <div style="color: var(--text-main); font-weight: 500;">${p.nome_completo || '-'}</div>
+                <div style="color: var(--text-muted); font-size: 11px;">${p.nome_curto || '-'}</div>
+            </td>
+            <td style="padding: 10px 8px; color: var(--text-main);">${v.estruturas.nome}</td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${formatCel(p.celular)}</td>
+            <td style="padding: 10px 8px; color: var(--text-muted);">${p.data_nascimento ? new Date(p.data_nascimento).toLocaleDateString('pt-BR') : '-'} (${idade})</td>
+        `;
+        tbody.appendChild(tr);
+    });
+};
+
+window.imprimirListaAtividades = function() {
+    const data = window.ativListaCacheParaImpressao || [];
+    if (data.length === 0) {
+        alert("Não há dados para imprimir.");
+        return;
+    }
+    const filtroStr = window.ativListaFiltroAtual || 'Todas as Atividades';
+    
+    let html = `
+    <html>
+    <head>
+        <title>Relatório de Atividades - SELA</title>
+        <style>
+            body { font-family: sans-serif; color: #333; margin: 20px; }
+            h2 { text-align: center; margin-bottom: 20px; }
+            h4 { text-align: center; margin-bottom: 20px; color: #666; font-weight: normal; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+            th { background-color: #f5f5f5; font-weight: bold; }
+            @media print {
+                @page { margin: 1cm; size: landscape; }
+                body { margin: 0; }
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Lista de Membros por Atividade - SELA</h2>
+        <h4>Filtro: ${filtroStr} (${data.length} registros)</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>CPF/CNPJ</th>
+                    <th>Nome Completo</th>
+                    <th>Nome Curto</th>
+                    <th>Atividade</th>
+                    <th>Celular</th>
+                    <th>Nascimento</th>
+                    <th>Idade</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    data.forEach(v => {
+        const p = v.pessoas;
+        let idade = '-';
+        let dt = '-';
+        if (p.data_nascimento) {
+            const birth = new Date(p.data_nascimento);
+            const diff = Date.now() - birth.getTime();
+            const ageDate = new Date(diff); 
+            idade = Math.abs(ageDate.getUTCFullYear() - 1970);
+            dt = birth.toLocaleDateString('pt-BR');
+        }
+        
+        html += `
+            <tr>
+                <td>${formatCpf(p.cpf_cnpj)}</td>
+                <td>${p.nome_completo || ''}</td>
+                <td>${p.nome_curto || ''}</td>
+                <td>${v.estruturas.nome}</td>
+                <td>${formatCel(p.celular)}</td>
+                <td>${dt}</td>
+                <td>${idade}</td>
             </tr>
         `;
     });
