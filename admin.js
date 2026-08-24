@@ -186,21 +186,38 @@ window.excluirRecargaCelular = async function(id) {
 // ==========================================
 
 window.switchSubTab = function(target, tabName) {
-    // target = 'pessoas' ou 'associados'
-    // tabName = 'perfil' ou 'dados'
+    const tabs = ['perfil', 'dados', 'lista'];
+    tabs.forEach(t => {
+        const el = document.getElementById(`subtab-${target}-${t}`) || document.getElementById(`${target}-${t}`);
+        if (el) el.style.display = 'none';
+        
+        const btn = document.querySelector(`.btn-${target}-${t}`);
+        if (btn) {
+            btn.classList.remove('active');
+            btn.style.background = 'rgba(255,255,255,0.05)';
+            btn.style.color = 'var(--text-muted)';
+            btn.style.border = '1px solid var(--border)';
+        }
+    });
     
-    // Atualiza botoes
-    document.querySelector(`.btn-${target}-perfil`).style.background = tabName === 'perfil' ? 'var(--primary)' : 'rgba(255,255,255,0.05)';
-    document.querySelector(`.btn-${target}-perfil`).style.color = tabName === 'perfil' ? 'white' : 'var(--text-muted)';
-    document.querySelector(`.btn-${target}-perfil`).style.border = tabName === 'perfil' ? 'none' : '1px solid var(--border)';
+    const targetEl = document.getElementById(`subtab-${target}-${tabName}`) || document.getElementById(`${target}-${tabName}`);
+    if (targetEl) targetEl.style.display = tabName === 'lista' ? 'flex' : (tabName === 'dados' ? 'grid' : 'block');
     
-    document.querySelector(`.btn-${target}-dados`).style.background = tabName === 'dados' ? 'var(--primary)' : 'rgba(255,255,255,0.05)';
-    document.querySelector(`.btn-${target}-dados`).style.color = tabName === 'dados' ? 'white' : 'var(--text-muted)';
-    document.querySelector(`.btn-${target}-dados`).style.border = tabName === 'dados' ? 'none' : '1px solid var(--border)';
+    const targetBtn = document.querySelector(`.btn-${target}-${tabName}`);
+    if (targetBtn) {
+        targetBtn.classList.add('active');
+        targetBtn.style.background = 'var(--primary)';
+        targetBtn.style.color = 'white';
+        targetBtn.style.border = 'none';
+    }
     
-    // Atualiza conteudos
-    document.querySelectorAll(`.${target}-subtab`).forEach(el => el.style.display = 'none');
-    document.getElementById(`subtab-${target}-${tabName}`).style.display = 'block';
+    if (tabName === 'lista' && target === 'associados') {
+        if(typeof window.carregarTabelaListaAssociados === 'function') {
+            window.carregarTabelaListaAssociados();
+        } else {
+            console.error('carregarTabelaListaAssociados function not found');
+        }
+    }
 };
 
 async function carregarDashboardsPessoas() {
