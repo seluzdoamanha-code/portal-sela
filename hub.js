@@ -2195,7 +2195,7 @@ async function carregarListaIrradiacao() {
 
                 let checkboxRepetir = `
                     <label style="font-size: 11px; display: flex; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; margin-bottom: 6px;">
-                        <input type="checkbox" onchange="toggleRenovacaoAutomatica('${item.id}', this.checked)" ${item.renovacao_automatica ? 'checked' : ''}>
+                        <input type="checkbox" id="chk_renovar_${item.id}" onchange="toggleRenovacaoAutomatica('${item.id}', this.checked)" ${item.renovacao_automatica ? 'checked' : ''}>
                         Repetir (Reiniciar ciclo automaticamente)
                     </label>
                 `;
@@ -2658,7 +2658,9 @@ window.marcarLeituraIrr = async function (btnElement, id, leituras_atuais, seman
         if (!Array.isArray(logs)) logs = [];
         logs.push(new Date().toISOString());
 
-        const autoRenovar = rowData.renovacao_automatica === true;
+        const autoRenovarDB = rowData.renovacao_automatica === true;
+        const chkElement = document.getElementById(`chk_renovar_${id}`);
+        const autoRenovar = chkElement ? chkElement.checked : autoRenovarDB;
 
         if (novaLeitura >= semanas_alvo) {
             if (autoRenovar) {
