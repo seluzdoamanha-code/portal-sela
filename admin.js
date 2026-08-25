@@ -1851,22 +1851,25 @@ window.carregarEstatisticasMiniAppIrradiacao = async function () {
 
                 <!-- Grid de Métricas -->
                 <div style="flex: 2; min-width: 400px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+                    <!-- Linha 1 -->
                     <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
                         <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Leituras Realizadas</span>
                         <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${leiturasRealizadasTotal}</div>
                     </div>
                     <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
                         <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Pessoas Únicas</span>
-                        <div style="font-size: 24px; font-weight: bold; color: #10b981;">${pessoasUnicasTotal.size}</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #10b981;">${pessoasUnicasTotal.size} <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">totais</span></div>
+                    </div>
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Pessoas Únicas</span>
+                        <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${pessoasUnicasAtivas.size} <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">ativas</span></div>
                     </div>
                     <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
                         <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Pessoas Concluídas</span>
                         <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">${pessoasConcluidas}</div>
                     </div>
-                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
-                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Pendentes</span>
-                        <div style="font-size: 24px; font-weight: bold; color: #ef4444;">${totalPendentes}</div>
-                    </div>
+                    
+                    <!-- Linha 2 -->
                     <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
                         <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Painel de Leitura</span>
                         <div style="font-size: 24px; font-weight: bold; color: #10b981;">${totalAtivos} <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">ativos</span></div>
@@ -1886,12 +1889,21 @@ window.carregarEstatisticasMiniAppIrradiacao = async function () {
                 </div>
             </div>
 
-            <!-- Tabelas de Necessidades -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
+            <!-- Tabelas de Necessidades e Pendentes no Centro -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 24px;">
                 <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
                     <h4 style="color: #10b981; font-size: 14px; margin: 0 0 16px 0;">Ativos por Dia / Necessidades</h4>
                     ${formatTable(ativosPorDia)}
                 </div>
+                
+                <!-- Card Pendentes em destaque -->
+                <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.1) 100%); border: 1px dashed rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 12px;">⏳</div>
+                    <div style="font-size: 12px; color: #ef4444; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px;">Aguardando Triagem</div>
+                    <div style="font-size: 56px; font-weight: 800; color: #ef4444; line-height: 1;">${totalPendentes}</div>
+                    <div style="font-size: 14px; color: var(--text-muted); margin-top: 12px;">Pacientes Pendentes</div>
+                </div>
+
                 <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
                     <h4 style="color: #f59e0b; font-size: 14px; margin: 0 0 16px 0;">Histórico por Dia / Necessidade</h4>
                     ${formatTable(historicoPorDia)}
