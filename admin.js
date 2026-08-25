@@ -404,7 +404,10 @@ async function carregarDashboardsHome() {
             celularHtml = `
             <div style="background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border: 1px solid var(--border); border-radius: 16px; padding: 20px; border-top: 4px solid ${corStatus}; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchTab('celular')">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">📱 Celular (Vivo)</div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="font-size: 20px; background: rgba(255,255,255,0.05); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">📱</div>
+                        <div style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Celular (Vivo)</div>
+                    </div>
                     <div style="font-size: 16px;" title="Status">${iconStatus}</div>
                 </div>
                 <div style="font-size: 28px; font-weight: 800; color: var(--text-main); line-height: 1.1;">
