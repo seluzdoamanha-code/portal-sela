@@ -82,9 +82,9 @@ window.switchTab = function(tabId) {
         if (typeof window.carregarEstatisticasBD === 'function') {
             window.carregarEstatisticasBD();
         }
-    } else if (tabId === 'agenda') {
-        if (typeof window.carregarAgendaGlobal === 'function') {
-            window.carregarAgendaGlobal();
+    } else if (tabId === 'miniapps') {
+        if (typeof window.carregarEstatisticasMiniAppIrradiacao === 'function') {
+            window.carregarEstatisticasMiniAppIrradiacao();
         }
     }
 };
@@ -211,7 +211,7 @@ window.excluirRecargaCelular = async function(id) {
 // ==========================================
 
 window.switchSubTab = function(target, tabName) {
-    const tabs = ['perfil', 'dados', 'lista', 'cards', 'miniapps'];
+    const tabs = ['perfil', 'dados', 'lista', 'cards', 'miniapps', 'irradiacao'];
     tabs.forEach(t => {
         const el = document.getElementById(`subtab-${target}-${t}`) || document.getElementById(`${target}-${t}`);
         if (el) el.style.display = 'none';
@@ -1720,5 +1720,295 @@ window.carregarAgendaGlobal = async function() {
     } catch (err) {
         console.error("Erro ao carregar agenda global:", err);
         container.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 40px;">⚠️ Erro ao carregar agenda.</div>';
+    }
+};
+
+// ==========================================
+// MÓDULO: MINI-APPS (IRRADIAÇÃO)
+// ==========================================
+
+window.carregarEstatisticasMiniAppIrradiacao = async function () {
+    const container = document.getElementById('containerEstatMiniAppIrradiacao');
+    if (!container) return;
+
+    container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 40px;">Processando dados da Irradiação, aguarde...</div>';
+
+    try {
+        const { data, error } = await db.from('app_irradiacao_solicitacoes').select('*');
+        if (error) throw error;
+
+        let totalAtivos = 0;
+        let totalHistorico = 0;
+        let totalPendentes = 0;
+        let encerraNaSemana = 0;
+        let arquivamento = 0;
+        let leiturasRealizadasTotal = 0;
+
+        const ativosPorDia = {};
+        const historicoPorDia = {};
+        const leiturasPorMes = {};
+        const leiturasPorSemana = {};
+
+        const pessoasUnicasAtivas = new Set();
+        const pessoasUnicasHistorico = new Set();
+        const pessoasUnicasTotal = new Set();
+
+        const hoje = new Date();
+
+        data.forEach(item => {
+            const nomeStr = (item.nome_solicitado || '').trim().toUpperCase();
+            if (nomeStr) pessoasUnicasTotal.add(nomeStr);
+
+            if (item.status === 'ativo') {
+                totalAtivos++;
+                if (nomeStr) pessoasUnicasAtivas.add(nomeStr);
+                ativosPorDia[item.dias_semana] = (ativosPorDia[item.dias_semana] || 0) + 1;
+
+                // Encerra na Semana
+                const alvo = parseInt(item.semanas_alvo) || 0;
+                const leituras = parseInt(item.leituras) || 0;
+                if (alvo - leituras === 1) {
+                    encerraNaSemana++;
+                }
+
+                // Arquivamento para ativos (sem leitura há > 30 dias)
+                if (item.ultima_leitura) {
+                    const ult = new Date(item.ultima_leitura);
+                    const diffDays = Math.ceil((hoje - ult) / (1000 * 60 * 60 * 24));
+                    if (diffDays > 30) arquivamento++;
+                }
+
+            } else if (item.status === 'historico') {
+                totalHistorico++;
+                if (nomeStr) pessoasUnicasHistorico.add(nomeStr);
+                historicoPorDia[item.dias_semana] = (historicoPorDia[item.dias_semana] || 0) + 1;
+            } else if (item.status === 'pendente') {
+                totalPendentes++;
+            }
+
+            // Processar as leituras reais para Gráficos e Total Geral
+            let logs = item.log_datas_leituras;
+            if (typeof logs === 'string') {
+                try { logs = JSON.parse(logs); } catch (e) { logs = []; }
+            }
+            if (Array.isArray(logs) && logs.length > 0) {
+                leiturasRealizadasTotal += logs.length;
+
+                logs.forEach(dateStr => {
+                    const date = new Date(dateStr);
+                    if (!isNaN(date)) {
+                        // Agrupar por Mês
+                        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                        leiturasPorMes[monthKey] = (leiturasPorMes[monthKey] || 0) + 1;
+
+                        // Agrupar por Semana ISO
+                        const dCopy = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+                        const dayNum = dCopy.getUTCDay() || 7;
+                        dCopy.setUTCDate(dCopy.getUTCDate() + 4 - dayNum);
+                        const yearStart = new Date(Date.UTC(dCopy.getUTCFullYear(), 0, 1));
+                        const weekNo = Math.ceil((((dCopy - yearStart) / 86400000) + 1) / 7);
+                        const weekKey = `Semana ${weekNo} (${dCopy.getUTCFullYear()})`;
+                        leiturasPorSemana[weekKey] = (leiturasPorSemana[weekKey] || 0) + 1;
+                    }
+                });
+            }
+        });
+
+        // Pessoas que concluíram mas continuam ativas em outro dia
+        pessoasUnicasAtivas.forEach(nome => {
+            if (pessoasUnicasHistorico.has(nome)) {
+                pessoasUnicasHistorico.delete(nome);
+            }
+        });
+
+        const pessoasConcluidas = pessoasUnicasHistorico.size;
+
+        // Tabelas Formatadas
+        const formatTable = (dict) => {
+            if (Object.keys(dict).length === 0) return '<div style="color:var(--text-muted); font-size:13px;">Sem dados</div>';
+            return Object.entries(dict).sort((a, b) => b[1] - a[1]).map(([dia, count]) => `
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 8px 0;">
+                    <span style="color: var(--text-muted); font-size: 13px;">${dia}</span>
+                    <strong style="color: var(--text-main); font-size: 14px;">${count}</strong>
+                </div>
+            `).join('');
+        };
+
+        // Render HTML
+        container.innerHTML = `
+            <!-- Cabeçalho / Card Principal e Grid de Métricas -->
+            <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px;">
+                
+                <!-- Card Principal do Mini-App -->
+                <div style="flex: 1; min-width: 300px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 24px; display: flex; align-items: center; gap: 24px;">
+                    <div style="font-size: 64px; text-shadow: 0 4px 12px rgba(59,130,246,0.3);">✨</div>
+                    <div>
+                        <h2 style="margin: 0 0 8px 0; color: #3b82f6; font-size: 24px;">Irradiação</h2>
+                        <div style="font-size: 14px; color: var(--text-main); margin-bottom: 4px;"><strong>Atividade:</strong> Irradiação à distância</div>
+                        <div style="font-size: 14px; color: var(--text-main);"><strong>Departamento:</strong> Espiritual</div>
+                    </div>
+                </div>
+
+                <!-- Grid de Métricas -->
+                <div style="flex: 2; min-width: 400px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Leituras Realizadas</span>
+                        <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${leiturasRealizadasTotal}</div>
+                    </div>
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Pessoas Únicas</span>
+                        <div style="font-size: 24px; font-weight: bold; color: #10b981;">${pessoasUnicasTotal.size}</div>
+                    </div>
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Pessoas Concluídas</span>
+                        <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">${pessoasConcluidas}</div>
+                    </div>
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Pendentes</span>
+                        <div style="font-size: 24px; font-weight: bold; color: #ef4444;">${totalPendentes}</div>
+                    </div>
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Painel de Leitura</span>
+                        <div style="font-size: 24px; font-weight: bold; color: #10b981;">${totalAtivos} <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">ativos</span></div>
+                    </div>
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Encerra na Semana</span>
+                        <div style="font-size: 24px; font-weight: bold; color: #8b5cf6;">${encerraNaSemana}</div>
+                    </div>
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Histórico</span>
+                        <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">${totalHistorico} <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">concluídos</span></div>
+                    </div>
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Arquivamento</span>
+                        <div style="font-size: 24px; font-weight: bold; color: #64748b;">${arquivamento}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabelas de Necessidades -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                    <h4 style="color: #10b981; font-size: 14px; margin: 0 0 16px 0;">Ativos por Dia / Necessidades</h4>
+                    ${formatTable(ativosPorDia)}
+                </div>
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                    <h4 style="color: #f59e0b; font-size: 14px; margin: 0 0 16px 0;">Histórico por Dia / Necessidade</h4>
+                    ${formatTable(historicoPorDia)}
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                <h4 style="color: var(--text-main); font-size: 14px; margin: 0 0 16px 0;">Evolução de Leituras por Semana (Eixo do Tempo)</h4>
+                <div style="position: relative; height: 350px; width: 100%;">
+                    <canvas id="chartMiniAppLeiturasSemanais"></canvas>
+                </div>
+            </div>
+
+            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                <h4 style="color: var(--text-main); font-size: 14px; margin: 0 0 16px 0;">Evolução de Leituras por Mês (Esforço da Equipe)</h4>
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="chartMiniAppLeiturasMensais"></canvas>
+                </div>
+            </div>
+        `;
+
+        // Preparar Dados dos Gráficos
+        const sortedMonths = Object.keys(leiturasPorMes).sort();
+        const chartLabelsMes = sortedMonths.map(m => {
+            const [year, month] = m.split('-');
+            const date = new Date(year, month - 1);
+            return date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+        });
+        const chartDataMes = sortedMonths.map(m => leiturasPorMes[m]);
+
+        const sortedWeeks = Object.keys(leiturasPorSemana).sort();
+        const chartLabelsSemana = sortedWeeks;
+        const chartDataSemana = sortedWeeks.map(w => leiturasPorSemana[w]);
+
+        if (window.Chart) {
+            // Destruir instâncias antigas se existirem
+            if (window.miniAppChartSemanal) window.miniAppChartSemanal.destroy();
+            if (window.miniAppChartMensal) window.miniAppChartMensal.destroy();
+
+            // Gráfico Semanal
+            const ctxSemanal = document.getElementById('chartMiniAppLeiturasSemanais').getContext('2d');
+            window.miniAppChartSemanal = new Chart(ctxSemanal, {
+                type: 'line',
+                data: {
+                    labels: chartLabelsSemana,
+                    datasets: [{
+                        label: 'Total de Leituras na Semana',
+                        data: chartDataSemana,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#8b5cf6',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#9ca3af' } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#9ca3af', precision: 0 },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        x: {
+                            ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico Mensal
+            const ctxMensal = document.getElementById('chartMiniAppLeiturasMensais').getContext('2d');
+            window.miniAppChartMensal = new Chart(ctxMensal, {
+                type: 'bar',
+                data: {
+                    labels: chartLabelsMes,
+                    datasets: [{
+                        label: 'Total de Leituras no Mês',
+                        data: chartDataMes,
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#9ca3af' } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#9ca3af', precision: 0 },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        x: {
+                            ticks: { color: '#9ca3af' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+    } catch (err) {
+        console.error("Erro ao carregar estatísticas do Mini-App Irradiação:", err);
+        container.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 40px;">⚠️ Erro ao carregar estatísticas.</div>';
     }
 };

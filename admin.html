@@ -78,6 +78,7 @@
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="auth_guard.js?v=4"></script>
     <link rel="icon" type="image/png" href="logo_sela.png">
 </head>
@@ -116,6 +117,7 @@
                         <div class="admin-tab" onclick="switchTab('legais')">⚖️ Legais</div>
                         <div class="admin-tab" onclick="switchTab('financas')">💰 Finanças</div>
                         <div class="admin-tab" onclick="switchTab('bd')">🗄️ Banco de Dados</div>
+                        <div class="admin-tab" onclick="switchTab('miniapps')">📱 Mini-Apps</div>
                     </div>
                 </div>
 
@@ -496,6 +498,18 @@
                     
                     <div id="gridBancoDados" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
                         <div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 40px;">Carregando tabelas...</div>
+                    </div>
+                </div>
+
+                <div id="tab-miniapps" class="tab-content">
+                    <h3 style="color: var(--text-main); margin-bottom: 16px;">📱 Dashboard de Mini-Apps</h3>
+                    
+                    <div class="admin-subtabs" style="display: flex; gap: 8px; margin-bottom: 24px;">
+                        <button onclick="switchSubTab('miniapps', 'irradiacao')" class="btn btn-miniapps-irradiacao active" style="flex: 1; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px;">Irradiação</button>
+                    </div>
+                    
+                    <div id="subtab-miniapps-irradiacao" class="subtab-content miniapps-subtab active" style="display: block;">
+                        <div id="containerEstatMiniAppIrradiacao" style="color: var(--text-muted); text-align: center; padding: 40px;">Carregando estatísticas...</div>
                     </div>
                 </div>
 
