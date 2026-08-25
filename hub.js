@@ -2223,7 +2223,7 @@ async function carregarListaIrradiacao() {
                 progressHtml = `<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">${checkboxRepetir}<div style="display:flex; align-items:center; margin-bottom:4px; flex-wrap:wrap;">Leitura atual: <strong style="margin-left: 4px; margin-right: 2px; color: var(--accent);">${leituras}/${semanas_alvo}</strong>${totalLeiturasHtml} ${lastDateHtml}</div><div style="display:flex; flex-wrap:wrap; max-width: 250px;">${caixinhas}</div></div>`;
 
                 actionsHtml = `
-                    <button id="btn_ler_${item.id}" onclick="marcarLeituraIrr(this, '${item.id}', ${leituras}, ${semanas_alvo}, ${item.renovacao_automatica ? 'true' : 'false'})" class="btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; padding: 8px 12px; transition: all 0.3s ease; width: 100%; font-weight: 600;">✅ Registrar Leitura</button>
+                    <button id="btn_ler_${item.id}" onclick="marcarLeituraIrr(this, '${item.id}', ${leituras}, ${semanas_alvo})" class="btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; padding: 8px 12px; transition: all 0.3s ease; width: 100%; font-weight: 600;">✅ Registrar Leitura</button>
                     <div style="display: flex; gap: 8px; width: 100%;">
                         <button onclick="abrirModalEdicaoIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}', ${semanasAlvoStr})" class="btn btn-secondary" style="padding: 6px 12px; flex: 1;">✏️ Editar</button>
                         <button onclick="arquivarIrradiacao('${item.id}')" class="btn btn-secondary" style="padding: 6px 12px; flex: 1;">Arquivar</button>
@@ -2617,7 +2617,7 @@ window.confirmarTriagem = async function (id) {
     }
 }
 
-window.marcarLeituraIrr = async function (btnElement, id, leituras_atuais, semanas_alvo, autoRenovar = false) {
+window.marcarLeituraIrr = async function (btnElement, id, leituras_atuais, semanas_alvo) {
     try {
         const novaLeitura = leituras_atuais + 1;
         const card = document.getElementById(`card_irr_${id}`);
@@ -2651,12 +2651,14 @@ window.marcarLeituraIrr = async function (btnElement, id, leituras_atuais, seman
         // ----------------------------------------------
 
         // Buscar log_datas_leituras atual
-        const { data: rowData, error: fetchErr } = await db.from('app_irradiacao_solicitacoes').select('log_datas_leituras').eq('id', id).single();
+        const { data: rowData, error: fetchErr } = await db.from('app_irradiacao_solicitacoes').select('log_datas_leituras, renovacao_automatica').eq('id', id).single();
         if (fetchErr) throw fetchErr;
 
         let logs = rowData.log_datas_leituras || [];
         if (!Array.isArray(logs)) logs = [];
         logs.push(new Date().toISOString());
+
+        const autoRenovar = rowData.renovacao_automatica === true;
 
         if (novaLeitura >= semanas_alvo) {
             if (autoRenovar) {
