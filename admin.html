@@ -293,13 +293,24 @@
                     <h3 style="color: var(--text-main); margin-bottom: 16px;">🏢 Departamentos</h3>
                     
                     <div class="admin-subtabs" style="display: flex; gap: 8px; margin-bottom: 24px;">
-                        <button onclick="switchSubTab('departamentos', 'cards')" class="btn btn-departamentos-cards active" style="flex: 1; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px;">Cards</button>
-                        <button onclick="switchSubTab('departamentos', 'lista')" class="btn btn-departamentos-lista" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Lista</button>
+                        <button onclick="switchSubTab('departamentos', 'cards')" class="btn btn-departamentos-cards active" style="flex: 1; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px;">Cards Organograma</button>
+                        <button onclick="switchSubTab('departamentos', 'miniapps')" class="btn btn-departamentos-miniapps" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Cards Mini-Apps</button>
+                        <button onclick="switchSubTab('departamentos', 'lista')" class="btn btn-departamentos-lista" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Lista Pessoas</button>
                     </div>
 
                     <div id="subtab-departamentos-cards" class="subtab-content departamentos-subtab active" style="display: block;">
                         <div id="gridDepartamentos" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
                             <div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 40px;">Carregando Departamentos...</div>
+                        </div>
+                    </div>
+
+                    <div id="subtab-departamentos-miniapps" class="subtab-content departamentos-subtab" style="display: none;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                                <h4 style="color: var(--primary); margin-top: 0; margin-bottom: 8px;">Irradiação</h4>
+                                <p style="font-size: 13px; color: var(--text-main); margin-bottom: 4px;"><strong>Departamento:</strong> Departamento Espiritual (Irradiação)</p>
+                                <p style="font-size: 13px; color: var(--text-main); margin-bottom: 4px;"><strong>Atividade:</strong> Reunião de Irradiação</p>
+                            </div>
                         </div>
                     </div>
                     
@@ -338,13 +349,28 @@
                     <h3 style="color: var(--text-main); margin-bottom: 16px;">📅 Atividades Regulares</h3>
                     
                     <div class="admin-subtabs" style="display: flex; gap: 8px; margin-bottom: 24px;">
-                        <button onclick="switchSubTab('atividades', 'cards')" class="btn btn-atividades-cards active" style="flex: 1; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px;">Cards</button>
-                        <button onclick="switchSubTab('atividades', 'lista')" class="btn btn-atividades-lista" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Lista</button>
+                        <button onclick="switchSubTab('atividades', 'cards')" class="btn btn-atividades-cards active" style="flex: 1; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px;">Cards Organograma</button>
+                        <button onclick="switchSubTab('atividades', 'miniapps')" class="btn btn-atividades-miniapps" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Cards Mini-Apps</button>
+                        <button onclick="switchSubTab('atividades', 'lista')" class="btn btn-atividades-lista" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Lista Pessoas</button>
                     </div>
 
                     <div id="subtab-atividades-cards" class="subtab-content atividades-subtab active" style="display: block;">
                         <div id="gridAtividades" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
                             <div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 40px;">Carregando Atividades...</div>
+                        </div>
+                    </div>
+
+                    <div id="subtab-atividades-miniapps" class="subtab-content atividades-subtab" style="display: none;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                                <h4 style="color: var(--primary); margin-top: 0; margin-bottom: 8px;">Irradiação</h4>
+                                <p style="font-size: 13px; color: var(--text-main); margin-bottom: 4px;"><strong>Departamento:</strong> Departamento Espiritual</p>
+                                <p style="font-size: 13px; color: var(--text-main); margin-bottom: 8px;"><strong>Atividade:</strong> Reunião de Irradiação</p>
+                                <div style="display: flex; gap: 12px; font-size: 12px; color: var(--text-muted);">
+                                    <div style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px;">Nº Assistidos: <strong style="color: white;">--</strong></div>
+                                    <div style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px;">Voluntários: <strong style="color: white;">--</strong></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     

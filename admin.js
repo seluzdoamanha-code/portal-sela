@@ -207,7 +207,7 @@ window.excluirRecargaCelular = async function(id) {
 // ==========================================
 
 window.switchSubTab = function(target, tabName) {
-    const tabs = ['perfil', 'dados', 'lista', 'cards'];
+    const tabs = ['perfil', 'dados', 'lista', 'cards', 'miniapps'];
     tabs.forEach(t => {
         const el = document.getElementById(`subtab-${target}-${t}`) || document.getElementById(`${target}-${t}`);
         if (el) el.style.display = 'none';
