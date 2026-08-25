@@ -319,7 +319,14 @@ function renderLista() {
                 }
             }
 
-            progressHtml = `<div style="margin-top: 8px; font-size: 13px; color: var(--text-muted);"><div style="display:flex; align-items:center; margin-bottom:4px; flex-wrap:wrap;">Leitura atual: <strong style="color:var(--accent); margin-left:4px; margin-right:4px;">${leituras}/${semanas_alvo}</strong>${totalLeiturasHtml} ${lastDateHtml}</div><div style="margin-top:4px; display:flex; flex-wrap:wrap;">${caixinhas}</div></div>`;
+            let checkboxRepetir = `
+                <label style="font-size: 11px; display: flex; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; margin-bottom: 6px;">
+                    <input type="checkbox" id="chk_renovar_${item.id}" onchange="toggleRenovacaoAutomaticaMobile('${item.id}', this.checked)" ${item.renovacao_automatica ? 'checked' : ''}>
+                    Repetir (Reiniciar automaticamente)
+                </label>
+            `;
+
+            progressHtml = `<div style="margin-top: 8px; font-size: 13px; color: var(--text-muted);">${checkboxRepetir}<div style="display:flex; align-items:center; margin-bottom:4px; flex-wrap:wrap;">Leitura atual: <strong style="color:var(--accent); margin-left:4px; margin-right:4px;">${leituras}/${semanas_alvo}</strong>${totalLeiturasHtml} ${lastDateHtml}</div><div style="margin-top:4px; display:flex; flex-wrap:wrap;">${caixinhas}</div></div>`;
 
             actions = `
                 <button id="btn_ler_${item.id}" onclick="marcarLeituraIrrMobile(this, '${item.id}', ${leituras}, ${semanas_alvo})" class="btn-action" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; transition: all 0.3s ease;">✅ Registrar Leitura</button>
@@ -500,6 +507,16 @@ window.arquivar = async function(id) {
     });
 }
 
+window.toggleRenovacaoAutomaticaMobile = async function (id, isChecked) {
+    try {
+        const { error } = await db.from('app_irradiacao_solicitacoes').update({ renovacao_automatica: isChecked }).eq('id', id);
+        if (error) throw error;
+    } catch (e) {
+        console.error(e);
+        alert('Erro ao atualizar opção de repetir ciclo: ' + e.message);
+    }
+}
+
 // ----------------------------------------------------
 // MARCAR LEITURA (IGUAL AO DESKTOP)
 // ----------------------------------------------------
@@ -544,7 +561,9 @@ window.marcarLeituraIrrMobile = async function (btnElement, id, leituras_atuais,
         if (!Array.isArray(logs)) logs = [];
         logs.push(new Date().toISOString());
 
-        const autoRenovar = rowData.renovacao_automatica === true;
+        const autoRenovarDB = rowData.renovacao_automatica === true;
+        const chkElement = document.getElementById(`chk_renovar_${id}`);
+        const autoRenovar = chkElement ? chkElement.checked : autoRenovarDB;
 
         // --- ATUALIZAÇÃO DO CACHE LOCAL (dataFull) ---
         const itemIdx = dataFull.findIndex(i => i.id === id);
