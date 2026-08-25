@@ -1846,7 +1846,9 @@ window.carregarPainelGestaoIrradiacao = async function () {
             <div style="display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; overflow-x: auto;">
                 <button onclick="mudarAbaIrradiacao('pendentes')" id="btnIrrPendentes" class="btn" style="white-space: nowrap; border-radius: 8px;">📥 Pendentes</button>
                 <button onclick="mudarAbaIrradiacao('ativos')" id="btnIrrAtivos" class="btn" style="white-space: nowrap; border-radius: 8px;">📋 Painel de Leitura</button>
+                <button onclick="mudarAbaIrradiacao('encerra_semana')" id="btnIrrEncerraSemana" class="btn" style="white-space: nowrap; border-radius: 8px;">⏳ Encerra na Semana</button>
                 <button onclick="mudarAbaIrradiacao('historico')" id="btnIrrHistorico" class="btn" style="white-space: nowrap; border-radius: 8px;">🗄️ Histórico</button>
+                <button onclick="mudarAbaIrradiacao('arquivamento')" id="btnIrrArquivamento" class="btn" style="white-space: nowrap; border-radius: 8px;">📦 Arquivamento</button>
                 <button onclick="mudarAbaIrradiacao('estatisticas')" id="btnIrrEstatisticas" class="btn" style="white-space: nowrap; border-radius: 8px;">📊 Estatísticas</button>
                 <button onclick="mudarAbaIrradiacao('limpeza')" id="btnIrrLimpeza" class="btn" style="white-space: nowrap; border-radius: 8px;">🧹 Limpeza</button>
                 <button onclick="window.open('irradiacao_imprimir.html', '_blank')" id="btnIrrImprimir" class="btn" style="white-space: nowrap; border-radius: 8px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">🖨️ Imprimir Lista</button>
@@ -1939,26 +1941,47 @@ window.mudarAbaIrradiacao = function (aba) {
     // Atualiza botões
     const btnPendentes = document.getElementById('btnIrrPendentes');
     const btnAtivos = document.getElementById('btnIrrAtivos');
+    const btnEncerraSemana = document.getElementById('btnIrrEncerraSemana');
     const btnHistorico = document.getElementById('btnIrrHistorico');
-
+    const btnArquivamento = document.getElementById('btnIrrArquivamento');
     const btnEstatisticas = document.getElementById('btnIrrEstatisticas');
     const btnLimpeza = document.getElementById('btnIrrLimpeza');
 
-    btnPendentes.style.background = aba === 'pendentes' ? 'rgba(56, 189, 248, 0.2)' : 'transparent';
-    btnPendentes.style.color = aba === 'pendentes' ? '#38bdf8' : 'var(--text-muted)';
-    btnPendentes.style.border = aba === 'pendentes' ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid transparent';
+    if(btnPendentes) {
+        btnPendentes.style.background = aba === 'pendentes' ? 'rgba(56, 189, 248, 0.2)' : 'transparent';
+        btnPendentes.style.color = aba === 'pendentes' ? '#38bdf8' : 'var(--text-muted)';
+        btnPendentes.style.border = aba === 'pendentes' ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid transparent';
+    }
 
-    btnAtivos.style.background = aba === 'ativos' ? 'rgba(16,185,129,0.2)' : 'transparent';
-    btnAtivos.style.color = aba === 'ativos' ? '#10b981' : 'var(--text-muted)';
-    btnAtivos.style.border = aba === 'ativos' ? '1px solid rgba(16,185,129,0.4)' : '1px solid transparent';
+    if(btnAtivos) {
+        btnAtivos.style.background = aba === 'ativos' ? 'rgba(16,185,129,0.2)' : 'transparent';
+        btnAtivos.style.color = aba === 'ativos' ? '#10b981' : 'var(--text-muted)';
+        btnAtivos.style.border = aba === 'ativos' ? '1px solid rgba(16,185,129,0.4)' : '1px solid transparent';
+    }
 
-    btnHistorico.style.background = aba === 'historico' ? 'rgba(255, 255, 255, 0.1)' : 'transparent';
-    btnHistorico.style.color = aba === 'historico' ? 'white' : 'var(--text-muted)';
-    btnHistorico.style.border = aba === 'historico' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid transparent';
+    if(btnEncerraSemana) {
+        btnEncerraSemana.style.background = aba === 'encerra_semana' ? 'rgba(245, 158, 11, 0.2)' : 'transparent';
+        btnEncerraSemana.style.color = aba === 'encerra_semana' ? '#f59e0b' : 'var(--text-muted)';
+        btnEncerraSemana.style.border = aba === 'encerra_semana' ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid transparent';
+    }
 
-    btnEstatisticas.style.background = aba === 'estatisticas' ? 'rgba(245, 158, 11, 0.2)' : 'transparent';
-    btnEstatisticas.style.color = aba === 'estatisticas' ? '#f59e0b' : 'var(--text-muted)';
-    btnEstatisticas.style.border = aba === 'estatisticas' ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid transparent';
+    if(btnHistorico) {
+        btnHistorico.style.background = aba === 'historico' ? 'rgba(255, 255, 255, 0.1)' : 'transparent';
+        btnHistorico.style.color = aba === 'historico' ? 'white' : 'var(--text-muted)';
+        btnHistorico.style.border = aba === 'historico' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid transparent';
+    }
+
+    if(btnArquivamento) {
+        btnArquivamento.style.background = aba === 'arquivamento' ? 'rgba(168, 85, 247, 0.2)' : 'transparent';
+        btnArquivamento.style.color = aba === 'arquivamento' ? '#a855f7' : 'var(--text-muted)';
+        btnArquivamento.style.border = aba === 'arquivamento' ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid transparent';
+    }
+
+    if (btnEstatisticas) {
+        btnEstatisticas.style.background = aba === 'estatisticas' ? 'rgba(245, 158, 11, 0.2)' : 'transparent';
+        btnEstatisticas.style.color = aba === 'estatisticas' ? '#f59e0b' : 'var(--text-muted)';
+        btnEstatisticas.style.border = aba === 'estatisticas' ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid transparent';
+    }
 
     if (btnLimpeza) {
         btnLimpeza.style.background = aba === 'limpeza' ? 'rgba(236, 72, 153, 0.2)' : 'transparent';
@@ -1988,7 +2011,7 @@ window.mudarAbaIrradiacao = function (aba) {
         estatisticasContainer.style.display = 'none';
         if (limpezaContainer) limpezaContainer.style.display = 'none';
         
-        if (aba === 'ativos' || aba === 'historico') {
+        if (aba === 'ativos' || aba === 'encerra_semana' || aba === 'historico' || aba === 'arquivamento') {
             listaIrradiacoes.style.display = 'flex';
             listaIrradiacoes.style.flexDirection = 'column';
         } else {
@@ -2023,20 +2046,61 @@ async function carregarListaIrradiacao() {
             .select('*')
             .eq('estrutura_id', estruturaId);
 
-        if (currentIrradiacaoTab === 'pendentes') {
-            query = query.eq('status', 'pendente').order('nome_solicitado', { ascending: true });
-        } else if (currentIrradiacaoTab === 'ativos') {
-            query = query.eq('status', 'ativo').order('nome_solicitado', { ascending: true });
-        } else if (currentIrradiacaoTab === 'historico') {
-            query = query.eq('status', 'historico').order('nome_solicitado', { ascending: true });
-        }
+        let targetStatus = currentIrradiacaoTab;
+        if (currentIrradiacaoTab === 'ativos' || currentIrradiacaoTab === 'encerra_semana') targetStatus = 'ativo';
+        if (currentIrradiacaoTab === 'pendentes') targetStatus = 'pendente';
+        if (currentIrradiacaoTab === 'historico' || currentIrradiacaoTab === 'arquivamento') targetStatus = 'historico';
+
+        query = query.eq('status', targetStatus).order('nome_solicitado', { ascending: true });
 
         const { data, error } = await query;
         if (error) throw error;
 
+        let filteredBase = data || [];
+
+        if (currentIrradiacaoTab === 'encerra_semana') {
+            filteredBase = filteredBase.filter(item => {
+                const semanas_alvo = item.semanas_alvo || 4;
+                const leituras = item.leituras || 0;
+                return (semanas_alvo - leituras) === 1;
+            });
+        } else if (currentIrradiacaoTab === 'arquivamento') {
+            filteredBase = filteredBase.filter(item => {
+                let logs = item.log_datas_leituras;
+                if (typeof logs === 'string') {
+                    try { logs = JSON.parse(logs); } catch (e) { logs = []; }
+                }
+                if (Array.isArray(logs) && logs.length > 0) {
+                    const lastLog = new Date(logs[logs.length - 1]);
+                    if (!isNaN(lastLog)) {
+                        const diffTime = Math.abs(new Date() - lastLog);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        return diffDays > 30;
+                    }
+                }
+                return false;
+            });
+        } else if (currentIrradiacaoTab === 'historico') {
+            filteredBase = filteredBase.filter(item => {
+                let logs = item.log_datas_leituras;
+                if (typeof logs === 'string') {
+                    try { logs = JSON.parse(logs); } catch (e) { logs = []; }
+                }
+                if (Array.isArray(logs) && logs.length > 0) {
+                    const lastLog = new Date(logs[logs.length - 1]);
+                    if (!isNaN(lastLog)) {
+                        const diffTime = Math.abs(new Date() - lastLog);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        return diffDays <= 30;
+                    }
+                }
+                return true;
+            });
+        }
+
         // --- Cálculo e atualização dos botões de filtro ---
         let counts = {
-            'Todos os dias': data ? data.length : 0,
+            'Todos os dias': filteredBase.length,
             'Segunda-feira': 0,
             'Terça-feira': 0,
             'Quarta-feira (Desobsessão)': 0,
@@ -2044,16 +2108,14 @@ async function carregarListaIrradiacao() {
             'Quinta-feira': 0
         };
 
-        if (data) {
-            data.forEach(item => {
-                const d = item.dias_semana || '';
-                if (d.includes('Segunda-feira')) counts['Segunda-feira']++;
-                if (d.includes('Terça-feira')) counts['Terça-feira']++;
-                if (d.includes('Quarta-feira (Desobsessão)')) counts['Quarta-feira (Desobsessão)']++;
-                if (d.includes('Quarta-feira (Desencarnado)')) counts['Quarta-feira (Desencarnado)']++;
-                if (d.includes('Quinta-feira')) counts['Quinta-feira']++;
-            });
-        }
+        filteredBase.forEach(item => {
+            const d = item.dias_semana || '';
+            if (d.includes('Segunda-feira')) counts['Segunda-feira']++;
+            if (d.includes('Terça-feira')) counts['Terça-feira']++;
+            if (d.includes('Quarta-feira (Desobsessão)')) counts['Quarta-feira (Desobsessão)']++;
+            if (d.includes('Quarta-feira (Desencarnado)')) counts['Quarta-feira (Desencarnado)']++;
+            if (d.includes('Quinta-feira')) counts['Quinta-feira']++;
+        });
 
         document.querySelectorAll('.btn-dia').forEach(b => {
             const btnDia = b.getAttribute('data-dia') || '';
@@ -2074,8 +2136,8 @@ async function carregarListaIrradiacao() {
 
         // Filtra os dados no lado do cliente
         const filteredData = currentIrradiacaoDia === ''
-            ? data
-            : (data || []).filter(item => (item.dias_semana || '').includes(currentIrradiacaoDia));
+            ? filteredBase
+            : (filteredBase || []).filter(item => (item.dias_semana || '').includes(currentIrradiacaoDia));
 
         if (!filteredData || filteredData.length === 0) {
             lista.innerHTML = '<div style="color: var(--text-muted); font-size: 14px; text-align: center; padding: 24px; background: rgba(255,255,255,0.02); border-radius: 8px;">Nenhum registro encontrado nesta visão.</div>';
@@ -2119,7 +2181,7 @@ async function carregarListaIrradiacao() {
                 actionsHtml = `
                     <button onclick="window.abrirSideSheetPendenteHub('${itemDataStr}')" class="btn" style="background: var(--sela-orange); color: #fff; width: 100%; border: none;">Analisar Solicitação 📋</button>
                 `;
-            } else if (currentIrradiacaoTab === 'ativos') {
+            } else if (currentIrradiacaoTab === 'ativos' || currentIrradiacaoTab === 'encerra_semana') {
                 const leituras = item.leituras || 0;
                 const semanas_alvo = item.semanas_alvo || 4; // Fallback se não existir no DB
                 let caixinhas = '';
@@ -2167,7 +2229,7 @@ async function carregarListaIrradiacao() {
                         <button onclick="arquivarIrradiacao('${item.id}')" class="btn btn-secondary" style="padding: 6px 12px; flex: 1;">Arquivar</button>
                     </div>
                 `;
-            } else if (currentIrradiacaoTab === 'historico') {
+            } else if (currentIrradiacaoTab === 'historico' || currentIrradiacaoTab === 'arquivamento') {
                 let lastDateInfo = '';
                 let logs = item.log_datas_leituras;
                 if (typeof logs === 'string') {
@@ -2190,7 +2252,7 @@ async function carregarListaIrradiacao() {
                 `;
             }
 
-            if (currentIrradiacaoTab === 'ativos' || currentIrradiacaoTab === 'historico') {
+            if (currentIrradiacaoTab === 'ativos' || currentIrradiacaoTab === 'encerra_semana' || currentIrradiacaoTab === 'historico' || currentIrradiacaoTab === 'arquivamento') {
                 html += `
                     <div id="card_irr_${item.id}" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 24px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                         <div style="flex: 2; min-width: 250px;">
