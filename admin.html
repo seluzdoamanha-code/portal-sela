@@ -9,11 +9,9 @@
         /* Tabs de navegação rolante */
         .admin-tabs-wrapper {
             width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
             border-bottom: 1px solid var(--border);
             margin-bottom: 24px;
-            padding-bottom: 8px;
+            padding-bottom: 12px;
         }
         
         .admin-tabs-wrapper::-webkit-scrollbar {
@@ -25,7 +23,8 @@
         }
         
         .admin-tabs {
-            display: inline-flex;
+            display: flex;
+            flex-wrap: wrap;
             gap: 12px;
             padding: 0 4px;
         }
@@ -108,6 +107,7 @@
                     <div class="admin-tabs" id="adminTabs">
                         <div class="admin-tab active" onclick="switchTab('home')">🏠 Home</div>
                         <div class="admin-tab" onclick="switchTab('agenda')">📅 Agenda</div>
+                        <div class="admin-tab" onclick="switchTab('miniapps')">📱 Mini-Apps</div>
                         <div class="admin-tab" onclick="switchTab('associados')">🤝 Associados</div>
                         <div class="admin-tab" onclick="switchTab('celular')">📱 Celular</div>
                         <div class="admin-tab" onclick="switchTab('mensalidades')">💳 Mensalidades</div>
@@ -117,7 +117,6 @@
                         <div class="admin-tab" onclick="switchTab('legais')">⚖️ Legais</div>
                         <div class="admin-tab" onclick="switchTab('financas')">💰 Finanças</div>
                         <div class="admin-tab" onclick="switchTab('bd')">🗄️ Banco de Dados</div>
-                        <div class="admin-tab" onclick="switchTab('miniapps')">📱 Mini-Apps</div>
                     </div>
                 </div>
 
