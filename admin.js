@@ -82,6 +82,10 @@ window.switchTab = function(tabId) {
         if (typeof window.carregarEstatisticasBD === 'function') {
             window.carregarEstatisticasBD();
         }
+    } else if (tabId === 'agenda') {
+        if (typeof window.carregarAgendaGlobal === 'function') {
+            window.carregarAgendaGlobal();
+        }
     }
 };
 
@@ -1624,4 +1628,94 @@ window.carregarEstatisticasBD = async function() {
         `;
         grid.appendChild(card);
     });
+};
+
+// ==========================================
+// MÓDULO: AGENDA GLOBAL
+// ==========================================
+
+window.carregarAgendaGlobal = async function() {
+    const container = document.getElementById('container-agenda-global');
+    if (!container) return;
+
+    container.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 40px;">Carregando eventos...</div>';
+
+    try {
+        const { data: eventos, error } = await db
+            .from('agenda')
+            .select('*, estruturas(nome)')
+            .order('data_hora_inicio', { ascending: true });
+
+        if (error) throw error;
+
+        if (!eventos || eventos.length === 0) {
+            container.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 40px;">Nenhum evento encontrado na agenda.</div>';
+            return;
+        }
+
+        // Agrupar eventos por Mês/Ano
+        const agrupados = {};
+
+        eventos.forEach(ev => {
+            if (!ev.data_hora_inicio) return;
+            const dataInicio = new Date(ev.data_hora_inicio);
+            if (isNaN(dataInicio)) return;
+
+            // Criar chave do mês/ano (ex: "Agosto 2026")
+            const mesNome = dataInicio.toLocaleString('pt-BR', { month: 'long' });
+            const ano = dataInicio.getFullYear();
+            const chave = `${mesNome.charAt(0).toUpperCase() + mesNome.slice(1)} ${ano}`;
+
+            if (!agrupados[chave]) {
+                agrupados[chave] = [];
+            }
+            agrupados[chave].push(ev);
+        });
+
+        let html = '';
+
+        for (const [mesAno, listaEventos] of Object.entries(agrupados)) {
+            // Cabeçalho do Mês
+            html += `
+                <h3 style="color: var(--primary); margin-top: 16px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                    ${mesAno}
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 32px;">
+            `;
+
+            // Cards de Eventos
+            listaEventos.forEach(ev => {
+                const dataInicio = new Date(ev.data_hora_inicio);
+                const dataFormatada = dataInicio.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase();
+                const horaFormatada = dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const organizador = ev.estruturas ? ev.estruturas.nome : 'Global / Sem Departamento';
+                const escopoStr = ev.visibilidade === 'Global' 
+                    ? '<span style="color: #ef4444; font-weight: bold;">[Global]</span>' 
+                    : '<span style="color: #3b82f6; font-weight: bold;">[Restrito]</span>';
+
+                html += `
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; gap: 12px; align-items: center; position: relative; transition: all 0.2s;">
+                        <div style="background: rgba(255,255,255,0.1); color: var(--text-main); border-radius: 6px; padding: 6px 10px; text-align: center; min-width: 55px;">
+                            <div style="font-size: 14px; font-weight: bold;">${dataFormatada.split(' DE ')[0]}</div>
+                            <div style="font-size: 10px; text-transform: uppercase;">${dataFormatada.split(' DE ')[1] || ''}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: var(--text-main); font-size: 14px;">${ev.titulo}</div>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">${organizador}</div>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">⏰ ${horaFormatada} ${ev.local ? `| 📍 ${ev.local}` : ''}</div>
+                            <div style="font-size: 11px; margin-top: 6px;">${escopoStr}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`; // fecha a grid
+        }
+
+        container.innerHTML = html;
+
+    } catch (err) {
+        console.error("Erro ao carregar agenda global:", err);
+        container.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 40px;">⚠️ Erro ao carregar agenda.</div>';
+    }
 };
