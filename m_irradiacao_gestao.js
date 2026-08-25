@@ -145,8 +145,9 @@ window.carregarLista = async function() {
         }
 
         let targetStatus = currentTab;
-        if (currentTab === 'ativos') targetStatus = 'ativo';
+        if (currentTab === 'ativos' || currentTab === 'encerra_semana') targetStatus = 'ativo';
         if (currentTab === 'pendentes') targetStatus = 'pendente';
+        if (currentTab === 'arquivamento') targetStatus = 'historico';
 
         query = query.eq('status', targetStatus).order('nome_solicitado', { ascending: true });
 
@@ -155,7 +156,6 @@ window.carregarLista = async function() {
         if (error) throw error;
 
         dataFull = data || [];
-        atualizarContadores(dataFull);
         renderLista();
 
     } catch (err) {
@@ -194,9 +194,53 @@ function atualizarContadores(dados) {
 function renderLista() {
     const listaEl = document.getElementById('listaGestaoIrradiacoes');
 
-    let filtered = dataFull;
+    let filteredBase = dataFull;
+
+    if (currentTab === 'encerra_semana') {
+        filteredBase = filteredBase.filter(item => {
+            const semanas_alvo = item.semanas_alvo || 4;
+            const leituras = item.leituras || 0;
+            return (semanas_alvo - leituras) === 1;
+        });
+    } else if (currentTab === 'arquivamento') {
+        filteredBase = filteredBase.filter(item => {
+            let logs = item.log_datas_leituras;
+            if (typeof logs === 'string') {
+                try { logs = JSON.parse(logs); } catch (e) { logs = []; }
+            }
+            if (Array.isArray(logs) && logs.length > 0) {
+                const lastLog = new Date(logs[logs.length - 1]);
+                if (!isNaN(lastLog)) {
+                    const diffTime = Math.abs(new Date() - lastLog);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return diffDays > 30;
+                }
+            }
+            return false;
+        });
+    } else if (currentTab === 'historico') {
+        filteredBase = filteredBase.filter(item => {
+            let logs = item.log_datas_leituras;
+            if (typeof logs === 'string') {
+                try { logs = JSON.parse(logs); } catch (e) { logs = []; }
+            }
+            if (Array.isArray(logs) && logs.length > 0) {
+                const lastLog = new Date(logs[logs.length - 1]);
+                if (!isNaN(lastLog)) {
+                    const diffTime = Math.abs(new Date() - lastLog);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return diffDays <= 30;
+                }
+            }
+            return true;
+        });
+    }
+
+    atualizarContadores(filteredBase);
+
+    let filtered = filteredBase;
     if (currentDia !== '') {
-        filtered = dataFull.filter(item => (item.dias_semana || '').includes(currentDia));
+        filtered = filteredBase.filter(item => (item.dias_semana || '').includes(currentDia));
     }
 
     if (filtered.length === 0) {
@@ -243,7 +287,7 @@ function renderLista() {
             actions = `
                 <button class="btn-action" style="background: var(--sela-orange); color: #fff; width: 100%; border: none;" onclick="window.abrirSideSheetPendente('${itemDataStr}')">Analisar Solicitação 📋</button>
             `;
-        } else if (currentTab === 'ativos') {
+        } else if (currentTab === 'ativos' || currentTab === 'encerra_semana') {
             const leituras = item.leituras || 0;
             const semanas_alvo = item.semanas_alvo || 4;
             let caixinhas = '';
@@ -282,7 +326,7 @@ function renderLista() {
                 <button class="btn-action btn-secondary" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})">Editar ✏️</button>
                 <button class="btn-action btn-danger" onclick="arquivar('${item.id}')">Forçar Arquivamento</button>
             `;
-        } else if (currentTab === 'historico') {
+        } else if (currentTab === 'historico' || currentTab === 'arquivamento') {
             let lastDateInfo = '';
             let logs = item.log_datas_leituras;
             if (typeof logs === 'string') {

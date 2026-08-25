@@ -29,16 +29,26 @@
         const listaSugestoes = document.getElementById('listaSugestoes');
 
         try {
-            // Pegar últimos cadastros para base do autocomplete
-            let { data } = await db.from('app_atendimento_fraterno').select('nome_completo, endereco_completo, data_nascimento, telefone').order('created_at', { ascending: false }).limit(200);
+            // Pegar pessoas físicas para base do autocomplete
+            let { data } = await db.from('pessoas')
+                .select('nome_completo, data_nascimento, celular, endereco, bairro')
+                .eq('tipo_pessoa', 'Física');
             
             if (data) {
                 window.sugestoes = {};
-                data.forEach(item => {
-                    if (item.nome_completo) {
-                        const n = item.nome_completo.toUpperCase();
+                data.forEach(p => {
+                    if (p.nome_completo) {
+                        const n = p.nome_completo.toUpperCase();
+                        
+                        let endCompleto = p.endereco || '';
+                        if (p.bairro) endCompleto += (endCompleto ? ' - ' : '') + p.bairro;
+                        
                         if (!window.sugestoes[n]) {
-                            window.sugestoes[n] = item;
+                            window.sugestoes[n] = {
+                                endereco_completo: endCompleto,
+                                data_nascimento: p.data_nascimento,
+                                telefone: p.celular
+                            };
                         }
                     }
                 });
