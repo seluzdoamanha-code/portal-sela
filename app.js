@@ -472,6 +472,7 @@ function setupModal() {
         const nome_pai = document.getElementById('inNomePai').value || null;
         const estado_civil = document.getElementById('inEstadoCivil').value || null;
         const profissao = document.getElementById('inProfissao').value || null;
+        const observacao = document.getElementById('inObservacao').value || null;
         
         const cep = document.getElementById('inCep').value.replace(/\D/g, '') || null;
         const endereco = document.getElementById('inEndereco').value || null;
@@ -485,7 +486,7 @@ function setupModal() {
         const dados = {
             cpf_cnpj, nome_completo, nome_curto, tipo_pessoa, celular, email, perfis,
             status, data_nascimento, sexo, naturalidade, nacionalidade, nome_mae, nome_pai, estado_civil, profissao,
-            cep, endereco, bairro, cidade, estado
+            cep, endereco, bairro, cidade, estado, observacao
         };
         
         try {
@@ -592,6 +593,7 @@ window.editarPessoa = async (id) => {
     document.getElementById('inNomePai').value = pessoa.nome_pai || '';
     document.getElementById('inEstadoCivil').value = pessoa.estado_civil || '';
     document.getElementById('inProfissao').value = pessoa.profissao || '';
+    document.getElementById('inObservacao').value = pessoa.observacao || '';
     
     document.getElementById('inCep').value = formatarCEP(pessoa.cep) || '';
     document.getElementById('inEndereco').value = pessoa.endereco || '';
