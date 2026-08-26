@@ -428,72 +428,48 @@
         </div>
     </div>
     
-    <!-- Modal: Formulario Familia -->
+<!-- Modal: Formulario Familia -->
     <div id="mFormModal" class="m-modal-overlay">
         <header class="m-header-nav">
             <button class="m-back-btn" onclick="fecharFormulario();">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
-            <div class="m-title" id="mFormTitle">Nova Família</div>
+            <div class="m-title" id="mFormTitle">Metadados da Família</div>
             <button id="btnSalvarFamilia" style="background:none; border:none; color:var(--primary); font-size:15px; font-weight:600; padding:8px; cursor:pointer;">Salvar</button>
         </header>
         <div class="m-modal-content">
             <input type="hidden" id="fId">
             <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px;">
-                <div style="color: #eab308; font-weight: 600; font-size: 14px; margin-bottom: 4px;">⚠️ Importante:</div>
                 <div style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">
-                    O Responsável e os Membros devem estar previamente cadastrados no sistema (Tabela Pessoas) com o perfil "Membro da Família". Sem isso, eles não aparecerão na lista de buscas abaixo.
+                    Edite aqui apenas os dados específicos da Assistência Social. Para adicionar membros, gerencie os Vínculos na página principal de Pessoas.
                 </div>
             </div>
 
-            <div style="display: flex; gap: 12px;">
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
                 <div class="m-form-group" style="flex: 1;">
-                    <label class="m-form-label">Código (Ex: A01)</label>
+                    <label>Código da Família (Ex: F-045)</label>
                     <input type="text" id="fCodigo" class="m-form-input">
                 </div>
-                <div class="m-form-group" style="flex: 2;">
-                    <label class="m-form-label">Nome de Identificação (Ex: Família Souza)</label>
-                    <input type="text" id="fNome" class="m-form-input" required>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 12px;">
                 <div class="m-form-group" style="flex: 1;">
-                    <label class="m-form-label">Tipo de Assistência</label>
-                    <select id="fTipo" class="m-form-input">
-                        <option value="Fixa/Assistida">Fixa / Assistida</option>
-                        <option value="Extra">Extra</option>
-                    </select>
-                </div>
-                <div class="m-form-group" style="flex: 1;">
-                    <label class="m-form-label">Status</label>
+                    <label>Status</label>
                     <select id="fStatus" class="m-form-input">
                         <option value="Ativa">Ativa</option>
-                        <option value="Triagem">Triagem</option>
                         <option value="Inativa">Inativa</option>
+                        <option value="Suspensa">Suspensa</option>
                     </select>
                 </div>
             </div>
-
-            <div class="m-form-group" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
-                <label class="m-form-label" style="color: var(--primary);">Responsável Legal</label>
-                <select id="fResponsavel" class="m-form-input" required>
-                    <option value="">Carregando pessoas...</option>
+            
+            <div class="m-form-group" style="margin-bottom: 12px;">
+                <label>Tipo de Assistência</label>
+                <select id="fTipo" class="m-form-input">
+                    <option value="Fixa/Assistida">Fixa / Assistida (Mensal)</option>
+                    <option value="Temporária">Temporária / Emergencial</option>
+                    <option value="Triagem">Em Triagem</option>
                 </select>
-            </div>
-
-            <div style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <label class="m-form-label" style="margin: 0;">Membros da Família</label>
-                    <button type="button" onclick="adicionarLinhaMembroAss()" style="background: var(--surface); border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">+ Adicionar Membro</button>
-                </div>
-                <div id="mMembrosContainer" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 50px;">
-                    <!-- Linhas injetadas via JS -->
-                </div>
             </div>
         </div>
     </div>
-
     <script src="m_ass_familias.js"></script>
 </body>
 </html>
