@@ -79,26 +79,10 @@
         document.getElementById('mLoadingState').style.display = 'block';
 
         try {
-            const { data, error } = await db.from('pessoas')
-                .select('*, ass_familias_meta(id, codigo, status, tipo), pessoas_relacionamentos!pessoa_origem_id(id)')
-                .ilike('perfis', '%Titular - Família Assistida%')
-                .order('nome_completo');
+            const { data, error } = await db.from('ass_familias').select('*, pessoas(*), ass_membros_familia(id)').order('nome_familia');
             if (error) throw error;
             
-            allFamilias = (data || []).map(p => {
-                const meta = (p.ass_familias_meta && p.ass_familias_meta.length > 0) ? p.ass_familias_meta[0] : {};
-                return {
-                    id: p.id,
-                    nome_familia: p.nome_curto || p.nome_completo,
-                    codigo: meta.codigo || 'S/C',
-                    status: meta.status || 'Ativa',
-                    tipo: meta.tipo || 'Fixa/Assistida',
-                    pessoas: p,
-                    ass_membros_familia: p.pessoas_relacionamentos || [],
-                    meta_id: meta.id || null
-                };
-            });
-            
+            allFamilias = data || [];
             filtrarLista();
 
             document.getElementById('mLoadingState').style.display = 'none';
@@ -326,7 +310,7 @@
 
 
         
-// Buscar Membros (Assíncrono)
+        // Buscar Membros (Assíncrono)
         const ml = document.getElementById('mdMembrosList');
         const cjBlock = document.getElementById('mdConjugeBlock');
         const cjVal = document.getElementById('mdConjuge');
@@ -334,9 +318,9 @@
         
         ml.innerHTML = 'Buscando membros...';
         try {
-            const { data: membrosOrig, error } = await db.from('pessoas_relacionamentos')
-                .select('tipo_relacao, pessoas!pessoa_destino_id(nome_completo, data_nascimento)')
-                .eq('pessoa_origem_id', f.id);
+            const { data: membrosOrig, error } = await db.from('ass_membros_familia')
+                .select('parentesco, pessoas(nome_completo, data_nascimento)')
+                .eq('familia_id', f.id);
                 
             if (error) throw error;
             
@@ -346,14 +330,14 @@
             if (resp.nome_completo) {
                 allMembers.push({
                     nome: resp.nome_completo,
-                    parentesco: 'Titular',
+                    parentesco: 'Responsável',
                     nascimento: resp.data_nascimento,
                     is_resp: true
                 });
             } else {
                  allMembers.push({
-                    nome: f.nome_familia || 'Titular',
-                    parentesco: 'Titular',
+                    nome: f.nome_familia || 'Responsável',
+                    parentesco: 'Responsável',
                     nascimento: null,
                     is_resp: true
                 });
@@ -365,9 +349,9 @@
                     const p = m.pessoas || {};
                     return {
                         nome: p.nome_completo || 'Sem Nome',
-                        parentesco: m.tipo_relacao || '',
+                        parentesco: m.parentesco || '',
                         nascimento: p.data_nascimento,
-                        is_conjuge: (m.tipo_relacao && m.tipo_relacao.toLowerCase().includes('cônjuge'))
+                        is_conjuge: (m.parentesco && m.parentesco.toLowerCase().includes('cônjuge'))
                     };
                 });
             }
@@ -451,57 +435,249 @@
         }
     }
 
-// --- FORMULÁRIO CRUD ---
-async function abrirFormularioNova() {
-    window.location.href = 'pessoas.html';
+    // --- FORMULÁRIO CRUD ---
+window.assPessoasGlobais = [];
+
+window.gerarOpcoesPessoasAss = function(selecionadoId = '') {
+    const pessoas = window.assPessoasGlobais || [];
+    const comPerfil = pessoas.filter(p => p.perfis && p.perfis.includes('Membro da Família'));
+    const semPerfil = pessoas.filter(p => !p.perfis || !p.perfis.includes('Membro da Família'));
+    
+    let html = '<option value="">-- Selecione --</option>';
+    
+    if (comPerfil.length > 0) {
+        html += '<optgroup label="Com perfil: Membro da Família">';
+        html += comPerfil.map(p => `<option value="${p.id}" ${p.id === selecionadoId ? 'selected' : ''}>${p.nome_completo}</option>`).join('');
+        html += '</optgroup>';
+    }
+    
+    if (semPerfil.length > 0) {
+        html += '<optgroup label="Demais Cadastros (Sem perfil)">';
+        html += semPerfil.map(p => `<option value="${p.id}" ${p.id === selecionadoId ? 'selected' : ''}>${p.nome_completo}</option>`).join('');
+        html += '</optgroup>';
+    }
+    
+    return html;
+};
+
+window.adicionarLinhaMembroAss = function(pessoaId = '', parentesco = '') {
+    const container = document.getElementById('mMembrosContainer');
+    
+    const div = document.createElement('div');
+    div.className = 'ass-membro-linha';
+    div.style = 'display: flex; gap: 8px; margin-bottom: 8px; align-items: center;';
+    
+    const pessoasOptions = window.gerarOpcoesPessoasAss(pessoaId);
+
+    div.innerHTML = `
+        <select class="m-form-input mem-pessoa" required style="flex: 2;">
+            ${pessoasOptions}
+        </select>
+        <input type="text" class="m-form-input mem-parentesco" required placeholder="Parentesco (Ex: Filho)" value="${parentesco}" style="flex: 1;">
+        <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color: #ef4444; padding:8px; cursor:pointer;" title="Remover">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    `;
+    container.appendChild(div);
+};
+
+async function carregarPessoasParaForm() {
+    if (window.assPessoasGlobais && window.assPessoasGlobais.length > 0) return; // Already loaded
+    try {
+        const { data: pessoas, error } = await db.from('pessoas').select('id, nome_completo, perfis').order('nome_completo');
+        if (error) throw error;
+        window.assPessoasGlobais = pessoas || [];
+    } catch(err) {
+        console.error("Erro ao carregar pessoas:", err);
+    }
 }
 
-async function abrirFormularioEdicao(f) {
-    if (!f) return;
+async function abrirFormularioNova() {
+    document.getElementById('mFormTitle').innerText = 'Nova Família';
+    document.getElementById('fId').value = '';
+    document.getElementById('fCodigo').value = '';
+    document.getElementById('fNome').value = '';
+    document.getElementById('fTipo').value = 'Fixa/Assistida';
+    document.getElementById('fStatus').value = 'Ativa';
+    document.getElementById('mMembrosContainer').innerHTML = '';
     
-    document.getElementById('mFormTitle').innerText = 'Metadados Assistência: ' + f.nome_familia;
-    document.getElementById('fId').value = f.id; // pessoa_id
-    document.getElementById('fCodigo').value = f.codigo || '';
-    document.getElementById('fStatus').value = f.status || 'Ativa';
-    document.getElementById('fTipo').value = f.tipo || 'Fixa/Assistida';
+    const btnSalvar = document.getElementById('btnSalvarFamilia');
+    btnSalvar.disabled = true;
+    btnSalvar.innerText = 'Carregando...';
     
     document.getElementById('mFormModal').classList.add('active');
+    
+    await carregarPessoasParaForm();
+    document.getElementById('fResponsavel').innerHTML = window.gerarOpcoesPessoasAss('');
+    
+    btnSalvar.disabled = false;
+    btnSalvar.innerText = 'Salvar';
+}
+    
+async function abrirFormularioEdicao(f) {
+    if (!f) return;
+    document.getElementById('mFormTitle').innerText = 'Editar Família';
+    document.getElementById('fId').value = f.id;
+    document.getElementById('fCodigo').value = f.codigo || '';
+    document.getElementById('fNome').value = f.nome_familia || '';
+    document.getElementById('fTipo').value = f.tipo || 'Fixa/Assistida';
+    document.getElementById('fStatus').value = f.status || 'Ativa';
+    document.getElementById('mMembrosContainer').innerHTML = '';
+    
+    const btnSalvar = document.getElementById('btnSalvarFamilia');
+    btnSalvar.disabled = true;
+    btnSalvar.innerText = 'Carregando...';
+    
+    document.getElementById('mFormModal').classList.add('active');
+    
+    await carregarPessoasParaForm();
+    document.getElementById('fResponsavel').innerHTML = window.gerarOpcoesPessoasAss(f.responsavel_id);
+    
+    // Fetch members for this family
+    try {
+        const { data: familiaDetalhe, error } = await db.from('ass_familias').select('*, ass_membros_familia(*)').eq('id', f.id).single();
+        if (error) throw error;
+        
+        if (familiaDetalhe && familiaDetalhe.ass_membros_familia) {
+            familiaDetalhe.ass_membros_familia.forEach(m => {
+                window.adicionarLinhaMembroAss(m.pessoa_id, m.parentesco);
+            });
+        }
+    } catch (e) {
+        console.error("Erro ao carregar membros:", e);
+    }
+    
+    btnSalvar.disabled = false;
+    btnSalvar.innerText = 'Salvar';
 }
 
-function fecharFormulario() {
+window.fecharFormulario = function() {
     document.getElementById('mFormModal').classList.remove('active');
-}
+};
 
 async function salvarFamilia() {
-    const pessoaId = document.getElementById('fId').value;
-    const codigo = document.getElementById('fCodigo').value.trim();
-    const status = document.getElementById('fStatus').value;
-    const tipo = document.getElementById('fTipo').value;
-
+    const id = document.getElementById('fId').value;
+    const payload = {
+        codigo: document.getElementById('fCodigo').value.trim() || null,
+        nome_familia: document.getElementById('fNome').value.trim(),
+        tipo: document.getElementById('fTipo').value,
+        status: document.getElementById('fStatus').value,
+        responsavel_id: document.getElementById('fResponsavel').value || null
+    };
+    
+    if (!payload.nome_familia) {
+        alert('O Nome de Identificação é obrigatório.');
+        return;
+    }
+    if (!payload.responsavel_id) {
+        alert('Selecione um Responsável Legal.');
+        return;
+    }
+    
     const btn = document.getElementById('btnSalvarFamilia');
     btn.innerText = 'Salvando...';
     btn.disabled = true;
-
+    
     try {
-        const payload = {
-            pessoa_id: pessoaId,
-            codigo: codigo,
-            status: status,
-            tipo: tipo
-        };
-
-        // Try to update or insert using upsert
-        const { error } = await db.from('ass_familias_meta').upsert(payload, { onConflict: 'pessoa_id' });
-        if (error) throw error;
+        let famId = id;
         
-        fecharFormulario();
-        carregarFamilias();
+        if (id) {
+            // Update
+            const { error } = await db.from('ass_familias').update(payload).eq('id', id);
+            if (error) throw error;
+            
+            // Delete old members
+            await db.from('ass_membros_familia').delete().eq('familia_id', id);
+        } else {
+            // Insert
+            const { data, error } = await db.from('ass_familias').insert([payload]).select('id').single();
+            if (error) throw error;
+            famId = data.id;
+        }
+        
+        // Insert new members
+        const linhas = document.querySelectorAll('.ass-membro-linha');
+        const membros = [];
+        linhas.forEach(l => {
+            const pid = l.querySelector('.mem-pessoa').value;
+            const par = l.querySelector('.mem-parentesco').value.trim();
+            if (pid && par) {
+                membros.push({
+                    familia_id: famId,
+                    pessoa_id: pid,
+                    parentesco: par
+                });
+            }
+        });
+
+        if (membros.length > 0) {
+            const { error: memError } = await db.from('ass_membros_familia').insert(membros);
+            if (memError) throw memError;
+        }
+        
+        window.fecharFormulario();
+        // Se estava editando, fecha o painel de detalhes tbm pra forçar refresh
+        if (id) document.getElementById('mDetModal').classList.remove('active');
+        
+        await carregarFamilias();
     } catch(e) {
         console.error(e);
-        alert('Erro ao salvar metadados da família.');
+        alert('Erro ao salvar família. Verifique se o código não está duplicado.');
     } finally {
         btn.innerText = 'Salvar';
         btn.disabled = false;
     }
 }
+
+
 })();
+
+window.renderEntregasList = function(limit) {
+    const hist = window._currentFamilyEntregas || [];
+    
+
+        const histEl = document.getElementById('mdHistoricoList');
+    if (!histEl) return;
+    
+    let html = '';
+    const toShow = hist.slice(0, limit);
+    
+    html += toShow.map(h => {
+        const dateStr = h.data_entrega ? h.data_entrega.split('-').reverse().join('/') : '';
+        const modeloNome = h.ass_cestas_modelos ? h.ass_cestas_modelos.tipo : 'Cesta Desconhecida';
+        const qtdStr = h.quantidade_entregue ? h.quantidade_entregue + 'x ' : '';
+        const obsHtml = h.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top:2px; font-style:italic;">Obs: ${h.observacoes}</div>` : '';
+        return `
+            <div class="m-member-row" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div>
+                    <div style="color:var(--text-main); font-weight:500;">${qtdStr}${modeloNome}</div>
+                    <div style="font-size:12px; color:var(--text-muted);">${dateStr}</div>
+                    ${obsHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    if (hist.length > limit) {
+        const remaining = hist.length - limit;
+        html += `
+            <div style="text-align: center; margin-top: 8px;">
+                <button onclick="renderEntregasList(999)" style="background: none; border: none; color: var(--primary); font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                    Ver mais ${remaining} entregas
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+            </div>
+        `;
+    } else if (limit > 3 && hist.length > 3) {
+         html += `
+            <div style="text-align: center; margin-top: 8px;">
+                <button onclick="renderEntregasList(3)" style="background: none; border: none; color: var(--text-muted); font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                    Mostrar menos
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+                </button>
+            </div>
+        `;
+    }
+    
+    histEl.innerHTML = html;
+};
