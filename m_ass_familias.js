@@ -759,13 +759,10 @@ async function salvarFamilia() {
 }
 
 
-})();
 
 window.renderEntregasList = function(limit) {
     const hist = window._currentFamilyEntregas || [];
-    
-
-        const histEl = document.getElementById('mdHistoricoList');
+    const histEl = document.getElementById('mdHistoricoList');
     if (!histEl) return;
     
     let html = '';
@@ -811,45 +808,46 @@ window.renderEntregasList = function(limit) {
     histEl.innerHTML = html;
 };
 
-
-    async function abrirFormularioMeta(f) {
-        document.getElementById('mMetaTitle').innerText = 'Metadados Assistência: ' + (f.nome_familia || '');
-        document.getElementById('fMetaId').value = f.id; // pessoa_id
-        document.getElementById('fMetaCodigo').value = f.codigo || '';
-        document.getElementById('fMetaStatus').value = f.status || 'Ativa';
-        document.getElementById('fMetaTipo').value = f.tipo || 'Fixa/Assistida';
-        
-        document.getElementById('mMetaModal').classList.add('active');
-    }
+async function abrirFormularioMeta(f) {
+    document.getElementById('mMetaTitle').innerText = 'Metadados Assistência: ' + (f.nome_familia || '');
+    document.getElementById('fMetaId').value = f.id; // pessoa_id
+    document.getElementById('fMetaCodigo').value = f.codigo || '';
+    document.getElementById('fMetaStatus').value = f.status || 'Ativa';
+    document.getElementById('fMetaTipo').value = f.tipo || 'Fixa/Assistida';
     
-    async function salvarMetaFamilia() {
-        const pessoaId = document.getElementById('fMetaId').value;
-        const codigo = document.getElementById('fMetaCodigo').value.trim();
-        const status = document.getElementById('fMetaStatus').value;
-        const tipo = document.getElementById('fMetaTipo').value;
+    document.getElementById('mMetaModal').classList.add('active');
+}
 
-        const btn = document.getElementById('btnSalvarMeta');
-        btn.innerText = 'Salvando...';
-        btn.disabled = true;
+async function salvarMetaFamilia() {
+    const pessoaId = document.getElementById('fMetaId').value;
+    const codigo = document.getElementById('fMetaCodigo').value.trim();
+    const status = document.getElementById('fMetaStatus').value;
+    const tipo = document.getElementById('fMetaTipo').value;
 
-        try {
-            const payload = {
-                pessoa_id: pessoaId,
-                codigo: codigo,
-                status: status,
-                tipo: tipo
-            };
+    const btn = document.getElementById('btnSalvarMeta');
+    btn.innerText = 'Salvando...';
+    btn.disabled = true;
 
-            const { error } = await db.from('ass_familias_meta').upsert(payload, { onConflict: 'pessoa_id' });
-            if (error) throw error;
-            
-            document.getElementById('mMetaModal').classList.remove('active');
-            carregarFamilias();
-        } catch(e) {
-            console.error(e);
-            alert('Erro ao salvar metadados da família.');
-        } finally {
-            btn.innerText = 'Salvar';
-            btn.disabled = false;
-        }
+    try {
+        const payload = {
+            pessoa_id: pessoaId,
+            codigo: codigo,
+            status: status,
+            tipo: tipo
+        };
+
+        const { error } = await db.from('ass_familias_meta').upsert(payload, { onConflict: 'pessoa_id' });
+        if (error) throw error;
+        
+        document.getElementById('mMetaModal').classList.remove('active');
+        carregarFamilias();
+    } catch(e) {
+        console.error(e);
+        alert('Erro ao salvar metadados da família.');
+    } finally {
+        btn.innerText = 'Salvar';
+        btn.disabled = false;
     }
+}
+
+})();
