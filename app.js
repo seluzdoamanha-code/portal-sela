@@ -578,7 +578,12 @@ window.editarPessoa = async (id) => {
     
     const modal = document.getElementById('modalPessoa');
     const modalTitle = document.getElementById('modalTitle');
-    if (modalTitle) modalTitle.textContent = 'Editar Pessoa/Entidade';
+    if (modalTitle) {
+        const docFormatado = formatarDocumento(pessoa.cpf_cnpj);
+        const nomeParaTitulo = pessoa.nome_curto || pessoa.nome_completo || 'Pessoa/Entidade';
+        const docSufixo = docFormatado ? ` (${docFormatado})` : '';
+        modalTitle.textContent = `Editando: ${nomeParaTitulo}${docSufixo}`;
+    }
     
     if (document.getElementById('vinculosAvisoInativo')) {
         document.getElementById('vinculosAvisoInativo').style.display = 'none';
@@ -790,9 +795,24 @@ window.carregarVinculos = async (pessoaId) => {
             renderizarLinha(v.id, nome, v.tipo_relacao);
         });
         
+        const obterRelacaoInversa = (tipo) => {
+            const mapa = {
+                'Pai / Mãe': 'Filho(a)',
+                'Filho(a)': 'Pai / Mãe',
+                'Avô / Avó': 'Neto(a)',
+                'Neto(a)': 'Avô / Avó',
+                'Responsável Legal (Tutor/Curador)': 'Dependente',
+                'Dependente': 'Responsável Legal (Tutor/Curador)',
+                'Sócio / Proprietário': 'Empresa',
+                'Funcionário / Colaborador': 'Empregador'
+            };
+            return mapa[tipo] || tipo;
+        };
+        
         dataDestino.forEach(v => {
             const nome = v.pessoas?.nome_curto || v.pessoas?.nome_completo || 'Desconhecido';
-            renderizarLinha(v.id, nome, v.tipo_relacao + ' (Reflexo)');
+            const tipoInverso = obterRelacaoInversa(v.tipo_relacao);
+            renderizarLinha(v.id, nome, tipoInverso + ' (Reflexo)');
         });
         
         if (dataOrigem.length === 0 && dataDestino.length === 0) {
