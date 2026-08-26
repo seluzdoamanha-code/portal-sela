@@ -8,172 +8,8 @@ let cameFromProfileEdit = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Configura as Tags Dinâmicas primeiro
-    await    window.renderizarTagsDisponiveis();
-});
+    await window.renderizarTagsDisponiveis();
 
-// ==========================================
-// VÍNCULOS / FAMÍLIA
-// ==========================================
-window.carregarVinculos = async (pessoaId) => {
-    const lista = document.getElementById('listaVinculos');
-    if (!lista) return;
-    lista.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 16px; color: var(--text-muted);">Carregando...</td></tr>';
-    
-    try {
-        const { data: dataOrigem, error: errorOrigem } = await db
-            .from('pessoas_relacionamentos')
-            .select(`
-                id,
-                tipo_relacao,
-                pessoas!pessoa_destino_id(id, nome_curto, nome_completo)
-            `)
-            .eq('pessoa_origem_id', pessoaId);
-            
-        const { data: dataDestino, error: errorDestino } = await db
-            .from('pessoas_relacionamentos')
-            .select(`
-                id,
-                tipo_relacao,
-                pessoas!pessoa_origem_id(id, nome_curto, nome_completo)
-            `)
-            .eq('pessoa_destino_id', pessoaId);
-            
-        if (errorOrigem) throw errorOrigem;
-        if (errorDestino) throw errorDestino;
-        
-        let html = '';
-        
-        const renderizarLinha = (idVinculo, nome, tipo) => {
-            html += `
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <td style="padding: 12px; color: var(--text-main); font-weight: 500;">${nome}</td>
-                    <td style="padding: 12px; color: var(--text-muted);">${tipo}</td>
-                    <td style="padding: 12px; text-align: center;">
-                        <button type="button" class="btn btn-secondary" style="padding: 4px 8px; border-color: rgba(239, 68, 68, 0.3); color: #ef4444;" onclick="removerVinculo(${idVinculo})" title="Excluir Vínculo">🗑️</button>
-                    </td>
-                </tr>
-            `;
-        };
-        
-        dataOrigem.forEach(v => {
-            const nome = v.pessoas?.nome_curto || v.pessoas?.nome_completo || 'Desconhecido';
-            renderizarLinha(v.id, nome, v.tipo_relacao);
-        });
-        
-        dataDestino.forEach(v => {
-            const nome = v.pessoas?.nome_curto || v.pessoas?.nome_completo || 'Desconhecido';
-            renderizarLinha(v.id, nome, v.tipo_relacao + ' (Reflexo)');
-        });
-        
-        if (dataOrigem.length === 0 && dataDestino.length === 0) {
-            html = '<tr><td colspan="3" style="text-align: center; padding: 16px; color: var(--text-muted);">Nenhum vínculo cadastrado.</td></tr>';
-        }
-        
-        lista.innerHTML = html;
-        
-    } catch(e) {
-        console.error('Erro carregarVinculos:', e);
-        lista.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 16px; color: #ef4444;">Erro ao carregar vínculos.</td></tr>';
-    }
-};
-
-window.removerVinculo = async (idVinculo) => {
-    if (!confirm('Deseja realmente remover este vínculo?')) return;
-    try {
-        const { error } = await db.from('pessoas_relacionamentos').delete().eq('id', idVinculo);
-        if (error) throw error;
-        if (pessoaEditandoId) window.carregarVinculos(pessoaEditandoId);
-    } catch(e) {
-        console.error(e);
-        alert('Erro ao excluir o vínculo.');
-    }
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-    const inputBusca = document.getElementById('inVinculoBusca');
-    const inputId = document.getElementById('inVinculoPessoaId');
-    const sugestoes = document.getElementById('vinculoSugestoes');
-    const btnAdd = document.getElementById('btnAdicionarVinculo');
-    const selTipo = document.getElementById('inVinculoTipo');
-    
-    if(!inputBusca) return;
-    
-    inputBusca.addEventListener('input', (e) => {
-        const val = e.target.value.toLowerCase();
-        if (val.length < 2) {
-            sugestoes.style.display = 'none';
-            inputId.value = '';
-            return;
-        }
-        
-        const filtrados = (window.pessoasGlobais || []).filter(p => {
-            if (p.id == pessoaEditandoId) return false;
-            return (p.nome_completo && p.nome_completo.toLowerCase().includes(val)) ||
-                   (p.nome_curto && p.nome_curto.toLowerCase().includes(val));
-        }).slice(0, 5);
-        
-        if (filtrados.length > 0) {
-            sugestoes.innerHTML = filtrados.map(p => `
-                <div class="sugestao-item" style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-main);" onclick="selecionarPessoaVinculo(${p.id}, '${(p.nome_curto || p.nome_completo).replace(/'/g, "\\'")}')">
-                    ${p.nome_curto || p.nome_completo} <span style="color:var(--text-muted); font-size:11px;">(${p.cpf_cnpj || 'Sem CPF'})</span>
-                </div>
-            `).join('');
-            sugestoes.style.display = 'block';
-        } else {
-            sugestoes.style.display = 'none';
-        }
-    });
-    
-    window.selecionarPessoaVinculo = (id, nome) => {
-        inputId.value = id;
-        inputBusca.value = nome;
-        sugestoes.style.display = 'none';
-    };
-    
-    btnAdd.addEventListener('click', async () => {
-        const destinoId = inputId.value;
-        const tipo = selTipo.value;
-        
-        if (!pessoaEditandoId) return alert('Você deve salvar a pessoa atual antes de adicionar vínculos.');
-        if (!destinoId) return alert('Selecione uma pessoa para vincular.');
-        if (!tipo) return alert('Selecione o tipo de relação.');
-        
-        btnAdd.disabled = true;
-        btnAdd.textContent = '...';
-        
-        try {
-            const { error } = await db.from('pessoas_relacionamentos').insert([{
-                pessoa_origem_id: pessoaEditandoId,
-                pessoa_destino_id: destinoId,
-                tipo_relacao: tipo
-            }]);
-            
-            if (error) {
-                if (error.code === '23505') throw new Error('Este vínculo já existe.');
-                throw error;
-            }
-            
-            inputBusca.value = '';
-            inputId.value = '';
-            selTipo.value = '';
-            window.carregarVinculos(pessoaEditandoId);
-            
-        } catch(e) {
-            console.error(e);
-            alert(e.message || 'Erro ao adicionar vínculo.');
-        } finally {
-            btnAdd.disabled = false;
-            btnAdd.textContent = 'Adicionar';
-        }
-    });
-    
-    // Esconder sugestões ao clicar fora
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('#inVinculoBusca') && !e.target.closest('#vinculoSugestoes')) {
-            if(sugestoes) sugestoes.style.display = 'none';
-        }
-    });
-});
     carregarPessoas();
     setupModal();
     
@@ -518,12 +354,6 @@ function setupModal() {
         if(window.switchTab) window.switchTab('basico');
         const modalTitle = document.getElementById('modalTitle');
         if (modalTitle) modalTitle.textContent = 'Nova Pessoa/Entidade';
-        
-        if (document.getElementById('vinculosAvisoInativo')) {
-            document.getElementById('vinculosAvisoInativo').style.display = 'block';
-            document.getElementById('vinculosContainer').style.display = 'none';
-        }
-        
         modal.classList.add('show');
     });
     btnClose.addEventListener('click', fecharModal);
@@ -743,12 +573,6 @@ window.editarPessoa = async (id) => {
     const modal = document.getElementById('modalPessoa');
     const modalTitle = document.getElementById('modalTitle');
     if (modalTitle) modalTitle.textContent = 'Editar Pessoa/Entidade';
-    
-    if (document.getElementById('vinculosAvisoInativo')) {
-        document.getElementById('vinculosAvisoInativo').style.display = 'none';
-        document.getElementById('vinculosContainer').style.display = 'block';
-        if(typeof window.carregarVinculos === 'function') window.carregarVinculos(id);
-    }
     
     document.getElementById('inTipo').value = pessoa.tipo_pessoa || 'Física';
     document.getElementById('inTipo').dispatchEvent(new Event('change'));
