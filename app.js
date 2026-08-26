@@ -865,7 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filtrados.length > 0) {
             sugestoes.innerHTML = filtrados.map(p => `
                 <div class="sugestao-item" style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-main);" onclick="selecionarPessoaVinculo('${p.id}', '${(p.nome_curto || p.nome_completo).replace(/'/g, "\\'")}')">
-                    ${p.nome_curto || p.nome_completo} <span style="color:var(--text-muted); font-size:11px;">(${p.cpf_cnpj || 'Sem CPF'})</span>
+                    ${p.nome_curto || p.nome_completo} <span style="color:var(--text-muted); font-size:11px;">(${formatarDocumento(p.cpf_cnpj) || 'Sem CPF/CNPJ'})</span>
                 </div>
             `).join('');
             sugestoes.style.display = 'block';
