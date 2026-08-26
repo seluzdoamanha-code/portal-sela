@@ -211,16 +211,6 @@ function filtrarLista() {
             headerTitle.innerText = currentTab === 'legado' ? `Famílias Legado (${filtrados.length})` : `Famílias Perfil (${filtrados.length})`;
         }
     }
-            
-            return matchTexto && matchPill;
-        });
-
-        renderizar(filtrados);
-        const headerTitle = document.getElementById('mMainTitle');
-        if (headerTitle) {
-            headerTitle.innerText = `Famílias Assistidas (${filtrados.length})`;
-        }
-    }
 
     function renderizar(dados) {
         const container = document.getElementById('mFamList');
