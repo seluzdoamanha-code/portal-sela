@@ -4,6 +4,10 @@
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let allFamilias = [];
+    let familiasLegado = [];
+    let familiasPerfil = [];
+    let currentTab = "legado";
+
     let currentFilter = 'Todas';
     let hubId = null;
     let selectedFamilia = null;
@@ -19,6 +23,33 @@
 
         document.getElementById('mSearchInput').addEventListener('input', filtrarLista);
         
+        
+        // Setup Main Tabs
+        document.querySelectorAll('.m-main-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.m-main-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentTab = tab.getAttribute('data-tab');
+                
+                // Mudar label do botão Nova Familia
+                const btnNova = document.getElementById('btnNovaFamilia');
+                if (btnNova) {
+                    if (currentTab === 'legado') {
+                        btnNova.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+                    } else {
+                        btnNova.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>';
+                    }
+                }
+                
+                filtrarLista();
+            });
+        });
+        
+        // Modal de metadados
+        const btnSalvarMeta = document.getElementById('btnSalvarMeta');
+        if (btnSalvarMeta) btnSalvarMeta.addEventListener('click', salvarMetaFamilia);
+
+
         // Setup Pills
         document.querySelectorAll('.m-pill').forEach(pill => {
             pill.addEventListener('click', () => {
@@ -34,8 +65,22 @@
             document.getElementById('btnNovaFamilia').style.display = 'flex';
             document.getElementById('btnEditFamilia').style.display = 'block';
             
-            document.getElementById('btnNovaFamilia').addEventListener('click', abrirFormularioNova);
-            document.getElementById('btnEditFamilia').addEventListener('click', () => abrirFormularioEdicao(selectedFamilia));
+            document.getElementById('btnNovaFamilia').addEventListener('click', () => {
+                if (currentTab === 'legado') {
+                    abrirFormularioNova();
+                } else {
+                    if (confirm('Famílias Perfil são gerenciadas no módulo global de Pessoas. Deseja ir para lá agora?')) {
+                        window.location.href = 'pessoas.html';
+                    }
+                }
+            });
+            document.getElementById('btnEditFamilia').addEventListener('click', () => {
+                if (selectedFamilia && selectedFamilia.is_nova_plataforma) {
+                    abrirFormularioMeta(selectedFamilia);
+                } else {
+                    abrirFormularioEdicao(selectedFamilia);
+                }
+            });
             document.getElementById('btnSalvarFamilia').addEventListener('click', salvarFamilia);
         }
 
@@ -133,20 +178,39 @@ async function carregarFamilias() {
         }
     }
 
-    function filtrarLista() {
+function filtrarLista() {
         const query = (document.getElementById('mSearchInput').value || '').toLowerCase();
         
-        const filtrados = allFamilias.filter(f => {
-            // Busca por texto
+        let sourceList = currentTab === 'legado' ? familiasLegado : familiasPerfil;
+        
+        const filtrados = sourceList.filter(f => {
             const nomeStr = (f.nome_familia || '').toLowerCase();
             const codStr = (f.codigo || '').toLowerCase();
             const matchTexto = nomeStr.includes(query) || codStr.includes(query);
             
-            // Filtro Pill
             let matchPill = true;
             if (currentFilter !== 'Todas') {
                 matchPill = (f.status === currentFilter);
             }
+            
+            return matchTexto && matchPill;
+        });
+        
+        // Reordena
+        filtrados.sort((a, b) => {
+            const nomeA = (a.nome_familia || '').toLowerCase();
+            const nomeB = (b.nome_familia || '').toLowerCase();
+            if (nomeA < nomeB) return -1;
+            if (nomeA > nomeB) return 1;
+            return 0;
+        });
+
+        renderizar(filtrados);
+        const headerTitle = document.getElementById('mMainTitle');
+        if (headerTitle) {
+            headerTitle.innerText = currentTab === 'legado' ? `Famílias Legado (${filtrados.length})` : `Famílias Perfil (${filtrados.length})`;
+        }
+    }
             
             return matchTexto && matchPill;
         });
@@ -746,3 +810,46 @@ window.renderEntregasList = function(limit) {
     
     histEl.innerHTML = html;
 };
+
+
+    async function abrirFormularioMeta(f) {
+        document.getElementById('mMetaTitle').innerText = 'Metadados Assistência: ' + (f.nome_familia || '');
+        document.getElementById('fMetaId').value = f.id; // pessoa_id
+        document.getElementById('fMetaCodigo').value = f.codigo || '';
+        document.getElementById('fMetaStatus').value = f.status || 'Ativa';
+        document.getElementById('fMetaTipo').value = f.tipo || 'Fixa/Assistida';
+        
+        document.getElementById('mMetaModal').classList.add('active');
+    }
+    
+    async function salvarMetaFamilia() {
+        const pessoaId = document.getElementById('fMetaId').value;
+        const codigo = document.getElementById('fMetaCodigo').value.trim();
+        const status = document.getElementById('fMetaStatus').value;
+        const tipo = document.getElementById('fMetaTipo').value;
+
+        const btn = document.getElementById('btnSalvarMeta');
+        btn.innerText = 'Salvando...';
+        btn.disabled = true;
+
+        try {
+            const payload = {
+                pessoa_id: pessoaId,
+                codigo: codigo,
+                status: status,
+                tipo: tipo
+            };
+
+            const { error } = await db.from('ass_familias_meta').upsert(payload, { onConflict: 'pessoa_id' });
+            if (error) throw error;
+            
+            document.getElementById('mMetaModal').classList.remove('active');
+            carregarFamilias();
+        } catch(e) {
+            console.error(e);
+            alert('Erro ao salvar metadados da família.');
+        } finally {
+            btn.innerText = 'Salvar';
+            btn.disabled = false;
+        }
+    }
