@@ -54,7 +54,7 @@
         
         try {
             const { error } = await db.from('ass_ocorrencias').insert([{
-                familia_id: familiaId,
+                pessoa_id: familiaId,
                 data_ocorrencia: dataOco,
                 codigo: codigo,
                 tipo: tipo,

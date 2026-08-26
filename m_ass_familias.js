@@ -107,17 +107,13 @@
     });
     
     async function autoOpenFamilia(id) {
-        try {
-            const { data, error } = await db.from('ass_familias')
-                .select('*, pessoas(*)')
-                .eq('id', id)
-                .single();
-            if (!error && data) {
-                abrirDetalhes(data);
+        // Wait a bit to ensure carregarFamilias finishes loading allFamilias
+        setTimeout(() => {
+            if (typeof allFamilias !== 'undefined') {
+                const fam = allFamilias.find(f => f.id === id);
+                if (fam) abrirDetalhes(fam);
             }
-        } catch (e) {
-            console.error('Erro auto open', e);
-        }
+        }, 1500);
     }
 
 async function carregarFamilias() {
@@ -369,9 +365,10 @@ const isNova = f.is_nova_plataforma ? '<span style="font-size:10px; background:#
         const ocoEl = document.getElementById('mdOcorrenciasList');
         if (ocoEl) {
             ocoEl.innerHTML = 'Buscando ocorrências...';
+            const colOco = f.is_nova_plataforma ? 'pessoa_id' : 'familia_id';
             db.from('ass_ocorrencias')
               .select('*')
-              .eq('familia_id', f.id)
+              .eq(colOco, f.id)
               .order('data_ocorrencia', {ascending: false})
               .then(({data: ocos, error}) => {
                   if(error) {
@@ -546,9 +543,10 @@ const isNova = f.is_nova_plataforma ? '<span style="font-size:10px; background:#
         hc.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Buscando histórico...</div>';
         
         try {
+            const colHist = selectedFamilia.is_nova_plataforma ? 'pessoa_id' : 'familia_id';
             const { data, error } = await db.from('ass_ocorrencias')
                 .select('*')
-                .eq('familia_id', selectedFamilia.id)
+                .eq(colHist, selectedFamilia.id)
                 .order('data_ocorrencia', { ascending: false });
                 
             if (error) throw error;

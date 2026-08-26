@@ -333,7 +333,7 @@ async function carregarListaOcorrencias() {
 
     try {
         const { data, error } = await db.from('ass_ocorrencias')
-            .select('*, ass_familias(nome_familia, codigo)')
+            .select('*, ass_familias(nome_familia, codigo), pessoas(id, nome_completo, nome_curto, ass_familias_meta(codigo))')
             .order('data_ocorrencia', { ascending: false });
             
         if (error) throw error;
@@ -352,7 +352,7 @@ async function carregarListaOcorrencias() {
                                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); font-size: 12px;">
                                     <th style="padding: 8px 4px; width: 100px;">Data</th>
                                     <th style="padding: 8px 4px; width: 100px;">Cód.</th>
-                                    <th style="padding: 8px 4px;">Família</th>
+                                    <th style="padding: 8px 4px;">Família / Pessoa</th>
                                     <th style="padding: 8px 4px; width: 120px;">Tipo</th>
                                     <th style="padding: 8px 4px;">Observação</th>
                                     <th style="padding: 8px 4px; text-align: right; width: 80px;">Ações</th>
@@ -365,12 +365,54 @@ async function carregarListaOcorrencias() {
                                     if(o.tipo === 'Familiar') corTipo = '#8b5cf6';
                                     if(o.tipo === 'Entrega') corTipo = '#f59e0b';
                                     
+                                    // Resolver nome e código
+                                    let nomeExibicao = 'Família Removida';
+                                    let isLegado = false;
+                                    
+                                    if (o.pessoa_id && o.pessoas) {
+                                        const p = o.pessoas;
+                                        const meta = p.ass_familias_meta ? (Array.isArray(p.ass_familias_meta) ? (p.ass_familias_meta[0] || {}) : p.ass_familias_meta) : {};
+                                        const cod = meta.codigo || 'S/C';
+                                        const n = p.nome_curto || p.nome_completo;
+                                        nomeExibicao = `${cod} - ${n} <span style="font-size:10px; background:#4ade80; color:#14532d; padding:2px 6px; border-radius:8px;">Global</span>`;
+                                    } else if (o.familia_id && o.ass_familias) {
+                                        nomeExibicao = `${o.ass_familias.codigo} - ${o.ass_familias.nome_familia} <span style="font-size:10px; background:#64748b; color:white; padding:2px 6px; border-radius:8px;">Legado</span>`;
+                                        isLegado = true;
+                                    }
+                                    
                                     return `
                                     <tr style="border-bottom: 1px solid var(--border); font-size: 13px;">
                                         <td style="padding: 12px 4px; color: var(--text-muted);">${o.data_ocorrencia.split('-').reverse().join('/')}</td>
                                         <td style="padding: 12px 4px; color: #60a5fa; font-weight: bold;">${o.codigo}</td>
                                         <td style="padding: 12px 4px; color: var(--text-main); font-weight: 500;">
-                                            ${o.ass_familias ? `${o.ass_familias.codigo} - ${o.ass_familias.nome_familia}` : 'Família Removida'}
+                                            ${nomeExibicao}
+                                        </td>
+                                        <td style="padding: 12px 4px;">
+                                            <span style="background: ${corTipo}20; color: ${corTipo}; padding: 2px 8px; border-radius: 12px; font-size: 11px;">${o.tipo}</span>
+                                        </td>
+                                        <td style="padding: 12px 4px; color: var(--text-muted); max-width: 250px;">
+                                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${o.observacao.replace(/"/g, '&quot;')}">${o.observacao}</div>
+                                        </td>
+                                        <td style="padding: 12px 4px; text-align: right;">
+                                            <button onclick="excluirOcorrenciaAss('${o.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;" title="Excluir Ocorrência">🗑️</button>
+                                        </td>
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `}
+            </div>
+        `;
+        
+        container.innerHTML = html;
+        
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 20px;">Erro ao carregar ocorrências.</div>';
+    }
+}
                                         </td>
                                         <td style="padding: 12px 4px;">
                                             <span style="background: ${corTipo}22; color: ${corTipo}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">
