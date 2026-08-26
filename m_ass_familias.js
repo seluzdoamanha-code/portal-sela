@@ -129,9 +129,9 @@ async function carregarFamilias() {
                 .select('*, ass_familias_meta(id, codigo, status, tipo), pessoas_relacionamentos!pessoa_origem_id(id)')
                 .ilike('perfis', '%Titular da Família%');
             
-            let familiasNovas = [];
+            let familiasPerfil = [];
             if (!errorNovas) {
-                familiasNovas = (dataNovas || []).map(p => {
+                familiasPerfil = (dataNovas || []).map(p => {
                     const meta = (p.ass_familias_meta && p.ass_familias_meta.length > 0) ? p.ass_familias_meta[0] : {};
                     return {
                         id: p.id,
@@ -151,15 +151,15 @@ async function carregarFamilias() {
             const { data: dataAntigas, error: errorAntigas } = await db.from('ass_familias')
                 .select('*, pessoas(*), ass_membros_familia(id)');
                 
-            let familiasAntigas = [];
+            let familiasLegado = [];
             if (!errorAntigas) {
-                familiasAntigas = (dataAntigas || []).map(f => {
+                familiasLegado = (dataAntigas || []).map(f => {
                     f.is_nova_plataforma = false;
                     return f;
                 });
             }
 
-            allFamilias = [...familiasNovas, ...familiasAntigas];
+            allFamilias = [...familiasPerfil, ...familiasLegado];
             
             allFamilias.sort((a, b) => {
                 const nomeA = (a.nome_familia || '').toLowerCase();
