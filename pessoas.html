@@ -152,6 +152,7 @@
                 <button type="button" class="modal-tab-btn" onclick="switchTab('pessoal', event)">Dados Pessoais</button>
                 <button type="button" class="modal-tab-btn" onclick="switchTab('papeis', event)">Perfis</button>
                 <button type="button" class="modal-tab-btn" onclick="switchTab('observacoes', event)">Observações</button>
+                <button type="button" class="modal-tab-btn" onclick="switchTab('vinculos', event)">Vínculos / Família</button>
             </div>
             <form id="formPessoa">
                 <div class="modal-body custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">
@@ -316,6 +317,68 @@
                         <div class="form-group">
                             <label>Observações Adicionais</label>
                             <textarea id="inObservacao" rows="5" placeholder="Adicione observações que podem auxiliar na referência à Pessoa, informação adicional especial ou qualquer ação importante..." style="width: 100%; resize: vertical;"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Aba Vínculos -->
+                    <div id="tab-vinculos" class="tab-content">
+                        <div id="vinculosAvisoInativo" style="display:none; color: var(--text-muted); font-size: 14px; text-align: center; padding: 24px;">
+                            Salve o cadastro da pessoa primeiro antes de adicionar vínculos.
+                        </div>
+                        
+                        <div id="vinculosContainer" style="display:none;">
+                            <div style="background: rgba(0,0,0,0.15); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                                <h4 style="margin: 0 0 16px 0; color: var(--text-main); font-size: 14px;">Adicionar Novo Vínculo</h4>
+                                <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                                    <div style="flex: 2; min-width: 200px; position: relative;">
+                                        <label style="font-size: 12px; color: var(--text-muted);">Buscar Pessoa</label>
+                                        <input type="text" id="inVinculoBusca" placeholder="Digite o nome..." autocomplete="off">
+                                        <input type="hidden" id="inVinculoPessoaId">
+                                        <div id="vinculoSugestoes" style="display:none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></div>
+                                    </div>
+                                    <div style="flex: 1; min-width: 150px;">
+                                        <label style="font-size: 12px; color: var(--text-muted);">Tipo de Relação</label>
+                                        <select id="inVinculoTipo">
+                                            <option value="">Selecione...</option>
+                                            <optgroup label="Familiares">
+                                                <option value="Cônjuge / Companheiro(a)">Cônjuge / Companheiro(a)</option>
+                                                <option value="Pai / Mãe">Pai / Mãe</option>
+                                                <option value="Filho(a)">Filho(a)</option>
+                                                <option value="Irmão / Irmã">Irmão / Irmã</option>
+                                                <option value="Avô / Avó">Avô / Avó</option>
+                                                <option value="Neto(a)">Neto(a)</option>
+                                                <option value="Familiar (Outros)">Familiar (Outros)</option>
+                                            </optgroup>
+                                            <optgroup label="Legais e Empresariais">
+                                                <option value="Responsável Legal (Tutor/Curador)">Responsável Legal</option>
+                                                <option value="Dependente">Dependente</option>
+                                                <option value="Sócio / Proprietário">Sócio / Proprietário</option>
+                                                <option value="Funcionário / Colaborador">Funcionário / Colaborador</option>
+                                                <option value="Empresa / Filial">Empresa / Filial</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-primary" id="btnAdicionarVinculo" style="height: 38px;">Adicionar</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h4 style="margin: 0 0 12px 0; color: var(--text-main); font-size: 14px;">Vínculos Atuais</h4>
+                            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                    <thead>
+                                        <tr style="background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border); color: var(--text-muted); text-align: left;">
+                                            <th style="padding: 12px;">Nome Vinculado</th>
+                                            <th style="padding: 12px;">Tipo de Relação</th>
+                                            <th style="padding: 12px; width: 60px; text-align: center;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="listaVinculos">
+                                        <!-- Preenchido via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                     
