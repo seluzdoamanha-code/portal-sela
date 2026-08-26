@@ -1,9 +1,7 @@
 import sys
-import subprocess
-
 try:
-    with open('m_ass_familias.js', 'r') as f:
+    with open('familias.js', 'r') as f:
         code = f.read()
-    print("Read JS.")
+    print("Read JS successfully.")
 except Exception as e:
     print(e)
