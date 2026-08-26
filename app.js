@@ -836,7 +836,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        const filtrados = (window.pessoasGlobais || []).filter(p => {
+        const filtrados = (pessoasGlobais || []).filter(p => {
             if (p.id == pessoaEditandoId) return false;
             return (p.nome_completo && p.nome_completo.toLowerCase().includes(val)) ||
                    (p.nome_curto && p.nome_curto.toLowerCase().includes(val));
