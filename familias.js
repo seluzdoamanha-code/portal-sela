@@ -217,10 +217,29 @@ async function carregarListaFamilias() {
         window._familiasLegadoWeb = legado || [];
 
         // Busca Perfil Global
-        const { data: perfilData, error: err2 } = await db.from('pessoas')
-            .select('*, ass_familias_meta(id, codigo, status, tipo), pessoas_relacionamentos!pessoa_origem_id(tipo_relacao, pessoas!pessoa_destino_id(nome_completo))')
-            .ilike('perfis', '%Titular da Família%');
-        if (err2) throw err2;
+// Tentar carregar sem .contains se for dar erro
+        let perfilData, err2;
+        try {
+            const result = await db.from('pessoas')
+                .select('*, ass_familias_meta(id, codigo, status, tipo), pessoas_relacionamentos!pessoa_origem_id(tipo_relacao, pessoas!pessoa_destino_id(nome_completo))')
+                .contains('perfis', ['Titular da Família']);
+            perfilData = result.data;
+            err2 = result.error;
+        } catch(e) {
+            err2 = e;
+        }
+        
+        if (err2) {
+            // Fallback: Busca manual se o operador falhar
+            const resultAll = await db.from('pessoas')
+                .select('*, ass_familias_meta(id, codigo, status, tipo), pessoas_relacionamentos!pessoa_origem_id(tipo_relacao, pessoas!pessoa_destino_id(nome_completo))');
+            if (resultAll.error) throw resultAll.error;
+            
+            perfilData = (resultAll.data || []).filter(p => {
+                const arr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? JSON.parse(p.perfis || '[]') : []);
+                return arr.includes('Titular da Família');
+            });
+        }
         
         window._familiasPerfilWeb = (perfilData || []).map(p => {
             const meta = (p.ass_familias_meta && p.ass_familias_meta.length > 0) ? p.ass_familias_meta[0] : {};
@@ -245,7 +264,7 @@ async function carregarListaFamilias() {
 
     } catch(err) {
         console.error(err);
-        container.innerHTML = '<div style="color: #ef4444; padding: 20px;">Erro ao carregar famílias.</div>';
+        container.innerHTML = '<div style="color: #ef4444; padding: 20px;">Erro ao carregar famílias: ' + (err.message || err.toString()) + '</div>';
     }
 }
 
