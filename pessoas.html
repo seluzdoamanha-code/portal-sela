@@ -328,30 +328,32 @@
                                         <input type="hidden" id="inVinculoPessoaId">
                                         <div id="vinculoSugestoes" style="display:none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></div>
                                     </div>
-                                    <div style="flex: 1; min-width: 150px;">
-                                        <label style="font-size: 12px; color: var(--text-muted);">Tipo de Relação</label>
-                                        <select id="inVinculoTipo">
-                                            <option value="">Selecione...</option>
-                                            <optgroup label="Familiares">
-                                                <option value="Cônjuge / Companheiro(a)">Cônjuge / Companheiro(a)</option>
-                                                <option value="Pai / Mãe">Pai / Mãe</option>
-                                                <option value="Filho(a)">Filho(a)</option>
-                                                <option value="Irmão / Irmã">Irmão / Irmã</option>
-                                                <option value="Avô / Avó">Avô / Avó</option>
-                                                <option value="Neto(a)">Neto(a)</option>
-                                                <option value="Familiar (Outros)">Familiar (Outros)</option>
-                                            </optgroup>
-                                            <optgroup label="Legais e Empresariais">
-                                                <option value="Responsável Legal (Tutor/Curador)">Responsável Legal</option>
-                                                <option value="Dependente">Dependente</option>
-                                                <option value="Sócio / Proprietário">Sócio / Proprietário</option>
-                                                <option value="Funcionário / Colaborador">Funcionário / Colaborador</option>
-                                                <option value="Empresa / Filial">Empresa / Filial</option>
-                                            </optgroup>
-                                        </select>
-                                    </div>
-                                    <div style="margin-left: 8px;">
-                                        <button type="button" class="btn btn-primary" id="btnAdicionarVinculo" style="height: 38px;">Adicionar</button>
+                                    <div style="flex: 2; min-width: 250px; display: flex; gap: 12px; align-items: flex-end;">
+                                        <div style="flex: 1;">
+                                            <label style="font-size: 12px; color: var(--text-muted);">Tipo de Relação</label>
+                                            <select id="inVinculoTipo" style="width: 100%;">
+                                                <option value="">Selecione...</option>
+                                                <optgroup label="Familiares">
+                                                    <option value="Cônjuge / Companheiro(a)">Cônjuge / Companheiro(a)</option>
+                                                    <option value="Pai / Mãe">Pai / Mãe</option>
+                                                    <option value="Filho(a)">Filho(a)</option>
+                                                    <option value="Irmão / Irmã">Irmão / Irmã</option>
+                                                    <option value="Avô / Avó">Avô / Avó</option>
+                                                    <option value="Neto(a)">Neto(a)</option>
+                                                    <option value="Familiar (Outros)">Familiar (Outros)</option>
+                                                </optgroup>
+                                                <optgroup label="Legais e Empresariais">
+                                                    <option value="Responsável Legal (Tutor/Curador)">Responsável Legal</option>
+                                                    <option value="Dependente">Dependente</option>
+                                                    <option value="Sócio / Proprietário">Sócio / Proprietário</option>
+                                                    <option value="Funcionário / Colaborador">Funcionário / Colaborador</option>
+                                                    <option value="Empresa / Filial">Empresa / Filial</option>
+                                                </optgroup>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <button type="button" class="btn btn-primary" id="btnAdicionarVinculo" style="height: 38px;">Adicionar</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
