@@ -153,7 +153,7 @@ async function carregarFamilias() {
             let familiasPerfil = [];
             if (!errorNovas) {
                 familiasPerfil = (dataNovas || []).map(p => {
-                    const meta = (p.ass_familias_meta && p.ass_familias_meta.length > 0) ? p.ass_familias_meta[0] : {};
+                    const meta = p.ass_familias_meta ? (Array.isArray(p.ass_familias_meta) ? (p.ass_familias_meta[0] || {}) : p.ass_familias_meta) : {};
                     return {
                         id: p.id,
                         nome_familia: p.nome_curto || p.nome_completo,

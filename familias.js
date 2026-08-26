@@ -242,7 +242,7 @@ async function carregarListaFamilias() {
         }
         
         window._familiasPerfilWeb = (perfilData || []).map(p => {
-            const meta = (p.ass_familias_meta && p.ass_familias_meta.length > 0) ? p.ass_familias_meta[0] : {};
+            const meta = p.ass_familias_meta ? (Array.isArray(p.ass_familias_meta) ? (p.ass_familias_meta[0] || {}) : p.ass_familias_meta) : {};
             const rels = p.pessoas_relacionamentos || [];
             const membrosMap = rels.map(r => ({
                 parentesco: r.tipo_relacao,
