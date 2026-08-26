@@ -151,8 +151,8 @@
                 <button type="button" class="modal-tab-btn" onclick="switchTab('endereco', event)">Endereço</button>
                 <button type="button" class="modal-tab-btn" onclick="switchTab('pessoal', event)">Dados Pessoais</button>
                 <button type="button" class="modal-tab-btn" onclick="switchTab('papeis', event)">Perfis</button>
-                <button type="button" class="modal-tab-btn" onclick="switchTab('observacoes', event)">Observações</button>
                 <button type="button" class="modal-tab-btn" onclick="switchTab('vinculos', event)">Vínculos / Família</button>
+                <button type="button" class="modal-tab-btn" onclick="switchTab('observacoes', event)">Obs.</button>
             </div>
             <form id="formPessoa">
                 <div class="modal-body custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">
@@ -312,14 +312,6 @@
                         </div>
                     </div>
                     
-                    <!-- Aba Observações -->
-                    <div id="tab-observacoes" class="tab-content">
-                        <div class="form-group">
-                            <label>Observações Adicionais</label>
-                            <textarea id="inObservacao" rows="5" placeholder="Adicione observações que podem auxiliar na referência à Pessoa, informação adicional especial ou qualquer ação importante..." style="width: 100%; resize: vertical;"></textarea>
-                        </div>
-                    </div>
-                    
                     <!-- Aba Vínculos -->
                     <div id="tab-vinculos" class="tab-content">
                         <div id="vinculosAvisoInativo" style="display:none; color: var(--text-muted); font-size: 14px; text-align: center; padding: 24px;">
@@ -379,6 +371,14 @@
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Aba Observações -->
+                    <div id="tab-observacoes" class="tab-content">
+                        <div class="form-group">
+                            <label>Observações Adicionais</label>
+                            <textarea id="inObservacao" rows="5" placeholder="Adicione observações que podem auxiliar na referência à Pessoa, informação adicional especial ou qualquer ação importante..." style="width: 100%; resize: vertical;"></textarea>
                         </div>
                     </div>
                     
