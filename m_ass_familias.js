@@ -82,7 +82,7 @@ async function carregarFamilias() {
             // 1. Busca Famílias NOVAS
             const { data: dataNovas, error: errorNovas } = await db.from('pessoas')
                 .select('*, ass_familias_meta(id, codigo, status, tipo), pessoas_relacionamentos!pessoa_origem_id(id)')
-                .ilike('perfis', '%Titular - Família Assistida%');
+                .ilike('perfis', '%Titular da Família%');
             
             let familiasNovas = [];
             if (!errorNovas) {
