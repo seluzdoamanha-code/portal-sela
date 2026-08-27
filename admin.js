@@ -2415,8 +2415,7 @@ let dataCalendarioAniv = new Date();
 async function carregarAniversariantes() {
     try {
         const { data, error } = await db.from('pessoas')
-            .select('id, nome_curto, nome_completo, foto_perfil, data_nascimento')
-            .neq('data_nascimento', null);
+            .select('id, nome_curto, nome_completo, foto_perfil, data_nascimento');
             
         if (error) throw error;
         aniversariantesGlobais = data;
