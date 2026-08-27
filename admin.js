@@ -2437,6 +2437,7 @@ function renderizarCalendarioAniversarios() {
     const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
     
     document.getElementById('aniversariosMesAnoDisplay').innerText = `${mesesNomes[mes]} ${ano}`;
+    document.getElementById('aniversariosPrintHeader').innerText = `Aniversariantes da Luz do Amanhã - ${mesesNomes[mes]} ${ano}`;
     
     const primeiroDia = new Date(ano, mes, 1).getDay();
     const diasNoMes = new Date(ano, mes + 1, 0).getDate();
