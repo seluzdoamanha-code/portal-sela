@@ -1006,9 +1006,41 @@ window.abrirModalNovaOcorrencia = async function() {
     document.getElementById('assOcorCodigo').value = 'RO' + timestamp;
     
     try {
-        const { data: familias } = await db.from('ass_familias').select('id, nome_familia, codigo').order('nome_familia');
+        const { data: familiasRaw, error: famErr } = await db.from('pessoas')
+            .select('id, nome_curto, nome_completo, ass_familias_meta(codigo, status, tipo)')
+            .contains('perfis', ['Titular da Família']);
+            
+        let familias = [];
+        if (famErr) {
+            const { data: allP } = await db.from('pessoas').select('id, nome_curto, nome_completo, perfis, ass_familias_meta(codigo, status, tipo)');
+            if (allP) {
+                familias = allP.filter(p => {
+                    const arr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? JSON.parse(p.perfis || '[]') : []);
+                    return arr.includes('Titular da Família');
+                });
+            }
+        } else {
+            familias = familiasRaw || [];
+        }
+
+        const arrAtivas = familias.filter(f => {
+            const meta = Array.isArray(f.ass_familias_meta) ? (f.ass_familias_meta[0] || {}) : (f.ass_familias_meta || {});
+            return meta.status === 'Ativa';
+        });
+        
+        arrAtivas.sort((a,b) => {
+            const nA = (a.nome_curto || a.nome_completo || '').toLowerCase();
+            const nB = (b.nome_curto || b.nome_completo || '').toLowerCase();
+            return nA.localeCompare(nB);
+        });
+        
         document.getElementById('assOcorFamilia').innerHTML = '<option value="">-- Selecione a família --</option>' + 
-            (familias || []).map(f => `<option value="${f.id}">${f.codigo} - ${f.nome_familia}</option>`).join('');
+            arrAtivas.map(f => {
+                const meta = Array.isArray(f.ass_familias_meta) ? (f.ass_familias_meta[0] || {}) : (f.ass_familias_meta || {});
+                const nome = f.nome_curto || f.nome_completo;
+                const cod = meta.codigo || 'S/C';
+                return `<option value="${f.id}">${cod} - ${nome}</option>`;
+            }).join('');
     } catch(e) {
         console.error(e);
     }
@@ -1026,7 +1058,7 @@ window.salvarNovaOcorrenciaAss = async function(e) {
         const payload = {
             data_ocorrencia: document.getElementById('assOcorData').value,
             codigo: document.getElementById('assOcorCodigo').value.trim(),
-            familia_id: document.getElementById('assOcorFamilia').value,
+            pessoa_id: document.getElementById('assOcorFamilia').value,
             tipo: document.getElementById('assOcorTipo').value,
             observacao: document.getElementById('assOcorObs').value.trim()
         };

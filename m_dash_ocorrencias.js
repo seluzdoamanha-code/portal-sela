@@ -14,7 +14,7 @@
             const sel = document.getElementById('selFamilia');
             if (sel.value) {
                 const nomeFam = encodeURIComponent(familiaMap[sel.value] || '');
-                window.location.href = 'm_ass_ocorrencias.html?f_id=' + sel.value + '&f_nome=' + nomeFam + '&from=dash';
+                window.location.href = 'm_ass_ocorrencias.html?f_id=' + sel.value + '&f_nome=' + nomeFam + '&from=dash&is_global=1';
             } else {
                 alert('Selecione uma família primeiro!');
             }
@@ -28,19 +28,39 @@
     }
 
     async function loadFamilias() {
-        const { data, error } = await db.from('ass_familias')
-            .select('id, codigo, nome_familia')
-            .eq('status', 'Ativa')
-            .order('nome_familia');
+        const { data: familiasRaw, error: famErr } = await db.from('pessoas')
+            .select('id, nome_curto, nome_completo, ass_familias_meta(codigo, status, tipo)')
+            .contains('perfis', ['Titular da Família']);
             
-        if (error) {
-            console.error(error);
-            return;
+        let familias = [];
+        if (famErr) {
+            const { data: allP } = await db.from('pessoas').select('id, nome_curto, nome_completo, perfis, ass_familias_meta(codigo, status, tipo)');
+            if (allP) {
+                familias = allP.filter(p => {
+                    const arr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? JSON.parse(p.perfis || '[]') : []);
+                    return arr.includes('Titular da Família');
+                });
+            }
+        } else {
+            familias = familiasRaw || [];
         }
+
+        const arrAtivas = familias.filter(f => {
+            const meta = Array.isArray(f.ass_familias_meta) ? (f.ass_familias_meta[0] || {}) : (f.ass_familias_meta || {});
+            return meta.status === 'Ativa';
+        });
+        
+        arrAtivas.sort((a,b) => {
+            const nA = (a.nome_curto || a.nome_completo || '').toLowerCase();
+            const nB = (b.nome_curto || b.nome_completo || '').toLowerCase();
+            return nA.localeCompare(nB);
+        });
         
         let html = '<option value="">-- Selecione uma Família --</option>';
-        data.forEach(f => {
-            const nomeLindo = f.codigo + ' - ' + f.nome_familia;
+        arrAtivas.forEach(f => {
+            const meta = Array.isArray(f.ass_familias_meta) ? (f.ass_familias_meta[0] || {}) : (f.ass_familias_meta || {});
+            const cod = meta.codigo || 'S/C';
+            const nomeLindo = cod + ' - ' + (f.nome_curto || f.nome_completo);
             familiaMap[f.id] = nomeLindo;
             html += `<option value="${f.id}">${nomeLindo}</option>`;
         });
@@ -89,7 +109,11 @@
         } else {
             lstEl.innerHTML = recentes.map(o => {
                 const dateStr = o.data_ocorrencia.split('-').reverse().join('/');
-                const famNome = o.ass_familias ? o.ass_familias.codigo + ' - ' + o.ass_familias.nome_familia.split(' ')[0] : '???';
+                let famNome = o.ass_familias ? o.ass_familias.codigo + ' - ' + o.ass_familias.nome_familia.split(' ')[0] : '???';
+                if (o.pessoa_id && o.pessoas) {
+                    const meta = Array.isArray(o.pessoas.ass_familias_meta) ? (o.pessoas.ass_familias_meta[0] || {}) : (o.pessoas.ass_familias_meta || {});
+                    famNome = (meta.codigo || 'S/C') + ' - ' + (o.pessoas.nome_curto || o.pessoas.nome_completo).split(' ')[0];
+                }
                 const corTipo = o.tipo === 'Grave' ? 'color: var(--primary); font-weight:600;' : 'color: var(--text-main); font-weight:500;';
                 
                 return `
