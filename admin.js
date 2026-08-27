@@ -2031,7 +2031,7 @@ window.carregarEstatisticasMiniAppIrradiacao = async function () {
 
 window.carregarUsuariosAutorizados = async function() {
     try {
-        const { data, error } = await db.from('usuarios_autorizados').select('*').order('criado_em', {ascending: false});
+        const { data, error } = await db.from('usuarios_autorizados').select('*').order('nome', {ascending: true});
         if (error) throw error;
         
         const tbody = document.getElementById('tabelaUsuariosAutorizados');
