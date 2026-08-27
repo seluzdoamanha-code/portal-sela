@@ -2311,35 +2311,7 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
 
             </div>
             
-            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">🤝</div>
-                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Atendimento Fraterno</div>
-                    <div style="font-size: 32px; font-weight: 800; color: var(--primary); margin: 8px 0; line-height: 1;">${totalFraterno}</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">Total histórico registrado</div>
-                    <div style="font-size: 12px; color: #10b981; margin-top: 4px; font-weight: 500;">+${fraternoMes} este mês</div>
-                </div>
 
-                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">📅</div>
-                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Sessões Realizadas</div>
-                    <div style="font-size: 32px; font-weight: 800; color: #3b82f6; margin: 8px 0; line-height: 1;">${totalSessoes}</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">Sessões abertas e concluídas</div>
-                    <div style="font-size: 12px; color: #10b981; margin-top: 4px; font-weight: 500;">+${sessoesMes} este mês</div>
-                </div>
-
-                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">📋</div>
-                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Pacientes em Tratamento</div>
-                    <div style="font-size: 32px; font-weight: 800; color: #8b5cf6; margin: 8px 0; line-height: 1;">${totalTratamentos}</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">Vínculos criados nas sessões</div>
-                </div>
-
-                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">✔️</div>
-                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Presenças Confirmadas</div>
-                    <div style="font-size: 32px; font-weight: 800; color: #10b981; margin: 8px 0; line-height: 1;">${totalPresencas}</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">Pacientes presentes no salão</div>
-                </div>
 
             </div>
             
