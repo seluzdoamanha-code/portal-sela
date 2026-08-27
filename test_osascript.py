@@ -1,7 +1,7 @@
 import subprocess
 import os
 
-filepath = os.path.abspath('assistencia.js')
+filepath = os.path.abspath('familias.js')
 cmd = ['osascript', '-l', 'JavaScript', '-e', f'''
 try {{
     var text = $.NSString.stringWithContentsOfFileEncodingError("{filepath}", $.NSUTF8StringEncoding, null).js;
