@@ -2618,10 +2618,13 @@ function imprimirMural() {
         html += `<ul style="list-style: none; padding: 0; margin: 0;">`;
         aniversariantesDoMes.forEach(p => {
             const dia = parseInt(p.data_nascimento.split('-')[2], 10);
+            const anoNasc = parseInt(p.data_nascimento.split('-')[0], 10);
+            const anoAtual = dataCalendarioAniv.getFullYear();
+            const idade = anoAtual - anoNasc;
             html += `
                 <li style="margin-bottom: 16px; font-size: 20px; display: flex; align-items: baseline; break-inside: avoid;">
                     <span style="font-weight: bold; width: 60px; color: #f97316;">Dia ${String(dia).padStart(2, '0')}</span>
-                    <span style="border-bottom: 1px dotted #ccc; flex-grow: 1; margin-left: 10px;">${p.nome_completo}</span>
+                    <span style="border-bottom: 1px dotted #ccc; flex-grow: 1; margin-left: 10px;">${p.nome_completo} <span style="font-size: 16px; color: #666; margin-left: 6px;">(${idade} a.)</span></span>
                 </li>
             `;
         });
