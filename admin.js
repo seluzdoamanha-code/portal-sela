@@ -2188,6 +2188,32 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
             if (tipo.includes('espiritual')) procEspiritual++;
         });
 
+        // --- Variáveis restauradas para os gráficos de baixo ---
+        const totalFraterno = resFraterno.data ? resFraterno.data.length : 0;
+        const totalSessoes = resSessoes.data ? resSessoes.data.length : 0;
+        const totalPresencas = resPresencas.data ? resPresencas.data.length : 0;
+
+        let qtdeOrientacao = 0;
+        let qtdeTratamento = 0;
+        let qtdeOutros = 0;
+        (resFraterno.data || []).forEach(f => {
+            const t = (f.encaminhamento || '').toLowerCase();
+            if (t.includes('orientaç') || t.includes('orientac')) qtdeOrientacao++;
+            else if (t.includes('tratamento')) qtdeTratamento++;
+            else qtdeOutros++;
+        });
+
+        const now = new Date();
+        const firstDayMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        let fraternoMes = 0;
+        (resFraterno.data || []).forEach(f => {
+            if (f.data_atendimento >= firstDayMonth) fraternoMes++;
+        });
+        let sessoesMes = 0;
+        (resSessoes.data || []).forEach(s => {
+            if (s.data_sessao >= firstDayMonth) sessoesMes++;
+        });
+
         // Building HTML UI
         let html = `
             <div style="display: flex; gap: 24px; margin-bottom: 24px; flex-wrap: wrap;">
