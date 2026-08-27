@@ -117,10 +117,45 @@
                         <div class="admin-tab" onclick="switchTab('legais')">⚖️ Legais</div>
                         <div class="admin-tab" onclick="switchTab('financas')">💰 Finanças</div>
                         <div class="admin-tab" onclick="switchTab('bd')">🗄️ Banco de Dados</div>
+                        <div class="admin-tab" onclick="switchTab('aniversarios')">🎂 Aniversários</div>
                     </div>
                 </div>
 
                 <!-- Conteúdos das Abas -->
+
+                <div id="tab-aniversarios" class="tab-content">
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <!-- Controle de Mês/Ano -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <button onclick="mudarMesAniversario(-1)" style="background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">&lt; Anterior</button>
+                            <h2 id="aniversariosMesAnoDisplay" style="margin: 0; font-size: 20px; font-weight: 600; color: var(--text-main);">Mês e Ano</h2>
+                            <button onclick="mudarMesAniversario(1)" style="background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">Próximo &gt;</button>
+                        </div>
+                        
+                        <!-- Grid do Calendário -->
+                        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px;">
+                            <div style="text-align: center; font-weight: 600; color: var(--text-muted); font-size: 13px;">Dom</div>
+                            <div style="text-align: center; font-weight: 600; color: var(--text-muted); font-size: 13px;">Seg</div>
+                            <div style="text-align: center; font-weight: 600; color: var(--text-muted); font-size: 13px;">Ter</div>
+                            <div style="text-align: center; font-weight: 600; color: var(--text-muted); font-size: 13px;">Qua</div>
+                            <div style="text-align: center; font-weight: 600; color: var(--text-muted); font-size: 13px;">Qui</div>
+                            <div style="text-align: center; font-weight: 600; color: var(--text-muted); font-size: 13px;">Sex</div>
+                            <div style="text-align: center; font-weight: 600; color: var(--text-muted); font-size: 13px;">Sáb</div>
+                        </div>
+                        
+                        <div id="gridCalendarioAniversarios" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;">
+                            <!-- Gerado via JS -->
+                        </div>
+                    </div>
+                    
+                    <!-- Painel de Lista da Semana -->
+                    <div id="painelListaAniversariantes" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: none;">
+                        <h3 id="tituloListaAniversariantes" style="margin-top: 0; margin-bottom: 16px; font-size: 16px; color: var(--primary);">Aniversariantes da Semana</h3>
+                        <div id="listaAniversariantesSemana" style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+                </div>
 
                 <div id="tab-celular" class="tab-content">
                     <div style="display: flex; flex-direction: column; gap: 24px;">
@@ -494,13 +529,31 @@
                                     <label style="display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">E-mail</label>
                                     <input type="email" id="bdUserEmail" class="form-control" placeholder="usuario@exemplo.com" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 8px;">
                                 </div>
-                                <div style="flex: 1; min-width: 150px;">
-                                    <label style="display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Nível de Acesso</label>
-                                    <select id="bdUserNivel" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 8px;">
-                                        <option value="comum">Comum</option>
-                                        <option value="admin">Administrador</option>
-                                        <option value="admin_global">Admin Global</option>
-                                    </select>
+                                <div style="flex: 1; min-width: 250px; background: var(--bg-body); border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+                                    <label style="display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Níveis de Acesso (Crachás)</label>
+                                    <div id="bdUserNivel" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
+                                            <input type="checkbox" value="comum" class="nivel-checkbox" checked> Comum
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
+                                            <input type="checkbox" value="diretor" class="nivel-checkbox"> Diretor
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
+                                            <input type="checkbox" value="secretaria" class="nivel-checkbox"> Secretaria
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
+                                            <input type="checkbox" value="assistencia" class="nivel-checkbox"> Assistência
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
+                                            <input type="checkbox" value="tesouraria" class="nivel-checkbox"> Tesouraria
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; color: #ec4899;">
+                                            <input type="checkbox" value="admin" class="nivel-checkbox"> Admin
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; color: #ef4444; font-weight: 600;">
+                                            <input type="checkbox" value="admin_global" class="nivel-checkbox"> Admin Global
+                                        </label>
+                                    </div>
                                 </div>
                                 <div style="flex: 0;">
                                     <button onclick="salvarUsuarioAutorizado()" class="btn btn-primary" style="height: 41px; padding: 0 24px; white-space: nowrap;">Adicionar</button>

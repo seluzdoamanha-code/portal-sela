@@ -96,6 +96,10 @@ window.switchTab = function(tabId) {
         if (typeof window.carregarAgendaGlobal === 'function') {
             window.carregarAgendaGlobal();
         }
+    } else if (tabId === 'aniversarios') {
+        if (typeof window.carregarAniversariantes === 'function') {
+            window.carregarAniversariantes();
+        }
     }
 };
 
@@ -2055,7 +2059,18 @@ window.carregarUsuariosAutorizados = async function() {
                 <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
                     <td style="padding: 12px 16px; color: var(--text-main); font-weight: 500;">${u.nome || '-'}</td>
                     <td style="padding: 12px 16px; color: var(--text-muted);">${u.email}</td>
-                    <td style="padding: 12px 16px;"><span style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: ${u.nivel_acesso === 'admin' ? 'rgba(236,72,153,0.1)' : 'rgba(56,189,248,0.1)'}; color: ${u.nivel_acesso === 'admin' ? '#ec4899' : '#38bdf8'}; text-transform: uppercase;">${u.nivel_acesso}</span></td>
+                    <td style="padding: 12px 16px;">
+                        ${(u.nivel_acesso || 'comum').split(',').map(n => {
+                            let bg = 'rgba(56,189,248,0.1)'; let col = '#38bdf8';
+                            if (n === 'admin') { bg = 'rgba(236,72,153,0.1)'; col = '#ec4899'; }
+                            if (n === 'admin_global') { bg = 'rgba(239,68,68,0.1)'; col = '#ef4444'; }
+                            if (n === 'tesouraria') { bg = 'rgba(16,185,129,0.1)'; col = '#10b981'; }
+                            if (n === 'assistencia') { bg = 'rgba(245,158,11,0.1)'; col = '#f59e0b'; }
+                            if (n === 'secretaria') { bg = 'rgba(139,92,246,0.1)'; col = '#8b5cf6'; }
+                            if (n === 'diretor') { bg = 'rgba(234,179,8,0.1)'; col = '#eab308'; }
+                            return `<span style="font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: ${bg}; color: ${col}; text-transform: uppercase; margin-right: 4px; display: inline-block; margin-bottom: 4px;">${n}</span>`;
+                        }).join('')}
+                    </td>
                     <td style="padding: 12px 16px; color: var(--text-muted);">${dataCriado}</td>
                     <td style="padding: 12px 16px;">
                         <button onclick="excluirUsuarioAutorizado('${u.email}')" style="background: transparent; border: none; color: #ef4444; cursor: pointer; padding: 4px; border-radius: 4px;" title="Remover acesso">
@@ -2075,7 +2090,13 @@ window.carregarUsuariosAutorizados = async function() {
 window.salvarUsuarioAutorizado = async function() {
     const nome = document.getElementById('bdUserNome').value.trim();
     const email = document.getElementById('bdUserEmail').value.trim();
-    const nivel = document.getElementById('bdUserNivel').value;
+    const checkboxes = document.querySelectorAll('.nivel-checkbox:checked');
+    const niveis = Array.from(checkboxes).map(cb => cb.value);
+    if (niveis.length === 0) {
+        alert("Selecione pelo menos um nível de acesso.");
+        return;
+    }
+    const nivel = niveis.join(',');
     
     if (!email) {
         alert("O e-mail é obrigatório.");
@@ -2382,3 +2403,176 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
         container.innerHTML = `<div style="color:red; text-align:center; padding: 20px;">Erro ao carregar estatísticas do Atendimento.</div>`;
     }
 };
+
+// ==========================================
+// MÓDULO: ANIVERSÁRIOS (CALENDÁRIO)
+// ==========================================
+let aniversariantesGlobais = [];
+let dataCalendarioAniv = new Date();
+
+async function carregarAniversariantes() {
+    try {
+        const { data, error } = await db.from('pessoas')
+            .select('id, nome_curto, nome_completo, foto_perfil, data_nascimento')
+            .not('data_nascimento', 'is', null);
+            
+        if (error) throw error;
+        aniversariantesGlobais = data;
+        renderizarCalendarioAniversarios();
+    } catch (e) {
+        console.error("Erro ao carregar aniversariantes", e);
+    }
+}
+
+function mudarMesAniversario(delta) {
+    dataCalendarioAniv.setMonth(dataCalendarioAniv.getMonth() + delta);
+    renderizarCalendarioAniversarios();
+    document.getElementById('painelListaAniversariantes').style.display = 'none';
+}
+
+function renderizarCalendarioAniversarios() {
+    const mes = dataCalendarioAniv.getMonth();
+    const ano = dataCalendarioAniv.getFullYear();
+    const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    
+    document.getElementById('aniversariosMesAnoDisplay').innerText = `${mesesNomes[mes]} ${ano}`;
+    
+    const primeiroDia = new Date(ano, mes, 1).getDay();
+    const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+    
+    const grid = document.getElementById('gridCalendarioAniversarios');
+    grid.innerHTML = '';
+    
+    // Filtra quem faz aniversário neste mês (ignorando ano de nascimento)
+    const aniversariantesDoMes = aniversariantesGlobais.filter(p => {
+        if (!p.data_nascimento) return false;
+        const partes = p.data_nascimento.split('-');
+        if (partes.length !== 3) return false;
+        return parseInt(partes[1]) === (mes + 1);
+    });
+
+    // Calcula semanas
+    let diaAtual = 1;
+    let semanas = [];
+    let semanaAtual = Array(7).fill(null);
+    
+    // Preenche primeira semana com vazios até o primeiroDia
+    for (let i = 0; i < primeiroDia; i++) {
+        semanaAtual[i] = null;
+    }
+    
+    for (let i = primeiroDia; i < 7; i++) {
+        semanaAtual[i] = diaAtual++;
+    }
+    semanas.push(semanaAtual);
+    
+    while (diaAtual <= diasNoMes) {
+        semanaAtual = Array(7).fill(null);
+        for (let i = 0; i < 7 && diaAtual <= diasNoMes; i++) {
+            semanaAtual[i] = diaAtual++;
+        }
+        semanas.push(semanaAtual);
+    }
+
+    // Renderiza a grid linha por linha (semanas) para facilitar o clique
+    semanas.forEach((semana, rowIndex) => {
+        const d1 = semana.find(d => d !== null);
+        const d2 = semana.slice().reverse().find(d => d !== null);
+        
+        semana.forEach(dia => {
+            const div = document.createElement('div');
+            div.style.background = dia ? 'rgba(255,255,255,0.02)' : 'transparent';
+            div.style.border = dia ? '1px solid var(--border)' : 'none';
+            div.style.borderRadius = '8px';
+            div.style.padding = '8px';
+            div.style.minHeight = '80px';
+            div.style.display = 'flex';
+            div.style.flexDirection = 'column';
+            div.style.gap = '4px';
+            div.style.cursor = dia ? 'pointer' : 'default';
+            div.style.transition = 'background 0.2s';
+            
+            if (dia) {
+                div.innerHTML = `<span style="font-weight: 600; color: var(--text-muted); font-size: 13px;">${dia}</span>`;
+                
+                div.onmouseover = () => div.style.background = 'rgba(255,255,255,0.05)';
+                div.onmouseout = () => div.style.background = 'rgba(255,255,255,0.02)';
+                
+                // Evento para abrir a lista da semana inteira
+                div.onclick = () => renderizarListaAniversariantesSemana(d1, d2, mes, ano);
+                
+                // Checa aniversariantes do dia
+                const niversHoje = aniversariantesDoMes.filter(p => parseInt(p.data_nascimento.split('-')[2]) === dia);
+                niversHoje.forEach(p => {
+                    const anoNasc = parseInt(p.data_nascimento.split('-')[0]);
+                    const idadeQueFara = ano - anoNasc;
+                    const pill = document.createElement('div');
+                    pill.style.background = 'rgba(236, 72, 153, 0.1)';
+                    pill.style.color = '#ec4899';
+                    pill.style.fontSize = '11px';
+                    pill.style.fontWeight = '600';
+                    pill.style.padding = '2px 6px';
+                    pill.style.borderRadius = '12px';
+                    pill.style.display = 'inline-block';
+                    pill.style.whiteSpace = 'nowrap';
+                    pill.style.overflow = 'hidden';
+                    pill.style.textOverflow = 'ellipsis';
+                    pill.innerText = `🎂 ${idadeQueFara}a - ${p.nome_curto || p.nome_completo.split(' ')[0]}`;
+                    pill.title = p.nome_completo;
+                    div.appendChild(pill);
+                });
+            }
+            grid.appendChild(div);
+        });
+    });
+}
+
+function renderizarListaAniversariantesSemana(diaInicio, diaFim, mes, ano) {
+    const painel = document.getElementById('painelListaAniversariantes');
+    const container = document.getElementById('listaAniversariantesSemana');
+    const titulo = document.getElementById('tituloListaAniversariantes');
+    
+    painel.style.display = 'block';
+    titulo.innerText = `Aniversariantes da Semana (${diaInicio} a ${diaFim} de ${document.getElementById('aniversariosMesAnoDisplay').innerText.split(' ')[0]})`;
+    
+    const aniversariantesDoMes = aniversariantesGlobais.filter(p => {
+        if (!p.data_nascimento) return false;
+        const partes = p.data_nascimento.split('-');
+        if (partes.length !== 3) return false;
+        return parseInt(partes[1]) === (mes + 1);
+    });
+    
+    const niversDaSemana = aniversariantesDoMes.filter(p => {
+        const dia = parseInt(p.data_nascimento.split('-')[2]);
+        return dia >= diaInicio && dia <= diaFim;
+    }).sort((a,b) => parseInt(a.data_nascimento.split('-')[2]) - parseInt(b.data_nascimento.split('-')[2]));
+    
+    if (niversDaSemana.length === 0) {
+        container.innerHTML = `<div style="color: var(--text-muted); font-size: 14px;">Nenhum aniversário nesta semana.</div>`;
+        return;
+    }
+    
+    container.innerHTML = niversDaSemana.map(p => {
+        const anoNasc = parseInt(p.data_nascimento.split('-')[0]);
+        const diaAniv = parseInt(p.data_nascimento.split('-')[2]);
+        const idadeQueFara = ano - anoNasc;
+        const imgUrl = p.foto_perfil || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nome_completo)}&background=random`;
+        
+        return `
+            <div style="display: flex; align-items: center; gap: 16px; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px;">
+                <img src="${imgUrl}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: var(--text-main); font-size: 15px;">${p.nome_completo}</div>
+                    <div style="color: var(--text-muted); font-size: 13px;">Dia ${String(diaAniv).padStart(2, '0')}/${String(mes+1).padStart(2, '0')}</div>
+                </div>
+                <div style="background: rgba(236, 72, 153, 0.1); color: #ec4899; padding: 6px 12px; border-radius: 12px; font-weight: 600; font-size: 14px;">
+                    Fazendo ${idadeQueFara} anos
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Rolar a tela suavemente para a lista
+    painel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
