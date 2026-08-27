@@ -97,7 +97,9 @@ window.switchTab = function(tabId) {
             window.carregarAgendaGlobal();
         }
     } else if (tabId === 'aniversarios') {
-        if (typeof window.carregarAniversariantes === 'function') {
+        if (typeof carregarAniversariantes === 'function') {
+            carregarAniversariantes();
+        } else if (typeof window.carregarAniversariantes === 'function') {
             window.carregarAniversariantes();
         }
     }
