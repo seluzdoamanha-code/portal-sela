@@ -2653,3 +2653,65 @@ function imprimirMural() {
 }
 
 window.imprimirMural = imprimirMural;
+
+function abrirModalWhatsApp() {
+    const mes = dataCalendarioAniv.getMonth();
+    const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    
+    // Filtra e ordena
+    const aniversariantesDoMes = aniversariantesGlobais.filter(p => {
+        if (!p.data_nascimento) return false;
+        const partes = p.data_nascimento.split('-');
+        if (partes.length !== 3) return false;
+        return parseInt(partes[1], 10) === (mes + 1);
+    }).sort((a, b) => parseInt(a.data_nascimento.split('-')[2], 10) - parseInt(b.data_nascimento.split('-')[2], 10));
+
+    // Monta o texto
+    let texto = `🎉 *Aniversariantes da Luz do Amanhã - ${mesesNomes[mes]}* 🎉\n\n`;
+    
+    if (aniversariantesDoMes.length === 0) {
+        texto += `Nenhum aniversariante registrado neste mês.\n`;
+    } else {
+        aniversariantesDoMes.forEach(p => {
+            const dia = parseInt(p.data_nascimento.split('-')[2], 10);
+            const anoNasc = parseInt(p.data_nascimento.split('-')[0], 10);
+            const anoAtual = dataCalendarioAniv.getFullYear();
+            const idade = anoAtual - anoNasc;
+            
+            // Usa o nome curto se existir, senão usa o primeiro nome
+            const nomeExibicao = p.nome_curto || p.nome_completo.split(' ')[0];
+            
+            texto += `🎈 *Dia ${String(dia).padStart(2, '0')}* - ${nomeExibicao} (${idade} anos)\n`;
+        });
+    }
+    
+    texto += `\nParabéns a todos! 🎂✨`;
+    
+    document.getElementById('textoWhatsAppPreview').value = texto;
+    document.getElementById('modalWhatsApp').style.display = 'flex';
+    document.getElementById('btnCopiarWhats').innerText = 'Copiar Texto';
+    document.getElementById('btnCopiarWhats').style.background = '#25D366';
+}
+
+function fecharModalWhatsApp() {
+    document.getElementById('modalWhatsApp').style.display = 'none';
+}
+
+function copiarTextoWhatsApp() {
+    const texto = document.getElementById('textoWhatsAppPreview').value;
+    navigator.clipboard.writeText(texto).then(() => {
+        const btn = document.getElementById('btnCopiarWhats');
+        btn.innerText = 'Copiado! ✓';
+        btn.style.background = '#128c7e';
+        setTimeout(() => {
+            fecharModalWhatsApp();
+        }, 1500);
+    }).catch(err => {
+        console.error('Erro ao copiar texto: ', err);
+        alert('Não foi possível copiar o texto automaticamente. Você pode copiá-mo manualmente na caixa de texto.');
+    });
+}
+
+window.abrirModalWhatsApp = abrirModalWhatsApp;
+window.fecharModalWhatsApp = fecharModalWhatsApp;
+window.copiarTextoWhatsApp = copiarTextoWhatsApp;
