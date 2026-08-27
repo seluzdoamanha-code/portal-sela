@@ -413,34 +413,6 @@ async function carregarListaOcorrencias() {
         container.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 20px;">Erro ao carregar ocorrências.</div>';
     }
 }
-                                        </td>
-                                        <td style="padding: 12px 4px;">
-                                            <span style="background: ${corTipo}22; color: ${corTipo}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">
-                                                ${o.tipo}
-                                            </span>
-                                        </td>
-                                        <td style="padding: 12px 4px; color: var(--text-muted); max-width: 300px; white-space: pre-wrap; word-wrap: break-word;">${o.observacao || '-'}</td>
-                                        <td style="padding: 12px 4px; text-align: right;">
-                                            <button onclick="excluirOcorrenciaAss('${o.id}')" style="background:none; border:none; color: #ef4444; cursor:pointer;" title="Excluir Ocorrência">🗑️</button>
-                                        </td>
-                                    </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `}
-            </div>
-        `;
-
-        container.innerHTML = html;
-
-    } catch(err) {
-        console.error(err);
-        container.innerHTML = '<div style="color: #ef4444; padding: 20px;">Erro ao carregar ocorrências.</div>';
-    }
-}
-
 // ==========================================
 // FUNÇÕES DE MODAIS 
 // ==========================================
