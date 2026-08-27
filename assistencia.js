@@ -976,7 +976,7 @@ window.abrirModalNovaEntrega = async function() {
     }
 
     document.getElementById('formNovaEntregaAss').reset();
-    document.getElementById('assEntData').value = new Date().toISOString().split('T')[0];
+    document.getElementById('assEntData').value = new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000).toISOString().split('T')[0];
     
     try {
         // Fetch famílias
@@ -1272,7 +1272,7 @@ window.salvarEntregaColetivaLote = async function(btn) {
         let successCount = 0;
         
         // Formatar data da entrega (dia 01 do mes ref, ou hoje se for mês atual)
-        let dataEntrega = new Date().toISOString().split('T')[0];
+        let dataEntrega = new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000).toISOString().split('T')[0];
         const hoje = new Date();
         if (hoje.getFullYear() !== window.assColetivaAno || (hoje.getMonth() + 1) !== window.assColetivaMes) {
             const mesStr = window.assColetivaMes.toString().padStart(2, '0');

@@ -12,7 +12,7 @@
             const sel = document.getElementById('selFamilia');
             if (sel.value) {
                 const fNome = sel.options[sel.selectedIndex].text;
-                window.location.href = 'm_ass_entregas.html?f_id=' + sel.value + '&f_nome=' + encodeURIComponent(fNome) + '&from=dash';
+                window.location.href = 'm_ass_entregas.html?f_id=' + sel.value + '&f_nome=' + encodeURIComponent(fNome) + '&is_global=1&from=dash';
             } else {
                 alert('Selecione uma família primeiro!');
             }
@@ -26,19 +26,40 @@
     }
 
     async function loadFamilias() {
-        const { data, error } = await db.from('ass_familias')
-            .select('id, codigo, nome_familia')
-            .eq('status', 'Ativa')
-            .order('nome_familia');
+        const { data: familiasRaw, error: famErr } = await db.from('pessoas')
+            .select('id, nome_curto, nome_completo, ass_familias_meta(codigo, status, tipo)')
+            .contains('perfis', ['Titular da Família']);
             
-        if (error) {
-            console.error(error);
-            return;
+        let familias = [];
+        if (famErr) {
+            const { data: allP } = await db.from('pessoas').select('id, nome_curto, nome_completo, perfis, ass_familias_meta(codigo, status, tipo)');
+            if (allP) {
+                familias = allP.filter(p => {
+                    const arr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? JSON.parse(p.perfis || '[]') : []);
+                    return arr.includes('Titular da Família');
+                });
+            }
+        } else {
+            familias = familiasRaw || [];
         }
+
+        const arrAtivas = familias.filter(f => {
+            const meta = Array.isArray(f.ass_familias_meta) ? (f.ass_familias_meta[0] || {}) : (f.ass_familias_meta || {});
+            return meta.status === 'Ativa';
+        });
+        
+        arrAtivas.sort((a,b) => {
+            const nA = (a.nome_curto || a.nome_completo || '').toLowerCase();
+            const nB = (b.nome_curto || b.nome_completo || '').toLowerCase();
+            return nA.localeCompare(nB);
+        });
         
         let html = '<option value="">-- Selecione uma Família --</option>';
-        data.forEach(f => {
-            html += `<option value="${f.id}">${f.codigo} - ${f.nome_familia}</option>`;
+        arrAtivas.forEach(f => {
+            const meta = Array.isArray(f.ass_familias_meta) ? (f.ass_familias_meta[0] || {}) : (f.ass_familias_meta || {});
+            const cod = meta.codigo || 'S/C';
+            const nome = f.nome_curto || f.nome_completo;
+            html += `<option value="${f.id}">${cod} - ${nome}</option>`;
         });
         document.getElementById('selFamilia').innerHTML = html;
     }
@@ -68,7 +89,8 @@
         let extras = 0; // qualquer outro
         
         entregas.forEach(e => {
-            if (e.familia_id) famSet.add(e.familia_id);
+            if (e.pessoa_id) famSet.add(e.pessoa_id);
+            else if (e.familia_id) famSet.add(e.familia_id);
             const qtd = e.quantidade_entregue || 1;
             const cod = e.ass_cestas_modelos ? e.ass_cestas_modelos.codigo : '';
             
@@ -106,7 +128,11 @@
         } else {
             lstEl.innerHTML = recentes.map(e => {
                 const dateStr = e.data_entrega.split('-').reverse().join('/');
-                const famNome = e.ass_familias ? e.ass_familias.codigo : '???';
+                let famNome = e.ass_familias ? e.ass_familias.codigo : '???';
+                if (e.pessoa_id && e.pessoas) {
+                    const meta = Array.isArray(e.pessoas.ass_familias_meta) ? (e.pessoas.ass_familias_meta[0] || {}) : (e.pessoas.ass_familias_meta || {});
+                    famNome = meta.codigo || 'S/C';
+                }
                 const modelo = e.ass_cestas_modelos ? e.ass_cestas_modelos.tipo : 'Cesta';
                 return `
                     <div class="m-list-item">

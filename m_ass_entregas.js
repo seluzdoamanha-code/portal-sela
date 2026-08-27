@@ -7,7 +7,7 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
         // Set today's date
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000).toISOString().split('T')[0];
         document.getElementById('inpData').value = today;
         
         // Parse URL params

@@ -169,7 +169,7 @@
             // Pad the month
             const mesStr = mes.toString().padStart(2, '0');
             // Assuming the delivery date is today if it's current month, otherwise 1st of the month
-            let dataEntrega = new Date().toISOString().split('T')[0];
+            let dataEntrega = new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000).toISOString().split('T')[0];
             const hoje = new Date();
             if (hoje.getFullYear() !== ano || (hoje.getMonth() + 1) !== mes) {
                 dataEntrega = `${ano}-${mesStr}-01`;
