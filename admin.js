@@ -2578,3 +2578,7 @@ function renderizarListaAniversariantesSemana(diaInicio, diaFim, mes, ano) {
     painel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+
+window.carregarAniversariantes = carregarAniversariantes;
+window.mudarMesAniversario = mudarMesAniversario;
+window.renderizarCalendarioAniversarios = renderizarCalendarioAniversarios;
