@@ -558,10 +558,15 @@
                     
                     <div class="admin-subtabs" style="display: flex; gap: 8px; margin-bottom: 24px;">
                         <button onclick="switchSubTab('miniapps', 'irradiacao')" class="btn btn-miniapps-irradiacao active" style="flex: 1; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px;">Irradiação</button>
+                        <button onclick="switchSubTab('miniapps', 'atendimento')" class="btn btn-miniapps-atendimento" style="flex: 1; background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Atendimento Espiritual</button>
                     </div>
                     
                     <div id="subtab-miniapps-irradiacao" class="subtab-content miniapps-subtab active" style="display: block;">
                         <div id="containerEstatMiniAppIrradiacao" style="color: var(--text-muted); text-align: center; padding: 40px;">Carregando estatísticas...</div>
+                    </div>
+                    
+                    <div id="subtab-miniapps-atendimento" class="subtab-content miniapps-subtab" style="display: none;">
+                        <div id="containerEstatMiniAppAtendimento" style="color: var(--text-muted); text-align: center; padding: 40px;">Carregando estatísticas do Atendimento...</div>
                     </div>
                 </div>
 
