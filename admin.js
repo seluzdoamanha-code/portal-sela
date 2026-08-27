@@ -2154,8 +2154,8 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
         
         let triagemAguardando = 0;
         (resFraterno.data || []).forEach(f => {
-            // Planejado ou qualquer status que indique fila
-            if (f.status === 'Planejado' || f.status === 'Aguardando' || f.status === 'Fila') {
+            const st = (f.status || '').toLowerCase();
+            if (st === 'pendente' || st === 'em tratamento') {
                 triagemAguardando++;
             }
         });
