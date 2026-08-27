@@ -2414,7 +2414,7 @@ async function carregarAniversariantes() {
     try {
         const { data, error } = await db.from('pessoas')
             .select('id, nome_curto, nome_completo, foto_perfil, data_nascimento')
-            .not('data_nascimento', 'is', null);
+            .neq('data_nascimento', null);
             
         if (error) throw error;
         aniversariantesGlobais = data;
