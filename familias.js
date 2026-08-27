@@ -928,25 +928,24 @@ window.editarFamiliaAss = async function(id) {
     }
 };
 
-window.excluirFamiliaAss = async function(id) {
-    if(!confirm("Tem certeza que deseja excluir esta Família? Se houver entregas registradas, não será possível.")) return;
-    try {
-        const { error } = await db.from('ass_familias').delete().eq('id', id);
-        if (error) throw error;
-        carregarListaFamilias();
-    } catch(err) {
-        console.error(err);
-        alert('Erro ao excluir família. Verifique se já não existem entregas registradas para ela.');
+window.excluirFamiliaAss = function(id) {
+    if (typeof mostrarModalConfirmacaoFamilias !== 'function') {
+        if(!confirm("Tem certeza que deseja excluir esta Família? Se houver entregas registradas, não será possível.")) return;
+        db.from('ass_familias').delete().eq('id', id).then(() => { fecharModalFamilia(); window.renderListaFamiliasWeb(); });
+        return;
     }
+    mostrarModalConfirmacaoFamilias(
+        'Excluir Família Legado',
+        'Tem certeza que deseja excluir esta Família Legado? Se houver entregas registradas, não será possível excluí-la.',
+        'Sim, Excluir',
+        async () => {
+            const { error } = await db.from('ass_familias').delete().eq('id', id);
+            if (error) throw error;
+            fecharModalFamilia();
+            window.renderListaFamiliasWeb();
+        }
+    );
 };
-
-// ==========================================
-// OUTROS STUBS
-// ==========================================
-// ==========================================
-// MODAIS DE OCORRÊNCIAS
-// ==========================================
-
 window.abrirModalNovaOcorrencia = async function() {
     if(!document.getElementById('modalNovaOcorrenciaAss')) {
         document.body.insertAdjacentHTML('beforeend', `
@@ -1051,16 +1050,22 @@ window.salvarNovaOcorrenciaAss = async function(e) {
     }
 };
 
-window.excluirOcorrenciaAss = async function(id) {
-    if(!confirm("Deseja realmente excluir esta ocorrência do livro?")) return;
-    try {
-        const { error } = await db.from('ass_ocorrencias').delete().eq('id', id);
-        if (error) throw error;
-        carregarListaOcorrencias();
-    } catch(err) {
-        console.error(err);
-        alert('Erro ao excluir ocorrência.');
+window.excluirOcorrenciaAss = function(id) {
+    if (typeof mostrarModalConfirmacaoFamilias !== 'function') {
+        if(!confirm("Deseja realmente excluir esta ocorrência do livro?")) return;
+        db.from('ass_ocorrencias').delete().eq('id', id).then(() => carregarListaOcorrencias());
+        return;
     }
+    mostrarModalConfirmacaoFamilias(
+        'Excluir Ocorrência',
+        'Deseja realmente excluir esta ocorrência do livro?',
+        'Sim, Excluir',
+        async () => {
+            const { error } = await db.from('ass_ocorrencias').delete().eq('id', id);
+            if (error) throw error;
+            carregarListaOcorrencias();
+        }
+    );
 };
 
 
