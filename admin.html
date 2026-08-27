@@ -6,6 +6,15 @@
     <title>Administração Global - Portal SELA</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        @media print {
+            body * { visibility: hidden; }
+            #tab-aniversarios, #tab-aniversarios * { visibility: visible; }
+            #tab-aniversarios { position: absolute; left: 0; top: 0; width: 100%; }
+            #aniversariosPrintHeader { display: block !important; }
+            #painelListaAniversariantes, #aniversariosNavButtons, .admin-tabs-wrapper, .sidebar, .top-header { display: none !important; }
+            /* Expande o grid para caber melhor na página impressa */
+            #gridCalendarioAniversarios > div { min-height: 120px !important; }
+        }
         /* Tabs de navegação rolante */
         .admin-tabs-wrapper {
             width: 100%;
@@ -126,9 +135,17 @@
                 <div id="tab-aniversarios" class="tab-content">
                     <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
                         <!-- Controle de Mês/Ano -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h1 id="aniversariosPrintHeader" style="display: none; text-align: center; margin-bottom: 24px; font-size: 24px; color: #333;">Aniversariantes da Luz do Amanhã</h1>
+                        
+                        <!-- Controle de Mês/Ano -->
+                        <div id="aniversariosNavButtons" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                             <button onclick="mudarMesAniversario(-1)" style="background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">&lt; Anterior</button>
-                            <h2 id="aniversariosMesAnoDisplay" style="margin: 0; font-size: 20px; font-weight: 600; color: var(--text-main);">Mês e Ano</h2>
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <h2 id="aniversariosMesAnoDisplay" style="margin: 0; font-size: 20px; font-weight: 600; color: var(--text-main);">Mês e Ano</h2>
+                                <button onclick="window.print()" style="background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                                    🖨️ Imprimir
+                                </button>
+                            </div>
                             <button onclick="mudarMesAniversario(1)" style="background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">Próximo &gt;</button>
                         </div>
                         
@@ -603,7 +620,7 @@
 
     <!-- Scripts Customizados -->
     <script src="auth_guard.js?v=6"></script>
-    <script src="admin.js?v=35"></script>
+    <script src="admin.js?v=36"></script>
     <script src="sidebar.js?v=10"></script>
 
     <!-- Modal Gestão Plana de Equipes -->
