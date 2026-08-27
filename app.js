@@ -665,14 +665,53 @@ window.excluirPessoa = async (id) => {
         return;
     }
     const pessoa = pessoasGlobais.find(p => p.id === id);
-    if (confirm(`Tem certeza que deseja excluir ${pessoa.nome_curto || pessoa.nome_completo}?`)) {
+    
+    try {
+        const checkBtn = document.activeElement;
+        const originalText = checkBtn ? checkBtn.innerText : '';
+        if (checkBtn && checkBtn.tagName === 'BUTTON') checkBtn.innerText = 'Verificando...';
+
+        const [
+            org, fraterno, familiaResp, familiaMembro,
+            entregas, ocorrencias, pacientes
+        ] = await Promise.all([
+            db.from('vinculos_estrutura').select('id', { count: 'exact', head: true }).eq('pessoa_id', id),
+            db.from('app_atendimento_fraterno').select('id', { count: 'exact', head: true }).eq('paciente_id', id),
+            db.from('ass_familias').select('id', { count: 'exact', head: true }).eq('responsavel_id', id),
+            db.from('ass_membros_familia').select('id', { count: 'exact', head: true }).eq('pessoa_id', id),
+            db.from('ass_entregas').select('id', { count: 'exact', head: true }).eq('pessoa_id', id),
+            db.from('ass_ocorrencias').select('id', { count: 'exact', head: true }).eq('pessoa_id', id),
+            db.from('app_pacientes').select('id', { count: 'exact', head: true }).eq('id', id)
+        ]);
+        
+        if (checkBtn && checkBtn.tagName === 'BUTTON') checkBtn.innerText = originalText;
+
+        let dependencias = [];
+        if (org.count > 0) dependencias.push(`- Organograma: ${org.count} vínculo(s)`);
+        if (fraterno.count > 0) dependencias.push(`- Atendimento Fraterno: ${fraterno.count} ficha(s)`);
+        if (familiaResp.count > 0) dependencias.push(`- Responsável por Família (Assistência): ${familiaResp.count} registro(s)`);
+        if (familiaMembro.count > 0) dependencias.push(`- Membro de Família (Assistência): ${familiaMembro.count} registro(s)`);
+        if (entregas.count > 0) dependencias.push(`- Entregas de Cestas: ${entregas.count} registro(s)`);
+        if (ocorrencias.count > 0) dependencias.push(`- Ocorrências Assistenciais: ${ocorrencias.count} registro(s)`);
+        if (pacientes.count > 0) dependencias.push(`- Paciente (Tratamento Espiritual): ${pacientes.count} registro(s)`);
+
+        if (dependencias.length > 0) {
+            alert(`ATENÇÃO! Esta pessoa não pode ser excluída pois seu histórico está atrelado aos seguintes departamentos:\n\n${dependencias.join('\n')}\n\nDica: Mude o Status da pessoa para "Inativo" em vez de excluí-la.`);
+            return;
+        }
+
+    } catch (e) {
+        console.error("Erro ao checar vínculos", e);
+    }
+
+    if (confirm(`Tem certeza que deseja excluir ${pessoa.nome_curto || pessoa.nome_completo}? Esta ação não tem volta.`)) {
         try {
             const { error } = await db.from('pessoas').delete().eq('id', id);
             if (error) throw error;
             carregarPessoas();
         } catch (error) {
             console.error('Erro ao excluir:', error);
-            alert('Não foi possível excluir. Verifique se a pessoa já possui vínculos no sistema.');
+            alert('Não foi possível excluir. O banco de dados recusou a operação (possível vínculo oculto).');
         }
     }
 };
