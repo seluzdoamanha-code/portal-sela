@@ -74,6 +74,7 @@
                     endereco: endereco,
                     cpf_cnpj: fakeCpf,
                     cpf_provisorio: true,
+                    perfis: ['Paciente'],
                     criado_por: criadoPor
                 }]).select('id').single();
 
