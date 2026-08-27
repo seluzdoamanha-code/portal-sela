@@ -92,6 +92,10 @@ window.switchTab = function(tabId) {
         if (typeof window.carregarEstatisticasMiniAppAtendimento === 'function') {
             window.carregarEstatisticasMiniAppAtendimento();
         }
+    } else if (tabId === 'agenda') {
+        if (typeof window.carregarAgendaGlobal === 'function') {
+            window.carregarAgendaGlobal();
+        }
     }
 };
 
