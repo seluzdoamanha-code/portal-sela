@@ -2589,3 +2589,63 @@ function renderizarListaAniversariantesSemana(diaInicio, diaFim, mes, ano) {
 window.carregarAniversariantes = carregarAniversariantes;
 window.mudarMesAniversario = mudarMesAniversario;
 window.renderizarCalendarioAniversarios = renderizarCalendarioAniversarios;
+
+function imprimirMural() {
+    const mes = dataCalendarioAniv.getMonth();
+    const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    
+    // Filtra e ordena todos os aniversariantes do mês atual
+    const aniversariantesDoMes = aniversariantesGlobais.filter(p => {
+        if (!p.data_nascimento) return false;
+        const partes = p.data_nascimento.split('-');
+        if (partes.length !== 3) return false;
+        return parseInt(partes[1], 10) === (mes + 1);
+    }).sort((a, b) => parseInt(a.data_nascimento.split('-')[2], 10) - parseInt(b.data_nascimento.split('-')[2], 10));
+
+    // Monta o HTML
+    let html = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h1 style="text-align: center; margin-bottom: 40px; font-size: 32px; border-bottom: 2px solid #ccc; padding-bottom: 20px;">
+                Aniversariantes - ${mesesNomes[mes]}
+            </h1>
+            <div style="column-count: 2; column-gap: 40px;">
+    `;
+    
+    if (aniversariantesDoMes.length === 0) {
+        html += `<p style="font-size: 18px; color: #666;">Nenhum aniversariante neste mês.</p>`;
+    } else {
+        html += `<ul style="list-style: none; padding: 0; margin: 0;">`;
+        aniversariantesDoMes.forEach(p => {
+            const dia = parseInt(p.data_nascimento.split('-')[2], 10);
+            html += `
+                <li style="margin-bottom: 16px; font-size: 20px; display: flex; align-items: baseline; break-inside: avoid;">
+                    <span style="font-weight: bold; width: 60px; color: #f97316;">Dia ${String(dia).padStart(2, '0')}</span>
+                    <span style="border-bottom: 1px dotted #ccc; flex-grow: 1; margin-left: 10px;">${p.nome_completo}</span>
+                </li>
+            `;
+        });
+        html += `</ul>`;
+    }
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    // Injeta no DOM
+    document.getElementById('muralImpressao').innerHTML = html;
+    
+    // Liga a classe especial de impressão
+    document.body.classList.add('imprimindo-mural');
+    
+    // Dispara a impressão
+    setTimeout(() => {
+        window.print();
+        // Remove a classe após imprimir
+        setTimeout(() => {
+            document.body.classList.remove('imprimindo-mural');
+        }, 500);
+    }, 100);
+}
+
+window.imprimirMural = imprimirMural;

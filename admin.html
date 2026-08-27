@@ -23,7 +23,8 @@
             
             /* Aumenta as Pílulas com os nomes */
             #gridCalendarioAniversarios > div > div {
-                font-size: 13px !important; 
+                font-size: 15px !important; 
+                font-weight: 700 !important;
                 white-space: normal !important; 
                 background: none !important; 
                 color: #000 !important; 
@@ -32,6 +33,12 @@
                 padding: 4px 0 !important;
                 line-height: 1.3 !important;
             }
+            
+            /* Regras específicas para a Lista do Mural */
+            body.imprimindo-mural @page { size: portrait; }
+            body.imprimindo-mural #gridCalendarioAniversarios { display: none !important; }
+            body.imprimindo-mural #gridCabecalhoDias { display: none !important; }
+            body.imprimindo-mural #muralImpressao { display: block !important; }
         }
         /* Tabs de navegação rolante */
         .admin-tabs-wrapper {
@@ -161,14 +168,17 @@
                             <div style="display: flex; align-items: center; gap: 16px;">
                                 <h2 id="aniversariosMesAnoDisplay" style="margin: 0; font-size: 20px; font-weight: 600; color: var(--text-main);">Mês e Ano</h2>
                                 <button onclick="window.print()" style="background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                                    🖨️ Imprimir
+                                    🖨️ Calendário
+                                </button>
+                                <button onclick="window.imprimirMural()" style="background: rgba(249, 115, 22, 0.1); border: 1px solid #f97316; color: #f97316; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                                    🖨️ Lista (Mural)
                                 </button>
                             </div>
                             <button onclick="mudarMesAniversario(1)" style="background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">Próximo &gt;</button>
                         </div>
                         
                         <!-- Grid do Calendário -->
-                        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px;">
+                        <div id="gridCabecalhoDias" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px;">
                             <div style="text-align: center; font-weight: 600; color: var(--text-muted); font-size: 13px;">Dom</div>
                             <div style="text-align: center; font-weight: 600; color: var(--text-muted); font-size: 13px;">Seg</div>
                             <div style="text-align: center; font-weight: 600; color: var(--text-muted); font-size: 13px;">Ter</div>
@@ -181,6 +191,8 @@
                         <div id="gridCalendarioAniversarios" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;">
                             <!-- Gerado via JS -->
                         </div>
+                        
+                        <div id="muralImpressao" style="display: none; width: 100%;"></div>
                     </div>
                     
                     <!-- Painel de Lista da Semana -->
