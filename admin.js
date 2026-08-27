@@ -2415,7 +2415,7 @@ let dataCalendarioAniv = new Date();
 async function carregarAniversariantes() {
     try {
         const { data, error } = await db.from('pessoas')
-            .select('id, nome_curto, nome_completo, foto_perfil, data_nascimento');
+            .select('id, nome_curto, nome_completo, foto_url, data_nascimento');
             
         if (error) throw error;
         aniversariantesGlobais = data;
@@ -2557,7 +2557,7 @@ function renderizarListaAniversariantesSemana(diaInicio, diaFim, mes, ano) {
         const anoNasc = parseInt(p.data_nascimento.split('-')[0]);
         const diaAniv = parseInt(p.data_nascimento.split('-')[2]);
         const idadeQueFara = ano - anoNasc;
-        const imgUrl = p.foto_perfil || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nome_completo)}&background=random`;
+        const imgUrl = p.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nome_completo)}&background=random`;
         
         return `
             <div style="display: flex; align-items: center; gap: 16px; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px;">
