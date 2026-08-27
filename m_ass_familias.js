@@ -146,7 +146,7 @@ async function carregarFamilias() {
                 errorNovas = null;
             }
             
-            let familiasPerfil = [];
+            familiasPerfil = [];
             if (!errorNovas) {
                 familiasPerfil = (dataNovas || []).map(p => {
                     const meta = p.ass_familias_meta ? (Array.isArray(p.ass_familias_meta) ? (p.ass_familias_meta[0] || {}) : p.ass_familias_meta) : {};
@@ -168,7 +168,7 @@ async function carregarFamilias() {
             const { data: dataAntigas, error: errorAntigas } = await db.from('ass_familias')
                 .select('*, pessoas(*), ass_membros_familia(id)');
                 
-            let familiasLegado = [];
+            familiasLegado = [];
             if (!errorAntigas) {
                 familiasLegado = (dataAntigas || []).map(f => {
                     f.is_nova_plataforma = false;
