@@ -2140,7 +2140,17 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
         const totalSessoes = resSessoes.data ? resSessoes.data.length : 0;
         const totalTratamentos = resTratamentos.data ? resTratamentos.data.length : 0;
         const totalPresencas = resPresencas.data ? resPresencas.data.length : 0;
-        const totalPacientes = resPacientes.count !== null ? resPacientes.count : (resPacientes.data ? resPacientes.data.length : 0);
+        
+        // Calculate Total Pacientes (Fichário) from unique names in Fraterno and Tratamentos
+        const ficharioSet = new Set();
+        (resFraterno.data || []).forEach(f => {
+            if (f.nome_completo) ficharioSet.add(f.nome_completo.trim().toUpperCase());
+        });
+        (resTratamentos.data || []).forEach(t => {
+            if (t.paciente?.nome_completo) ficharioSet.add(t.paciente.nome_completo.trim().toUpperCase());
+            else if (t.nome_completo) ficharioSet.add(t.nome_completo.trim().toUpperCase());
+        });
+        const totalPacientes = ficharioSet.size;
         
         let triagemAguardando = 0;
         (resFraterno.data || []).forEach(f => {
