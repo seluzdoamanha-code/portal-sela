@@ -306,7 +306,14 @@ function renderizarTabela(dados) {
                         <button onclick="excluirPessoa('${pessoa.id}')" style="background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">
                             Excluir
                         </button>
-                        ` : ''}
+                        ` : `
+                        <button disabled title="Acesso restrito" style="background: rgba(255,255,255,0.02); color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: not-allowed; white-space: nowrap; opacity: 0.5;">
+                            Editar
+                        </button>
+                        <button disabled title="Acesso restrito" style="background: rgba(255,255,255,0.02); color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: not-allowed; white-space: nowrap; opacity: 0.5;">
+                            Excluir
+                        </button>
+                        `}
                         <a href="perfil.html?id=${pessoa.id}" style="background: var(--primary); color: #fff; border: 1px solid var(--primary); border-radius: 6px; padding: 6px 16px; font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s; white-space: nowrap; box-shadow: 0 2px 4px rgba(79,70,229,0.3);" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
                             Perfil
                         </a>
@@ -321,7 +328,15 @@ function setupModal() {
     const modal = document.getElementById('modalPessoa');
     const btnNovo = document.getElementById('btnNovaPessoa');
     if (typeof window.podeEditarPessoas === 'function' && !window.podeEditarPessoas()) {
-        if (btnNovo) btnNovo.style.display = 'none';
+        if (btnNovo) {
+            btnNovo.disabled = true;
+            btnNovo.style.background = 'rgba(255,255,255,0.05)';
+            btnNovo.style.color = 'var(--text-muted)';
+            btnNovo.style.border = '1px solid var(--border)';
+            btnNovo.style.cursor = 'not-allowed';
+            btnNovo.title = 'Acesso restrito';
+            btnNovo.addEventListener('click', (e) => { e.preventDefault(); e.stopImmediatePropagation(); }, true);
+        }
     }
     const btnClose = document.getElementById('btnCloseModal');
     const btnCancel = document.getElementById('btnCancelModal');
@@ -568,6 +583,11 @@ function setupModal() {
 }
 
 window.editarPessoa = async (id) => {
+    if (typeof window.podeEditarPessoas === 'function' && !window.podeEditarPessoas()) {
+        alert("Acesso restrito: Você não tem permissão para editar cadastros.");
+        return;
+    }
+
     // Reset tabs
     if(window.switchTab) window.switchTab('basico');
 
@@ -640,6 +660,10 @@ window.editarPessoa = async (id) => {
 };
 
 window.excluirPessoa = async (id) => {
+    if (typeof window.podeEditarPessoas === 'function' && !window.podeEditarPessoas()) {
+        alert("Acesso restrito: Você não tem permissão para excluir cadastros.");
+        return;
+    }
     const pessoa = pessoasGlobais.find(p => p.id === id);
     if (confirm(`Tem certeza que deseja excluir ${pessoa.nome_curto || pessoa.nome_completo}?`)) {
         try {
