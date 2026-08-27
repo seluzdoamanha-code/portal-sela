@@ -2483,7 +2483,9 @@ function renderizarCalendarioAniversarios() {
         semana.forEach(dia => {
             const div = document.createElement('div');
             div.style.background = dia ? 'rgba(255,255,255,0.02)' : 'transparent';
-            div.style.border = dia ? '1px solid var(--border)' : 'none';
+            const hoje = new Date();
+            const isHoje = dia === hoje.getDate() && mes === hoje.getMonth() && ano === hoje.getFullYear();
+            div.style.border = dia ? (isHoje ? '2px solid #f97316' : '1px solid var(--border)') : 'none';
             div.style.borderRadius = '8px';
             div.style.padding = '8px';
             div.style.minHeight = '80px';
@@ -2508,8 +2510,8 @@ function renderizarCalendarioAniversarios() {
                     const anoNasc = parseInt(p.data_nascimento.split('-')[0]);
                     const idadeQueFara = ano - anoNasc;
                     const pill = document.createElement('div');
-                    pill.style.background = 'rgba(236, 72, 153, 0.1)';
-                    pill.style.color = '#ec4899';
+                    pill.style.background = 'rgba(249, 115, 22, 0.1)';
+                    pill.style.color = '#f97316';
                     pill.style.fontSize = '11px';
                     pill.style.fontWeight = '600';
                     pill.style.padding = '2px 6px';
@@ -2566,7 +2568,7 @@ function renderizarListaAniversariantesSemana(diaInicio, diaFim, mes, ano) {
                     <div style="font-weight: 600; color: var(--text-main); font-size: 15px;">${p.nome_completo}</div>
                     <div style="color: var(--text-muted); font-size: 13px;">Dia ${String(diaAniv).padStart(2, '0')}/${String(mes+1).padStart(2, '0')}</div>
                 </div>
-                <div style="background: rgba(236, 72, 153, 0.1); color: #ec4899; padding: 6px 12px; border-radius: 12px; font-weight: 600; font-size: 14px;">
+                <div style="background: rgba(249, 115, 22, 0.1); color: #f97316; padding: 6px 12px; border-radius: 12px; font-weight: 600; font-size: 14px;">
                     Fazendo ${idadeQueFara} anos
                 </div>
             </div>
