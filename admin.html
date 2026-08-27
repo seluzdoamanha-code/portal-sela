@@ -4,16 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administração Global - Portal SELA</title>
-    <link rel="stylesheet" href="style.css">
     <style>
         @media print {
+            @page { size: landscape; margin: 10mm; }
             body * { visibility: hidden; }
             #tab-aniversarios, #tab-aniversarios * { visibility: visible; }
             #tab-aniversarios { position: absolute; left: 0; top: 0; width: 100%; }
-            #aniversariosPrintHeader { display: block !important; }
+            #aniversariosPrintHeader { display: block !important; font-size: 28px !important; margin-bottom: 16px !important; font-weight: 800 !important; }
             #painelListaAniversariantes, #aniversariosNavButtons, .admin-tabs-wrapper, .sidebar, .top-header { display: none !important; }
-            /* Expande o grid para caber melhor na página impressa */
-            #gridCalendarioAniversarios > div { min-height: 120px !important; }
+            
+            /* Ajustes Finos para a Grade de Impressão */
+            #gridCalendarioAniversarios { gap: 4px !important; }
+            #gridCalendarioAniversarios > div { min-height: 130px !important; border: 1px solid #999 !important; }
+            
+            /* Aumenta o número do dia */
+            #gridCalendarioAniversarios > div > span { font-size: 18px !important; font-weight: bold !important; color: #000 !important; }
+            
+            /* Aumenta as Pílulas com os nomes */
+            #gridCalendarioAniversarios > div > div {
+                font-size: 13px !important; 
+                white-space: normal !important; 
+                background: none !important; 
+                color: #000 !important; 
+                border-bottom: 1px solid #eee !important;
+                border-radius: 0 !important;
+                padding: 4px 0 !important;
+                line-height: 1.3 !important;
+            }
         }
         /* Tabs de navegação rolante */
         .admin-tabs-wrapper {
