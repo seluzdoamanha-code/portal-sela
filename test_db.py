@@ -1,28 +1,21 @@
 import urllib.request
 import json
-import urllib.parse
 
 SUPABASE_URL = 'https://aymdooyafimliiggxeqs.supabase.co/rest/v1'
 SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5bWRvb3lhZmltbGlpZ2d4ZXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDUxNDksImV4cCI6MjEwMDY4MTE0OX0.-NBhiyGDlrWq4QKNLx9Ll5GlIk0mV_rBWnr0vdbUCOU'
 
-req = urllib.request.Request(f"{SUPABASE_URL}/pessoas?select=id,nome_completo,perfis", headers={
-    'apikey': SUPABASE_KEY,
-    'Authorization': f'Bearer {SUPABASE_KEY}'
-})
+def req(path):
+    r = urllib.request.Request(f"{SUPABASE_URL}/{path}", headers={
+        'apikey': SUPABASE_KEY,
+        'Authorization': f'Bearer {SUPABASE_KEY}'
+    })
+    return json.loads(urllib.request.urlopen(r).read().decode())
 
 try:
-    with urllib.request.urlopen(req) as response:
-        data = json.loads(response.read().decode())
-        print(f"Total pessoas: {len(data)}")
-        
-        found = False
-        for p in data:
-            perfis = p.get('perfis')
-            if perfis and 'Titular' in str(perfis):
-                print(f"Found match: {p['nome_completo']} -> {perfis}")
-                found = True
-                
-        if not found:
-            print("Nenhuma pessoa encontrada com 'Titular' nos perfis.")
+    fraterno = req('app_atendimento_fraterno?select=status')
+    print("Status in Fraterno:", set([f['status'] for f in fraterno if 'status' in f]))
+    
+    pacientes = req('app_pacientes?select=id')
+    print("Total Pacientes:", len(pacientes))
 except Exception as e:
-    print("Error:", e)
+    print(e)
