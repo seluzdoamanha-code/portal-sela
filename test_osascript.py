@@ -1,16 +1,16 @@
 import subprocess
 import os
 
-filepath = os.path.abspath('familias.js')
-cmd = ['osascript', '-l', 'JavaScript', '-e', f'''
-try {{
-    var text = $.NSString.stringWithContentsOfFileEncodingError("{filepath}", $.NSUTF8StringEncoding, null).js;
-    var f = new Function(text);
-    "OK";
-}} catch(e) {{
-    e.toString();
-}}
-''']
-res = subprocess.run(cmd, capture_output=True, text=True)
-print("STDOUT:", res.stdout)
-print("STDERR:", res.stderr)
+for f in ['m_ass_entregas.js', 'm_ass_entrega_coletiva.js']:
+    filepath = os.path.abspath(f)
+    cmd = ['osascript', '-l', 'JavaScript', '-e', f'''
+    try {{
+        var text = $.NSString.stringWithContentsOfFileEncodingError("{filepath}", $.NSUTF8StringEncoding, null).js;
+        var f = new Function(text);
+        "OK";
+    }} catch(e) {{
+        e.toString();
+    }}
+    ''']
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    print(f, "STDOUT:", res.stdout.strip())

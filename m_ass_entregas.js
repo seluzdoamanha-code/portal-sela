@@ -14,6 +14,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         familiaId = urlParams.get('f_id');
         const fNome = urlParams.get('f_nome');
+        window.isGlobalFam = urlParams.get('is_global') === '1';
         
         if (familiaId && fNome) {
             document.getElementById('inpFamilia').value = fNome;
@@ -81,15 +82,22 @@
             const [ano, mes] = dataEnt.split('-');
             
             // 1. Inserir a entrega
-            const { error } = await db.from('ass_entregas').insert([{
-                familia_id: familiaId,
+            
+            const payload = {
                 cesta_id: modeloId,
                 data_entrega: dataEnt,
                 ano_ref: parseInt(ano),
                 mes_ref: parseInt(mes),
                 quantidade_entregue: qtd,
                 observacoes: obs
-            }]);
+            };
+            if (window.isGlobalFam) {
+                payload.pessoa_id = familiaId;
+            } else {
+                payload.familia_id = familiaId;
+            }
+            const { error } = await db.from('ass_entregas').insert([payload]);
+
             
             if (error) throw error;
             

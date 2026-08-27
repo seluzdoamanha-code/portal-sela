@@ -421,9 +421,7 @@ async function carregarListaEntregas() {
         // Fetch Entregas Realizadas
         const { data: entregasData, error: entErr } = await db.from('ass_entregas')
             .select(`
-                *,
-                ass_familias (nome_familia, tipo),
-                ass_cestas_modelos (tipo)
+                *, ass_familias (nome_familia, tipo), pessoas (nome_curto, nome_completo, ass_familias_meta (tipo)), ass_cestas_modelos (tipo)
             `)
             .eq('mes_ref', window.assFiltroMes)
             .eq('ano_ref', window.assFiltroAno)
@@ -434,7 +432,11 @@ async function carregarListaEntregas() {
         let realExtra = 0;
         
         entregasData.forEach(e => {
-            const famTipo = e.ass_familias?.tipo;
+            let famTipo = e.ass_familias?.tipo;
+            if (e.pessoa_id && e.pessoas) {
+                const meta = Array.isArray(e.pessoas.ass_familias_meta) ? e.pessoas.ass_familias_meta[0] : e.pessoas.ass_familias_meta;
+                famTipo = meta ? meta.tipo : 'Fixa/Assistida';
+            }
             const qtd = e.quantidade_entregue || 1;
             if (famTipo === 'Fixa' || famTipo === 'Fixa/Assistida') realFixa += qtd;
             if (famTipo === 'Extra') realExtra += qtd;
@@ -515,13 +517,28 @@ async function carregarListaEntregas() {
                                 </tr>
                             </thead>
                             <tbody>
-                                ${entregasData.map(e => `
+                                ${entregasData.map(e => {
+                                    let nomeFamilia = e.ass_familias?.nome_familia || 'Família Deletada';
+                                    let isGlobal = false;
+                                    let famTipo = e.ass_familias?.tipo || '?';
+                                    
+                                    if (e.pessoa_id && e.pessoas) {
+                                        nomeFamilia = e.pessoas.nome_curto || e.pessoas.nome_completo;
+                                        isGlobal = true;
+                                        const meta = Array.isArray(e.pessoas.ass_familias_meta) ? (e.pessoas.ass_familias_meta[0] || {}) : (e.pessoas.ass_familias_meta || {});
+                                        famTipo = meta.tipo || 'Fixa/Assistida';
+                                        if(meta.codigo) nomeFamilia = meta.codigo + ' - ' + nomeFamilia;
+                                    }
+
+                                    return `
                                     <tr style="border-bottom: 1px solid var(--border); font-size: 13px;">
                                         <td style="padding: 8px 4px; color: var(--text-muted);">${e.data_entrega.split('-').reverse().join('/')}</td>
-                                        <td style="padding: 8px 4px; color: var(--text-main); font-weight: 500;">${e.ass_familias?.nome_familia || 'Família Deletada'}</td>
+                                        <td style="padding: 8px 4px; color: var(--text-main); font-weight: 500;">
+                                            ${nomeFamilia} ${isGlobal ? '<span style="font-size:10px; background:#4ade80; color:#14532d; padding:2px 6px; border-radius:8px; margin-left:4px;">Global</span>' : '<span style="font-size:10px; background:#64748b; color:white; padding:2px 6px; border-radius:8px; margin-left:4px;">Legado</span>'}
+                                        </td>
                                         <td style="padding: 8px 4px;">
-                                            <span style="background: ${e.ass_familias?.tipo === 'Extra' ? 'rgba(234,179,8,0.1)' : 'rgba(16,185,129,0.1)'}; color: ${e.ass_familias?.tipo === 'Extra' ? '#eab308' : '#10b981'}; padding: 2px 6px; border-radius: 4px; font-size: 11px;">
-                                                ${e.ass_familias?.tipo || '?'}
+                                            <span style="background: ${famTipo === 'Extra' ? 'rgba(234,179,8,0.1)' : 'rgba(16,185,129,0.1)'}; color: ${famTipo === 'Extra' ? '#eab308' : '#10b981'}; padding: 2px 6px; border-radius: 4px; font-size: 11px;">
+                                                ${famTipo}
                                             </span>
                                         </td>
                                         <td style="padding: 8px 4px; color: var(--text-muted);">${e.ass_cestas_modelos?.tipo || 'Cesta Deletada'}</td>
@@ -530,7 +547,7 @@ async function carregarListaEntregas() {
                                             <button onclick="excluirEntregaAss('${e.id}')" style="background:none; border:none; color: #ef4444; cursor:pointer;" title="Excluir (O estoque NÃO voltará automaticamente)">🗑️</button>
                                         </td>
                                     </tr>
-                                `).join('')}
+                                    `; }).join('')}
                             </tbody>
                         </table>
                     </div>
@@ -963,9 +980,44 @@ window.abrirModalNovaEntrega = async function() {
     
     try {
         // Fetch famílias
-        const { data: familias } = await db.from('ass_familias').select('id, nome_familia, codigo').eq('status', 'Ativa').order('nome_familia');
-        document.getElementById('assEntFamilia').innerHTML = '<option value="">-- Selecione a família --</option>' + 
-            (familias || []).map(f => `<option value="${f.id}">${f.codigo} - ${f.nome_familia}</option>`).join('');
+        const { data: familiasRaw, error: famErr } = await db.from('pessoas')
+            .select('id, nome_curto, nome_completo, ass_familias_meta(codigo, status, tipo)')
+            .contains('perfis', ['Titular da Família']);
+            
+        let familias = [];
+        if (famErr) {
+            // Fallback se contains der erro
+            const { data: allP } = await db.from('pessoas').select('id, nome_curto, nome_completo, perfis, ass_familias_meta(codigo, status, tipo)');
+            if (allP) {
+                familias = allP.filter(p => {
+                    const arr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? JSON.parse(p.perfis || '[]') : []);
+                    return arr.includes('Titular da Família');
+                });
+            }
+        } else {
+            familias = familiasRaw || [];
+        }
+
+        let familiaOptions = [];
+        const arrAtivas = familias.filter(f => {
+            const meta = Array.isArray(f.ass_familias_meta) ? (f.ass_familias_meta[0] || {}) : (f.ass_familias_meta || {});
+            return meta.status === 'Ativa';
+        });
+        
+        arrAtivas.sort((a,b) => {
+            const nA = (a.nome_curto || a.nome_completo || '').toLowerCase();
+            const nB = (b.nome_curto || b.nome_completo || '').toLowerCase();
+            return nA.localeCompare(nB);
+        });
+        
+        familiaOptions = arrAtivas.map(f => {
+            const meta = Array.isArray(f.ass_familias_meta) ? (f.ass_familias_meta[0] || {}) : (f.ass_familias_meta || {});
+            const nome = f.nome_curto || f.nome_completo;
+            const cod = meta.codigo || 'S/C';
+            return `<option value="${f.id}">${cod} - ${nome}</option>`;
+        });
+        
+        document.getElementById('assEntFamilia').innerHTML = '<option value="">-- Selecione a família --</option>' + familiaOptions.join('');
 
         // Fetch cestas
         const { data: cestas } = await db.from('ass_cestas_modelos').select('id, codigo, tipo').order('tipo');
@@ -993,7 +1045,7 @@ window.salvarNovaEntregaAss = async function(e) {
             data_entrega: dataStr,
             ano_ref: parseInt(ano),
             mes_ref: parseInt(mes),
-            familia_id: document.getElementById('assEntFamilia').value,
+            pessoa_id: document.getElementById('assEntFamilia').value,
             cesta_id: document.getElementById('assEntCesta').value,
             quantidade_entregue: parseInt(document.getElementById('assEntQtd').value) || 1
         };
@@ -1106,8 +1158,42 @@ window.carregarDadosColetiva = async function() {
 
     try {
         // Fetch Familias
-        const { data: fams } = await db.from('ass_familias').select('id, codigo, nome_familia').eq('status', 'Ativa').order('nome_familia');
-        window.assColetivaFamilias = fams || [];
+        const { data: familiasRaw, error: famErr } = await db.from('pessoas')
+            .select('id, nome_curto, nome_completo, ass_familias_meta(codigo, status, tipo)')
+            .contains('perfis', ['Titular da Família']);
+            
+        let familias = [];
+        if (famErr) {
+            const { data: allP } = await db.from('pessoas').select('id, nome_curto, nome_completo, perfis, ass_familias_meta(codigo, status, tipo)');
+            if (allP) {
+                familias = allP.filter(p => {
+                    const arr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? JSON.parse(p.perfis || '[]') : []);
+                    return arr.includes('Titular da Família');
+                });
+            }
+        } else {
+            familias = familiasRaw || [];
+        }
+
+        const arrAtivas = familias.filter(f => {
+            const meta = Array.isArray(f.ass_familias_meta) ? (f.ass_familias_meta[0] || {}) : (f.ass_familias_meta || {});
+            return meta.status === 'Ativa';
+        });
+        
+        arrAtivas.sort((a,b) => {
+            const nA = (a.nome_curto || a.nome_completo || '').toLowerCase();
+            const nB = (b.nome_curto || b.nome_completo || '').toLowerCase();
+            return nA.localeCompare(nB);
+        });
+        
+        window.assColetivaFamilias = arrAtivas.map(f => {
+            const meta = Array.isArray(f.ass_familias_meta) ? (f.ass_familias_meta[0] || {}) : (f.ass_familias_meta || {});
+            return {
+                id: f.id,
+                codigo: meta.codigo || 'S/C',
+                nome_familia: f.nome_curto || f.nome_completo
+            };
+        });
 
         // Fetch Cestas
         const { data: cestas } = await db.from('ass_cestas_modelos').select('id, codigo, tipo').order('tipo');
@@ -1115,7 +1201,7 @@ window.carregarDadosColetiva = async function() {
 
         // Fetch Entregas do Mês
         const { data: entregas } = await db.from('ass_entregas')
-            .select('id, familia_id, cesta_id, quantidade_entregue')
+            .select('id, pessoa_id, cesta_id, quantidade_entregue')
             .eq('ano_ref', window.assColetivaAno)
             .eq('mes_ref', window.assColetivaMes);
         window.assColetivaEntregas = entregas || [];
@@ -1147,7 +1233,7 @@ window.renderListColetiva = function() {
         <tbody>`;
 
     window.assColetivaFamilias.forEach(f => {
-        const entregue = window.assColetivaEntregas.find(e => e.familia_id === f.id);
+        const entregue = window.assColetivaEntregas.find(e => e.pessoa_id === f.id);
         const defQtd = entregue ? entregue.quantidade_entregue : 0;
         const defCesta = entregue ? entregue.cesta_id : '';
         const entId = entregue ? entregue.id : '';
@@ -1205,7 +1291,7 @@ window.salvarEntregaColetivaLote = async function(btn) {
                     data_entrega: dataEntrega,
                     ano_ref: window.assColetivaAno,
                     mes_ref: window.assColetivaMes,
-                    familia_id: famId,
+                    pessoa_id: famId,
                     cesta_id: cestaId,
                     quantidade_entregue: qtd
                 };

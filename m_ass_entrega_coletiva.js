@@ -55,16 +55,47 @@
             const mes = currentDate.getMonth() + 1; // 1-12
 
             // Fetch Active Families
-            const { data: familias, error: famErr } = await db.from('ass_familias')
-                .select('id, codigo, nome_familia')
-                .eq('status', 'Ativa')
-                .order('nome_familia');
-            if (famErr) throw famErr;
-            allFamilias = familias || [];
+            const { data: familiasRaw, error: famErr } = await db.from('pessoas')
+                .select('id, nome_curto, nome_completo, ass_familias_meta(codigo, status, tipo)')
+                .contains('perfis', ['Titular da Família']);
+                
+            let familiasP = [];
+            if (famErr) {
+                const { data: allP } = await db.from('pessoas').select('id, nome_curto, nome_completo, perfis, ass_familias_meta(codigo, status, tipo)');
+                if (allP) {
+                    familiasP = allP.filter(p => {
+                        const arr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? JSON.parse(p.perfis || '[]') : []);
+                        return arr.includes('Titular da Família');
+                    });
+                }
+            } else {
+                familiasP = familiasRaw || [];
+            }
+
+            const arrAtivas = familiasP.filter(f => {
+                const meta = Array.isArray(f.ass_familias_meta) ? (f.ass_familias_meta[0] || {}) : (f.ass_familias_meta || {});
+                return meta.status === 'Ativa';
+            });
+            
+            arrAtivas.sort((a,b) => {
+                const nA = (a.nome_curto || a.nome_completo || '').toLowerCase();
+                const nB = (b.nome_curto || b.nome_completo || '').toLowerCase();
+                return nA.localeCompare(nB);
+            });
+            
+            allFamilias = arrAtivas.map(f => {
+                const meta = Array.isArray(f.ass_familias_meta) ? (f.ass_familias_meta[0] || {}) : (f.ass_familias_meta || {});
+                return {
+                    id: f.id,
+                    codigo: meta.codigo || 'S/C',
+                    nome_familia: f.nome_curto || f.nome_completo,
+                    is_global: true
+                };
+            });
 
             // Fetch existing deliveries for this month
             const { data: entregas, error: entErr } = await db.from('ass_entregas')
-                .select('id, familia_id, cesta_id, quantidade_entregue')
+                .select('id, pessoa_id, cesta_id, quantidade_entregue')
                 .eq('ano_ref', ano)
                 .eq('mes_ref', mes);
             if (entErr) throw entErr;
@@ -90,7 +121,7 @@
         let html = '';
         allFamilias.forEach(f => {
             // Check if already delivered
-            const delivered = entregasMes.find(e => e.familia_id === f.id);
+            const delivered = entregasMes.find(e => e.pessoa_id === f.id);
             const defaultQtd = delivered ? delivered.quantidade_entregue : 0;
             const defaultCesta = delivered ? delivered.cesta_id : '';
 
@@ -162,7 +193,7 @@
                         data_entrega: dataEntrega,
                         ano_ref: ano,
                         mes_ref: mes,
-                        familia_id: famId,
+                        pessoa_id: famId,
                         cesta_id: cestaId,
                         quantidade_entregue: qtd
                     };

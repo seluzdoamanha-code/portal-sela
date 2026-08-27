@@ -352,7 +352,7 @@ const isNova = f.is_nova_plataforma ? '<span style="font-size:10px; background:#
         const btnIrEntrega = document.getElementById('btnIrParaEntrega');
         if (btnIrEntrega) {
             btnIrEntrega.onclick = () => {
-                window.location.href = `m_ass_entregas.html?f_id=${f.id}&f_nome=${encodeURIComponent(f.codigo + ' - ' + (f.nome_familia || ''))}`;
+                window.location.href = `m_ass_entregas.html?f_id=${f.id}&f_nome=${encodeURIComponent(f.codigo + ' - ' + (f.nome_familia || ''))}&is_global=${f.is_nova_plataforma ? '1' : '0'}`;
             };
         }
 
