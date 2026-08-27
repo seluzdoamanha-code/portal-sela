@@ -2673,36 +2673,19 @@ window.marcarLeituraIrr = async function (btnElement, id, leituras_atuais, seman
                 if (error) throw error;
                 // Não chamamos carregarListaIrradiacao(); aqui para não perder o efeito visual
             } else {
-                const modal = document.getElementById('modalFimLeitura');
-                const msg = document.getElementById('msgFimLeitura');
-                msg.innerHTML = `O ciclo de <strong>${semanas_alvo} semanas</strong> desta irradiação chegou ao fim.<br><br>O que você deseja fazer com este nome agora?`;
-                modal.style.display = 'flex';
-
-                document.getElementById('btnModalRenovar').onclick = async function () {
-                    modal.style.display = 'none';
-                    try {
-                        const { error } = await db.from('app_irradiacao_solicitacoes').update({
-                            leituras: 0,
-                            status: 'ativo',
-                            log_datas_leituras: logs
-                        }).eq('id', id);
-                        if (error) throw error;
-                        // Fica esmaecido, não recarrega a lista
-                    } catch (e) { console.error(e); alert('Erro ao renovar'); }
-                };
-
-                document.getElementById('btnModalHistorico').onclick = async function () {
-                    modal.style.display = 'none';
-                    try {
-                        const { error } = await db.from('app_irradiacao_solicitacoes').update({
-                            leituras: novaLeitura,
-                            status: 'historico',
-                            log_datas_leituras: logs
-                        }).eq('id', id);
-                        if (error) throw error;
-                        if (card) card.style.display = 'none'; // Esconde o card pois foi pro histórico
-                    } catch (e) { console.error(e); alert('Erro ao arquivar'); }
-                };
+                // Arquivar imediatamente
+                try {
+                    const { error } = await db.from('app_irradiacao_solicitacoes').update({
+                        leituras: novaLeitura,
+                        status: 'historico',
+                        log_datas_leituras: logs
+                    }).eq('id', id);
+                    if (error) throw error;
+                    if (card) card.style.display = 'none'; // Esconde o card pois foi pro histórico
+                } catch (e) { 
+                    console.error(e); 
+                    alert('Erro ao arquivar'); 
+                }
             }
         } else {
             // Apenas adiciona a leitura
