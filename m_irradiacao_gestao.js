@@ -581,42 +581,15 @@ window.marcarLeituraIrrMobile = async function (btnElement, id, leituras_atuais,
                 }).eq('id', id);
                 if (error) throw error;
             } else {
-                const result = await Swal.fire({
-                    title: 'Fim do Ciclo',
-                    text: `O ciclo de ${semanas_alvo} semanas desta irradiação chegou ao fim. Deseja reiniciar o ciclo (Renovar) para mais ${semanas_alvo} semanas?`,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: 'var(--primary)',
-                    cancelButtonColor: '#f59e0b',
-                    confirmButtonText: 'Renovar',
-                    cancelButtonText: 'Arquivar',
-                    background: 'var(--bg-card)',
-                    color: 'var(--text-main)'
-                });
-
-                if (result.isConfirmed) {
-                    // Renovar
-                    novasLeiturasAtuais = 0;
-                    const { error } = await db.from('app_irradiacao_solicitacoes').update({
-                        leituras: 0,
-                        status: 'ativo',
-                        log_datas_leituras: logs
-                    }).eq('id', id);
-                    if (error) throw error;
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    // Arquivar
-                    novoStatus = 'historico';
-                    const { error } = await db.from('app_irradiacao_solicitacoes').update({
-                        leituras: novaLeitura,
-                        status: 'historico',
-                        log_datas_leituras: logs
-                    }).eq('id', id);
-                    if (error) throw error;
-                    if (card) card.style.display = 'none';
-                } else {
-                    // Usuário clicou fora ou esc, reverter UI do card se necessário
-                    throw new Error("Ação cancelada pelo usuário");
-                }
+                // Arquivar imediatamente
+                novoStatus = 'historico';
+                const { error } = await db.from('app_irradiacao_solicitacoes').update({
+                    leituras: novaLeitura,
+                    status: 'historico',
+                    log_datas_leituras: logs
+                }).eq('id', id);
+                if (error) throw error;
+                if (card) card.style.display = 'none';
             }
         } else {
             // Apenas atualiza a contagem
