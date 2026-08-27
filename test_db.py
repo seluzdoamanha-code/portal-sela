@@ -12,10 +12,11 @@ def req(path):
     return json.loads(urllib.request.urlopen(r).read().decode())
 
 try:
-    fraterno = req('app_atendimento_fraterno?select=status')
-    print("Status in Fraterno:", set([f['status'] for f in fraterno if 'status' in f]))
+    trat = req('app_atendimento_tratamentos?select=tipo,status')
+    sessoes = req('app_atendimento_sessoes?select=tipo,status')
     
-    pacientes = req('app_pacientes?select=id')
-    print("Total Pacientes:", len(pacientes))
+    print("Tratamentos Tipos:", set([t.get('tipo') for t in trat]))
+    print("Tratamentos Status:", set([t.get('status') for t in trat]))
+    print("Sessoes Tipos:", set([s.get('tipo') for s in sessoes]))
 except Exception as e:
     print(e)

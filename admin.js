@@ -2140,16 +2140,10 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
         if (resTratamentos.error) console.error(resTratamentos.error);
         if (resPresencas.error) console.error(resPresencas.error);
 
-        const totalFraterno = resFraterno.data ? resFraterno.data.length : 0;
-        const totalSessoes = resSessoes.data ? resSessoes.data.length : 0;
-        const totalTratamentos = resTratamentos.data ? resTratamentos.data.length : 0;
-        const totalPresencas = resPresencas.data ? resPresencas.data.length : 0;
-        
-        // Calculate Total Pacientes (Fichário) from unique names in Fraterno and Tratamentos
+        // --- CALCULATIONS FOR CARDS ---
+        // 0) Fichário & Triagem
         const ficharioSet = new Set();
-        (resFraterno.data || []).forEach(f => {
-            if (f.nome_completo) ficharioSet.add(f.nome_completo.trim().toUpperCase());
-        });
+        (resFraterno.data || []).forEach(f => { if (f.nome_completo) ficharioSet.add(f.nome_completo.trim().toUpperCase()); });
         (resTratamentos.data || []).forEach(t => {
             if (t.paciente?.nome_completo) ficharioSet.add(t.paciente.nome_completo.trim().toUpperCase());
             else if (t.nome_completo) ficharioSet.add(t.nome_completo.trim().toUpperCase());
@@ -2159,35 +2153,39 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
         let triagemAguardando = 0;
         (resFraterno.data || []).forEach(f => {
             const st = (f.status || '').toLowerCase();
-            if (st === 'pendente' || st === 'em tratamento') {
-                triagemAguardando++;
-            }
+            if (st === 'pendente' || st === 'em tratamento') triagemAguardando++;
         });
 
-        // Count Atendimentos by type
-        let qtdeOrientacao = 0;
-        let qtdeTratamento = 0;
-        let qtdeOutros = 0;
-
+        // 1) & 2) Atendimento Fraterno (Realizados e Planejados) & (Pendentes)
+        let fraternoRealizados = 0;
+        let fraternoPendentes = 0;
         (resFraterno.data || []).forEach(f => {
-            const t = (f.encaminhamento || '').toLowerCase();
-            if (t.includes('orientaç') || t.includes('orientac')) qtdeOrientacao++;
-            else if (t.includes('tratamento')) qtdeTratamento++;
-            else qtdeOutros++;
+            const st = (f.status || '').toLowerCase();
+            if (['ativo', 'concluido', 'concluído', 'planejado'].includes(st)) fraternoRealizados++;
+            if (st === 'pendente') fraternoPendentes++;
         });
 
-        // Current Month
-        const now = new Date();
-        const firstDayMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        // 3), 4), 5), 8) Tratamentos
+        const totalTratamentos = resTratamentos.data ? resTratamentos.data.length : 0;
+        let tratFluidico = 0;
+        let tratEspiritual = 0;
+        let pacientesEmTratamento = 0;
         
-        let fraternoMes = 0;
-        (resFraterno.data || []).forEach(f => {
-            if (f.data_atendimento >= firstDayMonth) fraternoMes++;
+        (resTratamentos.data || []).forEach(t => {
+            const tipo = (t.tipo || '').toLowerCase();
+            const st = (t.status || '').toLowerCase();
+            if (tipo.includes('fluid') || tipo.includes('fluíd')) tratFluidico++;
+            if (tipo.includes('espiritual')) tratEspiritual++;
+            if (st !== 'concluido' && st !== 'concluído') pacientesEmTratamento++;
         });
 
-        let sessoesMes = 0;
-        (resSessoes.data || []).forEach(s => {
-            if (s.data_sessao >= firstDayMonth) sessoesMes++;
+        // 6), 7) Procedimentos (Sessões/Tratamentos)
+        let procFluidico = 0;
+        let procEspiritual = 0;
+        (resTratamentos.data || []).forEach(t => {
+            const tipo = (t.tipo || '').toLowerCase();
+            if (tipo.includes('fluid') || tipo.includes('fluíd')) procFluidico++;
+            if (tipo.includes('espiritual')) procEspiritual++;
         });
 
         // Building HTML UI
@@ -2205,7 +2203,7 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
                 
-                <!-- NEW CARD: Triagem -->
+                <!-- 0) Triagem -->
                 <div style="background: var(--bg-panel); border: 1px dashed #f59e0b; border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
                     <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">⏳</div>
                     <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Aguardando na Triagem</div>
@@ -2213,7 +2211,7 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
                     <div style="font-size: 12px; color: var(--text-muted);">Pacientes na fila</div>
                 </div>
 
-                <!-- NEW CARD: Fichário -->
+                <!-- 0) Fichário -->
                 <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
                     <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">🗂️</div>
                     <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Pacientes Cadastrados</div>
@@ -2221,7 +2219,73 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
                     <div style="font-size: 12px; color: var(--text-muted);">Total no Fichário</div>
                 </div>
 
+                <!-- 1) Fraterno Realizados -->
                 <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">🤝</div>
+                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Atendimento Fraterno</div>
+                    <div style="font-size: 32px; font-weight: 800; color: var(--primary); margin: 8px 0; line-height: 1;">${fraternoRealizados}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Realizados e Planejados</div>
+                </div>
+
+                <!-- 2) Fraterno Pendentes -->
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">🤝</div>
+                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Atendimento Fraterno</div>
+                    <div style="font-size: 32px; font-weight: 800; color: #ef4444; margin: 8px 0; line-height: 1;">${fraternoPendentes}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Pendentes</div>
+                </div>
+
+                <!-- 3) Tratamentos Totais -->
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">📋</div>
+                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Tratamentos</div>
+                    <div style="font-size: 32px; font-weight: 800; color: #8b5cf6; margin: 8px 0; line-height: 1;">${totalTratamentos}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Totais</div>
+                </div>
+
+                <!-- 4) Tratamento Fluídico -->
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">💧</div>
+                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Tratamento Fluídico</div>
+                    <div style="font-size: 32px; font-weight: 800; color: #3b82f6; margin: 8px 0; line-height: 1;">${tratFluidico}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Totais</div>
+                </div>
+
+                <!-- 5) Tratamento Espiritual -->
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">✨</div>
+                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Tratamento Espiritual</div>
+                    <div style="font-size: 32px; font-weight: 800; color: #a855f7; margin: 8px 0; line-height: 1;">${tratEspiritual}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Totais</div>
+                </div>
+
+                <!-- 6) Procedimento Fluídico -->
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">📅</div>
+                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Procedimento Fluídico</div>
+                    <div style="font-size: 32px; font-weight: 800; color: #0ea5e9; margin: 8px 0; line-height: 1;">${procFluidico}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Totais</div>
+                </div>
+
+                <!-- 7) Procedimento Espiritual -->
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">📅</div>
+                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Procedimento Espiritual</div>
+                    <div style="font-size: 32px; font-weight: 800; color: #d946ef; margin: 8px 0; line-height: 1;">${procEspiritual}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Totais</div>
+                </div>
+                
+                <!-- 8) Pacientes em Tratamento -->
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">❤️</div>
+                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Pacientes em Tratamento</div>
+                    <div style="font-size: 32px; font-weight: 800; color: #10b981; margin: 8px 0; line-height: 1;">${pacientesEmTratamento}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Ativos</div>
+                </div>
+
+            </div>
+            
+            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
                     <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">🤝</div>
                     <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Atendimento Fraterno</div>
                     <div style="font-size: 32px; font-weight: 800; color: var(--primary); margin: 8px 0; line-height: 1;">${totalFraterno}</div>
