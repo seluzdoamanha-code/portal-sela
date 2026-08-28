@@ -2192,15 +2192,19 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
         const totalTratamentos = resTratamentos.data ? resTratamentos.data.length : 0;
         let tratFluidico = 0;
         let tratEspiritual = 0;
-        let pacientesEmTratamento = 0;
+        let pacientesEmTratamentoSet = new Set();
         
         (resTratamentos.data || []).forEach(t => {
             const tipo = (t.tipo || '').toLowerCase();
             const st = (t.status || '').toLowerCase();
             if (tipo.includes('fluid') || tipo.includes('fluíd')) tratFluidico++;
             if (tipo.includes('espiritual')) tratEspiritual++;
-            if (st !== 'concluido' && st !== 'concluído') pacientesEmTratamento++;
+            if (st !== 'concluido' && st !== 'concluído') {
+                if (t.paciente_id) pacientesEmTratamentoSet.add(t.paciente_id);
+                else if (t.nome_completo) pacientesEmTratamentoSet.add(t.nome_completo.trim().toUpperCase());
+            }
         });
+        const pacientesEmTratamento = pacientesEmTratamentoSet.size;
 
         // 6), 7) Procedimentos (Sessões/Tratamentos)
         let procFluidico = 0;
