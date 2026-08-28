@@ -1901,7 +1901,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
     let eventos = [];
     
     try {
-        let query = db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(nome_completo, nome_curto), paciente:pessoas!paciente_id(nome_completo, nome_curto)');
+        let query = db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(nome_completo, nome_curto), app_atendimento_sessoes!atendimento_id(pessoas!atendente_id(nome_completo, nome_curto))');
         if (p.paciente_id) {
             query = query.eq('paciente_id', p.paciente_id);
         } else {
@@ -1909,13 +1909,14 @@ window.abrirModalFicharioCompleto = async function(safeId) {
         }
         
         const { data: atendimentos, error: errA } = await query;
+            
         if (errA) throw errA;
         
         const allAtendimentos = atendimentos || [];
         
         allAtendimentos.forEach(a => {
             eventos.push({
-                tipo: 'ATENDIMENTO', 
+                tipo: 'ATENDIMENTO', // Representa a Solicitação
                 data: new Date(a.created_at),
                 obj: a
             });
@@ -1924,167 +1925,169 @@ window.abrirModalFicharioCompleto = async function(safeId) {
         const fraternoIds = allAtendimentos.map(a => a.id);
         
         if (fraternoIds.length > 0) {
+            // Fetch all Tratamentos regardless of status
             const { data: tratamentos, error: errT } = await db
                 .from('app_atendimento_tratamentos')
                 .select('*')
                 .in('atendimento_id', fraternoIds);
                 
-            if (errT) throw errT;
+            if (!errT && tratamentos) {
+                tratamentos.forEach(t => {
+                    eventos.push({
+                        tipo: 'TRATAMENTO',
+                        data: obterDataPrecisa(t.data_inicio, t.created_at),
+                        obj: t
+                    });
+                });
+            }
             
-            const trats = tratamentos || [];
-            
-            const tratIds = trats.map(t => t.id);
-            let sessoesData = [];
-            let presencasData = [];
-            
+            // Fetch all Presenças
+            const tratIds = tratamentos ? tratamentos.map(t => t.id) : [];
             if (tratIds.length > 0) {
-                const [sessReq, presReq] = await Promise.all([
-                    db.from('app_atendimento_sessoes').select('*, pessoas!atendente_id(nome_curto, nome_completo)').in('atendimento_id', fraternoIds),
-                    db.from('app_atendimento_presencas').select('*').in('tratamento_id', tratIds)
-                ]);
-                
-                if (sessReq.error) throw sessReq.error;
-                if (presReq.error) throw presReq.error;
-                
-                sessoesData = sessReq.data || [];
-                presencasData = presReq.data || [];
-            } else {
-                const { data: sessoes, error: errS } = await db
-                    .from('app_atendimento_sessoes')
-                    .select('*, pessoas!atendente_id(nome_curto, nome_completo)')
-                    .in('atendimento_id', fraternoIds);
-                if (errS) throw errS;
-                sessoesData = sessoes || [];
+                const { data: pres, error: errPres } = await db
+                    .from('app_atendimento_presencas')
+                    .select('*')
+                    .in('tratamento_id', tratIds);
+                if (!errPres && pres) {
+                    pres.forEach(p => {
+                        const trat = tratamentos.find(t => t.id === p.treatment_id || t.id === p.tratamento_id);
+                        eventos.push({
+                            tipo: 'PRESENCA',
+                            data: obterDataPrecisa(p.data, p.created_at),
+                            obj: p,
+                            trat: trat
+                        });
+                    });
+                }
             }
             
-            trats.forEach(t => {
-                eventos.push({
-                    tipo: 'TRATAMENTO_INICIADO',
-                    data: new Date(t.created_at),
-                    obj: t
+            // Fetch all Sessões
+            const { data: sessoes, error: errS } = await db
+                .from('app_atendimento_sessoes')
+                .select('*, pessoas!atendente_id(nome_completo, nome_curto), app_atendimento_fraterno!atendimento_id(pessoas!atendente_id(nome_completo, nome_curto))')
+                .in('atendimento_id', fraternoIds);
+                
+            if (!errS && sessoes) {
+                sessoes.forEach(s => {
+                    const parentAten = allAtendimentos.find(a => a.id === s.atendimento_id);
+                    const atendenteNomeFallback = parentAten?.pessoas?.nome_curto || parentAten?.pessoas?.nome_completo || 'Desconhecido';
+                    
+                    eventos.push({
+                        tipo: 'SESSAO',
+                        data: obterDataPrecisa(s.data, s.created_at),
+                        obj: s,
+                        atendente_nome: s.pessoas?.nome_curto || s.pessoas?.nome_completo || atendenteNomeFallback
+                    });
                 });
-            });
-            
-            sessoesData.forEach(s => {
-                eventos.push({
-                    tipo: 'SESSAO_EVOLUCAO',
-                    data: new Date(s.created_at),
-                    obj: s
-                });
-            });
-            
-            presencasData.forEach(pr => {
-                eventos.push({
-                    tipo: 'PRESENCA_TRATAMENTO',
-                    data: new Date(pr.created_at),
-                    obj: pr
-                });
-            });
+            }
         }
         
-        eventos.sort((a, b) => b.data - a.data);
-        
-        if (eventos.length === 0) {
-            document.getElementById('globalSideSheetContent').innerHTML = `
-                <div style="padding: 24px; text-align: center; color: var(--text-muted);">
-                    Nenhum registro histórico encontrado.
-                </div>
-            `;
-            return;
-        }
-
-        let html = '<div style="padding: 16px;">';
-        
-        html += `
-            <div style="margin-bottom: 24px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 16px; border-radius: 12px;">
-                <h3 style="margin: 0 0 8px 0; color: var(--primary); font-size: 18px;">${p.nome_completo.toUpperCase()}</h3>
-                <div style="font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;">
-                    <span>📞 ${p.telefone || 'Sem telefone'}</span>
-                    ${p.endereco ? `<span>📍 ${p.endereco}</span>` : ''}
-                    <span>🎂 Nascimento: ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') : 'Não informado'}</span>
-                </div>
-            </div>
-        `;
-        
-        html += '<div style="position: relative; padding-left: 20px; border-left: 2px solid rgba(255,255,255,0.1);">';
-        
-        eventos.forEach((ev, index) => {
-            let icon = '';
-            let color = '';
-            let title = '';
-            let content = '';
-            
-            const localDate = ev.data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            
-            if (ev.tipo === 'ATENDIMENTO') {
-                icon = '🤝'; color = '#f59e0b'; title = 'Triagem / Atend. Fraterno';
-                content = `
-                    <div style="margin-top: 8px;">
-                        <strong>Status:</strong> ${ev.obj.status} <br>
-                        <strong>Motivo:</strong> ${ev.obj.motivo || '-'} <br>
-                        <strong>Atendente:</strong> ${ev.obj.pessoas?.nome_curto || ev.obj.pessoas?.nome_completo || 'Desconhecido'}
-                    </div>
-                `;
-            } 
-            else if (ev.tipo === 'TRATAMENTO_INICIADO') {
-                icon = ev.obj.tipo === 'Fluídico' ? '💧' : '✨';
-                color = ev.obj.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
-                title = `Início de Tratamento ${ev.obj.tipo}`;
-                content = `
-                    <div style="margin-top: 8px;">
-                        <strong>Status Atual:</strong> ${ev.obj.status} <br>
-                        <strong>Data Fim:</strong> ${ev.obj.data_fim ? new Date(ev.obj.data_fim).toLocaleDateString('pt-BR') : '-'}
-                    </div>
-                `;
+        // Push cycle completion events guaranteed to be at the top of their respective cycles
+        allAtendimentos.forEach(a => {
+            if (a.status === 'Concluído' || a.status === 'Cancelado') {
+                // Find the max date of all events associated with this Fraterno
+                let maxDate = new Date(a.created_at);
+                eventos.forEach(ev => {
+                    if (ev.obj.atendimento_id === a.id || ev.obj.id === a.id || ev.trat?.atendimento_id === a.id) {
+                        if (ev.data > maxDate) maxDate = ev.data;
+                    }
+                });
+                eventos.push({
+                    tipo: 'ATENDIMENTO_FIM',
+                    data: new Date(maxDate.getTime() + 1000), // +1 sec to ensure it stays on top
+                    obj: a
+                });
             }
-            else if (ev.tipo === 'SESSAO_EVOLUCAO') {
-                icon = '📝'; color = '#10b981'; title = 'Sessão / Evolução';
-                content = `
-                    <div style="margin-top: 8px;">
-                        <strong>Sintomas:</strong> ${ev.obj.sintomas_orientacoes} <br>
-                        <strong>Atendente:</strong> ${ev.obj.pessoas?.nome_curto || ev.obj.pessoas?.nome_completo || 'Desconhecido'} <br>
-                        ${ev.obj.apenas_conversa ? '<span style="font-size: 11px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block;">Apenas Conversa</span>' : ''}
-                    </div>
-                `;
-            }
-            else if (ev.tipo === 'PRESENCA_TRATAMENTO') {
-                icon = '🟢'; color = '#10b981'; title = 'Presença Registrada';
-                content = `
-                    <div style="margin-top: 8px;">
-                        <strong>Data:</strong> ${new Date(ev.obj.data).toLocaleDateString('pt-BR')} <br>
-                        <strong>Obs:</strong> ${ev.obj.observacoes || '-'}
-                    </div>
-                `;
-            }
-
-            html += `
-                <div style="position: relative; margin-bottom: 24px;">
-                    <div style="position: absolute; left: -32px; top: 0; width: 24px; height: 24px; border-radius: 50%; background: ${color}; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid var(--bg-panel);">
-                        ${icon}
-                    </div>
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
-                            <strong style="color: ${color}; font-size: 13px;">${title}</strong>
-                            <span style="font-size: 11px; color: var(--text-muted);">${localDate}</span>
-                        </div>
-                        <div style="font-size: 13px; color: var(--text-main); line-height: 1.5;">
-                            ${content}
-                        </div>
-                    </div>
-                </div>
-            `;
         });
         
-        html += '</div></div>';
+        eventos.sort((a, b) => b.data - a.data); // newest first
+        
+        let html = `
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">${p.nome_completo.toUpperCase()}</h4>
+                <strong>Telefone:</strong> ${p.telefone ? formatarCelular(p.telefone) : 'Não informado'}<br>
+                <strong>Endereço:</strong> ${p.endereco || 'Não informado'}<br>
+                <strong>Nascimento:</strong> ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') + ' (' + calcularIdade(p.data_nascimento) + ' anos)' : 'Não informado'}
+            </div>
+            <h4 style="color: var(--primary); margin-bottom: 16px;">Linha do Tempo</h4>
+        `;
+        
+        if (eventos.length === 0) {
+            html += '<div style="color:var(--text-muted); font-size:13px;">Nenhum evento registrado.</div>';
+        } else {
+            html += '<div style="display:flex; flex-direction:column; gap:12px; position:relative; padding-left:16px; border-left: 2px solid rgba(255,255,255,0.1); padding-bottom: 24px;">';
+            eventos.forEach(ev => {
+                const dateStr = ev.data.toLocaleDateString('pt-BR');
+                if (ev.tipo === 'ATENDIMENTO') {
+                    const badgeColor = ev.obj.status === 'Atendido' ? '#10b981' : (ev.obj.status === 'Em Tratamento' ? '#3b82f6' : (ev.obj.status === 'Cancelado' ? '#ef4444' : '#f59e0b'));
+                    html += `
+                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                            <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Solicitação de Atendimento Fraterno</div>
+                            <div style="font-size:12px; color:var(--text-muted);">Por ${ev.obj.criado_por || 'Sistema'}</div>
+                        </div>
+                    `;
+                } else if (ev.tipo === 'ATENDIMENTO_FIM') {
+                    const badgeColor = ev.obj.status === 'Concluído' ? '#10b981' : '#ef4444';
+                    const icon = ev.obj.status === 'Concluído' ? '✅' : '❌';
+                    html += `
+                        <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px dashed ${badgeColor}; padding: 12px; border-radius: 8px; opacity: 0.8;">
+                            <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                            <div style="font-weight:bold; color:${badgeColor}; font-size:13px;">${icon} Ciclo do Fraterno ${ev.obj.status}</div>
+                        </div>
+                    `;
+                } else if (ev.tipo === 'SESSAO') {
+                    html += `
+                        <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                            <div style="position:absolute; left:-25px; top:14px; width:10px; height:10px; border-radius:50%; background: #f59e0b; border:2px solid var(--bg-panel);"></div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                <div>
+                                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                                    <div style="font-weight:bold; color:var(--primary); font-size:14px;">🤝 Sessão Fraterno</div>
+                                </div>
+                                <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.atendente_nome}</span>
+                            </div>
+                            <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
+                        </div>
+                    `;
+                } else if (ev.tipo === 'TRATAMENTO') {
+                    const badgeColor = ev.obj.tipo === 'Espiritual' ? '#818cf8' : '#3b82f6';
+                    const statusColor = ev.obj.status === 'Ativo' ? '#10b981' : 'var(--text-muted)';
+                    html += `
+                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                            <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Início Tratamento ${ev.obj.tipo}</div>
+                            <div style="font-size:12px; color:var(--text-muted);">Status do Ciclo: <span style="color:${statusColor}">${ev.obj.status}</span></div>
+                        </div>
+                    `;
+                } else if (ev.tipo === 'PRESENCA') {
+                    const isEsp = ev.trat?.tipo === 'Espiritual';
+                    const badgeColor = isEsp ? '#818cf8' : '#3b82f6';
+                    const badgeText = isEsp ? '✨ ESPIRITUAL' : '💧 FLUÍDICO';
+                    html += `
+                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                            <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
+                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px; white-space: nowrap;">${badgeText}</span>
+                                Presença Registrada
+                            </div>
+                            ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+            html += '</div>';
+        }
         
         document.getElementById('globalSideSheetContent').innerHTML = html;
-
-    } catch (e) {
-        document.getElementById('globalSideSheetContent').innerHTML = `
-            <div style="padding: 24px; color: #ef4444; text-align: center;">
-                Erro ao carregar histórico: ${e.message}
-            </div>
-        `;
+        
+    } catch(err) {
+        console.error(err);
+        document.getElementById('globalSideSheetContent').innerHTML = '<div style="padding:24px;color:#ef4444;">Erro ao carregar histórico.</div>';
     }
 };
 
