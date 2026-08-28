@@ -2305,7 +2305,7 @@ async function salvarIrradiacao(e) {
     const isDesencarnado = document.getElementById('chkIrrDesencarnado') && document.getElementById('chkIrrDesencarnado').checked;
 
     if (isDesencarnado) {
-        nome = "[DESENCARNADO] " + nome;
+        nome = "🌟 " + nome;
     }
 
     const checkboxes = document.querySelectorAll('.chk-dia:checked');

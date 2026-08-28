@@ -118,8 +118,8 @@ async function salvarIrradiacao(e) {
     const endereco = document.getElementById('inIrrEndereco').value.trim().toUpperCase();
     const isDesencarnado = document.getElementById('chkIrrDesencarnado').checked;
     
-    if (isDesencarnado && !nome.includes('(DESENCARNADO)')) {
-        nome += ' (DESENCARNADO)';
+    if (isDesencarnado && !nome.startsWith('🌟 ')) {
+        nome = '🌟 ' + nome;
     }
 
     const dias = Array.from(document.querySelectorAll('.chk-dia:checked')).map(el => el.value);
