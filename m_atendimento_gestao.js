@@ -2006,7 +2006,6 @@ window.abrirModalFicharioCompleto = async function(safeId) {
             <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
                 <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">${p.nome_completo.toUpperCase()}</h4>
                 <strong>Telefone:</strong> ${p.telefone ? formatarCelular(p.telefone) : 'Não informado'}<br>
-                <strong>Endereço:</strong> ${p.endereco || 'Não informado'}<br>
                 <strong>Nascimento:</strong> ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') + ' (' + calcularIdade(p.data_nascimento) + ' anos)' : 'Não informado'}
             </div>
             <h4 style="color: var(--primary); margin-bottom: 16px;">Linha do Tempo</h4>
