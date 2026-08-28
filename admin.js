@@ -2154,7 +2154,7 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
             db.from('app_atendimento_fraterno').select('*', { count: 'exact' }),
             db.from('app_atendimento_sessoes').select('*', { count: 'exact' }),
             db.from('app_atendimento_tratamentos').select('*', { count: 'exact' }),
-            db.from('app_atendimento_presencas').select('*', { count: 'exact' }),
+            db.from('app_atendimento_presencas').select('*, app_atendimento_tratamentos(tipo)'),
             db.from('app_pacientes').select('id', { count: 'exact' })
         ]);
 
@@ -2205,13 +2205,15 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
         });
         const pacientesEmTratamento = pacientesEmTratamentoSet.size;
 
-        // 6), 7) Procedimentos (Sessões/Tratamentos)
+        // 6), 7) Procedimentos (Sessões/Tratamentos Realizados)
         let procFluidico = 0;
         let procEspiritual = 0;
-        (resTratamentos.data || []).forEach(t => {
-            const tipo = (t.tipo || '').toLowerCase();
-            if (tipo.includes('fluid') || tipo.includes('fluíd')) procFluidico++;
-            if (tipo.includes('espiritual')) procEspiritual++;
+        (resPresencas.data || []).forEach(p => {
+            if (p.app_atendimento_tratamentos) {
+                const tipo = (p.app_atendimento_tratamentos.tipo || '').toLowerCase();
+                if (tipo.includes('fluid') || tipo.includes('fluíd')) procFluidico++;
+                if (tipo.includes('espiritual')) procEspiritual++;
+            }
         });
 
         // --- Variáveis restauradas para os gráficos de baixo ---
