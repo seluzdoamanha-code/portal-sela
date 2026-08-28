@@ -929,9 +929,14 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                             : '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); white-space: nowrap;">🟡 Aguardando Chegada</span>'
                         );
 
-                    const btnConfirm = attendedToday
-                        ? `<button disabled style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed var(--border); border-radius: 4px; flex: 1;">Já Realizado Hoje</button>`
-                        : `<button onclick="confirmarSessaoTratamentoMobile('${t.id}', '${t.tipo}')" style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: ${badgeColor}; color: white; border: none; border-radius: 4px; flex: 1;">Confirmar Atendimento</button>`;
+                    let btnConfirm = '';
+                    if (attendedToday) {
+                        btnConfirm = `<button disabled style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed var(--border); border-radius: 4px; flex: 1;">Já Realizado Hoje</button>`;
+                    } else if (!t.presente) {
+                        btnConfirm = `<button disabled style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px dashed rgba(245, 158, 11, 0.3); border-radius: 4px; flex: 1;">⏳ Aguarde Presença</button>`;
+                    } else {
+                        btnConfirm = `<button onclick="confirmarSessaoTratamentoMobile('${t.id}', '${t.tipo}')" style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: ${badgeColor}; color: white; border: none; border-radius: 4px; flex: 1;">Confirmar Atendimento</button>`;
+                    }
 
                     const btnDesfazer = (!attendedToday && t.presente) 
                         ? `<button onclick="marcarTratamentoPresenteMobile('${t.id}', false)" style="padding: 6px 10px; font-size: 11px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px;">Desfazer Presente</button>`

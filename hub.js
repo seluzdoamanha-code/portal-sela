@@ -4843,9 +4843,14 @@ window.carregarTratamentosAtivosDesktop = async function () {
                         });
                     }
 
-                    const btnConfirm = attendedToday
-                        ? `<button disabled class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed var(--border); border-radius: 4px; cursor: not-allowed;">Atendimento já foi realizado HOJE!</button>`
-                        : `<button onclick="confirmarSessaoTratamento('${t.id}', '${t.tipo}')" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px; background: ${t.tipo === 'Espiritual' ? '#8b5cf6' : '#3b82f6'}; color: white; border: none; border-radius: 4px; cursor: pointer;">Confirmar Atendimento</button>`;
+                    let btnConfirm = '';
+                    if (attendedToday) {
+                        btnConfirm = `<button disabled class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed var(--border); border-radius: 4px; cursor: not-allowed;">Atendimento já foi realizado HOJE!</button>`;
+                    } else if (!t.presente) {
+                        btnConfirm = `<button disabled class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px dashed rgba(245, 158, 11, 0.3); border-radius: 4px; cursor: not-allowed;">⏳ Aguarde Presença</button>`;
+                    } else {
+                        btnConfirm = `<button onclick="confirmarSessaoTratamento('${t.id}', '${t.tipo}')" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px; background: ${t.tipo === 'Espiritual' ? '#8b5cf6' : '#3b82f6'}; color: white; border: none; border-radius: 4px; cursor: pointer;">Confirmar Atendimento</button>`;
+                    }
                     
                     actionsHTML = `
                         ${btnConfirm}
