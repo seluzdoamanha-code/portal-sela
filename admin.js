@@ -2184,7 +2184,7 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
         let fraternoPendentes = 0;
         (resFraterno.data || []).forEach(f => {
             const st = (f.status || '').toLowerCase();
-            if (['ativo', 'concluido', 'concluído', 'planejado', 'atendido'].includes(st)) fraternoRealizados++;
+            if (['ativo', 'concluido', 'concluído', 'planejado', 'atendido', 'em tratamento'].includes(st)) fraternoRealizados++;
             if (st === 'pendente') fraternoPendentes++;
         });
 

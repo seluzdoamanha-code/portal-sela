@@ -5964,7 +5964,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
     let eventos = [];
     
     try {
-        let query = db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(nome_completo, nome_curto), app_atendimento_fraterno!atendimento_id(pessoas!atendente_id(nome_completo, nome_curto))');
+        let query = db.from('app_atendimento_fraterno').select('*, pessoas!atendente_id(nome_completo, nome_curto), app_atendimento_sessoes!atendimento_id(pessoas!atendente_id(nome_completo, nome_curto))');
         if (p.paciente_id) {
             query = query.eq('paciente_id', p.paciente_id);
         } else {
