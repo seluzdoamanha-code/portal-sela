@@ -2200,8 +2200,7 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
             if (tipo.includes('fluid') || tipo.includes('fluíd')) tratFluidico++;
             if (tipo.includes('espiritual')) tratEspiritual++;
             if (st !== 'concluido' && st !== 'concluído') {
-                if (t.paciente_id) pacientesEmTratamentoSet.add(t.paciente_id);
-                else if (t.nome_completo) pacientesEmTratamentoSet.add(t.nome_completo.trim().toUpperCase());
+                if (t.atendimento_id) pacientesEmTratamentoSet.add(t.atendimento_id);
             }
         });
         const pacientesEmTratamento = pacientesEmTratamentoSet.size;
