@@ -62,7 +62,7 @@
                     <span class="bottom-nav-icon">🏠</span>
                     <span class="bottom-nav-text">Início</span>
                 </a>
-                <a href="atividades.html" class="bottom-nav-item ${currentPage === \'atividades.html\' ? \'active\' : \'\'}">
+                <a href="atividades.html" class="bottom-nav-item ${currentPage === 'atividades.html' ? 'active' : ''}">
                     <span class="bottom-nav-icon">📅</span>
                     <span class="bottom-nav-text">Atividades</span>
                 </a>
