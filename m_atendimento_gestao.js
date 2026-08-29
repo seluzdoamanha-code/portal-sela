@@ -693,7 +693,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                             <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
                                 <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                                 <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                                <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
+                                <div style="font-weight:bold; color:var(--text-main); font-size:13px; margin-bottom:4px;">
                                     <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px; white-space: nowrap;">${badgeText}</span>
                                     Presença Registrada
                                 </div>
@@ -717,7 +717,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                         <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">Registro de Atendimento Atual</h4>
                         <div class="form-group" style="margin-bottom: 16px;">
                             <label style="color: var(--text-muted); font-size: 13px;">Sintomas e Orientações</label>
-                            <textarea id="sideTxtSintomasOrientacoes" class="input" rows="4" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;" placeholder="Descreva os sintomas apresentados e as orientações transmitidas..."></textarea>
+                            <textarea id="sideTxtSintomasOrientacoes" class="input" rows="4" style="width: 100%; box-sizing: border-box; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main); padding: 12px; border-radius: 8px;" placeholder="Descreva os sintomas apresentados e as orientações transmitidas..."></textarea>
                         </div>
                         
                         <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
@@ -966,14 +966,14 @@ function obterDataPrecisa(dataStr, createdAtStr) {
 
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
-                        <strong style="font-size: 15px; color: white;">${(grupo.info.paciente?.nome_completo || grupo.info.nome_completo || '').toUpperCase()}</strong>
+                        <strong style="font-size: 15px; color: var(--text-main);">${(grupo.info.paciente?.nome_completo || grupo.info.nome_completo || '').toUpperCase()}</strong>
                         <span style="font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px;">📱 ${grupo.info.paciente?.celular || grupo.info.telefone || 'Sem telefone'}</span>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 4px;">
                         ${tratsHTML}
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
-                        <button onclick="toggleEvolucaoInlineMobile('${grupo.info.id}')" style="padding: 6px 12px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; gap: 6px;">
+                        <button onclick="toggleEvolucaoInlineMobile('${grupo.info.id}')" style="padding: 6px 12px; font-size: 12px; font-weight: 600; background: rgba(0,0,0,0.05); color: var(--text-main); border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; gap: 6px;">
                             📝 Evolução & Prontuário
                         </button>
                     </div>
@@ -1015,7 +1015,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                 background: 'var(--bg-panel)',
                 color: 'var(--text-main)',
                 inputAttributes: {
-                    style: 'background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border); border-radius: 8px;'
+                    style: 'background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px;'
                 }
             }).then(async (result) => {
                 if (result.isConfirmed) {
@@ -1149,7 +1149,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             ${abandonos.map(a => `
                                 <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(239,68,68,0.1); border-radius: 6px; padding: 10px;">
-                                    <div style="font-size: 13px; font-weight: bold; color: white;">${a.nome.toUpperCase()} <span style="font-size: 9px; padding: 2px 4px; border-radius: 8px; background: rgba(255,255,255,0.1); color: var(--text-muted);">${a.tipo}</span></div>
+                                    <div style="font-size: 13px; font-weight: bold; color: var(--text-main);">${a.nome.toUpperCase()} <span style="font-size: 9px; padding: 2px 4px; border-radius: 8px; background: rgba(255,255,255,0.1); color: var(--text-muted);">${a.tipo}</span></div>
                                     <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; margin-bottom: 8px;">Faltas: ${a.faltasConsecutivas} sem. | Última: ${a.lastDate}</div>
                                     ${a.telefone ? `<a href="https://wa.me/55${a.telefone.replace(/\D/g, '')}" target="_blank" class="btn" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); text-decoration: none; padding: 6px; font-size: 11px; border-radius: 6px; display: block; text-align: center;">Chamar no WhatsApp</a>` : '<span style="font-size: 11px; color: var(--text-muted);">Sem Telefone</span>'}
                                 </div>
@@ -1240,17 +1240,17 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                 <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
                     <div class="form-group">
                         <label style="color: var(--text-muted); font-size: 13px;">Nome Completo</label>
-                        <input type="text" id="sideEditAtenNome" required value="${nome}" class="input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">
+                        <input type="text" id="sideEditAtenNome" required value="${nome}" class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main); padding: 12px; border-radius: 8px;">
                     </div>
                     
                     <div class="form-group">
                         <label style="color: var(--text-muted); font-size: 13px;">Endereço</label>
-                        <textarea id="sideEditAtenEndereco" class="input" rows="3" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">${endereco}</textarea>
+                        <textarea id="sideEditAtenEndereco" class="input" rows="3" style="width: 100%; box-sizing: border-box; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main); padding: 12px; border-radius: 8px;">${endereco}</textarea>
                     </div>
                     
                     <div class="form-group">
                         <label style="color: var(--text-muted); font-size: 13px;">WhatsApp</label>
-                        <input type="text" id="sideEditAtenWhats" value="${fone}" class="input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">
+                        <input type="text" id="sideEditAtenWhats" value="${fone}" class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main); padding: 12px; border-radius: 8px;">
                     </div>
                 </div>
 
@@ -1309,7 +1309,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                 <div style="display: flex; flex-direction: column; gap: 16px;">
                     <div class="form-group">
                         <label style="color: var(--text-muted); font-size: 13px;">Atendente Fraterno</label>
-                        <select id="sideSelectAtendenteAtendimento" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px;">
+                        <select id="sideSelectAtendenteAtendimento" required class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main); padding: 12px; border-radius: 8px;">
                             <option value="">Carregando atendentes...</option>
                         </select>
                     </div>
@@ -1883,7 +1883,7 @@ window.carregarFicharioMobile = function(allData, allTratamentos) {
 
             <div style="display: flex; gap: 8px; flex-direction: row; margin-top: auto; flex-wrap: wrap;">
                 <button onclick="abrirFichaPacienteFichario('${p.paciente_id}')" class="btn" style="flex: 1; min-width: 90px; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); font-size: 12px; padding: 10px; border-radius: 8px; font-weight: 600;">📝 Ficha</button>
-                <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="flex: 1; min-width: 90px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); font-size: 12px; padding: 10px; border-radius: 8px; font-weight: 600;">📜 Histórico</button>
+                <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="flex: 1; min-width: 90px; background: rgba(0,0,0,0.05); color: var(--text-main); border: 1px solid var(--border); font-size: 12px; padding: 10px; border-radius: 8px; font-weight: 600;">📜 Histórico</button>
                 <button onclick="iniciarNovoAtendimentoFichario('${safeId}')" class="btn" style="flex: 1; min-width: 90px; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-size: 12px; padding: 10px; border-radius: 8px; font-weight: 600;">➕ Novo</button>
             </div>
         `;
@@ -2023,7 +2023,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                         <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Solicitação de Atendimento Fraterno</div>
+                            <div style="font-weight:bold; color:var(--text-main); font-size:13px; margin-bottom:4px;">Solicitação de Atendimento Fraterno</div>
                             <div style="font-size:12px; color:var(--text-muted);">Por ${ev.obj.criado_por || 'Sistema'}</div>
                         </div>
                     `;
@@ -2058,7 +2058,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                         <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Início Tratamento ${ev.obj.tipo}</div>
+                            <div style="font-weight:bold; color:var(--text-main); font-size:13px; margin-bottom:4px;">Início Tratamento ${ev.obj.tipo}</div>
                             <div style="font-size:12px; color:var(--text-muted);">Status do Ciclo: <span style="color:${statusColor}">${ev.obj.status}</span></div>
                         </div>
                     `;
@@ -2070,7 +2070,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                         <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
+                            <div style="font-weight:bold; color:var(--text-main); font-size:13px; margin-bottom:4px;">
                                 <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px; white-space: nowrap;">${badgeText}</span>
                                 Presença Registrada
                             </div>
