@@ -18,16 +18,13 @@
         const sidebarHTML = `
             <aside class="sidebar" style="display: flex; flex-direction: column;">
                 <div class="logo-area" style="display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <img src="logo_sela.png" alt="Logo SELA" style="height: 40px; width: auto; border-radius: 50%;">
-                        <h2 style="margin: 0;">Portal SELA</h2>
-                    </div>
-                    <button id="toggleSidebarBtn" class="toggle-sidebar-btn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; padding: 4px;">◀</button>
+                    <div style="display: flex; justify-content: center; width: 100%;"><img src="logo_sela.png" alt="Logo SELA" style="height: 40px; width: 40px; border-radius: 50%; object-fit: cover;"></div>
+                    
                 </div>
                 <nav class="main-nav custom-scrollbar" id="sidebarNav" style="flex: 1; overflow-y: auto;">
-                    <a href="index.html" class="nav-item ${currentPage === 'index.html' ? 'active' : ''}" title="Início / Mural">🏠 <span class="nav-text">Início / Mural</span></a>
-                    <a href="atividades.html" class="nav-item ${currentPage === 'atividades.html' || currentPage === 'hub.html' ? 'active' : ''}" title="Atividades">📅 <span class="nav-text">Atividades</span></a>
-                    <a href="pessoas.html" class="nav-item ${currentPage === 'pessoas.html' || currentPage === 'perfil.html' ? 'active' : ''}" title="Pessoas & Perfis">👥 <span class="nav-text">Pessoas & Perfis</span></a>
+                    <a href="index.html" class="nav-item ${currentPage === 'index.html' ? 'active' : ''}" title="Início / Mural">🏠</a>
+                    <a href="atividades.html" class="nav-item ${currentPage === 'atividades.html' ? 'active' : ''}" title="Atividades">📅</a>
+                    <a href="pessoas.html" class="nav-item ${currentPage === 'pessoas.html' || currentPage === 'perfil.html' ? 'active' : ''}" title="Pessoas & Perfis">👥</a>
                     
                     <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 8px 16px;" class="desktop-only"></div>
 
@@ -37,26 +34,14 @@
                     
                     ${window.isAdminGlobal && window.isAdminGlobal() ? `
                     <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 8px 16px;" class="desktop-only"></div>
-                    <a href="admin.html" class="nav-item ${currentPage === 'admin.html' ? 'active' : ''}" title="Administração Global">🛠️ <span class="nav-text">Admin Global</span></a>
+                    <a href="admin.html" class="nav-item ${currentPage === 'admin.html' ? 'active' : ''}" title="Administração Global">🛠️</a>
                     ` : ''}
                     ${window.isAdmin && window.isAdmin() ? `
-                    <a href="config.html" class="nav-item ${currentPage === 'config.html' ? 'active' : ''}" title="Configurações">⚙️ <span class="nav-text">Configurações</span></a>
+                    <a href="config.html" class="nav-item ${currentPage === 'config.html' ? 'active' : ''}" title="Configurações">⚙️</a>
                     ` : ''}
                 </nav>
                 
-                <div class="sidebar-footer" style="padding: 24px; font-size: 11px; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border);">
-                    <div id="socialLinks" class="hide-on-collapse" style="display: flex; justify-content: center; gap: 12px; margin-bottom: 12px;">
-                        <!-- Redes sociais injetadas aqui -->
-                    </div>
-                    <div class="desktop-only">
-                        <div>&copy; 2026 Luz do Amanhã</div>
-                        <div style="opacity: 0.6; margin-top: 4px;">Dev by Portal SELA</div>
-                    </div>
-                    <!-- User Profile Placeholder -->
-                    <div id="userProfileArea" style="margin-top: 24px; padding: 16px; background: var(--bg-dark); border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                    </div>
-                </div>
-            </aside>
+                </aside>
         `;
 
         const existingSidebar = document.querySelector('aside.sidebar');
@@ -77,7 +62,7 @@
                     <span class="bottom-nav-icon">🏠</span>
                     <span class="bottom-nav-text">Início</span>
                 </a>
-                <a href="atividades.html" class="bottom-nav-item ${currentPage === 'atividades.html' || currentPage === 'hub.html' ? 'active' : ''}">
+                <a href="atividades.html" class="bottom-nav-item ${currentPage === \'atividades.html\' ? \'active\' : \'\'}">
                     <span class="bottom-nav-icon">📅</span>
                     <span class="bottom-nav-text">Atividades</span>
                 </a>
@@ -263,7 +248,7 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const isActive = (window.location.pathname.includes('hub.html') && urlParams.get('id') == d.id);
                 
-                html += `<a href="hub.html?id=${d.id}" class="nav-item ${isActive ? 'active' : ''}" title="${d.nome}">${icon} <span class="nav-text">${d.nome}</span></a>`;
+                html += `<a href="hub.html?id=${d.id}" class="nav-item " title="${d.nome}">🏠</a>`;
             });
             
             container.innerHTML = html;
