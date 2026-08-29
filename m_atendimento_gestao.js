@@ -273,15 +273,15 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             const statsContainer = document.getElementById('statsDashboardMobile');
             if (statsContainer) {
                 statsContainer.innerHTML = `
-                    <div style="flex: 0 0 auto; min-width: 80px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; text-align: center;">
+                    <div style="flex: 0 0 auto; min-width: 80px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; text-align: center;">
                         <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 2px;">📂 Fila</div>
                         <div style="font-size: 13px; font-weight: bold; color: var(--primary);">${totalFila}</div>
                     </div>
-                    <div style="flex: 0 0 auto; min-width: 80px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; text-align: center;">
+                    <div style="flex: 0 0 auto; min-width: 80px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; text-align: center;">
                         <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 2px;">🛋️ Espera</div>
                         <div style="font-size: 13px; font-weight: bold; color: #f59e0b;">${espera}</div>
                     </div>
-                    <div style="flex: 0 0 auto; min-width: 80px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; text-align: center;">
+                    <div style="flex: 0 0 auto; min-width: 80px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; text-align: center;">
                         <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 2px;">🩹 Tratando</div>
                         <div style="font-size: 13px; font-weight: bold; color: #10b981;">${totalTratamentos}</div>
                     </div>
@@ -399,7 +399,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                 currentType = item.unified_type;
                 const typeColor = currentType === 'Fraterno' ? '#f59e0b' : (currentType === 'Fluídico' ? '#3b82f6' : '#8b5cf6');
                 const header = document.createElement('div');
-                header.style.cssText = `margin-top: 16px; margin-bottom: 8px; font-weight: bold; color: ${typeColor}; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; display: flex; align-items: center; gap: 8px;`;
+                header.style.cssText = `margin-top: 16px; margin-bottom: 8px; font-weight: bold; color: ${typeColor}; font-size: 14px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 4px; display: flex; align-items: center; gap: 8px;`;
                 header.innerHTML = `<span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${typeColor};"></span> ${currentType.toUpperCase()}`;
                 container.appendChild(header);
             }
@@ -427,7 +427,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             if (attName !== currentAtt) {
                 currentAtt = attName;
                 const header = document.createElement('div');
-                header.style.cssText = 'font-weight: bold; color: var(--primary); font-size: 14px; margin-top: 16px; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;';
+                header.style.cssText = 'font-weight: bold; color: var(--primary); font-size: 14px; margin-top: 16px; margin-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 4px;';
                 header.innerHTML = `👨‍💼 Atendente: ${currentAtt.toUpperCase()}`;
                 container.appendChild(header);
             }
@@ -451,7 +451,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             if (monthYear !== currentMonthYear) {
                 currentMonthYear = monthYear;
                 const header = document.createElement('div');
-                header.style.cssText = 'font-weight: bold; color: #10b981; font-size: 14px; margin-top: 16px; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;';
+                header.style.cssText = 'font-weight: bold; color: #10b981; font-size: 14px; margin-top: 16px; margin-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 4px;';
                 header.innerHTML = `📅 ${currentMonthYear}`;
                 container.appendChild(header);
             }
@@ -496,7 +496,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             `<button class="btn-action" onclick="alternarPresenca('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(0,0,0,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; transition: all 0.2s; font-weight: 500;">⚪ Confirmar Presença</button>`;
 
         const div = document.createElement('div');
-        div.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;';
+        div.style.cssText = 'background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;';
         
         const shortName = item.nome_curto || (item.nome_completo ? item.nome_completo.split(' ')[0] : 'Sem nome');
 
@@ -580,7 +580,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                     <span>📱 Celular: ${item.telefone ? formatarCelular(item.telefone) : 'Não informado'}</span>
                     ${whatsLink}
                 </div>
-                <div style="font-size: 11px; margin-top: 6px; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 12px; color: var(--text-muted); display: inline-block; width: fit-content;">Em ${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</div>
+                <div style="font-size: 11px; margin-top: 6px; padding: 4px 10px; background: rgba(0,0,0,0.05); border-radius: 12px; color: var(--text-muted); display: inline-block; width: fit-content;">Em ${dateStr}${item.criado_por ? ' por ' + item.criado_por : ''}</div>
                 ${infoExtra}
             </div>
             
@@ -608,7 +608,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             const telFormatado = telStr ? formatarCelular(telStr) : '-';
 
             let infoHtml = `
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
                     <strong>Nome:</strong> ${nomeStr}<br>
                     <strong>Nascimento:</strong> ${nascFormatado}<br>
                     <strong>Telefone:</strong> ${telFormatado}
@@ -673,7 +673,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                     const dateStr = ev.data.toLocaleDateString('pt-BR');
                     if (ev.tipo === 'SESSAO') {
                         sessoesHtml += `
-                            <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                            <div style="position:relative; background: var(--bg-panel); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
                                 <div style="position:absolute; left:-25px; top:14px; width:10px; height:10px; border-radius:50%; background: #f59e0b; border:2px solid var(--bg-panel);"></div>
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                     <div>
@@ -682,7 +682,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                                     </div>
                                     <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.atendente_nome}</span>
                                 </div>
-                                <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
+                                <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
                             </div>
                         `;
                     } else if (ev.tipo === 'PRESENCA') {
@@ -690,14 +690,14 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                         const badgeColor = isEsp ? '#818cf8' : '#3b82f6';
                         const badgeText = isEsp ? '✨ ESPIRITUAL' : '💧 FLUÍDICO';
                         sessoesHtml += `
-                            <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                            <div style="position:relative; background: var(--bg-panel); border: 1px solid rgba(0,0,0,0.05); padding: 12px; border-radius: 8px;">
                                 <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                                 <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                                 <div style="font-weight:bold; color:var(--text-main); font-size:13px; margin-bottom:4px;">
                                     <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px; white-space: nowrap;">${badgeText}</span>
                                     Presença Registrada
                                 </div>
-                                ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
+                                ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
                             </div>
                         `;
                     }
@@ -731,7 +731,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                             </label>
                         </div>
 
-                        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(0,0,0,0.05);">
                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                                 <input type="checkbox" id="sideChkApenasConversa" style="width: 18px; height: 18px; accent-color: #f59e0b;" onchange="if(this.checked) { document.getElementById('sideChkTratFluidico').checked = false; document.getElementById('sideChkTratEspiritual').checked = false; }">
                                 <span style="color: #f59e0b; font-weight: 500;">Apenas Conversa Fraterna</span>
@@ -931,7 +931,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
 
                     let btnConfirm = '';
                     if (attendedToday) {
-                        btnConfirm = `<button disabled style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed var(--border); border-radius: 4px; flex: 1;">Já Realizado Hoje</button>`;
+                        btnConfirm = `<button disabled style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: rgba(0,0,0,0.05); color: var(--text-muted); border: 1px dashed var(--border); border-radius: 4px; flex: 1;">Já Realizado Hoje</button>`;
                     } else if (!t.presente) {
                         btnConfirm = `<button disabled style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px dashed rgba(245, 158, 11, 0.3); border-radius: 4px; flex: 1;">⏳ Aguarde Presença</button>`;
                     } else {
@@ -946,7 +946,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                     const btnSuspender = `<button onclick="mudarStatusTratamentoMobile('${t.id}', 'Suspenso')" style="padding: 6px 10px; font-size: 12px; font-weight: 600; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; flex: 1;">Suspender</button>`;
 
                     tratsHTML += `
-                        <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display: flex; flex-direction: column; gap: 8px; background: var(--bg-panel); padding: 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05);">
                             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
                                 <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${t.tipo}</span>
                                 ${labelHtml}
@@ -965,9 +965,9 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                 });
 
                 card.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 10px;">
                         <strong style="font-size: 15px; color: var(--text-main);">${(grupo.info.paciente?.nome_completo || grupo.info.nome_completo || '').toUpperCase()}</strong>
-                        <span style="font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px;">📱 ${grupo.info.paciente?.celular || grupo.info.telefone || 'Sem telefone'}</span>
+                        <span style="font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 4px;">📱 ${grupo.info.paciente?.celular || grupo.info.telefone || 'Sem telefone'}</span>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 4px;">
                         ${tratsHTML}
@@ -1122,19 +1122,19 @@ function obterDataPrecisa(dataStr, createdAtStr) {
 
             let resumoHtml = `
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                         <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Ativos</div>
                         <div style="font-size: 20px; font-weight: bold; color: var(--primary);">${totalAtivos}</div>
                     </div>
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                         <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Na Semana</div>
                         <div style="font-size: 20px; font-weight: bold; color: #10b981;">${pacientesNaSemana}</div>
                     </div>
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                         <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Evangelho Lar</div>
                         <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">${evangelhoCount}</div>
                     </div>
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center;">
                         <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Frequência</div>
                         <div style="font-size: 20px; font-weight: bold; color: #8b5cf6;">${taxaFrequencia}%</div>
                     </div>
@@ -1148,7 +1148,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                         <h4 style="margin-top: 0; color: #ef4444; margin-bottom: 8px; font-size: 13px;">⚠️ Risco de Abandono (${abandonos.length})</h4>
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             ${abandonos.map(a => `
-                                <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(239,68,68,0.1); border-radius: 6px; padding: 10px;">
+                                <div style="background: var(--bg-panel); border: 1px solid rgba(239,68,68,0.2); box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 6px; padding: 10px;">
                                     <div style="font-size: 13px; font-weight: bold; color: var(--text-main);">${a.nome.toUpperCase()} <span style="font-size: 9px; padding: 2px 4px; border-radius: 8px; background: rgba(0,0,0,0.1); color: var(--text-muted);">${a.tipo}</span></div>
                                     <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; margin-bottom: 8px;">Faltas: ${a.faltasConsecutivas} sem. | Última: ${a.lastDate}</div>
                                     ${a.telefone ? `<a href="https://wa.me/55${a.telefone.replace(/\D/g, '')}" target="_blank" class="btn" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); text-decoration: none; padding: 6px; font-size: 11px; border-radius: 6px; display: block; text-align: center;">Chamar no WhatsApp</a>` : '<span style="font-size: 11px; color: var(--text-muted);">Sem Telefone</span>'}
@@ -1182,7 +1182,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                         if (i < presCount) {
                             boxesHtml += `<div style="width: 22px; height: 22px; border-radius: 4px; background: #10b981; border: 1px solid #059669; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px;">✓</div>`;
                         } else {
-                            boxesHtml += `<div style="width: 22px; height: 22px; border-radius: 4px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 9px;">${i+1}</div>`;
+                            boxesHtml += `<div style="width: 22px; height: 22px; border-radius: 4px; background: var(--bg-panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 9px;">${i+1}</div>`;
                         }
                     }
                     
@@ -1193,7 +1193,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                     const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
                     
                     listaHtml += `
-                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column;">
+                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column;">
                             <div style="font-size: 12px; font-weight: bold; color: var(--text-main); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 ${t.app_atendimento_fraterno?.paciente?.nome_completo?.toUpperCase() || t.app_atendimento_fraterno?.nome_completo?.toUpperCase() || 'DESCONHECIDO'}
                             </div>
@@ -1507,7 +1507,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                         const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
                         const badgeColor = trat?.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
                         return `
-                            <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 6px;">
+                            <div style="border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 6px;">
                                 <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${trat?.tipo || 'TRAT.'}</span>
                                 <strong style="color: #3b82f6; margin-left: 4px;">${dt}</strong>
                                 ${obs}
@@ -1528,7 +1528,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                             const atendenteFallback = s.pessoas || (s.app_atendimento_fraterno && s.app_atendimento_fraterno.pessoas) || {};
                             const nomeAtendente = atendenteFallback.nome_curto || atendenteFallback.nome_completo || 'Desconhecido';
                     return `
-                        <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 6px;">
+                        <div style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.05); border-radius: 6px; padding: 8px; font-size: 12px; margin-bottom: 6px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                 <div>
                                     <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: #f59e0b; color: white; text-transform: uppercase; white-space: nowrap;">FRATERNO</span>
@@ -1634,8 +1634,8 @@ window.carregarHistoricoGeralMobile = async function () {
 
         const renderAno = (ano) => {
             let anoHtml = `
-                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 8px;">
-                    <div onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'" style="padding: 16px; background: rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 8px;">
+                    <div onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'" style="padding: 16px; background: rgba(0,0,0,0.05); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05);">
                         <strong style="color: var(--text-main); font-size: 16px;">📂 Ano ${ano} <span style="font-size: 12px; opacity: 0.7; font-weight: normal; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 12px;">(${Object.values(grupos[ano]).flat().length} registros)</span></strong>
                         <span style="color: var(--text-muted); font-size: 12px;">Expandir/Recolher</span>
                     </div>
@@ -1651,7 +1651,7 @@ window.carregarHistoricoGeralMobile = async function () {
                     <div style="margin-bottom: 16px; margin-left: 16px; border-left: 2px solid var(--border); padding-left: 16px;">
                         <h4 onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'flex' : 'none'" style="color: var(--primary); font-size: 15px; margin-bottom: 12px; margin-top: 0; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                📂 ${mes} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 12px;">${registros.length} registros</span>
+                                📂 ${mes} <span style="font-size: 11px; color: var(--text-muted); font-weight: normal; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 12px;">${registros.length} registros</span>
                             </div>
                             <span style="color: var(--text-muted); font-size: 12px; font-weight: normal; opacity: 0.5;">▼</span>
                         </h4>
@@ -1679,7 +1679,7 @@ window.carregarHistoricoGeralMobile = async function () {
                     const dtDisplay = new Date(r.data).toLocaleDateString('pt-BR');
 
                     anoHtml += `
-                        <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                        <div style="background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
                             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 2px;">
                                 <span style="font-size: 10px; font-weight: bold; background: ${badgeConfig.color}; color: white; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">${badgeConfig.text}</span>
                                 <strong style="color: var(--text-main); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${r.nome.toUpperCase()}</strong>
@@ -1687,8 +1687,8 @@ window.carregarHistoricoGeralMobile = async function () {
                             <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
                                 <span>📅 ${dtDisplay}</span> &mdash; <span>${descHtml}</span>
                             </div>
-                            <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; display: flex; justify-content: flex-end;">
-                                <button onclick="abrirFichaAtendimento('${r.fraterno_id}')" class="btn" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border); padding: 6px 12px; font-size: 12px; border-radius: 6px; font-weight: 600;">📝 Ficha</button>
+                            <div style="border-top: 1px solid rgba(0,0,0,0.05); padding-top: 8px; display: flex; justify-content: flex-end;">
+                                <button onclick="abrirFichaAtendimento('${r.fraterno_id}')" class="btn" style="background: rgba(0,0,0,0.05); color: var(--text-main); border: 1px solid var(--border); padding: 6px 12px; font-size: 12px; border-radius: 6px; font-weight: 600;">📝 Ficha</button>
                             </div>
                         </div>
                     `;
@@ -1874,7 +1874,7 @@ window.carregarFicharioMobile = function(allData, allTratamentos) {
                     </div>
                 </div>
                 
-                <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; align-items: center;">
+                <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); display: flex; gap: 12px; align-items: center;">
                     <span style="color: var(--primary);">${countA} Atendimentos</span>
                     <span style="opacity: 0.3;">|</span>
                     <span style="color: #10b981;">${countT} Tratamentos</span>
@@ -2003,7 +2003,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
         eventos.sort((a, b) => b.data - a.data); // newest first
         
         let html = `
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
                 <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">${p.nome_completo.toUpperCase()}</h4>
                 <strong>Telefone:</strong> ${p.telefone ? formatarCelular(p.telefone) : 'Não informado'}<br>
                 <strong>Nascimento:</strong> ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') + ' (' + calcularIdade(p.data_nascimento) + ' anos)' : 'Não informado'}
@@ -2020,7 +2020,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                 if (ev.tipo === 'ATENDIMENTO') {
                     const badgeColor = ev.obj.status === 'Atendido' ? '#10b981' : (ev.obj.status === 'Em Tratamento' ? '#3b82f6' : (ev.obj.status === 'Cancelado' ? '#ef4444' : '#f59e0b'));
                     html += `
-                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:relative; background: var(--bg-panel); border: 1px solid rgba(0,0,0,0.05); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                             <div style="font-weight:bold; color:var(--text-main); font-size:13px; margin-bottom:4px;">Solicitação de Atendimento Fraterno</div>
@@ -2031,7 +2031,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                     const badgeColor = ev.obj.status === 'Concluído' ? '#10b981' : '#ef4444';
                     const icon = ev.obj.status === 'Concluído' ? '✅' : '❌';
                     html += `
-                        <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px dashed ${badgeColor}; padding: 12px; border-radius: 8px; opacity: 0.8;">
+                        <div style="position:relative; background: var(--bg-panel); border: 1px dashed ${badgeColor}; padding: 12px; border-radius: 8px; opacity: 0.8;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                             <div style="font-weight:bold; color:${badgeColor}; font-size:13px;">${icon} Ciclo do Fraterno ${ev.obj.status}</div>
@@ -2039,7 +2039,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                     `;
                 } else if (ev.tipo === 'SESSAO') {
                     html += `
-                        <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                        <div style="position:relative; background: var(--bg-panel); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
                             <div style="position:absolute; left:-25px; top:14px; width:10px; height:10px; border-radius:50%; background: #f59e0b; border:2px solid var(--bg-panel);"></div>
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                 <div>
@@ -2048,14 +2048,14 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                                 </div>
                                 <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.atendente_nome}</span>
                             </div>
-                            <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
+                            <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
                         </div>
                     `;
                 } else if (ev.tipo === 'TRATAMENTO') {
                     const badgeColor = ev.obj.tipo === 'Espiritual' ? '#818cf8' : '#3b82f6';
                     const statusColor = ev.obj.status === 'Ativo' ? '#10b981' : 'var(--text-muted)';
                     html += `
-                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:relative; background: var(--bg-panel); border: 1px solid rgba(0,0,0,0.05); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                             <div style="font-weight:bold; color:var(--text-main); font-size:13px; margin-bottom:4px;">Início Tratamento ${ev.obj.tipo}</div>
@@ -2067,14 +2067,14 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                     const badgeColor = isEsp ? '#818cf8' : '#3b82f6';
                     const badgeText = isEsp ? '✨ ESPIRITUAL' : '💧 FLUÍDICO';
                     html += `
-                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:relative; background: var(--bg-panel); border: 1px solid rgba(0,0,0,0.05); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                             <div style="font-weight:bold; color:var(--text-main); font-size:13px; margin-bottom:4px;">
                                 <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px; white-space: nowrap;">${badgeText}</span>
                                 Presença Registrada
                             </div>
-                            ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
+                            ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
                         </div>
                     `;
                 }
@@ -2235,19 +2235,19 @@ window.abrirFichaPacienteFichario = async function(pacienteId) {
                     </div>
                 </div>
 
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
                     <h4 style="margin-top: 0; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Dados de Contato</h4>
                     
                     <div style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px;">
-                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05);">
                             <span style="color: var(--text-muted); font-size: 13px;">Celular</span>
                             <strong style="font-size: 13px;">${celularHtml}</strong>
                         </div>
-                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05);">
                             <span style="color: var(--text-muted); font-size: 13px;">E-mail</span>
                             <strong style="font-size: 13px;">${p.email || '-'}</strong>
                         </div>
-                        <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05);">
                             <span style="color: var(--text-muted); font-size: 13px;">Endereço</span>
                             <strong style="font-size: 13px; line-height: 1.4;">${endFull}</strong>
                         </div>
@@ -2256,11 +2256,11 @@ window.abrirFichaPacienteFichario = async function(pacienteId) {
                     <h4 style="margin-top: 0; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Dados Pessoais</h4>
                     
                     <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05);">
                             <span style="color: var(--text-muted); font-size: 13px;">CPF</span>
                             <strong style="font-size: 13px;">${docFormatado}</strong>
                         </div>
-                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05);">
                             <span style="color: var(--text-muted); font-size: 13px;">Nascimento</span>
                             <strong style="font-size: 13px;">${nascHtml}</strong>
                         </div>
