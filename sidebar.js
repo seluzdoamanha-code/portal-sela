@@ -248,7 +248,7 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const isActive = (window.location.pathname.includes('hub.html') && urlParams.get('id') == d.id);
                 
-                html += `<a href="hub.html?id=${d.id}" class="nav-item " title="${d.nome}">🏠</a>`;
+                html += `<a href="hub.html?id=${d.id}&tipo=${d.tipo}" class="nav-item ${isActive ? 'active' : ''}" title="${d.nome}">${icon}</a>`;
             });
             
             container.innerHTML = html;
