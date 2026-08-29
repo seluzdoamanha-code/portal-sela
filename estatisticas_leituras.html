@@ -163,7 +163,8 @@
         const dataQuinta = [0, 0, 0, 0, 32, 0]; // Os nulos ou zeros de acordo com os dados
 
         // Configuração do Chart.js
-        const leiturasChart = new Chart(ctx, {
+        if(window.leiturasChartInstance) window.leiturasChartInstance.destroy();
+        window.leiturasChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,

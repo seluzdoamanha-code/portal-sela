@@ -60,7 +60,9 @@
         gradient.addColorStop(0, 'rgba(6, 182, 212, 0.8)');   
         gradient.addColorStop(1, 'rgba(139, 92, 246, 0.8)');
 
-        new Chart(ctx, {
+        if(window.chartEntregasMobileInstance) window.chartEntregasMobileInstance.destroy();
+        window.chartEntregasMobileInstance = if(window.chartDemografiaMobileInstance) window.chartDemografiaMobileInstance.destroy();
+        window.chartDemografiaMobileInstance = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],

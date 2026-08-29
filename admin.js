@@ -1962,6 +1962,7 @@ window.carregarEstatisticasMiniAppIrradiacao = async function () {
 
             // Gráfico Semanal
             const ctxSemanal = document.getElementById('chartMiniAppLeiturasSemanais').getContext('2d');
+            if(window.miniAppChartSemanal) window.miniAppChartSemanal.destroy();
             window.miniAppChartSemanal = new Chart(ctxSemanal, {
                 type: 'line',
                 data: {
@@ -2001,6 +2002,7 @@ window.carregarEstatisticasMiniAppIrradiacao = async function () {
 
             // Gráfico Mensal
             const ctxMensal = document.getElementById('chartMiniAppLeiturasMensais').getContext('2d');
+            if(window.miniAppChartMensal) window.miniAppChartMensal.destroy();
             window.miniAppChartMensal = new Chart(ctxMensal, {
                 type: 'bar',
                 data: {

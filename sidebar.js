@@ -367,13 +367,13 @@
                     const organizador = ev.estruturas ? ev.estruturas.nome : 'Portal SELA';
                     
                     html += `
-                    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 8px; padding: 12px; display: flex; gap: 12px; align-items: center; min-width: 300px;">
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 8px; padding: 12px; display: flex; gap: 12px; align-items: center; min-width: 300px;">
                         <div style="background: #ef4444; color: white; border-radius: 6px; padding: 6px 10px; text-align: center; min-width: 55px;">
                             <div style="font-size: 14px; font-weight: bold;">${dataFormatada.split(' de ')[0]}</div>
                             <div style="font-size: 10px; text-transform: uppercase;">${dataFormatada.split(' de ')[1] || ''}</div>
                         </div>
                         <div>
-                            <div style="font-weight: 600; color: white; font-size: 14px;">${ev.titulo}</div>
+                            <div style="font-weight: 600; color: var(--text-main); font-size: 14px;">${ev.titulo}</div>
                             <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${organizador} | ⏰ ${horaFormatada} ${ev.local ? `| 📍 ${ev.local}` : ''}</div>
                         </div>
                     </div>

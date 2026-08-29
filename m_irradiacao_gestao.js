@@ -720,6 +720,7 @@ window.carregarEstatisticasIrradiacaoMobile = async function () {
                 pointRadius: 3
             });
 
+            if(window.irrSemanalChartMobile) window.irrSemanalChartMobile.destroy();
             window.irrSemanalChartMobile = new Chart(ctxSemanal, {
                 type: 'line',
                 data: {
@@ -755,6 +756,7 @@ window.carregarEstatisticasIrradiacaoMobile = async function () {
                 });
             });
 
+            if(window.irrTotalChartMobile) window.irrTotalChartMobile.destroy();
             window.irrTotalChartMobile = new Chart(ctxTotal, {
                 type: 'bar',
                 data: {
