@@ -166,24 +166,7 @@
             }
         };
 
-        // Lógica de Collapse (Desktop)
-        const sidebar = document.querySelector('.sidebar');
-        const btnToggle = document.getElementById('toggleSidebarBtn');
-        
-        // Verifica preferência de colapso
-        if (localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
-            sidebar.classList.add('collapsed');
-            if(btnToggle) btnToggle.textContent = '▶';
-        }
-        
-        if(btnToggle) {
-            btnToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('collapsed');
-                const isCollapsed = sidebar.classList.contains('collapsed');
-                localStorage.setItem('sidebar_collapsed', isCollapsed);
-                btnToggle.textContent = isCollapsed ? '▶' : '◀';
-            });
-        }
+// Layout Sidebar Modern Slim aplicado
         
         await carregarAtalhosDinamicos();
         await carregarRedesSociais();
@@ -197,8 +180,8 @@
     });
 
     async function renderUserProfile() {
-        const container = document.getElementById('userProfileArea');
-        if (!container || !sidebarDb) return;
+        const topbar = document.querySelector('.topbar');
+        if (!topbar || !sidebarDb) return;
         
         const { data: { session } } = await sidebarDb.auth.getSession();
         if (!session || !session.user) return;
@@ -206,16 +189,19 @@
         const userName = session.user.user_metadata?.full_name || session.user.email;
         const userFoto = session.user.user_metadata?.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userName) + '&background=random';
         
-        container.innerHTML = `
-            <div id="btnMeuPerfil" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; border-radius: 8px; padding: 4px; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">
-                <img src="${userFoto}" alt="Foto" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
-                <span class="hide-on-collapse" style="font-weight: 500; color: var(--text-main); font-size: 13px; text-align: center;">${userName}</span>
+        const profileContainer = document.createElement('div');
+        profileContainer.className = 'topbar-profile-area';
+        profileContainer.innerHTML = `
+            <div id="btnMeuPerfil" class="topbar-profile-btn" title="Meu Perfil">
+                <img src="${userFoto}" alt="Foto">
+                <span>${userName}</span>
             </div>
-            <button id="btnLogout" class="hide-on-collapse" style="margin-top: 8px; width: 100%; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 6px 12px; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">Sair</button>
-            <button id="btnLogoutMini" class="show-on-collapse" style="display: none; margin-top: 8px; width: 40px; height: 40px; border-radius: 20px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; cursor: pointer; transition: all 0.2s;" title="Sair" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">
+            <button id="btnLogout" title="Sair" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'; this.style.color='#ef4444';" onmouseout="this.style.background='transparent'; this.style.color='var(--text-muted)';">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 2px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
             </button>
         `;
+        
+        topbar.appendChild(profileContainer);
 
         const doLogout = async () => {
             if(sidebarDb) {
@@ -236,7 +222,7 @@
         };
 
         document.getElementById('btnLogout').addEventListener('click', doLogout);
-        document.getElementById('btnLogoutMini').addEventListener('click', doLogout);
+        
         document.getElementById('btnMeuPerfil').addEventListener('click', goMeuPerfil);
     }
 

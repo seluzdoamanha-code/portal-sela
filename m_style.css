@@ -1,13 +1,13 @@
 /* 📱 Portal SELA Mobile CSS - App Dedicado */
 :root {
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --bg-dark: #0f0f11;
-    --bg-panel: #1a1a1f;
-    --bg-card: #222228;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --border: #2a2a35;
+    --primary: #FA9128;
+    --primary-hover: #E38324;
+    --bg-dark: #F8FAFC;
+    --bg-panel: #0B192C; /* Deep Blue para Header/Nav */
+    --bg-card: #FFFFFF;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+    --border: #E2E8F0;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
 }
@@ -58,7 +58,7 @@ input:-webkit-autofill:active {
 .m-header-title {
     font-size: 17px;
     font-weight: 600;
-    color: var(--text-main);
+    color: #FFFFFF;
 }
 
 .m-header-action {
