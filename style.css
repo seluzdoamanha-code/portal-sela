@@ -2,7 +2,7 @@
 :root {
     --primary: #06346F;
     --primary-hover: #042550;
-    --bg-dark: #F8FAFC;
+    --bg-dark: #F1F5F9;
     --bg-panel: #FFFFFF;
     --text-main: #1E293B;
     --text-muted: #64748B;
@@ -85,7 +85,7 @@ body.theme-dark {
 body.theme-light {
     --primary: #475569;
     --primary-hover: #334155;
-    --bg-dark: #f1f5f9;
+    --bg-dark: #f1f5f9; /* Slate 100 instead of F8FAFC */
     --bg-panel: #ffffff;
     --text-main: #1e293b;
     --text-muted: #64748b;
@@ -304,11 +304,12 @@ body {
 }
 
 .topbar {
-    padding: 24px 32px;
+    padding: 16px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
 }
 
 .btn {

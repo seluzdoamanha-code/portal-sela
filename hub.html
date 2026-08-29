@@ -16,24 +16,6 @@
     
     <style>
         /* Estilos específicos para o Hub */
-        .hub-header {
-            background: linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(192,132,252,0.05) 100%);
-            padding: 32px;
-            border-bottom: 1px solid var(--border);
-        }
-        .hub-title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: var(--text-main);
-        }
-        .hub-subtitle {
-            color: #818cf8;
-            font-size: 14px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
         
         .tabs-nav {
             display: flex;
@@ -123,14 +105,16 @@
             
             <div id="hubContent" style="display: none;">
                 <!-- Cabeçalho do Hub -->
-                <div class="hub-header">
-
-                    <div class="hub-subtitle" id="hubType">Tipo da Estrutura</div>
-                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 4px;">
-                        <h1 class="hub-title" id="hubName" style="margin: 0;">Nome da Estrutura</h1>
-                        <span id="btnFavoritarHub" style="cursor: pointer; font-size: 24px; user-select: none; line-height: 1;" title="Fixar no menu lateral">☆</span>
+                <header class="topbar">
+                    <div style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 14px;">
+                        <span style="color: var(--primary); font-weight: 500;">Portal SELA</span>
+                        <span style="font-size: 10px;">▶</span>
+                        <span id="hubType">Tipo da Estrutura</span>
+                        <span style="font-size: 10px;">▶</span>
+                        <span id="hubName" style="color: var(--text-main); font-weight: 600;">Nome da Estrutura</span>
+                        <span id="btnFavoritarHub" style="cursor: pointer; font-size: 16px; margin-left: 8px;" title="Fixar no menu lateral">☆</span>
                     </div>
-                </div>
+                </header>
                 
                 <!-- Sistema de Abas -->
                 <div class="tabs-nav">
