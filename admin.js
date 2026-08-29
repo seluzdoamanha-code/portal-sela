@@ -338,7 +338,7 @@ async function carregarDashboardsPessoas() {
 
         // Renderizar Perfis
         const renderCard = (title, val, color) => `
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px; border-left: 4px solid ${color};">
+            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; border-left: 4px solid ${color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)';" onmouseout="this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)';">
                 <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 8px;">${title}</div>
                 <div style="font-size: 24px; font-weight: 700; color: var(--text-main);">${val}</div>
             </div>
@@ -459,9 +459,9 @@ async function carregarDashboardsHome() {
         }
         
         const renderMetricCard = (icon, title, val, color) => `
-            <div style="background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border: 1px solid var(--border); border-radius: 16px; padding: 20px; border-top: 4px solid ${color}; display: flex; flex-direction: column; gap: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; border-top: 4px solid ${color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 8px; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)';">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="font-size: 20px; background: rgba(255,255,255,0.05); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">${icon}</div>
+                    <div style="font-size: 20px; background: rgba(0,0,0,0.05); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">${icon}</div>
                     <div style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">${title}</div>
                 </div>
                 <div style="font-size: 32px; font-weight: 800; color: var(--text-main); margin-top: 8px; line-height: 1;">

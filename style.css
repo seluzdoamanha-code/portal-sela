@@ -89,7 +89,7 @@ body.theme-light {
     --bg-panel: #ffffff;
     --text-main: #1e293b;
     --text-muted: #64748b;
-    --border: #e2e8f0;
+    --border: #cbd5e1; /* Changed from #e2e8f0 to increase contrast of borders/cards */
 }
 
 /* Tema Pastel */
@@ -397,12 +397,12 @@ select option, select optgroup {
 body:not(.theme-dark) .data-table th {
     background-color: #f1f5f9;
     color: #475569;
-    border-top: 1px solid #e2e8f0;
-    border-bottom: 2px solid #cbd5e1;
+    border-top: 1px solid var(--border);
+    border-bottom: 2px solid #94a3b8; /* Make the header bottom border stand out */
 }
 
 body:not(.theme-dark) .data-table td {
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border);
     color: #1e293b;
 }
 
@@ -472,7 +472,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .modal-tabs {
     display: flex;
     border-bottom: 1px solid var(--border);
-    background: rgba(0,0,0,0.2);
     padding: 0 16px;
     overflow-x: auto;
 }
