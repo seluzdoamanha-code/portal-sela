@@ -1,13 +1,13 @@
 /* 📱 Portal SELA Mobile CSS - App Dedicado */
 :root {
-    --primary: #FA9128;
-    --primary-hover: #E38324;
-    --bg-dark: #F8FAFC;
-    --bg-panel: #0B192C; /* Deep Blue para Header/Nav */
+    --primary: #475569;
+    --primary-hover: #334155;
+    --bg-dark: #F1F5F9; /* Slate 100 */
+    --bg-panel: #FFFFFF; /* White */
     --bg-card: #FFFFFF;
     --text-main: #1E293B;
     --text-muted: #64748B;
-    --border: #E2E8F0;
+    --border: #CBD5E1; /* Slate 300 for contrast */
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
 }
@@ -58,7 +58,7 @@ input:-webkit-autofill:active {
 .m-header-title {
     font-size: 17px;
     font-weight: 600;
-    color: #FFFFFF;
+    color: var(--text-main);
 }
 
 .m-header-action {
@@ -98,10 +98,10 @@ input:-webkit-autofill:active {
     width: 100%;
     height: calc(65px + var(--safe-bottom));
     padding-bottom: var(--safe-bottom);
-    background: rgba(26, 26, 31, 0.85);
+    background: rgba(255, 255, 255, 0.85); /* Changed to light */
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--border); /* Match theme border */
     display: flex;
     justify-content: space-around;
     align-items: center;
