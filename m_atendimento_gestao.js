@@ -493,7 +493,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
 
         const btnPresenca = item.presente ? 
             `<button class="btn-action" onclick="alternarPresenca('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s; font-weight: 600;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
-            `<button class="btn-action" onclick="alternarPresenca('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; transition: all 0.2s; font-weight: 500;">⚪ Confirmar Presença</button>`;
+            `<button class="btn-action" onclick="alternarPresenca('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(0,0,0,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; transition: all 0.2s; font-weight: 500;">⚪ Confirmar Presença</button>`;
 
         const div = document.createElement('div');
         div.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;';
@@ -522,7 +522,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             if (item.is_tratamento) {
                 const btnPresencaTrat = item.presente ? 
                     `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; font-weight: 600;">🟢 Presente</button>` :
-                    `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: 500;">⚪ Confirmar Presença</button>`;
+                    `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(0,0,0,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: 500;">⚪ Confirmar Presença</button>`;
                 buttonsHtml = `<div style="${buttonsContainerStyle}">${btnPresencaTrat}</div>`;
             } else {
                 buttonsHtml = `
@@ -1149,7 +1149,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             ${abandonos.map(a => `
                                 <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(239,68,68,0.1); border-radius: 6px; padding: 10px;">
-                                    <div style="font-size: 13px; font-weight: bold; color: var(--text-main);">${a.nome.toUpperCase()} <span style="font-size: 9px; padding: 2px 4px; border-radius: 8px; background: rgba(255,255,255,0.1); color: var(--text-muted);">${a.tipo}</span></div>
+                                    <div style="font-size: 13px; font-weight: bold; color: var(--text-main);">${a.nome.toUpperCase()} <span style="font-size: 9px; padding: 2px 4px; border-radius: 8px; background: rgba(0,0,0,0.1); color: var(--text-muted);">${a.tipo}</span></div>
                                     <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; margin-bottom: 8px;">Faltas: ${a.faltasConsecutivas} sem. | Última: ${a.lastDate}</div>
                                     ${a.telefone ? `<a href="https://wa.me/55${a.telefone.replace(/\D/g, '')}" target="_blank" class="btn" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); text-decoration: none; padding: 6px; font-size: 11px; border-radius: 6px; display: block; text-align: center;">Chamar no WhatsApp</a>` : '<span style="font-size: 11px; color: var(--text-muted);">Sem Telefone</span>'}
                                 </div>
@@ -1636,7 +1636,7 @@ window.carregarHistoricoGeralMobile = async function () {
             let anoHtml = `
                 <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 8px;">
                     <div onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'" style="padding: 16px; background: rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <strong style="color: var(--text-main); font-size: 16px;">📂 Ano ${ano} <span style="font-size: 12px; opacity: 0.7; font-weight: normal; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 12px;">(${Object.values(grupos[ano]).flat().length} registros)</span></strong>
+                        <strong style="color: var(--text-main); font-size: 16px;">📂 Ano ${ano} <span style="font-size: 12px; opacity: 0.7; font-weight: normal; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 12px;">(${Object.values(grupos[ano]).flat().length} registros)</span></strong>
                         <span style="color: var(--text-muted); font-size: 12px;">Expandir/Recolher</span>
                     </div>
                     <div style="display: none; padding: 16px;">
@@ -1812,7 +1812,7 @@ window.carregarFicharioMobile = function(allData, allTratamentos) {
                 <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total Fichário</div>
                 <div style="font-size: 24px; font-weight: 800; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${totalGeral}</div>
             </div>
-            <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.1);"></div>
+            <div style="width: 1px; height: 30px; background: rgba(0,0,0,0.1);"></div>
             <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
                 <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Letra ${letter}</div>
                 <div style="font-size: 24px; font-weight: 800; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${totalLetra}</div>

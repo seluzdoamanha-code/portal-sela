@@ -31,7 +31,7 @@
         
         .sub-tab-pill {
             padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;
-            background: rgba(255,255,255,0.05); color: var(--text-muted);
+            background: rgba(0,0,0,0.05); color: var(--text-muted);
             border: 1px solid var(--border); cursor: pointer; white-space: nowrap; transition: all 0.2s;
         }
         .sub-tab-pill.active {
@@ -42,7 +42,7 @@
         .list-container { padding: 16px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px; }
         
         .card-atendimento {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+            background: var(--bg-panel); border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             border-radius: 16px; padding: 16px;
         }
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
@@ -77,7 +77,7 @@
         </button>
         <div class="m-title">Gestão - Fraterno</div>
     </header>
-    <div id="statsDashboardMobile" style="display: flex; gap: 8px; padding: 10px 16px; background: rgba(255,255,255,0.01); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none;"></div>
+    <div id="statsDashboardMobile" style="display: flex; gap: 8px; padding: 10px 16px; background: rgba(0,0,0,0.01); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none;"></div>
 
     <div class="m-tabs" style="overflow-x: auto; white-space: nowrap; display: flex; scrollbar-width: none;">
         <div class="m-tab active" data-main="triagem" style="flex: none; min-width: 120px; padding: 12px 16px;">📋 Triagem</div>
