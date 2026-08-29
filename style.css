@@ -136,8 +136,8 @@ body {
 /* Sidebar Modern (Slim + Deep Blue) */
 .sidebar {
     width: 80px;
-    background-color: #0B192C; /* Deep Blue from mockup */
-    border-right: none;
+    background-color: var(--bg-dark); /* Changed from Deep Blue to match main background */
+    border-right: 1px solid var(--border); /* Added to separate from content */
     display: flex;
     flex-direction: column;
     z-index: 1000;
@@ -253,14 +253,14 @@ body {
 }
 
 .nav-item:hover {
-    background-color: rgba(255,255,255,0.05);
+    background-color: rgba(128,128,128,0.1);
     color: var(--text-main);
 }
 
 .nav-item.active {
-    background-color: rgba(79, 70, 229, 0.1);
-    color: #818cf8;
-    border-right: 3px solid #818cf8;
+    background-color: rgba(128,128,128,0.05);
+    color: var(--primary);
+    border-right: 3px solid var(--primary);
 }
 
 /* Main Content */

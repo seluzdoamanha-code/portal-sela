@@ -18,7 +18,7 @@
         const sidebarHTML = `
             <aside class="sidebar" style="display: flex; flex-direction: column;">
                 <div class="logo-area" style="display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
-                    <div style="display: flex; justify-content: center; width: 100%;"><img src="logo_sela.png" alt="Logo SELA" style="height: 40px; width: 40px; border-radius: 50%; object-fit: cover;"></div>
+                    <div style="display: flex; justify-content: center; width: 100%;"><img src="logo_sela_color.png" alt="Logo SELA" style="height: 40px; width: 40px; border-radius: 50%; object-fit: cover;"></div>
                     
                 </div>
                 <nav class="main-nav custom-scrollbar" id="sidebarNav" style="flex: 1; overflow-y: auto;">
@@ -48,7 +48,7 @@
         const mobileHeaderHTML = `
             <div class="mobile-header">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <img src="logo_sela.png" alt="Logo" style="height: 32px; border-radius: 50%;">
+                    <img src="logo_sela_color.png" alt="Logo" style="height: 32px; border-radius: 50%;">
                     <h2 style="font-size: 16px; margin: 0; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Portal SELA</h2>
                 </div>
                 <!-- Perfil icon for mobile (optional) -->
