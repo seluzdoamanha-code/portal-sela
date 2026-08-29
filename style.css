@@ -375,7 +375,8 @@ select option, select optgroup {
 
 .data-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     text-align: left;
 }
 
@@ -386,12 +387,37 @@ select option, select optgroup {
 
 .data-table th {
     font-weight: 600;
-    color: var(--text-muted);
-    font-size: 14px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.data-table tr:hover {
-    background-color: rgba(255,255,255,0.02);
+/* Tema Claro (Padrão) - Contraste Melhorado */
+body:not(.theme-dark) .data-table th {
+    background-color: #f1f5f9;
+    color: #475569;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 2px solid #cbd5e1;
+}
+
+body:not(.theme-dark) .data-table td {
+    border-bottom: 1px solid #e2e8f0;
+    color: #1e293b;
+}
+
+body:not(.theme-dark) .data-table tr:hover td {
+    background-color: #f8fafc;
+}
+
+/* Tema Escuro */
+body.theme-dark .data-table th {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+}
+
+body.theme-dark .data-table tr:hover td {
+    background-color: rgba(255, 255, 255, 0.02);
 }
 
 /* Modal */
