@@ -1713,7 +1713,7 @@ window.carregarAgendaGlobal = async function() {
                     : '<span style="color: #3b82f6; font-weight: bold;">[Restrito]</span>';
 
                 html += `
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; gap: 12px; align-items: center; position: relative; transition: all 0.2s;">
+                    <div style="background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; gap: 12px; align-items: center; position: relative; transition: all 0.2s;">
                         <div style="background: rgba(255,255,255,0.1); color: var(--text-main); border-radius: 6px; padding: 6px 10px; text-align: center; min-width: 55px;">
                             <div style="font-size: 14px; font-weight: bold;">${dataFormatada.split(' DE ')[0]}</div>
                             <div style="font-size: 10px; text-transform: uppercase;">${dataFormatada.split(' DE ')[1] || ''}</div>

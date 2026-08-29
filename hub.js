@@ -184,7 +184,7 @@ async function carregarDadosHome(estData) {
                     filhas.forEach(sub => {
                         const icone = window.obterIconeEstrutura ? window.obterIconeEstrutura(sub.nome, sub.tipo) : '🏛️';
                         html += `
-                            <a href="hub.html?id=${sub.id}" style="display: flex; align-items: center; gap: 12px; text-decoration: none; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--primary)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='var(--border)';">
+                            <a href="hub.html?id=${sub.id}" style="display: flex; align-items: center; gap: 12px; text-decoration: none; padding: 10px; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--primary)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='var(--border)';">
                                 <span style="font-size: 20px;">${icone}</span>
                                 <div>
                                     <div style="font-weight: 600; font-size: 12px;">${sub.nome.toUpperCase()}</div>
@@ -1243,7 +1243,7 @@ window.carregarAtividadesRegulares = async function () {
             };
 
             html += `
-                <div class="card-agenda" style="position: relative; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: all 0.2s;">
+                <div class="card-agenda" style="position: relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: all 0.2s;">
                     <div style="font-weight: 600; color: var(--text-main); font-size: 15px; margin-bottom: 6px; padding-right: 32px;">${at.titulo.toUpperCase()}</div>
                     <div style="display: flex; gap: 16px; font-size: 13px; color: var(--primary); font-weight: 500; margin-bottom: 8px;">
                         <span>📅 ${at.dia_semana}</span>
@@ -1418,7 +1418,7 @@ window.renderizarProjetosProcessos = () => {
                 }
 
                 docsHtml += `
-                <div style="background: rgba(255,255,255,0.03); border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);">
+                <div style="background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);">
                     <div style="display: flex; align-items: center; gap: 12px; cursor: pointer;" ${actionBtn}>
                         <div style="background: var(--bg-dark); padding: 8px; border-radius: 6px;">${dIcon}</div>
                         <span style="font-size: 14px; font-weight: 500;">${doc.titulo}</span>
@@ -1883,7 +1883,7 @@ window.carregarPainelGestaoIrradiacao = async function () {
                     <div style="display: flex; gap: 12px; flex-direction: column;">
                         <button id="btnModalRenovar" class="btn btn-primary" style="padding: 10px;">♻️ Renovar Tratamento (Zerar)</button>
                         <button id="btnModalHistorico" class="btn btn-secondary" style="padding: 10px;">🗄️ Mover para o Histórico</button>
-                        <button onclick="document.getElementById('modalFimLeitura').style.display='none'" class="btn" style="padding: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">Cancelar</button>
+                        <button onclick="document.getElementById('modalFimLeitura').style.display='none'" class="btn" style="padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-muted);">Cancelar</button>
                     </div>
                 </div>
             </div>
@@ -1924,7 +1924,7 @@ window.carregarPainelGestaoIrradiacao = async function () {
 
                         <div style="display: flex; gap: 12px;">
                             <button type="submit" class="btn btn-primary" style="flex: 1; padding: 10px;">💾 Salvar</button>
-                            <button type="button" onclick="document.getElementById('modalEdicaoIrradiacao').style.display='none'" class="btn" style="flex: 1; padding: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">Cancelar</button>
+                            <button type="button" onclick="document.getElementById('modalEdicaoIrradiacao').style.display='none'" class="btn" style="flex: 1; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-muted);">Cancelar</button>
                         </div>
                     </form>
                 </div>
@@ -2475,7 +2475,7 @@ window.carregarLimpezaIrradiacao = async function () {
 
             grupo.forEach(nome => {
                 html += `
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid transparent;" onmouseover="this.style.border='1px solid var(--border)'" onmouseout="this.style.border='1px solid transparent'">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 6px; border: 1px solid transparent;" onmouseover="this.style.border='1px solid var(--border)'" onmouseout="this.style.border='1px solid transparent'">
                         <input type="radio" name="grupo_${idx}" value="${nome}" style="accent-color: #ec4899;">
                         <span style="color: var(--text-main); font-size: 14px;">${nome}</span>
                         <span style="background: rgba(255,255,255,0.1); color: var(--text-muted); padding: 2px 6px; border-radius: 10px; font-size: 11px; margin-left: auto; white-space: nowrap;">${nomeCounts[nome]} registro(s)</span>
@@ -3871,7 +3871,7 @@ function renderizarCardAtendimentoItem(container, item) {
     const card = document.createElement('div');
     const isGrid = (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera');
 
-    card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 16px; transition: all 0.2s;';
+    card.style.cssText = 'background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 16px; transition: all 0.2s;';
     
     card.onmouseover = () => card.style.background = 'rgba(255,255,255,0.05)';
     card.onmouseout = () => card.style.background = 'rgba(255,255,255,0.03)';
@@ -4503,7 +4503,7 @@ window.abrirFichaAtendimento = async function (id) {
         if (error) throw error;
 
         let infoHtml = `
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+            <div style="background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
                 <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">${paciente.nome_completo.toUpperCase()}</h4>
                 <strong>Endereço:</strong> ${paciente.endereco_completo || 'Não informado'}<br>
                 <strong>WhatsApp:</strong> ${paciente.telefone || 'Não informado'}
@@ -4584,7 +4584,7 @@ window.abrirFichaAtendimento = async function (id) {
                     const badgeColor = isEsp ? '#818cf8' : '#3b82f6';
                     const badgeText = isEsp ? '✨ ESPIRITUAL' : '💧 FLUÍDICO';
                     sessoesHtml += `
-                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                             <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
@@ -4817,7 +4817,7 @@ window.carregarTratamentosAtivosDesktop = async function () {
         sortedPacIds.forEach(pacId => {
             const grupo = pacienteGrupos[pacId];
             const card = document.createElement('div');
-            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;';
+            card.style.cssText = 'background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;';
 
             // Layout de tratamentos da pessoa
             let tratsHTML = '';
@@ -5203,7 +5203,7 @@ window.carregarFilaPresencasDesktop = async function () {
             }
 
             const card = document.createElement('div');
-            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 16px; transition: all 0.2s;';
+            card.style.cssText = 'background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 16px; transition: all 0.2s;';
             card.onmouseover = () => card.style.background = 'rgba(255,255,255,0.05)';
             card.onmouseout = () => card.style.background = 'rgba(255,255,255,0.03)';
 
@@ -5275,7 +5275,7 @@ window.carregarEsperaTratamentoDesktop = async function () {
             const f = t.app_atendimento_fraterno;
             const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
             const card = document.createElement('div');
-            card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;';
+            card.style.cssText = 'background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;';
 
             let acaoHTML = '';
             if (t.tipo === 'Fluídico') {
@@ -5890,7 +5890,7 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
 
     patientsArray.forEach(p => {
         const card = document.createElement('div');
-        card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;';
+        card.style.cssText = 'background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;';
         
         const countA = p.atendimentos.length;
         const countT = p.tratamentos.length;
@@ -5943,7 +5943,7 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
                 <button onclick="abrirFichaPacienteFichario('${p.paciente_id}')" class="btn" style="flex: 1; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); font-size: 12px; padding: 10px; cursor:pointer; border-radius: 8px; text-align: center;">
                     👤 Ficha
                 </button>
-                <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="flex: 1; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); font-size: 12px; padding: 10px; cursor:pointer; border-radius: 8px; text-align: center;">
+                <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="flex: 1; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); font-size: 12px; padding: 10px; cursor:pointer; border-radius: 8px; text-align: center;">
                     📜 Histórico
                 </button>
                 <button onclick="iniciarNovoAtendimentoFichario('${safeId}')" class="btn" style="flex: 1; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-size: 12px; padding: 10px; cursor:pointer; border-radius: 8px; text-align: center;">
@@ -6066,7 +6066,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
         eventos.sort((a, b) => b.data - a.data); // newest first
         
         let html = `
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+            <div style="background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
                 <h4 style="margin-top:0; color:var(--primary); margin-bottom:12px;">${p.nome_completo.toUpperCase()}</h4>
                 <strong>Telefone:</strong> ${p.telefone ? formatarCelular(p.telefone) : 'Não informado'}<br>
                 <strong>Nascimento:</strong> ${p.data_nascimento ? p.data_nascimento.split('-').reverse().join('/') + ' (' + calcularIdade(p.data_nascimento) + ' anos)' : 'Não informado'}
@@ -6083,7 +6083,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                 if (ev.tipo === 'ATENDIMENTO') {
                     const badgeColor = ev.obj.status === 'Atendido' ? '#10b981' : (ev.obj.status === 'Em Tratamento' ? '#3b82f6' : (ev.obj.status === 'Cancelado' ? '#ef4444' : '#f59e0b'));
                     html += `
-                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                             <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Solicitação de Atendimento Fraterno</div>
@@ -6118,7 +6118,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                     const badgeColor = ev.obj.tipo === 'Espiritual' ? '#818cf8' : '#3b82f6';
                     const statusColor = ev.obj.status === 'Ativo' ? '#10b981' : 'var(--text-muted)';
                     html += `
-                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                             <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Início Tratamento ${ev.obj.tipo}</div>
@@ -6130,7 +6130,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                     const badgeColor = isEsp ? '#818cf8' : '#3b82f6';
                     const badgeText = isEsp ? '✨ ESPIRITUAL' : '💧 FLUÍDICO';
                     html += `
-                        <div style="position:relative; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                             <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
@@ -6273,7 +6273,7 @@ window.abrirFichaPacienteFichario = async function(pacienteId) {
                     </div>
                 </div>
 
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                <div style="background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
                     <h4 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Dados de Contato</h4>
                     
                     <div style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 24px;">

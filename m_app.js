@@ -46,7 +46,7 @@
                 if (post.link_url) {
                     const imgHtml = post.link_image ? `<img src="${post.link_image}" style="width: 100%; height: 140px; object-fit: cover; border-bottom: 1px solid var(--border);">` : '';
                     linkCard = `
-                    <a href="${post.link_url}" target="_blank" style="display: block; margin-top: 12px; text-decoration: none; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.03);">
+                    <a href="${post.link_url}" target="_blank" style="display: block; margin-top: 12px; text-decoration: none; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                         ${imgHtml}
                         <div style="padding: 12px;">
                             <div style="font-weight: 600; font-size: 14px; color: var(--primary); margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${post.link_title || post.link_url}</div>
