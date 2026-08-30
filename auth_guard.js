@@ -182,27 +182,27 @@ window.initGlobalNotifications = function(pessoaId) {
     const notifHtml = `
     <style>
         .notif-btn {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: var(--primary, #3b82f6);
-            color: white;
+            background: transparent;
+            color: var(--text-muted, #94a3b8);
             border: none;
-            border-radius: 50%;
-            width: 56px;
-            height: 56px;
-            display: flex;
+            width: 40px;
+            height: 40px;
+            display: none; /* Hidden until positioned */
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 99990;
-            font-size: 24px;
+            font-size: 22px;
+            opacity: 0.5;
+            position: relative;
+        }
+        .notif-btn.active {
+            opacity: 1;
+            color: #f59e0b; /* vivid color when there are notifications */
         }
         .notif-btn:hover { 
-            transform: scale(1.05);
-            background: #2563eb; 
+            transform: scale(1.1);
+            opacity: 1;
         }
         .notif-badge {
             position: absolute;
@@ -210,14 +210,13 @@ window.initGlobalNotifications = function(pessoaId) {
             right: -2px;
             background: #ef4444;
             color: white;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 12px;
             display: none; /* hidden by default */
             border: 2px solid var(--bg-panel, #1e293b);
         }
-        
         /* O Side-Sheet (Drawer) */
         .notif-sheet-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -288,6 +287,29 @@ window.initGlobalNotifications = function(pessoaId) {
     
     document.body.insertAdjacentHTML('beforeend', notifHtml);
     
+    // Posicionar o sino perto do perfil
+    const positionBell = () => {
+        const btn = document.getElementById('btnSinoGlobal');
+        if (!btn) return;
+        
+        const topbarProfile = document.querySelector('.topbar-profile-area');
+        if (topbarProfile) {
+            topbarProfile.insertAdjacentElement('afterbegin', btn);
+            btn.style.display = 'flex';
+            return;
+        }
+        
+        const mobileTopbar = document.querySelector('.topbar');
+        if (mobileTopbar) {
+            mobileTopbar.insertAdjacentElement('afterbegin', btn);
+            btn.style.display = 'flex';
+            return;
+        }
+        
+        setTimeout(positionBell, 500);
+    };
+    positionBell();
+    
     // Funções de Interação
     window.abrirNotificacoes = function(e) {
         if (e) e.stopPropagation();
@@ -348,12 +370,15 @@ window.initGlobalNotifications = function(pessoaId) {
     window.atualizarBadgeNotificacoes = function(notifs) {
         const unreadCount = notifs.filter(x => !x.lida).length;
         const badge = document.getElementById('badgeNotifCount');
-        if (badge) {
+        const btn = document.getElementById('btnSinoGlobal');
+        if (badge && btn) {
             if (unreadCount > 0) {
                 badge.style.display = 'block';
                 badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+                btn.classList.add('active');
             } else {
                 badge.style.display = 'none';
+                btn.classList.remove('active');
             }
         }
     };

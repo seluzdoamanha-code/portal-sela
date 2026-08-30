@@ -7111,6 +7111,10 @@ window.abrirAcompanhamentoEv = function(id) {
     document.getElementById('formEvAcompanhamento').reset();
     document.getElementById('inAcompEvId').value = id;
     
+    // Resetar equipe
+    window.acompEquipeAtual = [];
+    if (window.renderAcompEquipeHub) window.renderAcompEquipeHub();
+    
     // Sugerir a data de hoje
     document.getElementById('inAcompData').value = new Date().toISOString().split('T')[0];
     
@@ -7127,7 +7131,8 @@ window.salvarEvAcompanhamento = async function(e) {
     const novoAcomp = {
         data: document.getElementById('inAcompData').value,
         confirmado: document.getElementById('inAcompConfirmado').checked,
-        comentario: document.getElementById('inAcompObs').value
+        comentario: document.getElementById('inAcompObs').value,
+        equipe: window.acompEquipeAtual || []
     };
     
     const acompList = r.acompanhamentos_json || [];
@@ -7136,6 +7141,20 @@ window.salvarEvAcompanhamento = async function(e) {
     try {
         const { error } = await db.from('app_evangelho_lar').update({ acompanhamentos_json: acompList }).eq('id', id);
         if (error) throw error;
+        
+        // Se for um compromisso futuro, notificar a equipe escalada
+        const hoje = new Date().toISOString().split('T')[0];
+        if (novoAcomp.data >= hoje && novoAcomp.equipe.length > 0) {
+            const dtStr = novoAcomp.data.split('-').reverse().join('/');
+            const pacNome = r.pessoas ? r.pessoas.nome_completo : 'Assistido';
+            const notifications = novoAcomp.equipe.map(pessoa_id => ({
+                pessoa_id: pessoa_id,
+                titulo: 'Evangelho no Lar 🗓️',
+                mensagem: `Você foi agendado para o Evangelho de ${pacNome} no dia ${dtStr}.`,
+                lida: false
+            }));
+            await db.from('app_notificacoes').insert(notifications);
+        }
         
         document.getElementById('modalEvAcompanhamento').classList.remove('show');
         // Recarregar a mesma aba atual
