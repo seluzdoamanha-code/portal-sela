@@ -280,7 +280,7 @@ window.initGlobalNotifications = function(pessoaId) {
         </div>
     </div>
     
-    <button class="notif-btn" id="btnSinoGlobal" onclick="abrirNotificacoes()" title="Avisos e Lembretes">
+    <button class="notif-btn" id="btnSinoGlobal" title="Avisos e Lembretes">
         🔔
         <span class="notif-badge" id="badgeNotifCount">0</span>
     </button>
@@ -289,7 +289,8 @@ window.initGlobalNotifications = function(pessoaId) {
     document.body.insertAdjacentHTML('beforeend', notifHtml);
     
     // Funções de Interação
-    window.abrirNotificacoes = function() {
+    window.abrirNotificacoes = function(e) {
+        if (e) e.stopPropagation();
         document.getElementById('globalNotifOverlay').classList.add('open');
         carregarNotificacoes();
     };
@@ -298,6 +299,8 @@ window.initGlobalNotifications = function(pessoaId) {
     };
     
     document.getElementById('globalNotifOverlay').addEventListener('click', window.fecharNotificacoes);
+    document.getElementById('btnSinoGlobal').addEventListener('click', window.abrirNotificacoes);
+    document.querySelector('.notif-close').addEventListener('click', window.fecharNotificacoes);
     
     window.carregarNotificacoes = async function() {
         try {
