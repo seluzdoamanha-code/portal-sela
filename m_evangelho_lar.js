@@ -108,10 +108,12 @@ window.carregarDados = async function (aba) {
                 
                 filaManuais.forEach(r => {
                     const pac = r.pessoas;
+                    const zap = pac.celular ? `<div style="margin-bottom: 8px;"><a href="https://wa.me/55${pac.celular.replace(/\D/g, '')}" target="_blank" style="font-size: 13px; color: #10b981; text-decoration: none;">📱 ${pac.celular}</a></div>` : '';
                     html += `
                         <div class="ev-card">
                             <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px; color: var(--text-main);">${pac.nome_completo}</div>
-                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Aguardando designação de equipe</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Aguardando designação de equipe</div>
+                            ${zap}
                             <div style="margin-top: 16px;">
                                 <button class="m-btn m-btn-primary" style="width: 100%; background: #10b981; border-color: #10b981;" onclick="abrirSheetEv('${r.id}')">Continuar</button>
                             </div>

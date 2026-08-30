@@ -6839,11 +6839,13 @@ window.carregarConteudoEvangelho = async function(aba) {
                 
                 filaManuais.forEach(r => {
                     const pac = r.pessoas;
+                    const zap = pac.celular ? `<div style="margin-bottom: 4px;"><a href="https://wa.me/55${pac.celular.replace(/\D/g,'')}" target="_blank" style="font-size: 12px; color: #10b981; text-decoration: none;">📱 ${pac.celular}</a></div>` : '';
                     html += `
                         <div style="padding: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-weight: 600; color: var(--text-main); font-size: 15px;">${pac.nome_completo}</div>
-                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Aguardando designação de equipe</div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px; margin-bottom: 4px;">Aguardando designação de equipe</div>
+                                ${zap}
                             </div>
                             <button class="btn btn-primary" style="background: #10b981; border-color: #10b981;" onclick="abrirModalEvangelho('${r.id}')">Continuar</button>
                         </div>
@@ -6877,6 +6879,8 @@ window.carregarConteudoEvangelho = async function(aba) {
                     if (r.status_implantacao === 'Implantado') statusColor = '#10b981';
                     if (r.status_implantacao === 'Precisando de Acompanhamento') statusColor = '#f59e0b';
                     if (r.status_implantacao === 'Não Implantado') statusColor = '#ef4444';
+                    
+                    const zap = pac.celular ? `<div style="margin-bottom: 8px;"><a href="https://wa.me/55${pac.celular.replace(/\D/g,'')}" target="_blank" style="font-size: 12px; color: #10b981; text-decoration: none;">📱 ${pac.celular}</a></div>` : '';
                     
                     // Renderizar Acompanhamentos
                     let acompHtml = '';
@@ -6918,6 +6922,7 @@ window.carregarConteudoEvangelho = async function(aba) {
                         <div style="padding: 16px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; position: relative;">
                             <span style="position: absolute; top: 16px; right: 16px; background: ${statusColor}20; color: ${statusColor}; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 12px;">${r.status_implantacao}</span>
                             <div style="font-weight: 600; color: var(--text-main); font-size: 16px; margin-bottom: 4px; padding-right: 90px;">${pac.nome_completo}</div>
+                            ${zap}
                             <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📅 Implantação: ${dataImp} ${r.hora_implantacao ? 'às ' + r.hora_implantacao : ''}</div>
                             <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">🔄 Rotina: ${r.dia_semana_evangelho || '?'} às ${r.horario_evangelho || '?'}</div>
                             <div style="font-size: 13px; color: var(--text-muted);">👥 Equipe: ${equipe}</div>
