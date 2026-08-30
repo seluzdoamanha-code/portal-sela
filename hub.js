@@ -6791,7 +6791,7 @@ window.carregarConteudoEvangelho = async function(aba) {
         // 1. Fetch from app_evangelho_lar
         const { data: registros, error: err1 } = await db.from('app_evangelho_lar').select(`
             *,
-            pessoas!app_evangelho_lar_pessoa_id_fkey (id, nome_curto, nome_completo, celular, endereco, numero, complemento, bairro, cidade)
+            pessoas!app_evangelho_lar_pessoa_id_fkey (id, nome_curto, nome_completo, celular, endereco, bairro, cidade, estado)
         `);
         if (err1) throw err1;
         
@@ -6803,7 +6803,7 @@ window.carregarConteudoEvangelho = async function(aba) {
                 id, data,
                 app_atendimento_fraterno!inner (
                     paciente_id,
-                    pessoas!app_atendimento_fraterno_paciente_id_fkey!inner (id, nome_curto, nome_completo, celular, endereco, numero, complemento, bairro, cidade)
+                    pessoas!app_atendimento_fraterno_paciente_id_fkey!inner (id, nome_curto, nome_completo, celular, endereco, bairro, cidade, estado)
                 )
             `).eq('evangelho_lar', true);
             
@@ -6882,7 +6882,7 @@ window.carregarConteudoEvangelho = async function(aba) {
                     if (r.status_implantacao === 'Precisando de Acompanhamento') statusColor = '#f59e0b';
                     if (r.status_implantacao === 'Não Implantado') statusColor = '#ef4444';
                     
-                    const endCompleto = [pac.endereco, pac.numero, pac.complemento, pac.bairro, pac.cidade].filter(Boolean).join(', ') || 'Endereço não informado';
+                    const endCompleto = [pac.endereco, pac.bairro, pac.cidade ? `${pac.cidade} - ${pac.estado || ''}` : ''].filter(Boolean).join(', ') || 'Endereço não informado';
                     
                     const zap = pac.celular ? `<div style="margin-bottom: 8px;"><a href="https://wa.me/55${pac.celular.replace(/\D/g,'')}" target="_blank" style="font-size: 12px; color: #10b981; text-decoration: none;">📱 ${formatarCelular(pac.celular)}</a></div>` : '';
                     

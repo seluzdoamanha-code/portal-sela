@@ -75,7 +75,7 @@ window.carregarDados = async function (aba) {
         // Fetch from app_evangelho_lar
         const { data: registros, error: err1 } = await db.from('app_evangelho_lar').select(`
             *,
-            pessoas!app_evangelho_lar_pessoa_id_fkey (id, nome_curto, nome_completo, celular, endereco, numero, complemento, bairro, cidade)
+            pessoas!app_evangelho_lar_pessoa_id_fkey (id, nome_curto, nome_completo, celular, endereco, bairro, cidade, estado)
         `);
         if (err1) throw err1;
 
@@ -85,7 +85,7 @@ window.carregarDados = async function (aba) {
                 id, data,
                 app_atendimento_fraterno!inner (
                     paciente_id,
-                    pessoas!app_atendimento_fraterno_paciente_id_fkey!inner (id, nome_curto, nome_completo, celular, endereco, numero, complemento, bairro, cidade)
+                    pessoas!app_atendimento_fraterno_paciente_id_fkey!inner (id, nome_curto, nome_completo, celular, endereco, bairro, cidade, estado)
                 )
             `).eq('evangelho_lar', true);
 
@@ -162,7 +162,7 @@ window.carregarDados = async function (aba) {
                     if (r.status_implantacao === 'Precisando de Acompanhamento') statusColor = '#f59e0b';
                     if (r.status_implantacao === 'Não Implantado') statusColor = '#ef4444';
 
-                    const endCompleto = [pac.endereco, pac.numero, pac.complemento, pac.bairro, pac.cidade].filter(Boolean).join(', ') || 'Endereço não informado';
+                    const endCompleto = [pac.endereco, pac.bairro, pac.cidade ? `${pac.cidade} - ${pac.estado || ''}` : ''].filter(Boolean).join(', ') || 'Endereço não informado';
 
                     let acompHtml = '';
                     if (r.acompanhamentos_json && Array.isArray(r.acompanhamentos_json) && r.acompanhamentos_json.length > 0) {
