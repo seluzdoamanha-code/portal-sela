@@ -319,6 +319,7 @@
         if (n.includes('livro dos espíritos') || n.includes('livro dos espiritos')) return '📘';
         if (n.includes('ciclo 1')) return '🎨';
         if (n.includes('ciclo 2')) return '🚀';
+        if (n.includes('evangelho')) return '🙏';
         if (n.includes('evangelização') || n.includes('evangelizacao')) return '👶';
 
         // Regras de fallback por Tipo

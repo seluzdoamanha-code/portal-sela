@@ -107,10 +107,14 @@ async function checkAuth() {
         return;
     }
 
-    if (filename === 'm_config.html' && userProfile.nivel_acesso !== 'admin' && userProfile.nivel_acesso !== 'admin_global') {
         alert("Acesso restrito: Apenas administradores podem acessar as configurações.");
         window.location.replace('m_index.html');
         return;
+    }
+    
+    // Inicia notificações globais se houver ID
+    if (pessoaId) {
+        window.initGlobalNotifications(pessoaId);
     }
 }
 
@@ -165,15 +169,14 @@ window.isAdminGlobal = function() {
 };
 
 // --- GLOBAL NOTIFICATIONS SYSTEM ---
-window.addEventListener('DOMContentLoaded', () => {
+window.initGlobalNotifications = function(pessoaId) {
     // Apenas injeta se não for tela de login
     const path = window.location.pathname;
     if (path.includes('login.html')) return;
     
-    const profStr = localStorage.getItem('sela_user_profile');
-    if (!profStr) return;
-    const prof = JSON.parse(profStr);
-    if (!prof.pessoa_id) return; // precisa ter vinculado o id na tabela pessoas
+    if (!pessoaId) return; // precisa ter vinculado o id na tabela pessoas
+    
+    const injectUI = () => {
     
     // Injetar o CSS e HTML do SideSheet global no final do body
     const notifHtml = `
@@ -284,7 +287,6 @@ window.addEventListener('DOMContentLoaded', () => {
     `;
     
     document.body.insertAdjacentHTML('beforeend', notifHtml);
-    document.getElementById('globalNotifOverlay').addEventListener('click', fecharNotificacoes);
     
     // Funções de Interação
     window.abrirNotificacoes = function() {
@@ -295,11 +297,13 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('globalNotifOverlay').classList.remove('open');
     };
     
+    document.getElementById('globalNotifOverlay').addEventListener('click', window.fecharNotificacoes);
+    
     window.carregarNotificacoes = async function() {
         try {
             const { data, error } = await authDb.from('app_notificacoes')
                 .select('*')
-                .eq('pessoa_id', prof.pessoa_id)
+                .eq('pessoa_id', pessoaId)
                 .order('created_at', { ascending: false })
                 .limit(20);
                 
@@ -361,4 +365,11 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // Busca inicial do contador em background
     setTimeout(carregarNotificacoes, 1500);
-});
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectUI);
+    } else {
+        injectUI();
+    }
+};
