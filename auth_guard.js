@@ -287,7 +287,8 @@ window.initGlobalNotifications = function(pessoaId) {
     
     document.body.insertAdjacentHTML('beforeend', notifHtml);
     
-    // Posicionar o sino perto do perfil
+    // Posicionar o sino perto do perfil (tenta várias vezes pois o sidebar carrega assincrono)
+    let positionAttempts = 0;
     const positionBell = () => {
         const btn = document.getElementById('btnSinoGlobal');
         if (!btn) return;
@@ -311,7 +312,10 @@ window.initGlobalNotifications = function(pessoaId) {
             return;
         }
         
-        setTimeout(positionBell, 500);
+        positionAttempts++;
+        if (positionAttempts < 10) {
+            setTimeout(positionBell, 500);
+        }
     };
     positionBell();
     
