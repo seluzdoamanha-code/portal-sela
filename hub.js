@@ -6893,8 +6893,8 @@ window.carregarConteudoEvangelho = async function(aba) {
                         acompHtml += '<div style="font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Agenda & Acompanhamentos:</div>';
                         
                         const hoje = new Date().toISOString().split('T')[0];
-                        // Order by data descending
-                        const ordenados = [...r.acompanhamentos_json].sort((a, b) => b.data.localeCompare(a.data));
+                        const comIndex = r.acompanhamentos_json.map((a, i) => ({ ...a, _origIndex: i }));
+                        const ordenados = comIndex.sort((a, b) => b.data.localeCompare(a.data));
                         
                         // Pegar os ultimos 3
                         ordenados.slice(0, 3).forEach(a => {
@@ -6906,9 +6906,10 @@ window.carregarConteudoEvangelho = async function(aba) {
                                 : '';
                             
                             if (isFuturo) {
-                                acompHtml += `<div style="margin-bottom: 6px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 6px 8px; border-radius: 0 4px 4px 0;">
+                                acompHtml += `<div style="margin-bottom: 6px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 6px 8px; border-radius: 0 4px 4px 0; position: relative;">
+                                    <button title="Editar Compromisso" onclick="abrirAcompanhamentoEv('${r.id}', ${a._origIndex})" style="position: absolute; right: 8px; top: 6px; background: transparent; border: none; font-size: 14px; cursor: pointer;">✏️</button>
                                     <div style="color: #d97706; font-weight: 600; margin-bottom: 2px;">⏰ ${dtStr} - Compromisso Agendado</div>
-                                    <div style="color: var(--text-main); margin-bottom: ${eqAcomp ? '2px' : '0'};">${obs}</div>
+                                    <div style="color: var(--text-main); margin-bottom: ${eqAcomp ? '2px' : '0'}; padding-right: 20px;">${obs}</div>
                                     ${eqAcomp ? `<div style="color: var(--text-muted); font-size: 11px;">👥 Responsável / Participantes: ${eqAcomp}</div>` : ''}
                                 </div>`;
                             } else {
@@ -7107,17 +7108,29 @@ window.salvarEvangelho = async function(e) {
     }
 };
 
-window.abrirAcompanhamentoEv = function(id) {
+window.abrirAcompanhamentoEv = function(id, index = -1) {
     document.getElementById('formEvAcompanhamento').reset();
     document.getElementById('inAcompEvId').value = id;
+    document.getElementById('inAcompEvIndex').value = index;
     
-    // Resetar equipe
     window.acompEquipeAtual = [];
+    const r = window.evangelhoDataList.find(x => x.id === id);
+    
+    if (index >= 0 && r && r.acompanhamentos_json) {
+        const acomp = r.acompanhamentos_json[index];
+        if (acomp) {
+            document.getElementById('inAcompData').value = acomp.data;
+            document.getElementById('inAcompConfirmado').checked = acomp.confirmado;
+            document.getElementById('inAcompObs').value = acomp.comentario || acomp.observacao || '';
+            if (acomp.equipe && Array.isArray(acomp.equipe)) {
+                window.acompEquipeAtual = [...acomp.equipe];
+            }
+        }
+    } else {
+        document.getElementById('inAcompData').value = new Date().toISOString().split('T')[0];
+    }
+    
     if (window.renderAcompEquipeHub) window.renderAcompEquipeHub();
-    
-    // Sugerir a data de hoje
-    document.getElementById('inAcompData').value = new Date().toISOString().split('T')[0];
-    
     document.getElementById('modalEvAcompanhamento').classList.add('show');
 };
 
@@ -7125,6 +7138,7 @@ window.salvarEvAcompanhamento = async function(e) {
     e.preventDefault();
     
     const id = document.getElementById('inAcompEvId').value;
+    const index = parseInt(document.getElementById('inAcompEvIndex').value);
     const r = window.evangelhoDataList.find(x => x.id === id);
     if (!r) return;
     
@@ -7136,7 +7150,14 @@ window.salvarEvAcompanhamento = async function(e) {
     };
     
     const acompList = r.acompanhamentos_json || [];
-    acompList.push(novoAcomp);
+    let isNovo = true;
+    
+    if (index >= 0 && index < acompList.length) {
+        acompList[index] = novoAcomp;
+        isNovo = false;
+    } else {
+        acompList.push(novoAcomp);
+    }
     
     try {
         const { error } = await db.from('app_evangelho_lar').update({ acompanhamentos_json: acompList }).eq('id', id);
@@ -7144,7 +7165,8 @@ window.salvarEvAcompanhamento = async function(e) {
         
         // Se for um compromisso futuro, notificar a equipe escalada
         const hoje = new Date().toISOString().split('T')[0];
-        if (novoAcomp.data >= hoje && novoAcomp.equipe.length > 0) {
+        // Só dispara notificação se for novo ou se mudou a data para o futuro, vamos simplificar para disparar
+        if (isNovo && novoAcomp.data >= hoje && novoAcomp.equipe.length > 0) {
             const dtStr = novoAcomp.data.split('-').reverse().join('/');
             const pacNome = r.pessoas ? r.pessoas.nome_completo : 'Assistido';
             const notifications = novoAcomp.equipe.map(pessoa_id => ({

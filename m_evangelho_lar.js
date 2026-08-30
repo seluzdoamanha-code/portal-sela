@@ -170,7 +170,8 @@ window.carregarDados = async function (aba) {
                         acompHtml += '<div style="font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Últimos Contatos:</div>';
                         
                         const hoje = new Date().toISOString().split('T')[0];
-                        const ordenados = [...r.acompanhamentos_json].sort((a, b) => b.data.localeCompare(a.data));
+                        const comIndex = r.acompanhamentos_json.map((a, i) => ({ ...a, _origIndex: i }));
+                        const ordenados = comIndex.sort((a, b) => b.data.localeCompare(a.data));
                         
                         ordenados.slice(0, 3).forEach(a => {
                             if (!a.data) return;
@@ -182,9 +183,10 @@ window.carregarDados = async function (aba) {
                                 : '';
                             
                             if (isFuturo) {
-                                acompHtml += `<div style="margin-bottom: 6px; padding: 6px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; border-radius: 4px;">
+                                acompHtml += `<div style="margin-bottom: 6px; padding: 6px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; border-radius: 4px; position: relative;">
+                                    <button title="Editar" onclick="abrirSheetEvAcomp('${r.id}', ${a._origIndex})" style="position: absolute; right: 8px; top: 8px; background: transparent; border: none; font-size: 14px; cursor: pointer; color: #d97706;">✏️</button>
                                     <div style="color: #d97706; font-weight: 600; margin-bottom: 2px;">⏰ ${dtStr} - Compromisso Agendado</div>
-                                    <div style="color: var(--text-main); margin-bottom: ${eqAcomp ? '2px' : '0'};">${obs}</div>
+                                    <div style="color: var(--text-main); margin-bottom: ${eqAcomp ? '2px' : '0'}; padding-right: 24px;">${obs}</div>
                                     ${eqAcomp ? `<div style="color: var(--text-muted); font-size: 11px;">👥 Responsável / Participantes: ${eqAcomp}</div>` : ''}
                                 </div>`;
                             } else {
@@ -389,20 +391,29 @@ window.renderAcompEquipe = function() {
     container.innerHTML = html;
 };
 
-window.abrirSheetEvAcomp = function (id) {
+window.abrirSheetEvAcomp = function (id, index = -1) {
     document.getElementById('formEvAcomp').reset();
     document.getElementById('inAcompEvId').value = id;
+    document.getElementById('inAcompEvIndex').value = index;
     
     const r = window.evangelhoDataList.find(x => x.id === id);
     window.acompEquipeAtual = [];
-    if (r && r.equipe_json && Array.isArray(r.equipe_json)) {
-        window.acompEquipeAtual = [...r.equipe_json];
+    
+    if (index >= 0 && r && r.acompanhamentos_json) {
+        const acomp = r.acompanhamentos_json[index];
+        if (acomp) {
+            document.getElementById('inAcompData').value = acomp.data;
+            document.getElementById('inAcompConfirmado').checked = acomp.confirmado;
+            document.getElementById('inAcompObs').value = acomp.comentario || acomp.observacao || '';
+            if (acomp.equipe && Array.isArray(acomp.equipe)) {
+                window.acompEquipeAtual = [...acomp.equipe];
+            }
+        }
+    } else {
+        document.getElementById('inAcompData').value = new Date().toISOString().split('T')[0];
     }
     
     renderAcompEquipe();
-    
-    // Default to future date (next week) if want to schedule? No, default to today.
-    document.getElementById('inAcompData').value = new Date().toISOString().split('T')[0];
     document.getElementById('sheetEvAcomp').classList.add('show');
 };
 
@@ -414,6 +425,7 @@ window.salvarEvAcompanhamento = async function (e) {
     e.preventDefault();
 
     const id = document.getElementById('inAcompEvId').value;
+    const index = parseInt(document.getElementById('inAcompEvIndex').value);
     const r = window.evangelhoDataList.find(x => x.id === id);
     if (!r) return;
 
@@ -426,14 +438,21 @@ window.salvarEvAcompanhamento = async function (e) {
     };
 
     const acompList = r.acompanhamentos_json || [];
-    acompList.push(novoAcomp);
+    let isNovo = true;
+    
+    if (index >= 0 && index < acompList.length) {
+        acompList[index] = novoAcomp;
+        isNovo = false;
+    } else {
+        acompList.push(novoAcomp);
+    }
 
     try {
         const { error } = await db.from('app_evangelho_lar').update({ acompanhamentos_json: acompList }).eq('id', id);
         if (error) throw error;
         
         const hoje = new Date().toISOString().split('T')[0];
-        if (dt >= hoje && novoAcomp.equipe.length > 0) {
+        if (isNovo && dt >= hoje && novoAcomp.equipe.length > 0) {
             const pessoaNome = r.pessoas ? r.pessoas.nome_completo : 'Paciente';
             const notifs = novoAcomp.equipe.map(pessoa_id => ({
                 pessoa_id: pessoa_id,
