@@ -245,7 +245,7 @@ window.abrirSheetEv = function (id, pessoaId = '', pessoaNome = '', sessaoId = '
         document.getElementById('inEvId').value = r.id;
         document.getElementById('inEvPessoaId').value = r.pessoa_id;
         document.getElementById('inEvSessaoId').value = r.sessao_origem_id || '';
-        document.getElementById('lblEvPessoa').innerHTML = `Evangelho de<br><span style="font-size: 18px;">${r.pessoas.nome_completo}</span>`;
+        document.getElementById('lblEvPessoa').innerHTML = `🙏 Evangelho de<br><span style="font-size: 18px;">${r.pessoas.nome_completo}</span>`;
 
         document.getElementById('inEvData').value = r.data_implantacao || '';
         document.getElementById('inEvHora').value = r.hora_implantacao || '';
@@ -261,7 +261,7 @@ window.abrirSheetEv = function (id, pessoaId = '', pessoaNome = '', sessaoId = '
         document.getElementById('inEvId').value = '';
         document.getElementById('inEvPessoaId').value = pessoaId;
         document.getElementById('inEvSessaoId').value = sessaoId;
-        document.getElementById('lblEvPessoa').innerHTML = `Implantação para<br><span style="font-size: 18px;">${pessoaNome}</span>`;
+        document.getElementById('lblEvPessoa').innerHTML = `🙏 Implantação para<br><span style="font-size: 18px;">${pessoaNome}</span>`;
         document.getElementById('inEvStatus').value = 'Em andamento';
     }
 

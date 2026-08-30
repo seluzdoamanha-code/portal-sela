@@ -255,7 +255,7 @@ async function carregarDadosHome(estData) {
             appsGrid.innerHTML += `
                 <div class="card-agenda" style="background: rgba(16, 185, 129, 0.02); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
-                        <div style="font-weight: 600; color: #10b981; font-size: 14px; margin-bottom: 6px;">🏡 EVANGELHO NO LAR</div>
+                        <div style="font-weight: 600; color: #10b981; font-size: 14px; margin-bottom: 6px;">🙏 EVANGELHO NO LAR</div>
                         <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Gestão de implantações e acompanhamento de Evangelho no Lar.</div>
                     </div>
                     <button class="btn" onclick="mudarAbaAtalho('abaApps')" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 12px; padding: 6px 12px;">Abrir Painel ➔</button>
@@ -6580,7 +6580,7 @@ window.carregarModuloEvangelho = async function() {
             <!-- Menu Lateral do Mini App -->
             <div style="width: 250px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; flex-shrink: 0;">
                 <div style="padding: 16px; border-bottom: 1px solid var(--border); background: rgba(16, 185, 129, 0.05);">
-                    <h2 style="font-size: 16px; color: #10b981; margin: 0;">🏡 Evangelho no Lar</h2>
+                    <h2 style="font-size: 16px; color: #10b981; margin: 0;">🙏 Evangelho no Lar</h2>
                     <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Caixa de Entrada e Gestão</p>
                 </div>
                 <div style="padding: 12px; display: flex; flex-direction: column; gap: 4px;">
@@ -7034,7 +7034,7 @@ window.abrirSheetEv = function(id, pessoaId = '', pessoaNome = '', sessaoId = ''
         document.getElementById('inEvId').value = r.id;
         document.getElementById('inEvPessoaId').value = r.pessoa_id;
         document.getElementById('inEvSessaoId').value = r.sessao_origem_id || '';
-        document.getElementById('lblEvPessoa').innerHTML = `🏡 Implantação para:<br><span style="font-size: 20px;">${r.pessoas.nome_completo}</span>`;
+        document.getElementById('lblEvPessoa').innerHTML = `🙏 Implantação para:<br><span style="font-size: 20px;">${r.pessoas.nome_completo}</span>`;
         
         document.getElementById('inEvData').value = r.data_implantacao || '';
         document.getElementById('inEvHora').value = r.hora_implantacao || '';
@@ -7049,7 +7049,7 @@ window.abrirSheetEv = function(id, pessoaId = '', pessoaNome = '', sessaoId = ''
         document.getElementById('inEvId').value = '';
         document.getElementById('inEvPessoaId').value = pessoaId;
         document.getElementById('inEvSessaoId').value = sessaoId;
-        document.getElementById('lblEvPessoa').innerHTML = `🏡 Implantação para:<br><span style="font-size: 20px;">${pessoaNome}</span>`;
+        document.getElementById('lblEvPessoa').innerHTML = `🙏 Implantação para:<br><span style="font-size: 20px;">${pessoaNome}</span>`;
         document.getElementById('inEvStatus').value = 'Em andamento';
     }
     renderEvangelhoEquipeHub();
