@@ -6907,9 +6907,9 @@ window.carregarConteudoEvangelho = async function(aba) {
                             
                             if (isFuturo) {
                                 acompHtml += `<div style="margin-bottom: 6px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 6px 8px; border-radius: 0 4px 4px 0;">
-                                    <div style="color: #d97706; font-weight: 600; margin-bottom: 2px;">⏰ Compromisso Agendado - ${dtStr}</div>
+                                    <div style="color: #d97706; font-weight: 600; margin-bottom: 2px;">⏰ ${dtStr} - Compromisso Agendado</div>
                                     <div style="color: var(--text-main); margin-bottom: ${eqAcomp ? '2px' : '0'};">${obs}</div>
-                                    ${eqAcomp ? `<div style="color: var(--text-muted); font-size: 11px;">👥 Participantes: ${eqAcomp}</div>` : ''}
+                                    ${eqAcomp ? `<div style="color: var(--text-muted); font-size: 11px;">👥 Responsável / Participantes: ${eqAcomp}</div>` : ''}
                                 </div>`;
                             } else {
                                 const icon = a.confirmou ? '✅' : '📝';
