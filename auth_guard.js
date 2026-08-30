@@ -293,6 +293,7 @@ window.initGlobalNotifications = function(pessoaId) {
         const btn = document.getElementById('btnSinoGlobal');
         if (!btn) return;
         
+        // 1. Web (Desktop)
         const topbarProfile = document.querySelector('.topbar-profile-area');
         if (topbarProfile) {
             const btnLogout = document.getElementById('btnLogout');
@@ -305,13 +306,33 @@ window.initGlobalNotifications = function(pessoaId) {
             return;
         }
         
-        const mobileTopbar = document.querySelector('.topbar');
-        if (mobileTopbar) {
-            mobileTopbar.insertAdjacentElement('afterbegin', btn);
+        // 2. Mobile: Home (m_index.html)
+        const mHeader = document.querySelector('.m-header');
+        if (mHeader) {
+            mHeader.insertBefore(btn, mHeader.lastElementChild);
             btn.style.display = 'flex';
             return;
         }
         
+        // 3. Mobile: Internal Pages (m_evangelho_lar.html)
+        const mTopbar = document.querySelector('.m-topbar');
+        if (mTopbar) {
+            mTopbar.appendChild(btn);
+            btn.style.display = 'flex';
+            const spacer = mTopbar.querySelector('div[style*="width: 40px"]');
+            if (spacer) spacer.style.display = 'none';
+            return;
+        }
+        
+        // 4. Mobile: Hub Pages (m_hub.html, m_atendimento_gestao.html)
+        const mHeaderNav = document.querySelector('.m-header-nav');
+        if (mHeaderNav) {
+            mHeaderNav.appendChild(btn);
+            btn.style.display = 'flex';
+            return;
+        }
+        
+        // Tenta novamente se não achou (pode estar carregando)
         positionAttempts++;
         if (positionAttempts < 10) {
             setTimeout(positionBell, 500);
