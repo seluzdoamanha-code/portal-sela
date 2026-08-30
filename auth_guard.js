@@ -294,7 +294,12 @@ window.initGlobalNotifications = function(pessoaId) {
         
         const topbarProfile = document.querySelector('.topbar-profile-area');
         if (topbarProfile) {
-            topbarProfile.insertAdjacentElement('afterbegin', btn);
+            const btnLogout = document.getElementById('btnLogout');
+            if (btnLogout) {
+                topbarProfile.insertBefore(btn, btnLogout);
+            } else {
+                topbarProfile.appendChild(btn);
+            }
             btn.style.display = 'flex';
             return;
         }
