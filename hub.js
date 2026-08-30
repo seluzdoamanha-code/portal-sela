@@ -115,15 +115,16 @@ async function carregarDadosEstrutura() {
             const isAssistencia = nomeEstrutura.includes('assist') && nomeEstrutura.includes('social');
             const isAtendimento = nomeEstrutura.includes('atendimento');
             const isBiblioteca = nomeEstrutura.includes('biblioteca');
+            const isEvangelho = nomeEstrutura.includes('evangelho');
 
             // Lógica de exibir Abas com base na configuração do DB
             let config = data.abas_config || {
                 equipe: true, agenda: true, projetos: true, documentos: true,
                 tesouraria: false,
-                apps: isIrradiacao || isAssistencia || isAtendimento || isBiblioteca
+                apps: isIrradiacao || isAssistencia || isAtendimento || isBiblioteca || isEvangelho
             };
 
-            if (isIrradiacao || isAssistencia || isAtendimento || isBiblioteca) {
+            if (isIrradiacao || isAssistencia || isAtendimento || isBiblioteca || isEvangelho) {
                 config.apps = true;
             }
 
@@ -140,7 +141,7 @@ async function carregarDadosEstrutura() {
             if (config.apps) {
                 const btnApps = document.querySelector('[data-target="abaApps"]');
                 if (btnApps) btnApps.style.display = 'block';
-                if (isIrradiacao || isAssistencia || isAtendimento || isBiblioteca) {
+                if (isIrradiacao || isAssistencia || isAtendimento || isBiblioteca || isEvangelho) {
                     carregarAppMiniApps();
                 }
             }
@@ -233,6 +234,7 @@ async function carregarDadosHome(estData) {
         const isAssistencia = nomeEstrutura.includes('assist') && nomeEstrutura.includes('social');
         const isAtendimento = nomeEstrutura.includes('atendimento');
         const isBiblioteca = nomeEstrutura.includes('biblioteca');
+        const isEvangelho = nomeEstrutura.includes('evangelho');
 
         let hasApps = false;
 
@@ -245,6 +247,18 @@ async function carregarDadosHome(estData) {
                         <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Gestão de Atendimento Fraterno e Tratamentos Fluídicos e Espiritual.</div>
                     </div>
                     <button class="btn" onclick="mudarAbaAtalho('abaApps')" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 12px; padding: 6px 12px;">Abrir Painel ➔</button>
+                </div>
+            `;
+        }
+        if (isEvangelho && config.apps) {
+            hasApps = true;
+            appsGrid.innerHTML += `
+                <div class="card-agenda" style="background: rgba(16, 185, 129, 0.02); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="font-weight: 600; color: #10b981; font-size: 14px; margin-bottom: 6px;">🏡 EVANGELHO NO LAR</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Gestão de implantações e acompanhamento de Evangelho no Lar.</div>
+                    </div>
+                    <button class="btn" onclick="mudarAbaAtalho('abaApps')" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 12px; padding: 6px 12px;">Abrir Painel ➔</button>
                 </div>
             `;
         }
@@ -1555,6 +1569,7 @@ window.carregarAppMiniApps = async function () {
     const isAssistencia = nomeEstrutura.includes('assist') && nomeEstrutura.includes('social');
     const isAtendimento = nomeEstrutura.includes('atendimento');
     const isBiblioteca = nomeEstrutura.includes('biblioteca');
+    const isEvangelho = nomeEstrutura.includes('evangelho');
 
     let cards = '';
 
@@ -1618,6 +1633,11 @@ window.carregarAppMiniApps = async function () {
                 <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Clique aqui para abrir o acervo de livros e solicitar empréstimos no site oficial.</p>
             </div>
         `;
+    }
+    
+    if (isEvangelho) {
+        window.carregarModuloEvangelho();
+        return; // Retorna para não sobrescrever o containerApps com os cards
     }
 
     container.innerHTML = `
