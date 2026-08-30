@@ -6,6 +6,14 @@ window.estruturaId = urlParams.get('id');
 window.evangelhoDataList = [];
 window.evangelhoPessoasDict = {};
 
+function formatarCelularEv(v) {
+    if (!v) return '';
+    let d = v.replace(/\D/g, '');
+    if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+    if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+    return v;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Carregar Equipe (apenas pessoas com perfil Atendente Fraterno)
     try {
@@ -93,7 +101,7 @@ window.carregarDados = async function (aba) {
                 let html = '';
                 fila.forEach(s => {
                     const pac = s.app_atendimento_fraterno.pessoas;
-                    const zap = pac.celular ? `<a href="https://wa.me/55${pac.celular.replace(/\D/g, '')}" target="_blank" style="font-size: 13px; color: #10b981; text-decoration: none;">📱 ${pac.celular}</a>` : '';
+                    const zap = pac.celular ? `<a href="https://wa.me/55${pac.celular.replace(/\D/g, '')}" target="_blank" style="font-size: 13px; color: #10b981; text-decoration: none;">📱 ${formatarCelularEv(pac.celular)}</a>` : '';
                     html += `
                         <div class="ev-card">
                             <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px; color: var(--text-main);">${pac.nome_completo}</div>
@@ -108,7 +116,7 @@ window.carregarDados = async function (aba) {
                 
                 filaManuais.forEach(r => {
                     const pac = r.pessoas;
-                    const zap = pac.celular ? `<div style="margin-bottom: 8px;"><a href="https://wa.me/55${pac.celular.replace(/\D/g, '')}" target="_blank" style="font-size: 13px; color: #10b981; text-decoration: none;">📱 ${pac.celular}</a></div>` : '';
+                    const zap = pac.celular ? `<div style="margin-bottom: 8px;"><a href="https://wa.me/55${pac.celular.replace(/\D/g, '')}" target="_blank" style="font-size: 13px; color: #10b981; text-decoration: none;">📱 ${formatarCelularEv(pac.celular)}</a></div>` : '';
                     html += `
                         <div class="ev-card">
                             <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px; color: var(--text-main);">${pac.nome_completo}</div>
@@ -139,7 +147,7 @@ window.carregarDados = async function (aba) {
 
                 filtrados.forEach(r => {
                     const pac = r.pessoas;
-                    const zap = pac.celular ? `<a href="https://wa.me/55${pac.celular.replace(/\D/g, '')}" target="_blank" style="font-size: 13px; color: #10b981; text-decoration: none;">📱 ${pac.celular}</a>` : '';
+                    const zap = pac.celular ? `<a href="https://wa.me/55${pac.celular.replace(/\D/g, '')}" target="_blank" style="font-size: 13px; color: #10b981; text-decoration: none;">📱 ${formatarCelularEv(pac.celular)}</a>` : '';
                     
                     let equipeNomes = 'Não definida';
                     if (r.equipe_json && Array.isArray(r.equipe_json) && r.equipe_json.length > 0) {

@@ -6824,7 +6824,7 @@ window.carregarConteudoEvangelho = async function(aba) {
                 
                 fila.forEach(s => {
                     const pac = s.app_atendimento_fraterno.pessoas;
-                    const zap = pac.celular ? `<a href="https://wa.me/55${pac.celular.replace(/\D/g,'')}" target="_blank" style="font-size: 12px; color: #10b981; text-decoration: none;">📱 ${pac.celular}</a>` : '';
+                    const zap = pac.celular ? `<a href="https://wa.me/55${pac.celular.replace(/\D/g,'')}" target="_blank" style="font-size: 12px; color: #10b981; text-decoration: none;">📱 ${formatarCelular(pac.celular)}</a>` : '';
                     html += `
                         <div style="padding: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
                             <div>
@@ -6839,7 +6839,7 @@ window.carregarConteudoEvangelho = async function(aba) {
                 
                 filaManuais.forEach(r => {
                     const pac = r.pessoas;
-                    const zap = pac.celular ? `<div style="margin-bottom: 4px;"><a href="https://wa.me/55${pac.celular.replace(/\D/g,'')}" target="_blank" style="font-size: 12px; color: #10b981; text-decoration: none;">📱 ${pac.celular}</a></div>` : '';
+                    const zap = pac.celular ? `<div style="margin-bottom: 4px;"><a href="https://wa.me/55${pac.celular.replace(/\D/g,'')}" target="_blank" style="font-size: 12px; color: #10b981; text-decoration: none;">📱 ${formatarCelular(pac.celular)}</a></div>` : '';
                     html += `
                         <div style="padding: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
                             <div>
@@ -6880,7 +6880,7 @@ window.carregarConteudoEvangelho = async function(aba) {
                     if (r.status_implantacao === 'Precisando de Acompanhamento') statusColor = '#f59e0b';
                     if (r.status_implantacao === 'Não Implantado') statusColor = '#ef4444';
                     
-                    const zap = pac.celular ? `<div style="margin-bottom: 8px;"><a href="https://wa.me/55${pac.celular.replace(/\D/g,'')}" target="_blank" style="font-size: 12px; color: #10b981; text-decoration: none;">📱 ${pac.celular}</a></div>` : '';
+                    const zap = pac.celular ? `<div style="margin-bottom: 8px;"><a href="https://wa.me/55${pac.celular.replace(/\D/g,'')}" target="_blank" style="font-size: 12px; color: #10b981; text-decoration: none;">📱 ${formatarCelular(pac.celular)}</a></div>` : '';
                     
                     // Renderizar Acompanhamentos
                     let acompHtml = '';
