@@ -6678,6 +6678,7 @@ window.carregarModuloEvangelho = async function() {
                 <h2 style="margin-bottom: 24px; font-size: 20px; color: var(--text-main);">Registrar Acompanhamento</h2>
                 <form id="formEvAcompanhamento">
                     <input type="hidden" id="inAcompEvId">
+                    <input type="hidden" id="inAcompEvIndex" value="-1">
                     <div class="form-group" style="margin-bottom: 20px;">
                         <label>Data do Contato</label>
                         <input type="date" id="inAcompData" class="form-control" required>
@@ -6936,7 +6937,7 @@ window.carregarConteudoEvangelho = async function(aba) {
                             ${acompHtml}
                             
                             <div style="margin-top: 16px; display: flex; gap: 8px;">
-                                <button class="btn btn-secondary" style="flex: 1; font-size: 12px; padding: 6px;" onclick="abrirSheetEv('${r.id}')">Editar</button>
+                                <button class="btn btn-secondary" style="flex: 1; font-size: 12px; padding: 6px;" onclick="abrirModalEvangelho('${r.id}')">Editar</button>
                                 <button class="btn btn-secondary" style="flex: 1; font-size: 12px; padding: 6px;" onclick="abrirAcompanhamentoEv('${r.id}')">+ Acompanhamento</button>
                             </div>
                         </div>
