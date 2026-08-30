@@ -6674,11 +6674,11 @@ window.carregarModuloEvangelho = async function() {
         
         <!-- Modal Acompanhamento -->
         <div class="modal-overlay" id="modalEvAcompanhamento">
-            <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-content" style="max-width: 500px; padding: 32px;">
                 <h2 style="margin-bottom: 24px; font-size: 20px; color: var(--text-main);">Registrar Acompanhamento</h2>
                 <form id="formEvAcompanhamento">
                     <input type="hidden" id="inAcompEvId">
-                    <div class="form-group" style="margin-bottom: 16px;">
+                    <div class="form-group" style="margin-bottom: 20px;">
                         <label>Data do Contato</label>
                         <input type="date" id="inAcompData" class="form-control" required>
                     </div>
@@ -6791,7 +6791,7 @@ window.carregarConteudoEvangelho = async function(aba) {
         // 1. Fetch from app_evangelho_lar
         const { data: registros, error: err1 } = await db.from('app_evangelho_lar').select(`
             *,
-            pessoas!app_evangelho_lar_pessoa_id_fkey (id, nome_curto, nome_completo, celular)
+            pessoas!app_evangelho_lar_pessoa_id_fkey (id, nome_curto, nome_completo, celular, endereco, numero, complemento, bairro, cidade)
         `);
         if (err1) throw err1;
         
@@ -6803,7 +6803,7 @@ window.carregarConteudoEvangelho = async function(aba) {
                 id, data,
                 app_atendimento_fraterno!inner (
                     paciente_id,
-                    pessoas!app_atendimento_fraterno_paciente_id_fkey!inner (id, nome_curto, nome_completo, celular)
+                    pessoas!app_atendimento_fraterno_paciente_id_fkey!inner (id, nome_curto, nome_completo, celular, endereco, numero, complemento, bairro, cidade)
                 )
             `).eq('evangelho_lar', true);
             
@@ -6874,11 +6874,15 @@ window.carregarConteudoEvangelho = async function(aba) {
                     const pac = r.pessoas;
                     const equipe = Array.isArray(r.equipe_json) ? r.equipe_json.map(id => window.evangelhoPessoasDict[id] || 'Desconhecido').join(', ') : 'Não definida';
                     
+                    const horaImp = r.hora_implantacao ? r.hora_implantacao.substring(0,5) : '---';
+                    const horaEv = r.horario_evangelho ? r.horario_evangelho.substring(0,5) : '---';
                     const dataImp = r.data_implantacao ? r.data_implantacao.split('-').reverse().join('/') : 'A definir';
                     let statusColor = '#3b82f6';
                     if (r.status_implantacao === 'Implantado') statusColor = '#10b981';
                     if (r.status_implantacao === 'Precisando de Acompanhamento') statusColor = '#f59e0b';
                     if (r.status_implantacao === 'Não Implantado') statusColor = '#ef4444';
+                    
+                    const endCompleto = [pac.endereco, pac.numero, pac.complemento, pac.bairro, pac.cidade].filter(Boolean).join(', ') || 'Endereço não informado';
                     
                     const zap = pac.celular ? `<div style="margin-bottom: 8px;"><a href="https://wa.me/55${pac.celular.replace(/\D/g,'')}" target="_blank" style="font-size: 12px; color: #10b981; text-decoration: none;">📱 ${formatarCelular(pac.celular)}</a></div>` : '';
                     
@@ -6900,18 +6904,18 @@ window.carregarConteudoEvangelho = async function(aba) {
                             const eqAcomp = (a.equipe && Array.isArray(a.equipe) && a.equipe.length > 0) 
                                 ? a.equipe.map(id => window.evangelhoPessoasDict[id] || 'Desc.').join(', ') 
                                 : '';
-                                
+                            
                             if (isFuturo) {
                                 acompHtml += `<div style="margin-bottom: 6px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 6px 8px; border-radius: 0 4px 4px 0;">
-                                    <div style="color: #d97706; font-weight: 600; margin-bottom: 2px;">🗓️ Compromisso Agendado: ${dtStr}</div>
+                                    <div style="color: #d97706; font-weight: 600; margin-bottom: 2px;">⏰ Compromisso Agendado - ${dtStr}</div>
                                     <div style="color: var(--text-main); margin-bottom: ${eqAcomp ? '2px' : '0'};">${obs}</div>
-                                    ${eqAcomp ? `<div style="color: var(--text-muted); font-size: 11px;">👥 Equipe: ${eqAcomp}</div>` : ''}
+                                    ${eqAcomp ? `<div style="color: var(--text-muted); font-size: 11px;">👥 Participantes: ${eqAcomp}</div>` : ''}
                                 </div>`;
                             } else {
                                 const icon = a.confirmou ? '✅' : '📝';
-                                acompHtml += `<div style="margin-bottom: 6px;">
-                                    <span style="color:var(--text-muted)">${dtStr}</span> ${icon} ${obs}
-                                    ${eqAcomp ? `<br><span style="color: var(--text-muted); font-size: 11px;">👥 Equipe da visita: ${eqAcomp}</span>` : ''}
+                                acompHtml += `<div style="margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                                    <div style="margin-bottom: 4px;"><span style="color:var(--text-muted)">${dtStr}</span> ${icon} ${obs}</div>
+                                    ${eqAcomp ? `<div style="color: var(--text-muted); font-size: 11px;">👥 Participantes: ${eqAcomp}</div>` : ''}
                                 </div>`;
                             }
                         });
@@ -6923,9 +6927,10 @@ window.carregarConteudoEvangelho = async function(aba) {
                             <span style="position: absolute; top: 16px; right: 16px; background: ${statusColor}20; color: ${statusColor}; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 12px;">${r.status_implantacao}</span>
                             <div style="font-weight: 600; color: var(--text-main); font-size: 16px; margin-bottom: 4px; padding-right: 90px;">${pac.nome_completo}</div>
                             ${zap}
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📅 Implantação: ${dataImp} ${r.hora_implantacao ? 'às ' + r.hora_implantacao : ''}</div>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">🔄 Rotina: ${r.dia_semana_evangelho || '?'} às ${r.horario_evangelho || '?'}</div>
-                            <div style="font-size: 13px; color: var(--text-muted);">👥 Equipe: ${equipe}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📍 ${endCompleto}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📅 Implantação: ${dataImp} às ${horaImp}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">🔄 Rotina: ${r.dia_semana_evangelho || '?'} às ${horaEv}</div>
+                            <div style="font-size: 13px; color: var(--text-muted);">👥 Equipe da Implantação: ${equipe}</div>
                             
                             ${acompHtml}
                             

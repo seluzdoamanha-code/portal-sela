@@ -75,7 +75,7 @@ window.carregarDados = async function (aba) {
         // Fetch from app_evangelho_lar
         const { data: registros, error: err1 } = await db.from('app_evangelho_lar').select(`
             *,
-            pessoas!app_evangelho_lar_pessoa_id_fkey (id, nome_curto, nome_completo, celular)
+            pessoas!app_evangelho_lar_pessoa_id_fkey (id, nome_curto, nome_completo, celular, endereco, numero, complemento, bairro, cidade)
         `);
         if (err1) throw err1;
 
@@ -85,7 +85,7 @@ window.carregarDados = async function (aba) {
                 id, data,
                 app_atendimento_fraterno!inner (
                     paciente_id,
-                    pessoas!app_atendimento_fraterno_paciente_id_fkey!inner (id, nome_curto, nome_completo, celular)
+                    pessoas!app_atendimento_fraterno_paciente_id_fkey!inner (id, nome_curto, nome_completo, celular, endereco, numero, complemento, bairro, cidade)
                 )
             `).eq('evangelho_lar', true);
 
@@ -154,19 +154,46 @@ window.carregarDados = async function (aba) {
                         equipeNomes = r.equipe_json.map(id => window.evangelhoPessoasDict[id] || '...').join(', ');
                     }
 
+                    const horaImp = r.hora_implantacao ? r.hora_implantacao.substring(0,5) : '---';
+                    const horaEv = r.horario_evangelho ? r.horario_evangelho.substring(0,5) : '---';
                     const dataImp = r.data_implantacao ? r.data_implantacao.split('-').reverse().join('/') : 'A definir';
                     let statusColor = '#3b82f6';
                     if (r.status_implantacao === 'Implantado') statusColor = '#10b981';
                     if (r.status_implantacao === 'Precisando de Acompanhamento') statusColor = '#f59e0b';
                     if (r.status_implantacao === 'Não Implantado') statusColor = '#ef4444';
 
+                    const endCompleto = [pac.endereco, pac.numero, pac.complemento, pac.bairro, pac.cidade].filter(Boolean).join(', ') || 'Endereço não informado';
+
                     let acompHtml = '';
                     if (r.acompanhamentos_json && Array.isArray(r.acompanhamentos_json) && r.acompanhamentos_json.length > 0) {
                         acompHtml = '<div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); font-size: 12px;">';
                         acompHtml += '<div style="font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Últimos Contatos:</div>';
-                        r.acompanhamentos_json.slice(-2).reverse().forEach(a => {
-                            const icon = a.confirmado ? '✅' : '❌';
-                            acompHtml += `<div style="margin-bottom: 4px; line-height: 1.4;"><span style="color:var(--text-muted)">${a.data.split('-').reverse().join('/')}</span> ${icon} ${a.comentario}</div>`;
+                        
+                        const hoje = new Date().toISOString().split('T')[0];
+                        const ordenados = [...r.acompanhamentos_json].sort((a, b) => b.data.localeCompare(a.data));
+                        
+                        ordenados.slice(0, 3).forEach(a => {
+                            if (!a.data) return;
+                            const isFuturo = a.data >= hoje;
+                            const dtStr = a.data.split('-').reverse().join('/');
+                            const obs = a.comentario || '';
+                            const eqAcomp = (a.equipe && Array.isArray(a.equipe) && a.equipe.length > 0) 
+                                ? a.equipe.map(id => window.evangelhoPessoasDict[id] || '...').join(', ') 
+                                : '';
+                            
+                            if (isFuturo) {
+                                acompHtml += `<div style="margin-bottom: 6px; padding: 6px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; border-radius: 4px;">
+                                    <div style="color: #d97706; font-weight: 600; margin-bottom: 2px;">⏰ Compromisso Agendado - ${dtStr}</div>
+                                    <div style="color: var(--text-main); margin-bottom: ${eqAcomp ? '2px' : '0'};">${obs}</div>
+                                    ${eqAcomp ? `<div style="color: var(--text-muted); font-size: 11px;">👥 Participantes: ${eqAcomp}</div>` : ''}
+                                </div>`;
+                            } else {
+                                const icon = a.confirmado ? '✅' : '📝';
+                                acompHtml += `<div style="margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                                    <div style="margin-bottom: 4px;"><span style="color:var(--text-muted)">${dtStr}</span> ${icon} ${obs}</div>
+                                    ${eqAcomp ? `<div style="color: var(--text-muted); font-size: 11px;">👥 Participantes: ${eqAcomp}</div>` : ''}
+                                </div>`;
+                            }
                         });
                         acompHtml += '</div>';
                     }
@@ -179,9 +206,10 @@ window.carregarDados = async function (aba) {
                             ${zap}
                             <div style="margin-top: 8px;"></div>
                             
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📅 Implantação: ${dataImp} ${r.hora_implantacao ? 'às ' + r.hora_implantacao : ''}</div>
-                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">🔄 Rotina: ${r.dia_semana_evangelho || '?'} às ${r.horario_evangelho || '?'}</div>
-                            <div style="font-size: 13px; color: var(--text-muted);">👥 Equipe: ${equipeNomes}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📍 ${endCompleto}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📅 Implantação: ${dataImp} às ${horaImp}</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">🔄 Rotina: ${r.dia_semana_evangelho || '?'} às ${horaEv}</div>
+                            <div style="font-size: 13px; color: var(--text-muted);">👥 Equipe da Implantação: ${equipeNomes}</div>
                             
                             ${acompHtml}
                             
