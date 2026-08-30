@@ -106,7 +106,7 @@ async function checkAuth() {
         window.location.replace('index.html');
         return;
     }
-
+    if (filename === 'm_config.html' && userProfile.nivel_acesso !== 'admin' && userProfile.nivel_acesso !== 'admin_global') {
         alert("Acesso restrito: Apenas administradores podem acessar as configurações.");
         window.location.replace('m_index.html');
         return;
