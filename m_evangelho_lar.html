@@ -113,10 +113,15 @@
                     
                     <div class="m-form-group">
                         <label>Equipe Responsável</label>
-                        <select class="m-input" id="inEvEquipe" multiple style="height: 120px;">
-                            <!-- Preenchido via JS -->
-                        </select>
-                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Toque para selecionar vários</div>
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                            <select id="inEvEquipeAdd" class="m-input" style="flex: 1;">
+                                <option value="">Selecione um Atendente...</option>
+                            </select>
+                            <button type="button" class="m-btn m-btn-secondary" onclick="addEvangelhoEquipe()">Adicionar</button>
+                        </div>
+                        <div id="evEquipeLista" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 50px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.02);">
+                            <div style="color: var(--text-muted); font-size: 12px; text-align: center;">Ninguém na equipe ainda.</div>
+                        </div>
                     </div>
                     
                     <div class="m-form-group">
@@ -158,8 +163,23 @@
                         </label>
                     </div>
                     <div class="m-form-group">
-                        <label>Observação / Parecer</label>
-                        <textarea class="m-input" id="inAcompObs" rows="3" required placeholder="Ex: A família tem dúvidas sobre o livro dos espíritos..."></textarea>
+                        <label>Observação / Parecer / Assunto</label>
+                        <textarea class="m-input" id="inAcompObs" rows="3" required placeholder="Como foi? Ou pauta para o futuro..."></textarea>
+                    </div>
+                    
+                    <div class="m-form-group" style="margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 8px;">
+                        <label style="color: var(--primary);">Equipe Presencial (Opcional)</label>
+                        <p style="font-size: 11px; color: var(--text-muted); margin-top: -4px; margin-bottom: 12px;">Útil para agendar participações futuras da equipe.</p>
+                        
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                            <select id="inAcompEquipeAdd" class="m-input" style="flex: 1; border-color: rgba(255,255,255,0.2);">
+                                <option value="">Selecione um Atendente...</option>
+                            </select>
+                            <button type="button" class="m-btn m-btn-secondary" onclick="addAcompEquipe()">Adicionar</button>
+                        </div>
+                        <div id="acompEquipeLista" style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; min-height: 40px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.1);">
+                            <div style="color: var(--text-muted); font-size: 12px; text-align: center;">Equipe não selecionada.</div>
+                        </div>
                     </div>
                     <button type="submit" class="m-btn m-btn-primary" style="width: 100%; margin-top: 16px;">Adicionar</button>
                     <div style="height: 20px;"></div>

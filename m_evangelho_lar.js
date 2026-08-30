@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const { data: pessoas } = await db.from('pessoas').select('id, nome_curto, nome_completo, perfis').eq('status', 'Ativo').order('nome_completo');
         if (pessoas) {
-            const sel = document.getElementById('inEvEquipe');
+            const sel = document.getElementById('inEvEquipeAdd');
+            window.evangelhoPessoasDict = {};
             
             const atendentes = pessoas.filter(p => {
                 if (!p.perfis) return false;
@@ -192,9 +193,49 @@ window.carregarDados = async function (aba) {
     }
 };
 
+window.evangelhoEquipeAtual = [];
+
+window.addEvangelhoEquipe = function() {
+    const sel = document.getElementById('inEvEquipeAdd');
+    const id = sel.value;
+    if (!id) return;
+    
+    if (!window.evangelhoEquipeAtual.includes(id)) {
+        window.evangelhoEquipeAtual.push(id);
+        renderEvangelhoEquipe();
+    }
+    sel.value = '';
+};
+
+window.removeEvangelhoEquipe = function(id) {
+    window.evangelhoEquipeAtual = window.evangelhoEquipeAtual.filter(x => x !== id);
+    renderEvangelhoEquipe();
+};
+
+window.renderEvangelhoEquipe = function() {
+    const container = document.getElementById('evEquipeLista');
+    if (window.evangelhoEquipeAtual.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; text-align: center;">Ninguém na equipe ainda.</div>';
+        return;
+    }
+    
+    let html = '';
+    window.evangelhoEquipeAtual.forEach(id => {
+        const nome = window.evangelhoPessoasDict[id] || 'Desconhecido';
+        html += `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; margin-bottom: 4px;">
+                <span style="font-size: 13px; color: var(--text-main); font-weight: 500;">${nome}</span>
+                <button type="button" onclick="removeEvangelhoEquipe('${id}')" style="background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 16px; line-height: 1;">&times;</button>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+};
+
 window.abrirSheetEv = function (id, pessoaId = '', pessoaNome = '', sessaoId = '') {
     const form = document.getElementById('formEv');
     form.reset();
+    window.evangelhoEquipeAtual = [];
 
     if (id) {
         // Edit mode
@@ -212,10 +253,9 @@ window.abrirSheetEv = function (id, pessoaId = '', pessoaNome = '', sessaoId = '
         document.getElementById('inEvHorarioFixo').value = r.horario_evangelho || '';
         document.getElementById('inEvStatus').value = r.status_implantacao || 'Em andamento';
 
-        const selEquipe = document.getElementById('inEvEquipe');
-        Array.from(selEquipe.options).forEach(opt => {
-            opt.selected = (r.equipe_json && Array.isArray(r.equipe_json) && r.equipe_json.includes(opt.value));
-        });
+        if (r.equipe_json && Array.isArray(r.equipe_json)) {
+            window.evangelhoEquipeAtual = [...r.equipe_json];
+        }
     } else {
         // New mode
         document.getElementById('inEvId').value = '';
@@ -225,6 +265,7 @@ window.abrirSheetEv = function (id, pessoaId = '', pessoaNome = '', sessaoId = '
         document.getElementById('inEvStatus').value = 'Em andamento';
     }
 
+    renderEvangelhoEquipe();
     document.getElementById('sheetEv').classList.add('show');
 };
 
@@ -236,8 +277,7 @@ window.salvarEvangelho = async function (e) {
     e.preventDefault();
 
     const id = document.getElementById('inEvId').value;
-    const selEquipe = document.getElementById('inEvEquipe');
-    const equipe = Array.from(selEquipe.selectedOptions).map(o => o.value);
+    const equipe = window.evangelhoEquipeAtual || [];
 
     const payload = {
         pessoa_id: document.getElementById('inEvPessoaId').value,
@@ -272,9 +312,58 @@ window.salvarEvangelho = async function (e) {
     }
 };
 
+window.acompEquipeAtual = [];
+
+window.addAcompEquipe = function() {
+    const sel = document.getElementById('inAcompEquipeAdd');
+    const id = sel.value;
+    if (!id) return;
+    
+    if (!window.acompEquipeAtual.includes(id)) {
+        window.acompEquipeAtual.push(id);
+        renderAcompEquipe();
+    }
+    sel.value = '';
+};
+
+window.removeAcompEquipe = function(id) {
+    window.acompEquipeAtual = window.acompEquipeAtual.filter(x => x !== id);
+    renderAcompEquipe();
+};
+
+window.renderAcompEquipe = function() {
+    const container = document.getElementById('acompEquipeLista');
+    if (window.acompEquipeAtual.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; text-align: center;">Equipe não selecionada.</div>';
+        return;
+    }
+    
+    let html = '';
+    window.acompEquipeAtual.forEach(id => {
+        const nome = window.evangelhoPessoasDict[id] || 'Desconhecido';
+        html += `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 6px; margin-bottom: 2px;">
+                <span style="font-size: 13px; color: var(--text-main); font-weight: 500;">${nome}</span>
+                <button type="button" onclick="removeAcompEquipe('${id}')" style="background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 16px; line-height: 1;">&times;</button>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+};
+
 window.abrirSheetEvAcomp = function (id) {
     document.getElementById('formEvAcomp').reset();
     document.getElementById('inAcompEvId').value = id;
+    
+    const r = window.evangelhoDataList.find(x => x.id === id);
+    window.acompEquipeAtual = [];
+    if (r && r.equipe_json && Array.isArray(r.equipe_json)) {
+        window.acompEquipeAtual = [...r.equipe_json];
+    }
+    
+    renderAcompEquipe();
+    
+    // Default to future date (next week) if want to schedule? No, default to today.
     document.getElementById('inAcompData').value = new Date().toISOString().split('T')[0];
     document.getElementById('sheetEvAcomp').classList.add('show');
 };
@@ -290,10 +379,12 @@ window.salvarEvAcompanhamento = async function (e) {
     const r = window.evangelhoDataList.find(x => x.id === id);
     if (!r) return;
 
+    const dt = document.getElementById('inAcompData').value;
     const novoAcomp = {
-        data: document.getElementById('inAcompData').value,
+        data: dt,
         confirmado: document.getElementById('inAcompConfirmado').checked,
-        comentario: document.getElementById('inAcompObs').value
+        comentario: document.getElementById('inAcompObs').value,
+        equipe: window.acompEquipeAtual || []
     };
 
     const acompList = r.acompanhamentos_json || [];
@@ -302,9 +393,26 @@ window.salvarEvAcompanhamento = async function (e) {
     try {
         const { error } = await db.from('app_evangelho_lar').update({ acompanhamentos_json: acompList }).eq('id', id);
         if (error) throw error;
+        
+        const hoje = new Date().toISOString().split('T')[0];
+        if (dt >= hoje && novoAcomp.equipe.length > 0) {
+            const pessoaNome = r.pessoas ? r.pessoas.nome_completo : 'Paciente';
+            const notifs = novoAcomp.equipe.map(pessoa_id => ({
+                pessoa_id: pessoa_id,
+                titulo: 'Agendamento: Evangelho no Lar',
+                mensagem: `Você foi escalado para um Acompanhamento Presencial em ${dt.split('-').reverse().join('/')} na casa de ${pessoaNome}.`
+            }));
+            db.from('app_notificacoes').insert(notifs).then(() => {}).catch(() => {});
+        }
 
         fecharSheetEvAcomp();
-        carregarDados('andamento');
+        
+        const currentTabBtn = document.querySelector('.m-tab.active');
+        if (currentTabBtn) {
+            carregarDados(currentTabBtn.getAttribute('data-target') || 'andamento');
+        } else {
+            carregarDados('andamento');
+        }
     } catch (err) {
         alert("Erro ao adicionar acompanhamento: " + err.message);
     }

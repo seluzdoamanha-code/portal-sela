@@ -6641,11 +6641,16 @@ window.carregarModuloEvangelho = async function() {
                     </div>
                     
                     <div class="form-group" style="margin-bottom: 20px;">
-                        <label>Equipe Responsável (Selecione as pessoas)</label>
-                        <select id="inEvEquipe" multiple style="height: 100px;">
-                            <!-- Preenchido via JS -->
-                        </select>
-                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Segure CTRL/CMD para selecionar vários.</div>
+                        <label>Equipe Responsável</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                            <select id="inEvEquipeAdd" class="form-control" style="flex: 1;">
+                                <option value="">Selecione um Atendente...</option>
+                            </select>
+                            <button type="button" class="btn btn-secondary" onclick="addEvangelhoEquipeHub()">Adicionar</button>
+                        </div>
+                        <div id="evEquipeLista" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 50px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.02);">
+                            <div style="color: var(--text-muted); font-size: 12px; text-align: center;">Ninguém na equipe ainda.</div>
+                        </div>
                     </div>
                     
                     <div class="form-group" style="margin-bottom: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
@@ -6683,9 +6688,22 @@ window.carregarModuloEvangelho = async function() {
                             Confirmou que realizou o Evangelho?
                         </label>
                     </div>
-                    <div class="form-group" style="margin-bottom: 24px;">
-                        <label>Observação / Parecer</label>
-                        <textarea id="inAcompObs" rows="3" required placeholder="Como foi? Dúvidas?"></textarea>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label>Observação / Parecer / Assunto</label>
+                        <textarea id="inAcompObs" rows="3" required placeholder="Como foi? Ou pauta para o futuro..."></textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 8px;">
+                        <label style="color: var(--primary);">Equipe Presencial (Opcional)</label>
+                        <p style="font-size: 11px; color: var(--text-muted); margin-top: -4px; margin-bottom: 12px;">Útil para agendar participações futuras da equipe.</p>
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                            <select id="inAcompEquipeAdd" class="form-control" style="flex: 1; border-color: rgba(255,255,255,0.2);">
+                                <option value="">Selecione um Atendente...</option>
+                            </select>
+                            <button type="button" class="btn btn-secondary" onclick="addAcompEquipeHub()" style="padding: 0 12px;">Adicionar</button>
+                        </div>
+                        <div id="acompEquipeLista" style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; min-height: 40px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.1);">
+                            <div style="color: var(--text-muted); font-size: 12px; text-align: center;">Equipe não selecionada.</div>
+                        </div>
                     </div>
                     <div style="display: flex; gap: 12px; justify-content: flex-end;">
                         <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalEvAcompanhamento').classList.remove('show')">Cancelar</button>
@@ -6704,8 +6722,10 @@ window.carregarModuloEvangelho = async function() {
     try {
         const { data: pessoas } = await db.from('pessoas').select('id, nome_curto, nome_completo, perfis').eq('status', 'Ativo').order('nome_completo');
         if (pessoas) {
-            const sel = document.getElementById('inEvEquipe');
+            const selEv = document.getElementById('inEvEquipeAdd');
+            const selAc = document.getElementById('inAcompEquipeAdd');
             window.evangelhoPessoasDict = {}; // para buscas rápidas
+            window.evangelhoAtendentesHub = []; // cache
             
             const atendentes = pessoas.filter(p => {
                 if (!p.perfis) return false;
@@ -6715,10 +6735,17 @@ window.carregarModuloEvangelho = async function() {
             });
             
             atendentes.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p.id;
-                opt.text = p.nome_completo;
-                sel.appendChild(opt);
+                const optEv = document.createElement('option');
+                optEv.value = p.id;
+                optEv.text = p.nome_completo;
+                selEv.appendChild(optEv);
+                
+                const optAc = document.createElement('option');
+                optAc.value = p.id;
+                optAc.text = p.nome_completo;
+                selAc.appendChild(optAc);
+                
+                window.evangelhoAtendentesHub.push(p);
             });
             
             // Popula dicionário com todas as pessoas para exibir corretamente os nomes mesmo se perderem o perfil depois
@@ -6855,11 +6882,34 @@ window.carregarConteudoEvangelho = async function(aba) {
                     let acompHtml = '';
                     if (r.acompanhamentos_json && Array.isArray(r.acompanhamentos_json) && r.acompanhamentos_json.length > 0) {
                         acompHtml = '<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px;">';
-                        acompHtml += '<div style="font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Últimos Acompanhamentos:</div>';
-                        // Pegar os ultimos 2
-                        r.acompanhamentos_json.slice(-2).reverse().forEach(a => {
-                            const icon = a.confirmado ? '✅' : '❌';
-                            acompHtml += `<div style="margin-bottom: 4px;"><span style="color:var(--text-muted)">${a.data.split('-').reverse().join('/')}</span> ${icon} ${a.comentario}</div>`;
+                        acompHtml += '<div style="font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Agenda & Acompanhamentos:</div>';
+                        
+                        const hoje = new Date().toISOString().split('T')[0];
+                        // Order by data descending
+                        const ordenados = [...r.acompanhamentos_json].sort((a, b) => b.data.localeCompare(a.data));
+                        
+                        // Pegar os ultimos 3
+                        ordenados.slice(0, 3).forEach(a => {
+                            const isFuturo = a.data >= hoje;
+                            const dtStr = a.data.split('-').reverse().join('/');
+                            const obs = a.observacao || a.comentario || '';
+                            const eqAcomp = (a.equipe && Array.isArray(a.equipe) && a.equipe.length > 0) 
+                                ? a.equipe.map(id => window.evangelhoPessoasDict[id] || 'Desc.').join(', ') 
+                                : '';
+                                
+                            if (isFuturo) {
+                                acompHtml += `<div style="margin-bottom: 6px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 6px 8px; border-radius: 0 4px 4px 0;">
+                                    <div style="color: #d97706; font-weight: 600; margin-bottom: 2px;">🗓️ Compromisso Agendado: ${dtStr}</div>
+                                    <div style="color: var(--text-main); margin-bottom: ${eqAcomp ? '2px' : '0'};">${obs}</div>
+                                    ${eqAcomp ? `<div style="color: var(--text-muted); font-size: 11px;">👥 Equipe: ${eqAcomp}</div>` : ''}
+                                </div>`;
+                            } else {
+                                const icon = a.confirmou ? '✅' : '📝';
+                                acompHtml += `<div style="margin-bottom: 6px;">
+                                    <span style="color:var(--text-muted)">${dtStr}</span> ${icon} ${obs}
+                                    ${eqAcomp ? `<br><span style="color: var(--text-muted); font-size: 11px;">👥 Equipe da visita: ${eqAcomp}</span>` : ''}
+                                </div>`;
+                            }
                         });
                         acompHtml += '</div>';
                     }
@@ -6875,7 +6925,7 @@ window.carregarConteudoEvangelho = async function(aba) {
                             ${acompHtml}
                             
                             <div style="margin-top: 16px; display: flex; gap: 8px;">
-                                <button class="btn btn-secondary" style="flex: 1; font-size: 12px; padding: 6px;" onclick="abrirModalEvangelho('${r.id}')">Editar</button>
+                                <button class="btn btn-secondary" style="flex: 1; font-size: 12px; padding: 6px;" onclick="abrirSheetEv('${r.id}')">Editar</button>
                                 <button class="btn btn-secondary" style="flex: 1; font-size: 12px; padding: 6px;" onclick="abrirAcompanhamentoEv('${r.id}')">+ Acompanhamento</button>
                             </div>
                         </div>
@@ -6893,10 +6943,90 @@ window.carregarConteudoEvangelho = async function(aba) {
     }
 };
 
-window.abrirModalEvangelho = function(id, pessoaId = '', pessoaNome = '', sessaoId = '') {
+window.evangelhoEquipeAtual = [];
+
+window.addEvangelhoEquipeHub = function() {
+    const sel = document.getElementById('inEvEquipeAdd');
+    const id = sel.value;
+    if (!id) return;
+    
+    if (!window.evangelhoEquipeAtual.includes(id)) {
+        window.evangelhoEquipeAtual.push(id);
+        renderEvangelhoEquipeHub();
+    }
+    sel.value = '';
+};
+
+window.removeEvangelhoEquipeHub = function(id) {
+    window.evangelhoEquipeAtual = window.evangelhoEquipeAtual.filter(x => x !== id);
+    renderEvangelhoEquipeHub();
+};
+
+window.renderEvangelhoEquipeHub = function() {
+    const container = document.getElementById('evEquipeLista');
+    if (window.evangelhoEquipeAtual.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; text-align: center;">Ninguém na equipe ainda.</div>';
+        return;
+    }
+    
+    let html = '';
+    window.evangelhoEquipeAtual.forEach(id => {
+        const nome = window.evangelhoPessoasDict[id] || 'Desconhecido';
+        html += `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; margin-bottom: 4px;">
+                <span style="font-size: 13px; color: var(--text-main); font-weight: 500;">${nome}</span>
+                <button type="button" onclick="removeEvangelhoEquipeHub('${id}')" style="background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 16px; line-height: 1;">&times;</button>
+            </div>
+        `;
+    });
+    });
+    container.innerHTML = html;
+};
+
+window.acompEquipeAtual = [];
+
+window.addAcompEquipeHub = function() {
+    const sel = document.getElementById('inAcompEquipeAdd');
+    const id = sel.value;
+    if (!id) return;
+    
+    if (!window.acompEquipeAtual.includes(id)) {
+        window.acompEquipeAtual.push(id);
+        renderAcompEquipeHub();
+    }
+    sel.value = '';
+};
+
+window.removeAcompEquipeHub = function(id) {
+    window.acompEquipeAtual = window.acompEquipeAtual.filter(x => x !== id);
+    renderAcompEquipeHub();
+};
+
+window.renderAcompEquipeHub = function() {
+    const container = document.getElementById('acompEquipeLista');
+    if (window.acompEquipeAtual.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; text-align: center;">Equipe não selecionada.</div>';
+        return;
+    }
+    
+    let html = '';
+    window.acompEquipeAtual.forEach(id => {
+        const nome = window.evangelhoPessoasDict[id] || 'Desconhecido';
+        html += `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 6px; margin-bottom: 2px;">
+                <span style="font-size: 13px; color: var(--text-main); font-weight: 500;">${nome}</span>
+                <button type="button" onclick="removeAcompEquipeHub('${id}')" style="background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 16px; line-height: 1;">&times;</button>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+};
+
+window.abrirSheetEv = function(id, pessoaId = '', pessoaNome = '', sessaoId = '') {
     const form = document.getElementById('formEvangelho');
     form.reset();
-    
+    window.evangelhoEquipeAtual = [];
+
     if (id) {
         // Modo Edição
         const r = window.evangelhoDataList.find(x => x.id === id);
@@ -6905,24 +7035,16 @@ window.abrirModalEvangelho = function(id, pessoaId = '', pessoaNome = '', sessao
         document.getElementById('inEvId').value = r.id;
         document.getElementById('inEvPessoaId').value = r.pessoa_id;
         document.getElementById('inEvSessaoId').value = r.sessao_origem_id || '';
-        document.getElementById('lblEvPessoa').innerHTML = `🏡 Evangelho no Lar de:<br><span style="font-size: 20px;">${r.pessoas.nome_completo}</span>`;
+        document.getElementById('lblEvPessoa').innerHTML = `🏡 Implantação para:<br><span style="font-size: 20px;">${r.pessoas.nome_completo}</span>`;
         
         document.getElementById('inEvData').value = r.data_implantacao || '';
         document.getElementById('inEvHora').value = r.hora_implantacao || '';
         document.getElementById('inEvDiaSemana').value = r.dia_semana_evangelho || '';
         document.getElementById('inEvHorarioFixo').value = r.horario_evangelho || '';
         document.getElementById('inEvStatus').value = r.status_implantacao || 'Em andamento';
-        
-        // Equipe select multiple
-        const selEquipe = document.getElementById('inEvEquipe');
-        Array.from(selEquipe.options).forEach(opt => {
-            if (r.equipe_json && Array.isArray(r.equipe_json) && r.equipe_json.includes(opt.value)) {
-                opt.selected = true;
-            } else {
-                opt.selected = false;
-            }
-        });
-        
+        if (r.equipe_json && Array.isArray(r.equipe_json)) {
+            window.evangelhoEquipeAtual = [...r.equipe_json];
+        }
     } else {
         // Novo a partir da Caixa de Entrada
         document.getElementById('inEvId').value = '';
@@ -6931,7 +7053,7 @@ window.abrirModalEvangelho = function(id, pessoaId = '', pessoaNome = '', sessao
         document.getElementById('lblEvPessoa').innerHTML = `🏡 Implantação para:<br><span style="font-size: 20px;">${pessoaNome}</span>`;
         document.getElementById('inEvStatus').value = 'Em andamento';
     }
-    
+    renderEvangelhoEquipeHub();
     document.getElementById('modalEvangelho').classList.add('show');
 };
 
@@ -6939,10 +7061,8 @@ window.salvarEvangelho = async function(e) {
     e.preventDefault();
     
     const id = document.getElementById('inEvId').value;
-    
     // Obter selecionados
-    const selEquipe = document.getElementById('inEvEquipe');
-    const equipe = Array.from(selEquipe.selectedOptions).map(o => o.value);
+    const equipe = window.evangelhoEquipeAtual || [];
     
     const payload = {
         pessoa_id: document.getElementById('inEvPessoaId').value,
