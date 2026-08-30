@@ -6600,8 +6600,8 @@ window.carregarModuloEvangelho = async function() {
         
         <!-- Modal Nova Implantação -->
         <div class="modal-overlay" id="modalEvangelho">
-            <div class="modal-content" style="max-width: 600px;">
-                <h2 style="margin-bottom: 16px; color: #10b981;">Implantação de Evangelho no Lar</h2>
+            <div class="modal-content" style="max-width: 600px; padding: 32px;">
+                <h2 style="margin-bottom: 24px; color: #10b981;">Implantação de Evangelho no Lar</h2>
                 <form id="formEvangelho">
                     <input type="hidden" id="inEvId">
                     <input type="hidden" id="inEvPessoaId">
@@ -6700,17 +6700,29 @@ window.carregarModuloEvangelho = async function() {
     document.getElementById('formEvangelho').addEventListener('submit', salvarEvangelho);
     document.getElementById('formEvAcompanhamento').addEventListener('submit', salvarEvAcompanhamento);
     
-    // Carregar Equipe (todas as pessoas ativas para o select multiplo)
+    // Carregar Equipe (apenas pessoas com perfil Atendente Fraterno)
     try {
-        const { data: pessoas } = await db.from('pessoas').select('id, nome_curto, nome_completo').eq('status', 'Ativo').order('nome_completo');
+        const { data: pessoas } = await db.from('pessoas').select('id, nome_curto, nome_completo, perfis').eq('status', 'Ativo').order('nome_completo');
         if (pessoas) {
             const sel = document.getElementById('inEvEquipe');
             window.evangelhoPessoasDict = {}; // para buscas rápidas
-            pessoas.forEach(p => {
+            
+            const atendentes = pessoas.filter(p => {
+                if (!p.perfis) return false;
+                if (Array.isArray(p.perfis)) return p.perfis.includes('Atendente Fraterno');
+                if (typeof p.perfis === 'string') return p.perfis.includes('Atendente Fraterno');
+                return false;
+            });
+            
+            atendentes.forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p.id;
                 opt.text = p.nome_completo;
                 sel.appendChild(opt);
+            });
+            
+            // Popula dicionário com todas as pessoas para exibir corretamente os nomes mesmo se perderem o perfil depois
+            pessoas.forEach(p => {
                 window.evangelhoPessoasDict[p.id] = p.nome_curto || p.nome_completo;
             });
         }

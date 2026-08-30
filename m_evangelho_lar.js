@@ -7,16 +7,27 @@ window.evangelhoDataList = [];
 window.evangelhoPessoasDict = {};
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Carregar Equipe (todas as pessoas ativas para o select multiplo)
+    // Carregar Equipe (apenas pessoas com perfil Atendente Fraterno)
     try {
-        const { data: pessoas } = await db.from('pessoas').select('id, nome_curto, nome_completo').eq('status', 'Ativo').order('nome_completo');
+        const { data: pessoas } = await db.from('pessoas').select('id, nome_curto, nome_completo, perfis').eq('status', 'Ativo').order('nome_completo');
         if (pessoas) {
             const sel = document.getElementById('inEvEquipe');
-            pessoas.forEach(p => {
+            
+            const atendentes = pessoas.filter(p => {
+                if (!p.perfis) return false;
+                if (Array.isArray(p.perfis)) return p.perfis.includes('Atendente Fraterno');
+                if (typeof p.perfis === 'string') return p.perfis.includes('Atendente Fraterno');
+                return false;
+            });
+            
+            atendentes.forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p.id;
                 opt.text = p.nome_completo;
                 sel.appendChild(opt);
+            });
+            
+            pessoas.forEach(p => {
                 window.evangelhoPessoasDict[p.id] = p.nome_curto || p.nome_completo;
             });
         }
