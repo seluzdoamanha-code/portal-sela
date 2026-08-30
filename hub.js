@@ -6979,7 +6979,6 @@ window.renderEvangelhoEquipeHub = function() {
             </div>
         `;
     });
-    });
     container.innerHTML = html;
 };
 
