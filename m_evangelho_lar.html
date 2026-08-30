@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SELA Mobile - Evangelho no Lar</title>
+    <link rel="stylesheet" href="m_style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth_guard.js"></script>
+    <meta name="theme-color" content="#0f172a">
+    <style>
+        .aba-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 13px; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .aba-btn.active { color: #10b981; border-bottom: 2px solid #10b981; }
+        .aba-content { display: none; padding: 16px; }
+        .aba-content.active { display: block; }
+        
+        .ev-card { background: var(--bg-panel); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border); position: relative; }
+        .ev-status-badge { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 12px; text-transform: uppercase; }
+        
+        .floating-action {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            background: #10b981;
+            color: #fff;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body style="padding-bottom: 80px;">
+
+    <!-- Topbar -->
+    <header class="m-topbar" style="position: sticky; top: 0; z-index: 50;">
+        <button class="m-btn-icon" onclick="window.location.href='m_hub.html' + (window.estruturaId ? '?id=' + window.estruturaId : '')" style="color: #10b981;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="m-topbar-title">Evangelho no Lar</div>
+        <div style="width: 40px;"></div>
+    </header>
+
+    <!-- Abas -->
+    <div style="display: flex; background: var(--bg-panel); border-bottom: 1px solid var(--border); position: sticky; top: 60px; z-index: 40;">
+        <div class="aba-btn active" data-target="cx" onclick="mudarAba('cx', this)">📥 Caixa</div>
+        <div class="aba-btn" data-target="andamento" onclick="mudarAba('andamento', this)">🔄 Em Andamento</div>
+        <div class="aba-btn" data-target="concluidos" onclick="mudarAba('concluidos', this)">✅ Implantados</div>
+    </div>
+
+    <!-- Conteúdos das Abas -->
+    <div id="aba-cx" class="aba-content active">
+        <div id="cxList">Carregando...</div>
+    </div>
+    
+    <div id="aba-andamento" class="aba-content">
+        <div id="andamentoList">Carregando...</div>
+    </div>
+    
+    <div id="aba-concluidos" class="aba-content">
+        <div id="concluidosList">Carregando...</div>
+    </div>
+
+    <!-- Bottom Sheet Formulario de Implantacao -->
+    <div class="bottom-sheet-overlay" id="sheetEv">
+        <div class="bottom-sheet">
+            <div class="bottom-sheet-header">
+                <h3 id="sheetEvTitle">Implantação de Evangelho</h3>
+                <button class="m-btn-icon" onclick="fecharSheetEv()">✕</button>
+            </div>
+            <div class="bottom-sheet-body">
+                <form id="formEv">
+                    <input type="hidden" id="inEvId">
+                    <input type="hidden" id="inEvPessoaId">
+                    <input type="hidden" id="inEvSessaoId">
+                    
+                    <div style="margin-bottom: 20px; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; color: #10b981; font-weight: 600; text-align: center;" id="lblEvPessoa"></div>
+                    
+                    <div class="m-form-group">
+                        <label>Data Prevista / Implantação</label>
+                        <input type="date" class="m-input" id="inEvData" required>
+                    </div>
+                    <div class="m-form-group">
+                        <label>Hora Prevista</label>
+                        <input type="time" class="m-input" id="inEvHora">
+                    </div>
+                    
+                    <div class="m-form-group">
+                        <label>Dia da Semana Fixo (Família)</label>
+                        <select class="m-input" id="inEvDiaSemana">
+                            <option value="">Selecione...</option>
+                            <option value="Domingo">Domingo</option>
+                            <option value="Segunda-feira">Segunda-feira</option>
+                            <option value="Terça-feira">Terça-feira</option>
+                            <option value="Quarta-feira">Quarta-feira</option>
+                            <option value="Quinta-feira">Quinta-feira</option>
+                            <option value="Sexta-feira">Sexta-feira</option>
+                            <option value="Sábado">Sábado</option>
+                        </select>
+                    </div>
+                    <div class="m-form-group">
+                        <label>Horário Fixo</label>
+                        <input type="time" class="m-input" id="inEvHorarioFixo">
+                    </div>
+                    
+                    <div class="m-form-group">
+                        <label>Equipe Responsável</label>
+                        <select class="m-input" id="inEvEquipe" multiple style="height: 120px;">
+                            <!-- Preenchido via JS -->
+                        </select>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Toque para selecionar vários</div>
+                    </div>
+                    
+                    <div class="m-form-group">
+                        <label>Status da Implantação</label>
+                        <select class="m-input" id="inEvStatus">
+                            <option value="Fila de Espera">Fila de Espera (Apenas marcado)</option>
+                            <option value="Em andamento">Em andamento (Equipe designada)</option>
+                            <option value="Implantado">✅ Implantado com Sucesso</option>
+                            <option value="Precisando de Acompanhamento">⚠️ Precisando de Acompanhamento</option>
+                            <option value="Não Implantado">❌ Não Implantado / Desistência</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="m-btn m-btn-primary" style="background: #10b981; border-color: #10b981; width: 100%; margin-top: 16px;">Salvar Implantação</button>
+                    <div style="height: 20px;"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Sheet Acompanhamento -->
+    <div class="bottom-sheet-overlay" id="sheetEvAcomp">
+        <div class="bottom-sheet">
+            <div class="bottom-sheet-header">
+                <h3>Novo Acompanhamento</h3>
+                <button class="m-btn-icon" onclick="fecharSheetEvAcomp()">✕</button>
+            </div>
+            <div class="bottom-sheet-body">
+                <form id="formEvAcomp">
+                    <input type="hidden" id="inAcompEvId">
+                    <div class="m-form-group">
+                        <label>Data do Contato</label>
+                        <input type="date" class="m-input" id="inAcompData" required>
+                    </div>
+                    <div class="m-form-group" style="margin: 16px 0;">
+                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                            <input type="checkbox" id="inAcompConfirmado" style="width: 24px; height: 24px; accent-color: #10b981;">
+                            <span style="font-size: 15px;">Confirmou realização do Evangelho?</span>
+                        </label>
+                    </div>
+                    <div class="m-form-group">
+                        <label>Observação / Parecer</label>
+                        <textarea class="m-input" id="inAcompObs" rows="3" required placeholder="Ex: A família tem dúvidas sobre o livro dos espíritos..."></textarea>
+                    </div>
+                    <button type="submit" class="m-btn m-btn-primary" style="width: 100%; margin-top: 16px;">Adicionar</button>
+                    <div style="height: 20px;"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+    <script src="m_evangelho_lar.js"></script>
+
+</body>
+</html>

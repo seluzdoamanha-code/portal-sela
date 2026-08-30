@@ -246,6 +246,15 @@
                 </a>
             `;
             document.getElementById('dynamicActivityIconContainer').innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>';
+        } else if (nome.includes('evangelho')) {
+            html += `
+                <a href="m_evangelho_lar.html?id=${estruturaAtual.id}" class="m-app-card">
+                    <div class="m-app-icon" style="background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 28px;">🏡</span>
+                    </div>
+                    <div class="m-app-name">Gestão do Evangelho</div>
+                </a>
+            `;
         } else if (nome.includes('atendimento')) {
             html += `
                 <a href="m_atendimento_pedido.html?id=${estruturaAtual.id}" class="m-app-card">
