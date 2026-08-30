@@ -2577,7 +2577,6 @@ function renderizarListaAniversariantesSemana(diaInicio, diaFim, mes, ano) {
         const idadeQueFara = ano - anoNasc;
         const imgUrl = p.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nome_completo)}&background=random`;
         
-        return `
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
         const dataAniv = new Date(hoje.getFullYear(), mes, diaAniv);
