@@ -179,32 +179,40 @@ window.addEventListener('DOMContentLoaded', () => {
     const notifHtml = `
     <style>
         .notif-btn {
-            position: relative;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: var(--text-main);
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--primary, #3b82f6);
+            color: white;
+            border: none;
             border-radius: 50%;
-            width: 36px;
-            height: 36px;
+            width: 56px;
+            height: 56px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s;
-            margin-left: auto; /* Joga pra direita em flex containers */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 99990;
+            font-size: 24px;
         }
-        .notif-btn:hover { background: rgba(255,255,255,0.1); }
+        .notif-btn:hover { 
+            transform: scale(1.05);
+            background: #2563eb; 
+        }
         .notif-badge {
             position: absolute;
-            top: -4px;
-            right: -4px;
+            top: -2px;
+            right: -2px;
             background: #ef4444;
             color: white;
-            font-size: 10px;
+            font-size: 12px;
             font-weight: bold;
-            padding: 2px 6px;
+            padding: 2px 8px;
             border-radius: 12px;
             display: none; /* hidden by default */
+            border: 2px solid var(--bg-panel, #1e293b);
         }
         
         /* O Side-Sheet (Drawer) */
@@ -268,24 +276,15 @@ window.addEventListener('DOMContentLoaded', () => {
             </div>
         </div>
     </div>
+    
+    <button class="notif-btn" id="btnSinoGlobal" onclick="abrirNotificacoes()" title="Avisos e Lembretes">
+        🔔
+        <span class="notif-badge" id="badgeNotifCount">0</span>
+    </button>
     `;
     
     document.body.insertAdjacentHTML('beforeend', notifHtml);
     document.getElementById('globalNotifOverlay').addEventListener('click', fecharNotificacoes);
-    
-    // Injetar o botão 🔔 na Topbar (se existir)
-    // Na Web costuma ser <header class="topbar"> ou no mobile .header-mobile
-    let topbar = document.querySelector('header.topbar') || document.querySelector('.header-mobile') || document.querySelector('.mural-header');
-    if (topbar) {
-        // Se a topbar tiver um display flex, o margin-left:auto vai empurrar o sino pro final
-        const btnHtml = `
-            <button class="notif-btn" id="btnSinoGlobal" onclick="abrirNotificacoes()" title="Avisos e Lembretes">
-                🔔
-                <span class="notif-badge" id="badgeNotifCount">0</span>
-            </button>
-        `;
-        topbar.insertAdjacentHTML('beforeend', btnHtml);
-    }
     
     // Funções de Interação
     window.abrirNotificacoes = function() {

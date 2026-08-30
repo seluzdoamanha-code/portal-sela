@@ -6675,39 +6675,39 @@ window.carregarModuloEvangelho = async function() {
         <!-- Modal Acompanhamento -->
         <div class="modal-overlay" id="modalEvAcompanhamento">
             <div class="modal-content" style="max-width: 400px;">
-                <h2 style="margin-bottom: 16px;">Registrar Acompanhamento</h2>
+                <h2 style="margin-bottom: 24px; font-size: 20px; color: var(--text-main);">Registrar Acompanhamento</h2>
                 <form id="formEvAcompanhamento">
                     <input type="hidden" id="inAcompEvId">
-                    <div class="form-group">
-                        <label>Data do Contato</label>
-                        <input type="date" id="inAcompData" required>
-                    </div>
                     <div class="form-group" style="margin-bottom: 16px;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" id="inAcompConfirmado" style="width: 18px; height: 18px; accent-color: #10b981;">
-                            Confirmou que realizou o Evangelho?
+                        <label>Data do Contato</label>
+                        <input type="date" id="inAcompData" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; background: rgba(255,255,255,0.02); padding: 12px; border: 1px solid var(--border); border-radius: 8px;">
+                            <input type="checkbox" id="inAcompConfirmado" style="width: 20px; height: 20px; accent-color: #10b981;">
+                            <span style="font-size: 15px;">Confirmou realização do Evangelho?</span>
                         </label>
                     </div>
-                    <div class="form-group" style="margin-bottom: 16px;">
+                    <div class="form-group" style="margin-bottom: 24px;">
                         <label>Observação / Parecer / Assunto</label>
-                        <textarea id="inAcompObs" rows="3" required placeholder="Como foi? Ou pauta para o futuro..."></textarea>
+                        <textarea id="inAcompObs" class="form-control" rows="3" required placeholder="Como foi? Ou pauta para o futuro..."></textarea>
                     </div>
-                    <div class="form-group" style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 8px;">
+                    <div class="form-group" style="margin-bottom: 24px; padding: 16px; background: rgba(0,0,0,0.15); border: 1px solid var(--border); border-radius: 8px;">
                         <label style="color: var(--primary);">Equipe Presencial (Opcional)</label>
-                        <p style="font-size: 11px; color: var(--text-muted); margin-top: -4px; margin-bottom: 12px;">Útil para agendar participações futuras da equipe.</p>
-                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                            <select id="inAcompEquipeAdd" class="form-control" style="flex: 1; border-color: rgba(255,255,255,0.2);">
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px; margin-bottom: 16px;">Útil para agendar participações futuras da equipe.</p>
+                        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                            <select id="inAcompEquipeAdd" class="form-control" style="flex: 1;">
                                 <option value="">Selecione um Atendente...</option>
                             </select>
-                            <button type="button" class="btn btn-secondary" onclick="addAcompEquipeHub()" style="padding: 0 12px;">Adicionar</button>
+                            <button type="button" class="btn btn-secondary" onclick="addAcompEquipeHub()">Adicionar</button>
                         </div>
-                        <div id="acompEquipeLista" style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; min-height: 40px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.1);">
-                            <div style="color: var(--text-muted); font-size: 12px; text-align: center;">Equipe não selecionada.</div>
+                        <div id="acompEquipeLista" style="border: 1px dashed var(--border); border-radius: 8px; padding: 16px; min-height: 50px; display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.02);">
+                            <div style="color: var(--text-muted); font-size: 13px; text-align: center;">Equipe não selecionada.</div>
                         </div>
                     </div>
                     <div style="display: flex; gap: 12px; justify-content: flex-end;">
                         <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalEvAcompanhamento').classList.remove('show')">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Adicionar</button>
+                        <button type="submit" class="btn btn-primary" style="background: #10b981; border-color: #10b981;">Adicionar Contato</button>
                     </div>
                 </form>
             </div>
