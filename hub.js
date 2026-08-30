@@ -6764,7 +6764,7 @@ window.carregarConteudoEvangelho = async function(aba) {
                 id, data,
                 app_atendimento_fraterno!inner (
                     paciente_id,
-                    pessoas!inner (id, nome_curto, nome_completo, celular)
+                    pessoas!app_atendimento_fraterno_paciente_id_fkey!inner (id, nome_curto, nome_completo, celular)
                 )
             `).eq('evangelho_lar', true);
             
