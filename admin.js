@@ -2578,6 +2578,19 @@ function renderizarListaAniversariantesSemana(diaInicio, diaFim, mes, ano) {
         const imgUrl = p.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nome_completo)}&background=random`;
         
         return `
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const dataAniv = new Date(hoje.getFullYear(), mes, diaAniv);
+        let verboList = "";
+        if (dataAniv < hoje) {
+            verboList = `Tem ${idadeQueFara}`;
+        } else if (dataAniv > hoje) {
+            verboList = `Fará ${idadeQueFara}`;
+        } else {
+            verboList = `Faz ${idadeQueFara} hoje!`;
+        }
+        
+        return `
             <div style="display: flex; align-items: center; gap: 16px; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px;">
                 <img src="${imgUrl}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
                 <div style="flex: 1;">
@@ -2595,7 +2608,7 @@ function renderizarListaAniversariantesSemana(diaInicio, diaFim, mes, ano) {
                     Ver Detalhes
                 </button>
                 <div style="background: rgba(249, 115, 22, 0.1); color: #f97316; padding: 6px 12px; border-radius: 12px; font-weight: 600; font-size: 14px;">
-                    Fazendo ${idadeQueFara} anos
+                    ${verboList} anos
                 </div>
             </div>
         `;
@@ -2759,8 +2772,23 @@ window.abrirSideSheetResumoAniv = async function(id) {
             const anoNasc = parseInt(partesNasc[0]);
             const diaAniv = parseInt(partesNasc[2]);
             const mesAniv = parseInt(partesNasc[1]);
-            const anoAtual = new Date().getFullYear();
-            idadeStr = `🎂 ${String(diaAniv).padStart(2, '0')}/${String(mesAniv).padStart(2, '0')} (Fará ${anoAtual - anoNasc} anos)`;
+            
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            
+            const dataAniv = new Date(hoje.getFullYear(), mesAniv - 1, diaAniv);
+            const idadeBase = hoje.getFullYear() - anoNasc;
+            
+            let verbo = "";
+            if (dataAniv < hoje) {
+                verbo = `Tem ${idadeBase}`;
+            } else if (dataAniv > hoje) {
+                verbo = `Fará ${idadeBase}`;
+            } else {
+                verbo = `Faz ${idadeBase} hoje!`;
+            }
+            
+            idadeStr = `🎂 ${String(diaAniv).padStart(2, '0')}/${String(mesAniv).padStart(2, '0')} (${verbo} anos)`;
         }
         
         const telefoneUrl = p.celular ? `https://wa.me/55${p.celular.replace(/\D/g, '')}` : null;
@@ -2790,7 +2818,7 @@ window.abrirSideSheetResumoAniv = async function(id) {
             ${p.endereco || p.bairro ? `
             <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
                 <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Contato & Endereço</div>
-                ${p.celular ? `<div style="font-size: 14px; margin-bottom: 4px; display: flex; justify-content: space-between;"><span style="color:var(--text-muted)">Celular:</span> <span>${p.celular}</span></div>` : ''}
+                ${p.celular ? `<div style="font-size: 14px; margin-bottom: 4px; display: flex; justify-content: space-between;"><span style="color:var(--text-muted)">Celular:</span> <span>${p.celular.replace(/\D/g, '').replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3')}</span></div>` : ''}
                 ${p.email ? `<div style="font-size: 14px; margin-bottom: 4px; display: flex; justify-content: space-between;"><span style="color:var(--text-muted)">E-mail:</span> <span>${p.email}</span></div>` : ''}
                 ${p.endereco || p.bairro ? `<div style="font-size: 14px; margin-bottom: 4px; display: flex; justify-content: space-between;"><span style="color:var(--text-muted)">Endereço:</span> <span style="text-align: right;">${p.endereco || ''} ${p.bairro ? '- ' + p.bairro : ''}</span></div>` : ''}
                 ${p.cidade || p.estado ? `<div style="font-size: 14px; margin-bottom: 4px; display: flex; justify-content: space-between;"><span style="color:var(--text-muted)">Local:</span> <span>${p.cidade || ''}/${p.estado || ''}</span></div>` : ''}
