@@ -7021,7 +7021,7 @@ window.renderAcompEquipeHub = function() {
     container.innerHTML = html;
 };
 
-window.abrirSheetEv = function(id, pessoaId = '', pessoaNome = '', sessaoId = '') {
+window.abrirModalEvangelho = function(id, pessoaId = '', pessoaNome = '', sessaoId = '') {
     const form = document.getElementById('formEvangelho');
     form.reset();
     window.evangelhoEquipeAtual = [];
