@@ -57,7 +57,7 @@ window.mudarAbaEvang = function(aba) {
     if (aba === 'turmas') {
         carregarEvangTurmas();
     } else if (aba === 'aulas') {
-        content.innerHTML = '<h3 style="color:#10b981;">Planejamento de Aulas</h3><p style="color:var(--text-muted);">Módulo em desenvolvimento...</p>';
+        carregarEvangAulas();
     } else if (aba === 'diario') {
         content.innerHTML = '<h3 style="color:#10b981;">Diário de Classe</h3><p style="color:var(--text-muted);">Módulo em desenvolvimento...</p>';
     } else if (aba === 'boletim') {
@@ -268,5 +268,163 @@ window.removerMatriculaEvang = async function(matriculaId, turmaId, turmaNome) {
         gerenciarMatriculas(turmaId, turmaNome);
     } catch(e) {
         alert("Erro ao remover: " + e.message);
+    }
+};
+
+// ==========================================
+// PLANEJAMENTO DE AULAS
+// ==========================================
+
+window.carregarEvangAulas = async function() {
+    const content = document.getElementById('evangContent');
+    content.innerHTML = '<div style="color:var(--text-muted);">Carregando dados...</div>';
+    
+    try {
+        const { data: turmas, error } = await db.from('app_evang_turmas').select('*').order('nome');
+        if (error) throw error;
+        
+        if (!turmas || turmas.length === 0) {
+            content.innerHTML = '<div style="color:var(--text-muted);">Crie uma turma primeiro.</div>';
+            return;
+        }
+        
+        let html = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <div>
+                    <h3 style="color: #10b981; margin: 0 0 8px 0;">Planejamento Anual de Aulas</h3>
+                    <select id="selEvangTurmaAulas" class="input" style="min-width: 200px;" onchange="listarAulasTurma()">
+                        <option value="">-- Selecione a Turma --</option>
+                        ${turmas.map(t => `<option value="${t.id}">${t.nome} (${t.ano_letivo})</option>`).join('')}
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="novaEvangAula()">+ Nova Aula</button>
+            </div>
+            <div id="listaEvangAulas" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+                <div style="color: var(--text-muted); font-size: 14px;">Selecione uma turma acima para ver o planejamento.</div>
+            </div>
+        `;
+        content.innerHTML = html;
+        
+    } catch(e) {
+        content.innerHTML = `<div style="color:#ef4444;">Erro: ${e.message}</div>`;
+    }
+};
+
+window.listarAulasTurma = async function() {
+    const turmaId = document.getElementById('selEvangTurmaAulas').value;
+    const div = document.getElementById('listaEvangAulas');
+    
+    if (!turmaId) {
+        div.innerHTML = '<div style="color: var(--text-muted); font-size: 14px;">Selecione uma turma acima para ver o planejamento.</div>';
+        return;
+    }
+    
+    div.innerHTML = '<div style="color:var(--text-muted);">Buscando aulas...</div>';
+    
+    try {
+        const { data: aulas, error } = await db.from('app_evang_aulas')
+            .select('*')
+            .eq('turma_id', turmaId)
+            .order('data_aula');
+            
+        if (error) throw error;
+        
+        if (!aulas || aulas.length === 0) {
+            div.innerHTML = '<div style="color: var(--text-muted); font-size: 14px;">Nenhuma aula cadastrada para esta turma.</div>';
+            return;
+        }
+        
+        let html = `
+            <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding: 12px; border-bottom: 2px solid var(--border); color: var(--text-muted);">Data</th>
+                        <th style="text-align: left; padding: 12px; border-bottom: 2px solid var(--border); color: var(--text-muted);">Status</th>
+                        <th style="text-align: left; padding: 12px; border-bottom: 2px solid var(--border); color: var(--text-muted);">Tema Planejado</th>
+                        <th style="text-align: right; padding: 12px; border-bottom: 2px solid var(--border); color: var(--text-muted);">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        aulas.forEach(a => {
+            const dataParts = a.data_aula.split('-');
+            const dataBR = \`\${dataParts[2]}/\${dataParts[1]}/\${dataParts[0]}\`;
+            
+            let badge = '';
+            if (a.status === 'Realizada') badge = '<span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 2px 8px; border-radius: 12px; font-size: 11px;">Realizada</span>';
+            else if (a.status === 'Cancelada') badge = '<span style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 2px 8px; border-radius: 12px; font-size: 11px;">Cancelada</span>';
+            else badge = '<span style="background: rgba(245,158,11,0.1); color: #f59e0b; padding: 2px 8px; border-radius: 12px; font-size: 11px;">Planejada</span>';
+            
+            html += `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 12px; color: var(--text-main); font-weight: 500;">\${dataBR}</td>
+                    <td style="padding: 12px;">\${badge}</td>
+                    <td style="padding: 12px; color: var(--text-muted);">\${a.tema || '<i>Sem tema definido</i>'}</td>
+                    <td style="padding: 12px; text-align: right;">
+                        <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="excluirEvangAula('\${a.id}')">Excluir</button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += `</tbody></table>`;
+        div.innerHTML = html;
+        
+    } catch(e) {
+        div.innerHTML = `<div style="color:#ef4444;">Erro ao carregar aulas: ${e.message}</div>`;
+    }
+};
+
+window.novaEvangAula = async function() {
+    const turmaSelect = document.getElementById('selEvangTurmaAulas');
+    if (!turmaSelect) return alert("Vá para a aba Aulas primeiro.");
+    const turmaId = turmaSelect.value;
+    
+    if (!turmaId) return alert("Selecione uma turma primeiro para adicionar uma aula nela.");
+    
+    const { value: formValues } = await Swal.fire({
+        title: 'Nova Aula',
+        html:
+            '<label style="display:block; text-align:left; margin-bottom:4px; font-size:12px;">Data da Aula</label>' +
+            '<input id="swal-aula-data" class="swal2-input" type="date" style="margin-top:0;">' +
+            '<label style="display:block; text-align:left; margin-top:16px; margin-bottom:4px; font-size:12px;">Tema Planejado (Opcional)</label>' +
+            '<input id="swal-aula-tema" class="swal2-input" placeholder="Ex: Parábola do Semeador" style="margin-top:0;">',
+        focusConfirm: false,
+        preConfirm: () => {
+            return {
+                data: document.getElementById('swal-aula-data').value,
+                tema: document.getElementById('swal-aula-tema').value
+            }
+        }
+    });
+
+    if (formValues) {
+        if(!formValues.data) return alert('A data é obrigatória.');
+        
+        try {
+            const { error } = await db.from('app_evang_aulas').insert([{
+                turma_id: turmaId,
+                data_aula: formValues.data,
+                tema: formValues.tema,
+                status: 'Planejada'
+            }]);
+            
+            if (error) throw error;
+            listarAulasTurma();
+        } catch(e) {
+            alert('Erro ao salvar aula: ' + e.message);
+        }
+    }
+};
+
+window.excluirEvangAula = async function(aulaId) {
+    if (!confirm('Excluir esta aula do calendário? O diário de classe também será apagado.')) return;
+    try {
+        const { error } = await db.from('app_evang_aulas').delete().eq('id', aulaId);
+        if (error) throw error;
+        listarAulasTurma();
+    } catch(e) {
+        alert("Erro ao excluir: " + e.message);
     }
 };
