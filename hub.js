@@ -1570,7 +1570,7 @@ window.carregarAppMiniApps = async function () {
     const isAtendimento = nomeEstrutura.includes('atendimento');
     const isBiblioteca = nomeEstrutura.includes('biblioteca');
     const isEvangelho = nomeEstrutura.includes('evangelho');
-    const isEvangelizacao = nomeEstrutura.includes('evangeliza') || nomeEstrutura.includes('infância') || nomeEstrutura.includes('juventude');
+    const isEvangelizacao = nomeEstrutura.includes('evang') && !isEvangelho || nomeEstrutura.includes('infância') || nomeEstrutura.includes('juventude') || nomeEstrutura.includes('infancia');
 
     let cards = '';
 

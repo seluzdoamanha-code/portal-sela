@@ -349,7 +349,7 @@ window.listarAulasTurma = async function() {
         
         aulas.forEach(a => {
             const dataParts = a.data_aula.split('-');
-            const dataBR = \`\${dataParts[2]}/\${dataParts[1]}/\${dataParts[0]}\`;
+            const dataBR = `${dataParts[2]}/${dataParts[1]}/${dataParts[0]}`;
             
             let badge = '';
             if (a.status === 'Realizada') badge = '<span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 2px 8px; border-radius: 12px; font-size: 11px;">Realizada</span>';
@@ -358,11 +358,11 @@ window.listarAulasTurma = async function() {
             
             html += `
                 <tr style="border-bottom: 1px solid var(--border);">
-                    <td style="padding: 12px; color: var(--text-main); font-weight: 500;">\${dataBR}</td>
-                    <td style="padding: 12px;">\${badge}</td>
-                    <td style="padding: 12px; color: var(--text-muted);">\${a.tema || '<i>Sem tema definido</i>'}</td>
+                    <td style="padding: 12px; color: var(--text-main); font-weight: 500;">${dataBR}</td>
+                    <td style="padding: 12px;">${badge}</td>
+                    <td style="padding: 12px; color: var(--text-muted);">${a.tema || '<i>Sem tema definido</i>'}</td>
                     <td style="padding: 12px; text-align: right;">
-                        <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="excluirEvangAula('\${a.id}')">Excluir</button>
+                        <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="excluirEvangAula('${a.id}')">Excluir</button>
                     </td>
                 </tr>
             `;
