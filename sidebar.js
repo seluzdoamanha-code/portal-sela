@@ -1,7 +1,7 @@
 (function() {
     // Aplica o tema salvo imediatamente para evitar piscar cores
-    const temaSalvo = localStorage.getItem('central_sela_theme');
-    if (temaSalvo && temaSalvo !== 'theme-dark') {
+    const temaSalvo = localStorage.getItem('central_sela_theme') || 'theme-dark';
+    if (temaSalvo) {
         document.body.className = temaSalvo;
     }
 

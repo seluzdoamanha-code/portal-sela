@@ -30,15 +30,14 @@ function configurarTemas() {
         btn.addEventListener('click', (e) => {
             const novoTema = e.currentTarget.dataset.theme;
             
-            // Remove active de todos
+            // Remove active style from all
             botoesTema.forEach(b => b.classList.remove('active'));
-            
-            // Adiciona active no clicado
+            // Add active style to clicked
             e.currentTarget.classList.add('active');
             
-            // Salva e aplica
+            // Save & Apply
             localStorage.setItem('central_sela_theme', novoTema);
-            document.body.className = novoTema === 'theme-dark' ? '' : novoTema;
+            document.body.className = novoTema;
             
             showAviso('Tema visual alterado com sucesso! ✅');
         });
