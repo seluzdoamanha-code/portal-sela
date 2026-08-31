@@ -260,7 +260,7 @@
 
     async function carregarRedesSociais() {
         const container = document.getElementById('socialLinks');
-        if (!sidebarDb) return;
+        if (!container || !sidebarDb) return;
         
         try {
             const { data, error } = await sidebarDb.from('configuracoes').select('*');
