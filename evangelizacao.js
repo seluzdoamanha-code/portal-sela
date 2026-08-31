@@ -217,7 +217,7 @@ window.gerenciarMatriculas = async function(turmaId, turmaNome) {
                     <div style="display: flex; gap: 8px; margin-bottom: 16px; margin-top: 4px;">
                         <select id="selEvangelizador" class="input" style="flex: 1;">
                             <option value="">Selecione...</option>
-                            ${dispoEvangelizadores.map(p => \`<option value="\${p.id}">\${p.nome}</option>\`).join('')}
+                            ${dispoEvangelizadores.map(p => `<option value="${p.id}">${p.nome}</option>`).join('')}
                         </select>
                         <button class="btn btn-primary" onclick="addMatriculaEvang('${turmaId}', '${turmaNome}', 'selEvangelizador', 'Evangelizador')">Vincular</button>
                     </div>
@@ -226,7 +226,7 @@ window.gerenciarMatriculas = async function(turmaId, turmaNome) {
                     <div style="display: flex; gap: 8px; margin-top: 4px;">
                         <select id="selEvangelizando" class="input" style="flex: 1;">
                             <option value="">Selecione...</option>
-                            ${dispoEvangelizandos.map(p => \`<option value="\${p.id}">\${p.nome}</option>\`).join('')}
+                            ${dispoEvangelizandos.map(p => `<option value="${p.id}">${p.nome}</option>`).join('')}
                         </select>
                         <button class="btn btn-primary" onclick="addMatriculaEvang('${turmaId}', '${turmaNome}', 'selEvangelizando', 'Evangelizando')">Vincular</button>
                     </div>

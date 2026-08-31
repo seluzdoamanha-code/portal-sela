@@ -219,8 +219,7 @@ async function renderizarGraficoEntregasWeb(ano) {
     gradient.addColorStop(1, 'rgba(139, 92, 246, 0.8)');
 
     if(window.chartAssEntregasWebInstance) window.chartAssEntregasWebInstance.destroy();
-    window.chartAssEntregasWebInstance = if(window.chartAssDemografiaWebInstance) window.chartAssDemografiaWebInstance.destroy();
-    window.chartAssDemografiaWebInstance = new Chart(ctx, {
+    window.chartAssEntregasWebInstance = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
