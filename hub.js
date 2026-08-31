@@ -116,15 +116,16 @@ async function carregarDadosEstrutura() {
             const isAtendimento = nomeEstrutura.includes('atendimento');
             const isBiblioteca = nomeEstrutura.includes('biblioteca');
             const isEvangelho = nomeEstrutura.includes('evangelho');
+            const isEvangelizacao = nomeEstrutura.includes('evang') && !isEvangelho || nomeEstrutura.includes('infância') || nomeEstrutura.includes('juventude') || nomeEstrutura.includes('infancia');
 
             // Lógica de exibir Abas com base na configuração do DB
             let config = data.abas_config || {
                 equipe: true, agenda: true, projetos: true, documentos: true,
                 tesouraria: false,
-                apps: isIrradiacao || isAssistencia || isAtendimento || isBiblioteca || isEvangelho
+                apps: isIrradiacao || isAssistencia || isAtendimento || isBiblioteca || isEvangelho || isEvangelizacao
             };
 
-            if (isIrradiacao || isAssistencia || isAtendimento || isBiblioteca || isEvangelho) {
+            if (isIrradiacao || isAssistencia || isAtendimento || isBiblioteca || isEvangelho || isEvangelizacao) {
                 config.apps = true;
             }
 
@@ -141,7 +142,7 @@ async function carregarDadosEstrutura() {
             if (config.apps) {
                 const btnApps = document.querySelector('[data-target="abaApps"]');
                 if (btnApps) btnApps.style.display = 'block';
-                if (isIrradiacao || isAssistencia || isAtendimento || isBiblioteca || isEvangelho) {
+                if (isIrradiacao || isAssistencia || isAtendimento || isBiblioteca || isEvangelho || isEvangelizacao) {
                     carregarAppMiniApps();
                 }
             }
