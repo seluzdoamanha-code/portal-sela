@@ -1570,6 +1570,7 @@ window.carregarAppMiniApps = async function () {
     const isAtendimento = nomeEstrutura.includes('atendimento');
     const isBiblioteca = nomeEstrutura.includes('biblioteca');
     const isEvangelho = nomeEstrutura.includes('evangelho');
+    const isEvangelizacao = nomeEstrutura.includes('evangeliza') || nomeEstrutura.includes('infância') || nomeEstrutura.includes('juventude');
 
     let cards = '';
 
@@ -1631,6 +1632,16 @@ window.carregarAppMiniApps = async function () {
                 <div style="font-size: 32px; margin-bottom: 12px;">📚</div>
                 <h3 style="color: #4f46e5; margin-bottom: 8px;">Acessar Biblioteca SELA</h3>
                 <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Clique aqui para abrir o acervo de livros e solicitar empréstimos no site oficial.</p>
+            </div>
+        `;
+    }
+    
+    if (isEvangelizacao) {
+        cards += `
+            <div onclick="window.carregarModuloEvangelizacao()" style="background: rgba(16, 185, 129, 0.05); border: 1px solid #10b981; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(16, 185, 129, 0.05)'; this.style.transform='none'">
+                <div style="font-size: 32px; margin-bottom: 12px;">🌱</div>
+                <h3 style="color: #10b981; margin-bottom: 8px;">Módulo Evangelização</h3>
+                <p style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Gestão de Turmas, Frequência Diária e Avaliações Semestrais.</p>
             </div>
         `;
     }
