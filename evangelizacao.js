@@ -59,7 +59,7 @@ window.mudarAbaEvang = function(aba) {
     } else if (aba === 'aulas') {
         carregarEvangAulas();
     } else if (aba === 'diario') {
-        content.innerHTML = '<h3 style="color:#10b981;">Diário de Classe</h3><p style="color:var(--text-muted);">Módulo em desenvolvimento...</p>';
+        carregarEvangDiario();
     } else if (aba === 'boletim') {
         content.innerHTML = '<h3 style="color:#10b981;">Boletim de Avaliação</h3><p style="color:var(--text-muted);">Módulo em desenvolvimento...</p>';
     }
@@ -426,5 +426,246 @@ window.excluirEvangAula = async function(aulaId) {
         listarAulasTurma();
     } catch(e) {
         alert("Erro ao excluir: " + e.message);
+    }
+};
+
+// ==========================================
+// DIÁRIO DE CLASSE (FREQUÊNCIA)
+// ==========================================
+
+window.carregarEvangDiario = async function() {
+    const content = document.getElementById('evangContent');
+    content.innerHTML = '<div style="color:var(--text-muted);">Carregando turmas...</div>';
+    
+    try {
+        const { data: turmas, error } = await db.from('app_evang_turmas').select('*').order('nome');
+        if (error) throw error;
+        
+        let html = `
+            <div style="margin-bottom: 24px;">
+                <h3 style="color: #10b981; margin: 0 0 16px 0;">Diário de Classe - Frequência</h3>
+                <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Turma</label>
+                        <select id="selDiarioTurma" class="input" style="width: 100%;" onchange="carregarDatasAulasDiario()">
+                            <option value="">-- Selecione --</option>
+                            ${turmas.map(t => `<option value="${t.id}">${t.nome}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Data da Aula</label>
+                        <select id="selDiarioAula" class="input" style="width: 100%;" onchange="carregarListaChamada()" disabled>
+                            <option value="">Selecione a Turma primeiro</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="listaChamadaContainer" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-height: 200px;">
+                <div style="color: var(--text-muted); font-size: 14px; text-align: center; margin-top: 20px;">
+                    Selecione a turma e a data da aula acima para realizar a chamada.
+                </div>
+            </div>
+        `;
+        content.innerHTML = html;
+        
+    } catch(e) {
+        content.innerHTML = `<div style="color:#ef4444;">Erro: ${e.message}</div>`;
+    }
+};
+
+window.carregarDatasAulasDiario = async function() {
+    const turmaId = document.getElementById('selDiarioTurma').value;
+    const selAula = document.getElementById('selDiarioAula');
+    const container = document.getElementById('listaChamadaContainer');
+    
+    container.innerHTML = '<div style="color: var(--text-muted); font-size: 14px; text-align: center; margin-top: 20px;">Selecione a turma e a data da aula acima para realizar a chamada.</div>';
+    
+    if (!turmaId) {
+        selAula.innerHTML = '<option value="">Selecione a Turma primeiro</option>';
+        selAula.disabled = true;
+        return;
+    }
+    
+    selAula.innerHTML = '<option value="">Carregando...</option>';
+    selAula.disabled = true;
+    
+    try {
+        const { data: aulas, error } = await db.from('app_evang_aulas')
+            .select('id, data_aula, tema, status')
+            .eq('turma_id', turmaId)
+            .order('data_aula', { ascending: false });
+            
+        if (error) throw error;
+        
+        if (!aulas || aulas.length === 0) {
+            selAula.innerHTML = '<option value="">Nenhuma aula planejada</option>';
+            return;
+        }
+        
+        let options = '<option value="">-- Escolha a data --</option>';
+        aulas.forEach(a => {
+            const dataParts = a.data_aula.split('-');
+            const dataBR = `${dataParts[2]}/${dataParts[1]}/${dataParts[0]}`;
+            const label = `${dataBR} - ${a.tema || 'Sem tema'} (${a.status})`;
+            options += `<option value="${a.id}">${label}</option>`;
+        });
+        
+        selAula.innerHTML = options;
+        selAula.disabled = false;
+        
+    } catch(e) {
+        selAula.innerHTML = '<option value="">Erro ao carregar</option>';
+        console.error(e);
+    }
+};
+
+window.carregarListaChamada = async function() {
+    const turmaId = document.getElementById('selDiarioTurma').value;
+    const aulaId = document.getElementById('selDiarioAula').value;
+    const container = document.getElementById('listaChamadaContainer');
+    
+    if (!turmaId || !aulaId) {
+        container.innerHTML = '<div style="color: var(--text-muted); font-size: 14px; text-align: center; margin-top: 20px;">Selecione a turma e a data da aula acima para realizar a chamada.</div>';
+        return;
+    }
+    
+    container.innerHTML = '<div style="text-align: center; color: var(--text-muted);">Montando diário de classe...</div>';
+    
+    try {
+        // 1. Buscar alunos matriculados na turma
+        const { data: matriculas, error: errMat } = await db.from('app_evang_matriculas')
+            .select('pessoa_id, papel, pessoas(nome)')
+            .eq('turma_id', turmaId)
+            .eq('papel', 'Evangelizando');
+            
+        if (errMat) throw errMat;
+        
+        if (!matriculas || matriculas.length === 0) {
+            container.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum Evangelizando(a) matriculado nesta turma. Vá na aba Turmas e vincule os alunos.</div>';
+            return;
+        }
+        
+        // 2. Buscar frequência já existente para esta aula
+        const { data: frequencias, error: errFreq } = await db.from('app_evang_frequencia')
+            .select('*')
+            .eq('aula_id', aulaId);
+            
+        if (errFreq) throw errFreq;
+        
+        const freqMap = {};
+        if (frequencias) {
+            frequencias.forEach(f => {
+                freqMap[f.pessoa_id] = f.presente;
+            });
+        }
+        
+        // Ordenar alunos alfabeticamente
+        matriculas.sort((a,b) => a.pessoas.nome.localeCompare(b.pessoas.nome));
+        
+        let html = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h4 style="margin: 0; color: var(--text-main);">Chamada - ${matriculas.length} Alunos</h4>
+                <button class="btn btn-primary" onclick="salvarDiarioClasse('${aulaId}')">Salvar Chamada</button>
+            </div>
+            
+            <div style="background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--border); overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <thead>
+                        <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);">
+                            <th style="padding: 12px; text-align: left; color: var(--text-muted); width: 60%;">Nome do Evangelizando</th>
+                            <th style="padding: 12px; text-align: center; color: var(--text-muted); width: 40%;">Presença</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        matriculas.forEach(m => {
+            const pId = m.pessoa_id;
+            const isPresente = freqMap[pId] !== false; // Padrão é true (presente) se não existir registro, ou se for true
+            const hasRecord = freqMap.hasOwnProperty(pId);
+            
+            // Se já tem registro e é falso, desmarca. Se não tem registro, deixa marcado (padrão PRESENTE)
+            const checked = (hasRecord && !isPresente) ? '' : 'checked';
+            
+            html += `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 12px; color: var(--text-main); font-weight: 500;">
+                        ${m.pessoas.nome}
+                    </td>
+                    <td style="padding: 12px; text-align: center;">
+                        <label style="display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" class="chamada-checkbox" data-pessoaid="${pId}" ${checked} style="width: 18px; height: 18px; accent-color: #10b981;">
+                            <span style="color: var(--text-muted); font-size: 12px;">Presente</span>
+                        </label>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 16px; text-align: right;">
+                <button class="btn btn-primary" onclick="salvarDiarioClasse('${aulaId}')">Salvar Chamada</button>
+            </div>
+        `;
+        
+        container.innerHTML = html;
+        
+    } catch(e) {
+        container.innerHTML = `<div style="color:#ef4444;">Erro ao montar diário: ${e.message}</div>`;
+    }
+};
+
+window.salvarDiarioClasse = async function(aulaId) {
+    const checkboxes = document.querySelectorAll('.chamada-checkbox');
+    const records = [];
+    
+    checkboxes.forEach(chk => {
+        records.push({
+            aula_id: aulaId,
+            pessoa_id: chk.getAttribute('data-pessoaid'),
+            presente: chk.checked
+        });
+    });
+    
+    if (records.length === 0) return;
+    
+    const btn = event.target;
+    const textoOriginal = btn.innerText;
+    btn.innerText = 'Salvando...';
+    btn.disabled = true;
+    
+    try {
+        // Apagar frequencias anteriores dessa aula (substituição completa)
+        await db.from('app_evang_frequencia').delete().eq('aula_id', aulaId);
+        
+        // Inserir novas frequencias
+        const { error: errIns } = await db.from('app_evang_frequencia').insert(records);
+        if (errIns) throw errIns;
+        
+        // Atualizar status da aula para "Realizada"
+        await db.from('app_evang_aulas').update({ status: 'Realizada' }).eq('id', aulaId);
+        
+        // Atualiza a combo para mostrar o status Realizada
+        const turmaId = document.getElementById('selDiarioTurma').value;
+        await carregarDatasAulasDiario();
+        // Restaura a seleção
+        document.getElementById('selDiarioAula').value = aulaId;
+        
+        btn.innerText = 'Salvo com sucesso!';
+        btn.style.background = '#10b981';
+        setTimeout(() => {
+            btn.innerText = textoOriginal;
+            btn.style.background = '';
+            btn.disabled = false;
+        }, 2000);
+        
+    } catch (e) {
+        alert("Erro ao salvar diário: " + e.message);
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
     }
 };
