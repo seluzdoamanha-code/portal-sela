@@ -806,15 +806,15 @@ window.renderizarMapaFrequencia = function() {
         freqMap[f.matricula_id][f.aula_id] = f;
     });
     
-    let thead = `<tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);">
-        <th style="padding: 12px; text-align: left; color: var(--text-muted); position: sticky; left: 0; background: var(--bg-panel); z-index: 2; min-width: 250px;">Aluno</th>
-        <th style="padding: 12px; text-align: center; color: var(--text-muted); min-width: 80px;">Ocorr.</th>`;
+    let thead = `<tr style="border-bottom: 1px solid var(--border);">
+        <th style="padding: 12px 16px; text-align: left; color: var(--text-muted); position: sticky; left: 0; background: var(--bg-panel); z-index: 2; min-width: 200px; border-right: 1px solid var(--border);">Aluno</th>
+        <th style="padding: 8px 4px; text-align: center; color: var(--text-muted); min-width: 60px;">Ocorr.</th>`;
         
     aulas.forEach(a => {
         const dataParts = a.data_aula.split('-');
         const dataBR = `${dataParts[2]}/${dataParts[1]}`;
         const isFoco = (a.id === aulaFocoId);
-        thead += `<th style="padding: 12px; text-align: center; color: var(--text-muted); min-width: ${modoMassa || isFoco ? '120px' : '50px'}; ${isFoco ? 'background: rgba(16,185,129,0.1); border-radius: 8px 8px 0 0;' : ''}" title="${a.tema || 'Sem tema'}">
+        thead += `<th style="padding: 8px 4px; text-align: center; color: var(--text-muted); min-width: ${modoMassa || isFoco ? '100px' : '40px'}; ${isFoco ? 'background: rgba(16,185,129,0.1); border-radius: 8px 8px 0 0;' : ''}" title="${a.tema || 'Sem tema'}">
             ${dataBR}
         </th>`;
     });
@@ -825,11 +825,11 @@ window.renderizarMapaFrequencia = function() {
         const mId = m.id;
         
         tbody += `<tr style="border-bottom: 1px solid var(--border);">
-            <td style="padding: 12px; color: var(--text-main); font-weight: 500; position: sticky; left: 0; background: var(--bg-panel); z-index: 1;">
+            <td style="padding: 12px 16px; color: var(--text-main); font-weight: 500; position: sticky; left: 0; background: var(--bg-panel); z-index: 1; border-right: 1px solid var(--border);">
                 ${m.pessoas?.nome_completo || 'Desconhecido'}
             </td>
-            <td style="padding: 12px; text-align: center;">
-                <button onclick="window.registrarOcorrenciaEvang('${m.pessoa_id}', '${(m.pessoas?.nome_completo || '').replace(/'/g, "\'")}')" style="background: none; border: none; cursor: pointer; font-size: 14px;" title="Ocorrência Assistencial">⚠️</button>
+            <td style="padding: 8px 4px; text-align: center;">
+                <button onclick="window.registrarOcorrenciaEvang('${m.pessoa_id}', '${(m.pessoas?.nome_completo || '').replace(/'/g, "\\'")}')" style="background: none; border: none; cursor: pointer; font-size: 14px;" title="Ocorrência Assistencial">⚠️</button>
             </td>`;
             
         aulas.forEach(a => {
@@ -861,7 +861,7 @@ window.renderizarMapaFrequencia = function() {
                 }
             }
             
-            tbody += `<td style="padding: 12px; text-align: center; ${isFoco ? 'background: rgba(16,185,129,0.05);' : ''}">${cellContent}</td>`;
+            tbody += `<td style="padding: 8px 4px; text-align: center; ${isFoco ? 'background: rgba(16,185,129,0.05);' : ''}">${cellContent}</td>`;
         });
         
         tbody += `</tr>`;
@@ -891,7 +891,7 @@ window.renderizarMapaFrequencia = function() {
     }
     
     let html = `
-        <div style="overflow-x: auto; max-height: 600px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 16px; background: rgba(0,0,0,0.2);">
+        <div style="overflow-x: auto; max-height: 600px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 16px; background: transparent;">
             <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                 <thead>${thead}</thead>
                 <tbody>${tbody}</tbody>
