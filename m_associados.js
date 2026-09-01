@@ -19,7 +19,7 @@ let todasPessoas = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     if (!loggedUserPessoaId && loggedUserEmail) {
-        const { data: pData } = await db.from('pessoas').select('id, nome_completo, email, perfil').eq('email', loggedUserEmail).single();
+        const { data: pData } = await db.from('pessoas').select('id, nome_completo, email, perfis').eq('email', loggedUserEmail).single();
         if (pData) {
             loggedUserPessoaId = pData.id;
         }
@@ -54,7 +54,11 @@ async function carregarDadosAssociados() {
         const { data: pessoas, error: errPes } = await db.from('pessoas').select('*, vinculos_estrutura(estruturas(nome, tipo))').order('nome_completo', { ascending: true });
         if (errPes) throw errPes;
         
-        todasPessoas = (pessoas || []).filter(p => p.perfil && p.perfil.toLowerCase().includes('associado'));
+        todasPessoas = (pessoas || []).filter(p => {
+            if (!p.perfis) return false;
+            const perfisArr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? p.perfis.split(',').map(s=>s.trim()) : []);
+            return perfisArr.some(pf => pf.toLowerCase().includes('associado'));
+        });
         
         renderizarDiretorio();
     } catch (e) {
@@ -171,10 +175,16 @@ function renderizarDiretorio(filtro = '') {
         const div = document.createElement('div');
         div.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 4px;';
         
+        let perfisFormatados = '';
+        if (p.perfis) {
+            const arr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? p.perfis.split(',') : []);
+            perfisFormatados = arr.filter(pf => pf.toLowerCase().includes('associado')).join(', ') || 'Associado';
+        }
+
         div.innerHTML = `
             <div style="font-weight: 600; font-size: 13px; color: var(--text-main);">${p.nome_completo}</div>
             ${p.email ? `<div style="font-size: 11px; color: var(--text-muted);">${p.email}</div>` : ''}
-            <div style="font-size: 11px; font-weight: 600; color: var(--primary); margin-top: 4px;">${p.perfil || 'Associado'}</div>
+            <div style="font-size: 11px; font-weight: 600; color: var(--primary); margin-top: 4px;">${perfisFormatados}</div>
             
             <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
                 ${tagsDepts}

@@ -20,7 +20,7 @@ let todasPessoas = [];
 document.addEventListener('DOMContentLoaded', async () => {
     // Buscar o pessoa_id do usuário logado baseado no email caso não tenha vindo do auth_guard
     if (!loggedUserPessoaId && loggedUserEmail) {
-        const { data: pData } = await db.from('pessoas').select('id, nome_completo, email, perfil').eq('email', loggedUserEmail).single();
+        const { data: pData } = await db.from('pessoas').select('id, nome_completo, email, perfis').eq('email', loggedUserEmail).single();
         if (pData) {
             loggedUserPessoaId = pData.id;
         }
@@ -64,8 +64,11 @@ async function carregarDadosAssociados() {
         if (errPes) throw errPes;
         
         // Filtra apenas os que são "Associados" (Efetivo, etc)
-        // Adjust the filtering logic based on how Associado is defined in the system. Often it's in the 'perfil' column.
-        todasPessoas = (pessoas || []).filter(p => p.perfil && p.perfil.toLowerCase().includes('associado'));
+        todasPessoas = (pessoas || []).filter(p => {
+            if (!p.perfis) return false;
+            const perfisArr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? p.perfis.split(',').map(s=>s.trim()) : []);
+            return perfisArr.some(pf => pf.toLowerCase().includes('associado'));
+        });
         
         renderizarDiretorio();
 
@@ -193,13 +196,19 @@ function renderizarDiretorio(filtro = '') {
         const div = document.createElement('div');
         div.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;';
         
+        let perfisFormatados = '';
+        if (p.perfis) {
+            const arr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? p.perfis.split(',') : []);
+            perfisFormatados = arr.filter(pf => pf.toLowerCase().includes('associado')).join(', ') || 'Associado';
+        }
+
         div.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <div style="font-weight: 600; font-size: 14px; color: var(--text-main);">${p.nome_completo}</div>
                     ${emailTxt}
                 </div>
-                <div style="font-size: 11px; font-weight: 600; color: var(--primary);">${p.perfil}</div>
+                <div style="font-size: 11px; font-weight: 600; color: var(--primary);">${perfisFormatados}</div>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px;">
                 <div style="display: flex; flex-wrap: wrap; gap: 4px;">
