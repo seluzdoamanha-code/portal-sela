@@ -315,11 +315,11 @@ window.carregarEvangAulas = async function() {
         }
         
         let html = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div style="margin-bottom: 24px;">
+                <h3 style="color: #10b981; margin: 0 0 16px 0;">Planejamento Anual de Aulas</h3>
                 <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
-                    <div>
-                        <h3 style="color: #10b981; margin: 0 0 8px 0;">Planejamento Anual de Aulas</h3>
-                        <select id="selEvangTurmaAulas" class="input" style="min-width: 200px;" onchange="listarAulasTurma()">
+                    <div style="flex: 1; min-width: 250px;">
+                        <select id="selEvangTurmaAulas" class="input" style="width: 100%;" onchange="listarAulasTurma()">
                             <option value="">-- Selecione a Turma --</option>
                             ${turmas.map(t => `<option value="${t.id}">${t.nome} (${t.ano_letivo}) - ${t.dia_semana || 'Sem Dia'}</option>`).join('')}
                         </select>
@@ -327,6 +327,7 @@ window.carregarEvangAulas = async function() {
                     <button class="btn" style="background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border);" onclick="gerarLoteEvangAulas()">Gerar Lote de Aulas</button>
                     <button class="btn btn-primary" onclick="novaEvangAula()">+ Nova Aula</button>
                 </div>
+            </div>
             <div id="listaEvangAulas" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
                 <div style="color: var(--text-muted); font-size: 14px;">Selecione uma turma acima para ver o planejamento.</div>
             </div>
