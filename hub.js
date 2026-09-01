@@ -236,6 +236,7 @@ async function carregarDadosHome(estData) {
         const isAtendimento = nomeEstrutura.includes('atendimento');
         const isBiblioteca = nomeEstrutura.includes('biblioteca');
         const isEvangelho = nomeEstrutura.includes('evangelho');
+        const isEvangelizacao = nomeEstrutura.includes('evangeliza') || nomeEstrutura.includes('infância') || nomeEstrutura.includes('infancia');
 
         let hasApps = false;
 
@@ -292,13 +293,26 @@ async function carregarDadosHome(estData) {
             appsGrid.innerHTML += `
                 <div class="card-agenda" style="background: rgba(139, 92, 246, 0.02); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
-                        <div style="font-weight: 600; color: #8b5cf6; font-size: 14px; margin-bottom: 6px;">📚 BIBLIOTECA</div>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Consulta e catalogação de acervo literário, controle de empréstimos ativos e históricos de leituras.</div>
+                        <div style="font-weight: 600; color: #8b5cf6; font-size: 14px; margin-bottom: 6px;">📚 BIBLIOTECA E ACERVO</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Gestão de livros, empréstimos e leitores da entidade.</div>
                     </div>
                     <button class="btn" onclick="mudarAbaAtalho('abaApps')" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); font-size: 12px; padding: 6px 12px;">Abrir Painel ➔</button>
                 </div>
             `;
         }
+        if (isEvangelizacao && config.apps) {
+            hasApps = true;
+            appsGrid.innerHTML += `
+                <div class="card-agenda" style="background: rgba(16, 185, 129, 0.02); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="font-weight: 600; color: #10b981; font-size: 14px; margin-bottom: 6px;">🌱 EVANGELIZAÇÃO INFANTO-JUVENIL</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Gestão de turmas, planejamento de aulas e diário de classe (frequência).</div>
+                    </div>
+                    <button class="btn" onclick="mudarAbaAtalho('abaApps')" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 12px; padding: 6px 12px;">Abrir Painel ➔</button>
+                </div>
+            `;
+        }
+}
 
         if (!hasApps) {
             appsGrid.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; font-style: italic; padding: 12px 0;">Este setor não possui ferramentas ativas no momento.</div>';

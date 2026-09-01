@@ -5,26 +5,25 @@
 window.carregarModuloEvangelizacao = async function() {
     const container = document.getElementById('containerApps');
     container.innerHTML = `
-        <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
-            <!-- Menu Lateral do Mini App -->
-            <div style="width: 250px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; flex-shrink: 0;">
-                <div style="padding: 16px; border-bottom: 1px solid var(--border); background: rgba(16, 185, 129, 0.05);">
-                    <h2 style="font-size: 16px; color: #10b981; margin: 0;">🌱 Evangelização</h2>
-                    <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Gestão de Turmas e Aulas</p>
-                </div>
-                <div style="padding: 12px; display: flex; flex-direction: column; gap: 4px;">
-                    <button onclick="mudarAbaEvang('inicio')" id="btnAbaEvangInicio" class="btn" style="text-align: left; background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border); justify-content: flex-start;">🏠 Início</button>
-                    <button onclick="mudarAbaEvang('turmas')" id="btnAbaEvangTurmas" class="btn" style="text-align: left; background: transparent; color: var(--text-muted); border: 1px solid transparent; justify-content: flex-start;">🏫 Turmas e Matrículas</button>
-                    <button onclick="mudarAbaEvang('aulas')" id="btnAbaEvangAulas" class="btn" style="text-align: left; background: transparent; color: var(--text-muted); border: 1px solid transparent; justify-content: flex-start;">📅 Planejamento Anual</button>
-                    <button onclick="mudarAbaEvang('diario')" id="btnAbaEvangDiario" class="btn" style="text-align: left; background: transparent; color: var(--text-muted); border: 1px solid transparent; justify-content: flex-start;">📝 Diário de Classe</button>
-                    <button onclick="mudarAbaEvang('boletim')" id="btnAbaEvangBoletim" class="btn" style="text-align: left; background: transparent; color: var(--text-muted); border: 1px solid transparent; justify-content: flex-start;">📊 Boletim Final</button>
+        <div>
+            <div style="padding: 16px; border-bottom: 1px solid var(--border); background: rgba(16, 185, 129, 0.05); border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <h2 style="font-size: 18px; color: #10b981; margin: 0;">🌱 Evangelização</h2>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Gestão de Turmas e Aulas</p>
                 </div>
             </div>
+            
+            <div style="display: flex; gap: 8px; padding: 12px; background: var(--bg-panel); border-left: 1px solid var(--border); border-right: 1px solid var(--border); overflow-x: auto; white-space: nowrap;">
+                <button onclick="mudarAbaEvang('inicio')" id="btnAbaEvangInicio" class="btn" style="background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border);">🏠 Início</button>
+                <button onclick="mudarAbaEvang('turmas')" id="btnAbaEvangTurmas" class="btn" style="background: transparent; color: var(--text-muted); border: 1px solid transparent;">🏫 Turmas e Matrículas</button>
+                <button onclick="mudarAbaEvang('aulas')" id="btnAbaEvangAulas" class="btn" style="background: transparent; color: var(--text-muted); border: 1px solid transparent;">📅 Planejamento Anual</button>
+                <button onclick="mudarAbaEvang('diario')" id="btnAbaEvangDiario" class="btn" style="background: transparent; color: var(--text-muted); border: 1px solid transparent;">📝 Diário de Classe</button>
+                <button onclick="mudarAbaEvang('boletim')" id="btnAbaEvangBoletim" class="btn" style="background: transparent; color: var(--text-muted); border: 1px solid transparent;">📊 Boletim Final</button>
+            </div>
 
-            <!-- Conteúdo -->
-            <div style="flex: 1; min-width: 300px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 24px;">
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 0 0 12px 12px; padding: 24px;">
                 <div id="evangContent">
-                    <div style="color: var(--text-muted); font-size: 14px;">Selecione uma opção no menu ao lado...</div>
+                    <div style="color: var(--text-muted); font-size: 14px;">Selecione uma opção nas abas acima...</div>
                 </div>
             </div>
         </div>
