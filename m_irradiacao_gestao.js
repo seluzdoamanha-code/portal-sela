@@ -732,17 +732,7 @@ window.carregarEstatisticasIrradiacaoMobile = async function () {
                 };
             }).filter(ds => ds.data.some(v => v > 0));
 
-            datasetsSemanal.push({
-                label: 'Total da Semana',
-                data: sortedWeeks.map(w => leiturasPorSemana[w] || 0),
-                borderColor: '#6366f1',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                borderWidth: 2,
-                borderDash: [5, 5],
-                tension: 0.3,
-                fill: true,
-                pointRadius: 3
-            });
+            // Linha "Total da Semana" removida conforme solicitado
 
             if(window.irrSemanalChartMobile) window.irrSemanalChartMobile.destroy();
             window.irrSemanalChartMobile = new Chart(ctxSemanal, {

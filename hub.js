@@ -2036,9 +2036,9 @@ window.mudarAbaIrradiacao = function (aba) {
     }
 
     if(btnHistorico) {
-        btnHistorico.style.background = aba === 'historico' ? 'rgba(255, 255, 255, 0.1)' : 'transparent';
-        btnHistorico.style.color = aba === 'historico' ? 'white' : 'var(--text-muted)';
-        btnHistorico.style.border = aba === 'historico' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid transparent';
+        btnHistorico.style.background = aba === 'historico' ? 'rgba(100, 116, 139, 0.2)' : 'transparent';
+        btnHistorico.style.color = aba === 'historico' ? 'var(--text-main)' : 'var(--text-muted)';
+        btnHistorico.style.border = aba === 'historico' ? '1px solid rgba(100, 116, 139, 0.4)' : '1px solid transparent';
     }
 
     if(btnArquivamento) {
