@@ -626,10 +626,11 @@ window.registrarOcorrenciaEvang = async function(pessoaId, nomePessoa) {
         Swal.fire({ title: 'Salvando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
         
         try {
+            const timeStr = Date.now().toString().slice(-5);
             const { error } = await db.from('ass_ocorrencias').insert([{
                 pessoa_id: pessoaId,
                 data_ocorrencia: formValues.data,
-                codigo: 'RO-DIJ',
+                codigo: 'RO-DIJ-' + timeStr,
                 tipo: 'Evangelização / DIJ',
                 observacao: formValues.obs
             }]);
