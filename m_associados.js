@@ -3,13 +3,22 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let loggedUserPessoaId = null;
-let loggedUserEmail = localStorage.getItem('userEmail');
+let loggedUserEmail = null;
+
+try {
+    const profStr = localStorage.getItem('sela_user_profile');
+    if (profStr) {
+        const prof = JSON.parse(profStr);
+        loggedUserEmail = prof.email;
+        loggedUserPessoaId = prof.pessoa_id;
+    }
+} catch(e) {}
 
 let todosTemplates = [];
 let todasPessoas = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-    if (loggedUserEmail) {
+    if (!loggedUserPessoaId && loggedUserEmail) {
         const { data: pData } = await db.from('pessoas').select('id, nome_completo, email, perfil').eq('email', loggedUserEmail).single();
         if (pData) {
             loggedUserPessoaId = pData.id;
