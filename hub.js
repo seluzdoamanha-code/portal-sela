@@ -2624,24 +2624,24 @@ window.aprovarIrradiacao = function (id, nome, endereco, dias_semana) {
 
     const modalHtml = `
         <div id="modalTriagemIrr" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-            <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 90%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 90%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
                 <h3 style="color: var(--text-main); font-size: 18px; margin-bottom: 16px;">Triagem de Irradiação</h3>
                 
                 <div style="margin-bottom: 16px;">
                     <p style="margin:0; font-size: 14px; color: var(--text-muted);">Nome Solicitado:</p>
-                    <p style="margin:0; font-weight: bold; color: white;">${nome}</p>
+                    <p style="margin:0; font-weight: bold; color: var(--text-main);">${nome}</p>
                 </div>
 
                 <div style="margin-bottom: 16px;">
                     <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Dia da Semana:</label>
-                    <select id="triagemDia" style="width: 100%; padding: 8px 12px; border-radius: 8px; background: var(--bg-panel); border: 1px solid var(--border); color: white;">
+                    <select id="triagemDia" style="width: 100%; padding: 8px 12px; border-radius: 8px; background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main);">
                         ${opcoesDiaHtml}
                     </select>
                 </div>
 
                 <div style="margin-bottom: 24px;">
                     <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Duração do Tratamento:</label>
-                    <select id="triagemSemanas" style="width: 100%; padding: 8px 12px; border-radius: 8px; background: var(--bg-panel); border: 1px solid var(--border); color: white;">
+                    <select id="triagemSemanas" style="width: 100%; padding: 8px 12px; border-radius: 8px; background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main);">
                         <option value="4">4 Semanas (Padrão)</option>
                         <option value="16">16 Semanas (Longo)</option>
                     </select>
