@@ -299,7 +299,7 @@ function renderLista() {
                 }
             }
 
-            let lastDateHtml = '';
+            let lastDateHtml = 'N/A';
             let logs = item.log_datas_leituras;
             if (typeof logs === 'string') {
                 try { logs = JSON.parse(logs); } catch (e) { logs = []; }
@@ -312,26 +312,41 @@ function renderLista() {
                     const today = new Date();
                     const isToday = (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear());
                     if (isToday) {
-                        lastDateHtml = `<span style="margin-left: 8px; font-size: 11px; font-weight: 600; background: rgba(16,185,129,0.15); color: #10b981; padding: 2px 6px; border-radius: 4px; border: 1px solid #10b981;">(Hoje)</span>`;
+                        lastDateHtml = `<strong style="color: #10b981;">Hoje</strong>`;
                     } else {
-                        lastDateHtml = `<span style="margin-left: 8px; font-size: 11px; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">Última: ${lastDateStr}</span>`;
+                        lastDateHtml = lastDateStr;
                     }
                 }
             }
 
             let checkboxRepetir = `
-                <label style="font-size: 11px; display: flex; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; margin-bottom: 6px;">
+                <label style="font-size: 12px; display: flex; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; margin: 0;">
                     <input type="checkbox" id="chk_renovar_${item.id}" onchange="toggleRenovacaoAutomaticaMobile('${item.id}', this.checked)" ${item.renovacao_automatica ? 'checked' : ''}>
-                    Repetir (Reiniciar automaticamente)
+                    Repetir
                 </label>
             `;
 
-            progressHtml = `<div style="margin-top: 8px; font-size: 13px; color: var(--text-muted);">${checkboxRepetir}<div style="display:flex; align-items:center; margin-bottom:4px; flex-wrap:wrap;">Leitura atual: <strong style="color:var(--accent); margin-left:4px; margin-right:4px;">${leituras}/${semanas_alvo}</strong>${totalLeiturasHtml} ${lastDateHtml}</div><div style="margin-top:4px; display:flex; flex-wrap:wrap;">${caixinhas}</div></div>`;
+            progressHtml = `
+                <div style="margin-top: 4px; font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                    <div>Atual: <strong style="color:var(--text-main);">${leituras}/${semanas_alvo}</strong> | Total: <strong style="color:var(--text-main);">${arrayLogs.length}</strong> | Última: ${lastDateHtml}</div>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 4px;">
+                        ${checkboxRepetir}
+                        <div style="color: var(--border);">|</div>
+                        <div style="display: flex; align-items: center; gap: 2px;">${caixinhas}</div>
+                    </div>
+                </div>
+            `;
 
             actions = `
-                <button id="btn_ler_${item.id}" onclick="marcarLeituraIrrMobile(this, '${item.id}', ${leituras}, ${semanas_alvo})" class="btn-action" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; transition: all 0.3s ease;">✅ Registrar Leitura</button>
-                <button class="btn-action btn-secondary" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})">Editar ✏️</button>
-                <button class="btn-action btn-danger" onclick="arquivar('${item.id}')">Forçar Arquivamento</button>
+                <button id="btn_ler_${item.id}" onclick="marcarLeituraIrrMobile(this, '${item.id}', ${leituras}, ${semanas_alvo})" class="btn-action" style="flex: 1; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 8px 4px; gap:4px; height: auto;">
+                    <span style="font-size: 16px;">✅</span><span style="font-size: 10px;">Registrar</span>
+                </button>
+                <button class="btn-action" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})" style="flex: 1; background: transparent; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 8px 4px; gap:4px; height: auto;">
+                    <span style="font-size: 16px;">✏️</span><span style="font-size: 10px;">Editar</span>
+                </button>
+                <button class="btn-action" onclick="arquivar('${item.id}')" style="flex: 1; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 8px 4px; gap:4px; height: auto;">
+                    <span style="font-size: 16px;">🗄️</span><span style="font-size: 10px;">Arquivar</span>
+                </button>
             `;
         } else if (currentTab === 'historico' || currentTab === 'arquivamento') {
             let lastDateInfo = '';
@@ -348,9 +363,15 @@ function renderLista() {
             progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: Histórico${totalLeiturasHtml}${lastDateInfo}</div>`;
 
             actions = `
-                <button class="btn-action btn-primary" onclick="aprovar('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}')">Reativar ♻️</button>
-                <button class="btn-action btn-secondary" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})">Editar ✏️</button>
-                <button class="btn-action btn-danger" onclick="excluir('${item.id}')">Excluir</button>
+                <button class="btn-action" onclick="aprovar('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}')" style="flex: 1; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 8px 4px; gap:4px; height: auto;">
+                    <span style="font-size: 16px;">♻️</span><span style="font-size: 10px;">Reativar</span>
+                </button>
+                <button class="btn-action" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})" style="flex: 1; background: transparent; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 8px 4px; gap:4px; height: auto;">
+                    <span style="font-size: 16px;">✏️</span><span style="font-size: 10px;">Editar</span>
+                </button>
+                <button class="btn-action" onclick="excluir('${item.id}')" style="flex: 1; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 8px 4px; gap:4px; height: auto;">
+                    <span style="font-size: 16px;">🗑️</span><span style="font-size: 10px;">Excluir</span>
+                </button>
             `;
         }
 
@@ -362,11 +383,11 @@ function renderLista() {
                         <div class="m-card-subtitle">📍 ${endStr}</div>
                     </div>
                 </div>
-                <div class="m-card-meta">
-                    Em: ${dataPed}${item.criado_por ? ' por ' + item.criado_por : ''} | Dias: <span style="color: var(--text-main);">${item.dias_semana}</span>
+                <div class="m-card-meta" style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                    <div>Em: ${dataPed} | Dia: <span style="color: var(--text-main);">${item.dias_semana}</span></div>
                     ${progressHtml}
                 </div>
-                <div class="m-card-actions">
+                <div class="m-card-actions" style="display: flex; gap: 8px; margin-top: 12px;">
                     ${actions}
                 </div>
             </div>
