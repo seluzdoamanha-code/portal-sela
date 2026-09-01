@@ -186,8 +186,9 @@
 
                 <!-- Aba 1: Equipe -->
                 <div class="tab-content" id="abaEquipe">
-                    <div id="equipeStatus" style="display: none;"></div><div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 16px;">
-                        <button class="btn btn-primary" onclick="abrirOrganograma()">Abrir Organograma Completo &nearr;</button>
+                    <div id="equipeStatus" style="display: none;"></div><div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 16px; gap: 8px;">
+                        <button id="btnHubGerenciarEquipe" onclick="abrirHubModalEquipe()" class="btn btn-secondary" style="display: none; padding: 6px 12px; font-size: 13px;">⚙️ Gerenciar Equipe (Modo Lista)</button>
+                        <button class="btn btn-primary" onclick="abrirOrganograma()" style="padding: 6px 12px; font-size: 13px;">Abrir Organograma &nearr;</button>
                     </div>
                     
                     <!-- Liderança -->
@@ -200,7 +201,6 @@
                     <div id="containerMembros" style="display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                             <h3 style="color: var(--text-muted); margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Membros da Equipe</h3>
-                            <button id="btnHubGerenciarEquipe" onclick="abrirHubModalEquipe()" class="btn btn-secondary" style="display: none; height: 32px; font-size: 12px;">⚙️ Gerenciar Equipe (Modo Lista)</button>
                         </div>
                         <div id="gridMembros" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;"></div>
                     </div>
