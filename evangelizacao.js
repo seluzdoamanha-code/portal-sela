@@ -598,6 +598,51 @@ window.excluirEvangAula = async function(aulaId) {
     }
 };
 
+window.registrarOcorrenciaEvang = async function(pessoaId, nomePessoa) {
+    const dataAtual = new Date().toISOString().split('T')[0];
+    
+    const { value: formValues } = await Swal.fire({
+        title: 'Registrar Ocorrência',
+        width: 500,
+        html:
+            `<div style="text-align: left; font-size: 14px; margin-bottom: 16px; color: var(--text-muted);">Esta ocorrência será enviada diretamente para o prontuário do aluno na <strong>Assistência Social / DIJ</strong>.</div>` +
+            `<div style="margin-bottom: 16px; text-align: left;"><strong style="color:var(--text-main);">${nomePessoa}</strong></div>` +
+            '<label style="display:block; text-align:left; margin-bottom:4px; font-size:12px;">Data</label>' +
+            `<input id="swal-oco-data" class="swal2-input" type="date" value="${dataAtual}" style="margin-top:0; width: 100%;">` +
+            '<label style="display:block; text-align:left; margin-top:16px; margin-bottom:4px; font-size:12px;">Descreva o Ocorrido</label>' +
+            `<textarea id="swal-oco-obs" class="swal2-textarea" placeholder="Ex: Criança relatou fome, agressividade incomum, etc." style="margin-top:0; width: 100%; min-height: 100px;"></textarea>`,
+        focusConfirm: false,
+        preConfirm: () => {
+            return {
+                data: document.getElementById('swal-oco-data').value,
+                obs: document.getElementById('swal-oco-obs').value
+            }
+        }
+    });
+
+    if (formValues) {
+        if (!formValues.data || !formValues.obs) return alert('A data e a observação são obrigatórias.');
+        
+        Swal.fire({ title: 'Salvando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+        
+        try {
+            const { error } = await db.from('ass_ocorrencias').insert([{
+                pessoa_id: pessoaId,
+                data_ocorrencia: formValues.data,
+                codigo: 'RO-DIJ',
+                tipo: 'Evangelização / DIJ',
+                observacao: formValues.obs
+            }]);
+            
+            if (error) throw error;
+            
+            Swal.fire('Sucesso!', 'Ocorrência registrada com sucesso.', 'success');
+        } catch(e) {
+            Swal.fire('Erro', 'Ocorreu um erro ao salvar: ' + e.message, 'error');
+        }
+    }
+};
+
 // ==========================================
 // DIÁRIO DE CLASSE (FREQUÊNCIA)
 // ==========================================
@@ -715,6 +760,10 @@ window.carregarListaChamada = async function() {
             return;
         }
         
+        const { data: aulaInfo, error: errAula } = await db.from('app_evang_aulas')
+            .select('atividades_realizadas, observacoes_diarias')
+            .eq('id', aulaId).single();
+            
         // 2. Buscar frequência já existente para esta aula
         const { data: frequencias, error: errFreq } = await db.from('app_evang_frequencia')
             .select('*')
@@ -725,7 +774,7 @@ window.carregarListaChamada = async function() {
         const freqMap = {};
         if (frequencias) {
             frequencias.forEach(f => {
-                freqMap[f.matricula_id] = f.presente;
+                freqMap[f.matricula_id] = { presente: f.presente, observacao: f.observacao || '' };
             });
         }
         
@@ -738,12 +787,13 @@ window.carregarListaChamada = async function() {
                 <button class="btn btn-primary" onclick="salvarDiarioClasse('${aulaId}')">Salvar Chamada</button>
             </div>
             
-            <div style="background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--border); overflow: hidden;">
+            <div style="background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 24px;">
                 <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                     <thead>
                         <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);">
-                            <th style="padding: 12px; text-align: left; color: var(--text-muted); width: 60%;">Nome do Evangelizando</th>
-                            <th style="padding: 12px; text-align: center; color: var(--text-muted); width: 40%;">Presença</th>
+                            <th style="padding: 12px; text-align: left; color: var(--text-muted); width: 40%;">Nome do Evangelizando</th>
+                            <th style="padding: 12px; text-align: center; color: var(--text-muted); width: 20%;">Presença</th>
+                            <th style="padding: 12px; text-align: left; color: var(--text-muted); width: 40%;">Observação / Justificativa (Falta)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -751,22 +801,27 @@ window.carregarListaChamada = async function() {
         
         matriculas.forEach(m => {
             const mId = m.id;
-            const isPresente = freqMap[mId] !== false; // Padrão é true (presente) se não existir registro, ou se for true
-            const hasRecord = freqMap.hasOwnProperty(mId);
+            const record = freqMap[mId];
+            const isPresente = record ? record.presente : true; // Padrão é true
+            const obsValue = record ? record.observacao : '';
+            const hasRecord = !!record;
             
             // Se já tem registro e é falso, desmarca. Se não tem registro, deixa marcado (padrão PRESENTE)
             const checked = (hasRecord && !isPresente) ? '' : 'checked';
             
             html += `
                 <tr style="border-bottom: 1px solid var(--border);">
-                    <td style="padding: 12px; color: var(--text-main); font-weight: 500;">
-                        ${m.pessoas?.nome_completo || 'Desconhecido'}
+                    <td style="padding: 12px; color: var(--text-main); font-weight: 500; display: flex; justify-content: space-between; align-items: center;">
+                        <span>${m.pessoas?.nome_completo || 'Desconhecido'}</span>
+                        <button onclick="window.registrarOcorrenciaEvang('${m.pessoa_id}', '${(m.pessoas?.nome_completo || '').replace(/'/g, "\\'")}')" style="background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; border-radius: 4px; cursor: pointer; color: #f59e0b; padding: 2px 6px; font-size: 11px;" title="Registrar Ocorrência na Assistência Social">⚠️ Ocorrência</button>
                     </td>
                     <td style="padding: 12px; text-align: center;">
                         <label style="display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" class="chamada-checkbox" data-matriculaid="${mId}" ${checked} style="width: 18px; height: 18px; accent-color: #10b981;">
-                            <span style="color: var(--text-muted); font-size: 12px;">Presente</span>
+                            <input type="checkbox" class="chamada-checkbox" data-matriculaid="${mId}" ${checked} style="width: 18px; height: 18px; accent-color: #10b981;" onchange="document.getElementById('obs-${mId}').placeholder = this.checked ? 'Observação (opcional)' : 'Motivo da falta (ex: Doença)'">
                         </label>
+                    </td>
+                    <td style="padding: 12px;">
+                        <input type="text" class="chamada-obs" id="obs-${mId}" data-matriculaid="${mId}" value="${obsValue}" placeholder="${checked ? 'Observação (opcional)' : 'Motivo da falta (ex: Doença)'}" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text-main); font-size: 13px; padding: 4px; outline: none;">
                     </td>
                 </tr>
             `;
@@ -776,8 +831,20 @@ window.carregarListaChamada = async function() {
                     </tbody>
                 </table>
             </div>
+            
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
+                <div style="flex: 1; min-width: 250px;">
+                    <label style="font-size: 13px; color: var(--text-muted); display: block; margin-bottom: 4px;">Atividades Realizadas na Aula</label>
+                    <textarea id="txtAtividadesRealizadas" class="input" style="width: 100%; min-height: 80px;" placeholder="Descreva brevemente o que foi trabalhado em aula (ex: Contação de História e Desenho)">${aulaInfo?.atividades_realizadas || ''}</textarea>
+                </div>
+                <div style="flex: 1; min-width: 250px;">
+                    <label style="font-size: 13px; color: var(--text-muted); display: block; margin-bottom: 4px;">Observações Gerais da Turma (Diário)</label>
+                    <textarea id="txtObservacoesDiarias" class="input" style="width: 100%; min-height: 80px;" placeholder="Clima da turma, agitação, recados dados aos pais, etc.">${aulaInfo?.observacoes_diarias || ''}</textarea>
+                </div>
+            </div>
+            
             <div style="margin-top: 16px; text-align: right;">
-                <button class="btn btn-primary" onclick="salvarDiarioClasse('${aulaId}')">Salvar Chamada</button>
+                <button class="btn btn-primary" onclick="salvarDiarioClasse('${aulaId}')">Salvar Diário de Classe</button>
             </div>
         `;
         
@@ -793,14 +860,20 @@ window.salvarDiarioClasse = async function(aulaId) {
     const records = [];
     
     checkboxes.forEach(chk => {
+        const mId = chk.getAttribute('data-matriculaid');
+        const obsInput = document.getElementById('obs-' + mId);
         records.push({
             aula_id: aulaId,
-            matricula_id: chk.getAttribute('data-matriculaid'),
-            presente: chk.checked
+            matricula_id: mId,
+            presente: chk.checked,
+            observacao: obsInput ? obsInput.value : null
         });
     });
     
     if (records.length === 0) return;
+    
+    const atividades = document.getElementById('txtAtividadesRealizadas').value;
+    const observacoes = document.getElementById('txtObservacoesDiarias').value;
     
     const btn = event.target;
     const textoOriginal = btn.innerText;
@@ -815,8 +888,12 @@ window.salvarDiarioClasse = async function(aulaId) {
         const { error: errIns } = await db.from('app_evang_frequencia').insert(records);
         if (errIns) throw errIns;
         
-        // Atualizar status da aula para "Realizada"
-        await db.from('app_evang_aulas').update({ status: 'Realizada' }).eq('id', aulaId);
+        // Atualizar status da aula e as observações gerais
+        await db.from('app_evang_aulas').update({ 
+            status: 'Realizada',
+            atividades_realizadas: atividades,
+            observacoes_diarias: observacoes
+        }).eq('id', aulaId);
         
         // Atualiza a combo para mostrar o status Realizada
         const turmaId = document.getElementById('selDiarioTurma').value;
