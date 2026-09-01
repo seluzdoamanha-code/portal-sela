@@ -25,6 +25,7 @@
                     <a href="index.html" class="nav-item ${currentPage === 'index.html' ? 'active' : ''}" title="Início / Mural">🏠</a>
                     <a href="atividades.html" class="nav-item ${currentPage === 'atividades.html' ? 'active' : ''}" title="Atividades">📅</a>
                     <a href="pessoas.html" class="nav-item ${currentPage === 'pessoas.html' || currentPage === 'perfil.html' ? 'active' : ''}" title="Pessoas & Perfis">👥</a>
+                    <a href="associados.html" class="nav-item ${currentPage === 'associados.html' ? 'active' : ''}" title="Portal do Associado">🤝</a>
                     
                     <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 8px 16px;" class="desktop-only"></div>
 
