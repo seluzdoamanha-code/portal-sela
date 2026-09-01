@@ -51,7 +51,7 @@ async function carregarDadosAssociados() {
         renderizarMeusDocumentos(assinaturasUser || []);
         renderizarBibliotecaOficial();
 
-        const { data: pessoas, error: errPes } = await db.from('pessoas').select('*, vinculacoes(estruturas(nome, tipo))').order('nome_completo', { ascending: true });
+        const { data: pessoas, error: errPes } = await db.from('pessoas').select('*, vinculos_estrutura(estruturas(nome, tipo))').order('nome_completo', { ascending: true });
         if (errPes) throw errPes;
         
         todasPessoas = (pessoas || []).filter(p => p.perfil && p.perfil.toLowerCase().includes('associado'));
@@ -155,8 +155,8 @@ function renderizarDiretorio(filtro = '') {
 
     filtrados.forEach(p => {
         let depts = [];
-        if (p.vinculacoes && p.vinculacoes.length > 0) {
-            depts = p.vinculacoes.map(v => v.estruturas?.nome).filter(Boolean);
+        if (p.vinculos_estrutura && p.vinculos_estrutura.length > 0) {
+            depts = p.vinculos_estrutura.map(v => v.estruturas?.nome).filter(Boolean);
             depts = [...new Set(depts)];
         }
         

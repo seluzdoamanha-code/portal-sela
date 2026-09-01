@@ -60,7 +60,7 @@ async function carregarDadosAssociados() {
         // 3. Carregar Diretório (Todos os Associados)
         // Busca pessoas que tenham perfil de associado (Associado Efetivo, Proponente, etc) e seus vínculos para mostrar o departamento
         // No momento, vamos buscar todas as pessoas e filtrar pelo perfil
-        const { data: pessoas, error: errPes } = await db.from('pessoas').select('*, vinculacoes(estruturas(nome, tipo))').order('nome_completo', { ascending: true });
+        const { data: pessoas, error: errPes } = await db.from('pessoas').select('*, vinculos_estrutura(estruturas(nome, tipo))').order('nome_completo', { ascending: true });
         if (errPes) throw errPes;
         
         // Filtra apenas os que são "Associados" (Efetivo, etc)
@@ -173,8 +173,8 @@ function renderizarDiretorio(filtro = '') {
     filtrados.forEach(p => {
         // Extrair departamentos únicos
         let depts = [];
-        if (p.vinculacoes && p.vinculacoes.length > 0) {
-            depts = p.vinculacoes.map(v => v.estruturas?.nome).filter(Boolean);
+        if (p.vinculos_estrutura && p.vinculos_estrutura.length > 0) {
+            depts = p.vinculos_estrutura.map(v => v.estruturas?.nome).filter(Boolean);
             // remover duplicatas
             depts = [...new Set(depts)];
         }
