@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     display: flex; align-items: center; justify-content: space-between;
                 }
                 .side-sheet-header h3 { margin: 0; font-size: 18px; color: var(--accent); }
-                .side-sheet-content { padding: 24px; flex: 1; overflow-y: auto; }
+                .side-sheet-content { padding: 24px; padding-bottom: 120px; flex: 1; overflow-y: auto; }
             </style>
         `;
         const sideSheetHTML = `
@@ -405,7 +405,7 @@ window.abrirEdicao = function(id, nome, end, dias, semanas) {
                 <input type="number" id="editIrrSemanasSS" value="${semanas}" required min="1" max="52" class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
             </div>
             <div style="margin-top: 16px;">
-                <button type="submit" class="btn" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; background: var(--sela-orange); border: none; color: white; cursor: pointer;">Salvar Alterações</button>
+                <button type="submit" class="btn" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; background: #FA9128; border: none; color: white; cursor: pointer;">Salvar Alterações</button>
             </div>
         </form>
     `;
