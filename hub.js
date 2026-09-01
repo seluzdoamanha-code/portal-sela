@@ -312,7 +312,6 @@ async function carregarDadosHome(estData) {
                 </div>
             `;
         }
-}
 
         if (!hasApps) {
             appsGrid.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; font-style: italic; padding: 12px 0;">Este setor não possui ferramentas ativas no momento.</div>';
