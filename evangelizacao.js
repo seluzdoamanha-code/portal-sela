@@ -317,15 +317,17 @@ window.carregarEvangAulas = async function() {
         
         let html = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <div>
-                    <h3 style="color: #10b981; margin: 0 0 8px 0;">Planejamento Anual de Aulas</h3>
-                    <select id="selEvangTurmaAulas" class="input" style="min-width: 200px;" onchange="listarAulasTurma()">
-                        <option value="">-- Selecione a Turma --</option>
-                        ${turmas.map(t => `<option value="${t.id}">${t.nome} (${t.ano_letivo})</option>`).join('')}
-                    </select>
+                <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                    <div>
+                        <h3 style="color: #10b981; margin: 0 0 8px 0;">Planejamento Anual de Aulas</h3>
+                        <select id="selEvangTurmaAulas" class="input" style="min-width: 200px;" onchange="listarAulasTurma()">
+                            <option value="">-- Selecione a Turma --</option>
+                            ${turmas.map(t => `<option value="${t.id}">${t.nome} (${t.ano_letivo}) - ${t.dia_semana || 'Sem Dia'}</option>`).join('')}
+                        </select>
+                    </div>
+                    <button class="btn" style="background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border);" onclick="gerarLoteEvangAulas()">Gerar Lote de Aulas</button>
+                    <button class="btn btn-primary" onclick="novaEvangAula()">+ Nova Aula</button>
                 </div>
-                <button class="btn btn-primary" onclick="novaEvangAula()">+ Nova Aula</button>
-            </div>
             <div id="listaEvangAulas" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
                 <div style="color: var(--text-muted); font-size: 14px;">Selecione uma turma acima para ver o planejamento.</div>
             </div>
@@ -388,7 +390,8 @@ window.listarAulasTurma = async function() {
                     <td style="padding: 12px; color: var(--text-main); font-weight: 500;">${dataBR}</td>
                     <td style="padding: 12px;">${badge}</td>
                     <td style="padding: 12px; color: var(--text-muted);">${a.tema || '<i>Sem tema definido</i>'}</td>
-                    <td style="padding: 12px; text-align: right;">
+                    <td style="padding: 12px; text-align: right; white-space: nowrap;">
+                        <button class="btn" style="padding: 4px 8px; font-size: 11px; margin-right: 4px; border: 1px solid var(--border); background: transparent;" onclick="editarEvangAula('${a.id}', '${a.data_aula}', '${(a.tema||'').replace(/'/g, "\\'")}')">Editar</button>
                         <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="excluirEvangAula('${a.id}')">Excluir</button>
                     </td>
                 </tr>
@@ -430,17 +433,156 @@ window.novaEvangAula = async function() {
         if(!formValues.data) return alert('A data é obrigatória.');
         
         try {
+            // Verificar se ja existe
+            const { data: ext } = await db.from('app_evang_aulas').select('id').eq('turma_id', turmaId).eq('data_aula', formValues.data);
+            if (ext && ext.length > 0) return alert('Já existe uma aula planejada para esta data nesta turma.');
+            
             const { error } = await db.from('app_evang_aulas').insert([{
                 turma_id: turmaId,
                 data_aula: formValues.data,
-                tema: formValues.tema,
-                status: 'Planejada'
+                tema: formValues.tema || 'Tema a definir'
             }]);
             
             if (error) throw error;
             listarAulasTurma();
+            Swal.fire('Sucesso!', 'Aula adicionada com sucesso.', 'success');
         } catch(e) {
-            alert('Erro ao salvar aula: ' + e.message);
+            alert('Erro ao adicionar aula: ' + e.message);
+        }
+    }
+};
+
+window.editarEvangAula = async function(id, data_atual, tema_atual) {
+    const { value: formValues } = await Swal.fire({
+        title: 'Editar Aula',
+        html:
+            '<label style="display:block; text-align:left; margin-bottom:4px; font-size:12px;">Data da Aula</label>' +
+            `<input id="swal-aula-data" class="swal2-input" type="date" value="${data_atual}" style="margin-top:0;">` +
+            '<label style="display:block; text-align:left; margin-top:16px; margin-bottom:4px; font-size:12px;">Tema Planejado</label>' +
+            `<input id="swal-aula-tema" class="swal2-input" value="${tema_atual === 'Tema a definir' ? '' : tema_atual}" placeholder="Ex: Parábola do Semeador" style="margin-top:0;">`,
+        focusConfirm: false,
+        preConfirm: () => {
+            return {
+                data: document.getElementById('swal-aula-data').value,
+                tema: document.getElementById('swal-aula-tema').value
+            }
+        }
+    });
+
+    if (formValues) {
+        if(!formValues.data) return alert('A data é obrigatória.');
+        
+        try {
+            const { error } = await db.from('app_evang_aulas').update({
+                data_aula: formValues.data,
+                tema: formValues.tema || 'Tema a definir'
+            }).eq('id', id);
+            
+            if (error) throw error;
+            listarAulasTurma();
+        } catch(e) {
+            alert('Erro ao editar aula: ' + e.message);
+        }
+    }
+};
+
+window.gerarLoteEvangAulas = async function() {
+    const turmaSelect = document.getElementById('selEvangTurmaAulas');
+    if (!turmaSelect) return alert("Vá para a aba Aulas primeiro.");
+    const turmaId = turmaSelect.value;
+    
+    if (!turmaId) return alert("Selecione uma turma primeiro para gerar o lote de aulas.");
+    
+    // Obter informacoes da turma para saber o dia da semana
+    const { data: turmaData } = await db.from('app_evang_turmas').select('dia_semana, ano_letivo').eq('id', turmaId).single();
+    
+    let diaSugerido = turmaData?.dia_semana || 'Terça-feira';
+    
+    const { value: formValues } = await Swal.fire({
+        title: 'Gerar Lote de Aulas',
+        width: 500,
+        html:
+            '<div style="text-align: left; font-size: 14px; margin-bottom: 16px; color: var(--text-muted);">As aulas serão geradas para o dia da semana especificado, dentro do período. Aulas já existentes nas mesmas datas serão puladas.</div>' +
+            '<label style="display:block; text-align:left; margin-bottom:4px; font-size:12px;">Dia da Semana</label>' +
+            `<select id="swal-lote-dia" class="swal2-input" style="margin-top:0; width: 100%;">
+                <option value="0" ${diaSugerido === 'Domingo' ? 'selected' : ''}>Domingo</option>
+                <option value="1" ${diaSugerido === 'Segunda-feira' ? 'selected' : ''}>Segunda-feira</option>
+                <option value="2" ${diaSugerido === 'Terça-feira' ? 'selected' : ''}>Terça-feira</option>
+                <option value="3" ${diaSugerido === 'Quarta-feira' ? 'selected' : ''}>Quarta-feira</option>
+                <option value="4" ${diaSugerido === 'Quinta-feira' ? 'selected' : ''}>Quinta-feira</option>
+                <option value="5" ${diaSugerido === 'Sexta-feira' ? 'selected' : ''}>Sexta-feira</option>
+                <option value="6" ${diaSugerido === 'Sábado' ? 'selected' : ''}>Sábado</option>
+            </select>` +
+            '<div style="display: flex; gap: 16px; margin-top: 16px;">' +
+            '<div style="flex:1;"><label style="display:block; text-align:left; margin-bottom:4px; font-size:12px;">Data Inicial</label>' +
+            `<input id="swal-lote-inicio" class="swal2-input" type="date" style="margin-top:0; width:100%;"></div>` +
+            '<div style="flex:1;"><label style="display:block; text-align:left; margin-bottom:4px; font-size:12px;">Data Final</label>' +
+            `<input id="swal-lote-fim" class="swal2-input" type="date" style="margin-top:0; width:100%;"></div>` +
+            '</div>',
+        focusConfirm: false,
+        preConfirm: () => {
+            return {
+                dia: parseInt(document.getElementById('swal-lote-dia').value),
+                inicio: document.getElementById('swal-lote-inicio').value,
+                fim: document.getElementById('swal-lote-fim').value
+            }
+        }
+    });
+
+    if (formValues) {
+        if (!formValues.inicio || !formValues.fim) return alert('Informe as datas inicial e final.');
+        
+        let dStart = new Date(formValues.inicio + "T12:00:00");
+        let dEnd = new Date(formValues.fim + "T12:00:00");
+        
+        if (dStart > dEnd) return alert("Data inicial não pode ser maior que a final.");
+        
+        // Encontrar os dias
+        let diasASalvar = [];
+        let curr = new Date(dStart.getTime());
+        while(curr <= dEnd) {
+            if (curr.getDay() === formValues.dia) {
+                const yyyy = curr.getFullYear();
+                const mm = String(curr.getMonth() + 1).padStart(2, '0');
+                const dd = String(curr.getDate()).padStart(2, '0');
+                diasASalvar.push(`${yyyy}-${mm}-${dd}`);
+            }
+            curr.setDate(curr.getDate() + 1);
+        }
+        
+        if (diasASalvar.length === 0) return alert('Nenhum dia correspondente encontrado no período informado.');
+        
+        Swal.fire({ title: 'Gerando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+        
+        try {
+            // Pegar as já existentes pra não duplicar
+            const { data: ext } = await db.from('app_evang_aulas').select('data_aula').eq('turma_id', turmaId).in('data_aula', diasASalvar);
+            const jaExistentes = (ext || []).map(a => a.data_aula);
+            
+            const novasAulas = [];
+            for (let diaStr of diasASalvar) {
+                if (!jaExistentes.includes(diaStr)) {
+                    novasAulas.push({
+                        turma_id: turmaId,
+                        data_aula: diaStr,
+                        tema: 'Tema a definir',
+                        status: 'Planejada'
+                    });
+                }
+            }
+            
+            if (novasAulas.length === 0) {
+                Swal.fire('Aviso', 'Todas as datas desse período já estavam cadastradas!', 'info');
+                return;
+            }
+            
+            const { error: errIns } = await db.from('app_evang_aulas').insert(novasAulas);
+            if (errIns) throw errIns;
+            
+            Swal.fire('Sucesso!', `${novasAulas.length} novas aulas foram criadas!`, 'success');
+            listarAulasTurma();
+        } catch(e) {
+            Swal.fire('Erro', 'Ocorreu um erro ao gerar: ' + e.message, 'error');
         }
     }
 };
@@ -562,7 +704,7 @@ window.carregarListaChamada = async function() {
     try {
         // 1. Buscar alunos matriculados na turma
         const { data: matriculas, error: errMat } = await db.from('app_evang_matriculas')
-            .select('pessoa_id, papel, pessoas(nome_completo)')
+            .select('id, pessoa_id, papel, pessoas(nome_completo)')
             .eq('turma_id', turmaId)
             .eq('papel', 'Evangelizando');
             
@@ -583,7 +725,7 @@ window.carregarListaChamada = async function() {
         const freqMap = {};
         if (frequencias) {
             frequencias.forEach(f => {
-                freqMap[f.pessoa_id] = f.presente;
+                freqMap[f.matricula_id] = f.presente;
             });
         }
         
@@ -608,9 +750,9 @@ window.carregarListaChamada = async function() {
         `;
         
         matriculas.forEach(m => {
-            const pId = m.pessoa_id;
-            const isPresente = freqMap[pId] !== false; // Padrão é true (presente) se não existir registro, ou se for true
-            const hasRecord = freqMap.hasOwnProperty(pId);
+            const mId = m.id;
+            const isPresente = freqMap[mId] !== false; // Padrão é true (presente) se não existir registro, ou se for true
+            const hasRecord = freqMap.hasOwnProperty(mId);
             
             // Se já tem registro e é falso, desmarca. Se não tem registro, deixa marcado (padrão PRESENTE)
             const checked = (hasRecord && !isPresente) ? '' : 'checked';
@@ -622,7 +764,7 @@ window.carregarListaChamada = async function() {
                     </td>
                     <td style="padding: 12px; text-align: center;">
                         <label style="display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" class="chamada-checkbox" data-pessoaid="${pId}" ${checked} style="width: 18px; height: 18px; accent-color: #10b981;">
+                            <input type="checkbox" class="chamada-checkbox" data-matriculaid="${mId}" ${checked} style="width: 18px; height: 18px; accent-color: #10b981;">
                             <span style="color: var(--text-muted); font-size: 12px;">Presente</span>
                         </label>
                     </td>
@@ -653,7 +795,7 @@ window.salvarDiarioClasse = async function(aulaId) {
     checkboxes.forEach(chk => {
         records.push({
             aula_id: aulaId,
-            pessoa_id: chk.getAttribute('data-pessoaid'),
+            matricula_id: chk.getAttribute('data-matriculaid'),
             presente: chk.checked
         });
     });
