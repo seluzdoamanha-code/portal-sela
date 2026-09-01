@@ -131,10 +131,10 @@ window.novaTurmaEvang = async function() {
     const { value: formValues } = await Swal.fire({
         title: 'Nova Turma',
         html:
-            '<input id="swal-input1" class="swal2-input" placeholder="Nome da Turma (Ex: Ciclo I)">' +
-            '<input id="swal-input2" class="swal2-input" placeholder="Ano (Ex: 2026)" type="number" value="2026">' +
-            '<input id="swal-input3" class="swal2-input" placeholder="Dia (Ex: Terça-feira)" value="Terça-feira">' +
-            '<input id="swal-input4" class="swal2-input" placeholder="Horário (Ex: 19:30)" type="time" value="19:30">',
+            '<input id="swal-input1" class="swal2-input" placeholder="Nome da Turma (Ex: Ciclo I)" style="margin: 0 0 16px 0; width: 100%; box-sizing: border-box;">' +
+            '<input id="swal-input2" class="swal2-input" placeholder="Ano (Ex: 2026)" type="number" value="2026" style="margin: 0 0 16px 0; width: 100%; box-sizing: border-box;">' +
+            '<input id="swal-input3" class="swal2-input" placeholder="Dia (Ex: Terça-feira)" value="Terça-feira" style="margin: 0 0 16px 0; width: 100%; box-sizing: border-box;">' +
+            '<input id="swal-input4" class="swal2-input" placeholder="Horário (Ex: 19:30)" type="time" value="19:30" style="margin: 0; width: 100%; box-sizing: border-box;">',
         focusConfirm: false,
         preConfirm: () => {
             return {
@@ -417,9 +417,9 @@ window.novaEvangAula = async function() {
         title: 'Nova Aula',
         html:
             '<label style="display:block; text-align:left; margin-bottom:4px; font-size:12px;">Data da Aula</label>' +
-            '<input id="swal-aula-data" class="swal2-input" type="date" style="margin-top:0;">' +
+            '<input id="swal-aula-data" class="swal2-input" type="date" style="margin: 0; width: 100%; box-sizing: border-box;">' +
             '<label style="display:block; text-align:left; margin-top:16px; margin-bottom:4px; font-size:12px;">Tema Planejado (Opcional)</label>' +
-            '<input id="swal-aula-tema" class="swal2-input" placeholder="Ex: Parábola do Semeador" style="margin-top:0;">',
+            '<input id="swal-aula-tema" class="swal2-input" placeholder="Ex: Parábola do Semeador" style="margin: 0; width: 100%; box-sizing: border-box;">',
         focusConfirm: false,
         preConfirm: () => {
             return {
@@ -457,9 +457,9 @@ window.editarEvangAula = async function(id, data_atual, tema_atual) {
         title: 'Editar Aula',
         html:
             '<label style="display:block; text-align:left; margin-bottom:4px; font-size:12px;">Data da Aula</label>' +
-            `<input id="swal-aula-data" class="swal2-input" type="date" value="${data_atual}" style="margin-top:0;">` +
+            `<input id="swal-aula-data" class="swal2-input" type="date" value="${data_atual}" style="margin: 0; width: 100%; box-sizing: border-box;">` +
             '<label style="display:block; text-align:left; margin-top:16px; margin-bottom:4px; font-size:12px;">Tema Planejado</label>' +
-            `<input id="swal-aula-tema" class="swal2-input" value="${tema_atual === 'Tema a definir' ? '' : tema_atual}" placeholder="Ex: Parábola do Semeador" style="margin-top:0;">`,
+            `<input id="swal-aula-tema" class="swal2-input" value="${tema_atual === 'Tema a definir' ? '' : tema_atual}" placeholder="Ex: Parábola do Semeador" style="margin: 0; width: 100%; box-sizing: border-box;">`,
         focusConfirm: false,
         preConfirm: () => {
             return {
@@ -504,7 +504,7 @@ window.gerarLoteEvangAulas = async function() {
         html:
             '<div style="text-align: left; font-size: 14px; margin-bottom: 16px; color: var(--text-muted);">As aulas serão geradas para o dia da semana especificado, dentro do período. Aulas já existentes nas mesmas datas serão puladas.</div>' +
             '<label style="display:block; text-align:left; margin-bottom:4px; font-size:12px;">Dia da Semana</label>' +
-            `<select id="swal-lote-dia" class="swal2-input" style="margin-top:0; width: 100%;">
+            `<select id="swal-lote-dia" class="swal2-input" style="margin: 0; width: 100%; box-sizing: border-box;">
                 <option value="0" ${diaSugerido === 'Domingo' ? 'selected' : ''}>Domingo</option>
                 <option value="1" ${diaSugerido === 'Segunda-feira' ? 'selected' : ''}>Segunda-feira</option>
                 <option value="2" ${diaSugerido === 'Terça-feira' ? 'selected' : ''}>Terça-feira</option>
@@ -515,9 +515,9 @@ window.gerarLoteEvangAulas = async function() {
             </select>` +
             '<div style="display: flex; gap: 16px; margin-top: 16px;">' +
             '<div style="flex:1;"><label style="display:block; text-align:left; margin-bottom:4px; font-size:12px;">Data Inicial</label>' +
-            `<input id="swal-lote-inicio" class="swal2-input" type="date" style="margin-top:0; width:100%;"></div>` +
+            `<input id="swal-lote-inicio" class="swal2-input" type="date" style="margin: 0; width: 100%; box-sizing: border-box;"></div>` +
             '<div style="flex:1;"><label style="display:block; text-align:left; margin-bottom:4px; font-size:12px;">Data Final</label>' +
-            `<input id="swal-lote-fim" class="swal2-input" type="date" style="margin-top:0; width:100%;"></div>` +
+            `<input id="swal-lote-fim" class="swal2-input" type="date" style="margin: 0; width: 100%; box-sizing: border-box;"></div>` +
             '</div>',
         focusConfirm: false,
         preConfirm: () => {
@@ -608,9 +608,9 @@ window.registrarOcorrenciaEvang = async function(pessoaId, nomePessoa) {
             `<div style="text-align: left; font-size: 14px; margin-bottom: 16px; color: var(--text-muted);">Esta ocorrência será enviada diretamente para o prontuário do aluno na <strong>Assistência Social / DIJ</strong>.</div>` +
             `<div style="margin-bottom: 16px; text-align: left;"><strong style="color:var(--text-main);">${nomePessoa}</strong></div>` +
             '<label style="display:block; text-align:left; margin-bottom:4px; font-size:12px;">Data</label>' +
-            `<input id="swal-oco-data" class="swal2-input" type="date" value="${dataAtual}" style="margin-top:0; width: 100%;">` +
+            `<input id="swal-oco-data" class="swal2-input" type="date" value="${dataAtual}" style="margin: 0; width: 100%; box-sizing: border-box;">` +
             '<label style="display:block; text-align:left; margin-top:16px; margin-bottom:4px; font-size:12px;">Descreva o Ocorrido</label>' +
-            `<textarea id="swal-oco-obs" class="swal2-textarea" placeholder="Ex: Criança relatou fome, agressividade incomum, etc." style="margin-top:0; width: 100%; min-height: 100px;"></textarea>`,
+            `<textarea id="swal-oco-obs" class="swal2-textarea" placeholder="Ex: Criança relatou fome, agressividade incomum, etc." style="margin: 0; width: 100%; box-sizing: border-box; min-height: 100px;"></textarea>`,
         focusConfirm: false,
         preConfirm: () => {
             return {
