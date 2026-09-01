@@ -285,7 +285,10 @@ function renderLista() {
             }));
 
             actions = `
-                <button class="btn-action" style="background: var(--sela-orange); color: #fff; width: 100%; border: none;" onclick="window.abrirSideSheetPendente('${itemDataStr}')">Analisar Solicitação 📋</button>
+                <button class="btn-action" style="width: 100%; background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 12px; gap:8px; height: auto;" onclick="window.abrirSideSheetPendente('${itemDataStr}')">
+                    <span style="font-size: 18px;">📋</span>
+                    <span style="font-size: 14px; font-weight: 600;">Analisar Solicitação</span>
+                </button>
             `;
         } else if (currentTab === 'ativos' || currentTab === 'encerra_semana') {
             const leituras = item.leituras || 0;
