@@ -113,6 +113,9 @@
                         <span style="font-size: 10px;">▶</span>
                         <span id="hubName" style="color: var(--text-main); font-weight: 600;">Nome da Estrutura</span>
                         <span id="btnFavoritarHub" style="cursor: pointer; font-size: 16px; margin-left: 8px;" title="Fixar no menu lateral">☆</span>
+                        <span id="topbarTabTitleContainer" style="display: none; align-items: center; gap: 8px; margin-left: 8px; border-left: 1px solid var(--border); padding-left: 8px;">
+                            <span id="topbarTabTitle" style="color: var(--text-main); font-weight: 600;"></span>
+                        </span>
                     </div>
                 </header>
                 
@@ -132,11 +135,7 @@
                 
                 <!-- Aba Início (Apresentação Geral) -->
                 <div class="tab-content active" id="abaInicio">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
-                        <div>
-                            <h2>Apresentação Geral</h2>
-                            <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">Informações essenciais sobre o funcionamento e ferramentas deste departamento/atividade.</p>
-                        </div>
+                    <div style="display: flex; justify-content: flex-end; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 16px;">
                         <button class="btn btn-secondary" id="btnEditarHome" onclick="abrirModalEditarHome()" style="display: none; padding: 6px 12px; font-size: 13px;">✏️ Editar Informações</button>
                     </div>
 
@@ -186,11 +185,7 @@
 
                 <!-- Aba 1: Equipe -->
                 <div class="tab-content" id="abaEquipe">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <div>
-                            <h2 id="tituloGestaoPessoas">Gestão de Pessoas</h2>
-                            <div id="equipeStatus" style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Carregando equipe...</div>
-                        </div>
+                    <div id="equipeStatus" style="display: none;"></div><div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 16px;">
                         <button class="btn btn-primary" onclick="abrirOrganograma()">Abrir Organograma Completo &nearr;</button>
                     </div>
                     
@@ -216,11 +211,7 @@
                         
                         <!-- Coluna 1: Agenda e Eventos (Pontuais) -->
                         <div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                <div>
-                                    <h2 style="font-size: 18px; margin: 0;">🗓️ Agenda e Eventos</h2>
-                                    <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Atividades pontuais, reuniões e palestras.</p>
-                                </div>
+                            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 16px;">
                                 <button class="btn btn-primary" onclick="abrirModalEvento()" style="padding: 6px 12px; font-size: 12px;">+ Novo Evento</button>
                             </div>
                             
@@ -231,11 +222,7 @@
 
                         <!-- Coluna 2: Atividades Regulares & Funcionamento (Recorrentes) -->
                         <div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                <div>
-                                    <h2 style="font-size: 18px; margin: 0;">🔁 Atividades Regulares</h2>
-                                    <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Dias e horários recorrentes de funcionamento.</p>
-                                </div>
+                            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 16px;">
                                 <button class="btn btn-primary" onclick="abrirModalAtividadeRegular()" style="padding: 6px 12px; font-size: 12px;">+ Nova Atividade</button>
                             </div>
                             
@@ -249,11 +236,7 @@
 
                 <!-- Aba 3: Projetos & Processos -->
                 <div class="tab-content" id="abaProjetosProcessos">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <div>
-                            <h2>Projetos e Processos Ativos</h2>
-                            <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">Agrupadores de tarefas, processos estruturados e blocos de documentos.</p>
-                        </div>
+                    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 16px;">
                         <div style="display: flex; gap: 8px;">
                             <button class="btn" style="background: var(--bg-dark); color: var(--text-muted);" onclick="abrirModalProjeto('Processo')">+ Novo Processo</button>
                             <button class="btn btn-primary" onclick="abrirModalProjeto('Projeto')">+ Novo Projeto</button>
@@ -267,11 +250,7 @@
 
                 <!-- Aba 5: Documentos -->
                 <div class="tab-content" id="abaDocumentos">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <div>
-                            <h2>Gestão do Conhecimento & Documentos</h2>
-                            <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">Atas, links, ofícios e documentações (Markdown) deste setor.</p>
-                        </div>
+                    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 16px;">
                         <button class="btn btn-primary" onclick="abrirModalDoc()">+ Novo Documento</button>
                     </div>
                     
@@ -294,12 +273,7 @@
                 
                 <!-- Aba 6: Apps & Serviços -->
                 <div class="tab-content" id="abaApps">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <div>
-                            <h2>Ferramentas & Serviços</h2>
-                            <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">Recursos específicos desta área.</p>
-                        </div>
-                    </div>
+                    <div style="display: none;"></div>
                     
                     <div id="containerApps" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px;">
                         <!-- Conteúdo injetado via JS (Ex: Formulário de Irradiação) -->
@@ -309,12 +283,7 @@
                 
                 <!-- Aba Tesouraria -->
                 <div class="tab-content" id="abaTesouraria">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <div>
-                            <h2>Envio para Tesouraria</h2>
-                            <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">Envie recibos, comprovantes ou solicitações diretamente para a equipe financeira.</p>
-                        </div>
-                    </div>
+                    <div style="display: none;"></div>
                     
                     <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 600px;">
                         <form id="formTesourariaEnvio">

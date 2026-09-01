@@ -642,6 +642,8 @@ function configurarAbas() {
             btn.classList.add('active');
             const targetId = btn.getAttribute('data-target');
             document.getElementById(targetId).classList.add('active');
+            
+            atualizarTituloTopbar(targetId);
 
             // No celular, recolhe o menu após clicar em uma aba
             const tabsNav = document.querySelector('.tabs-nav');
@@ -658,9 +660,36 @@ function configurarAbas() {
         setTimeout(() => {
             const btn = document.querySelector(`[data-target="${urlTab}"]`);
             if (btn && btn.style.display !== 'none') {
-                btn.click();
+                btn.click(); // Já chama atualizarTituloTopbar
+            } else {
+                atualizarTituloTopbar('abaInicio');
             }
         }, 300);
+    } else {
+        atualizarTituloTopbar('abaInicio');
+    }
+}
+
+function atualizarTituloTopbar(abaId) {
+    const titles = {
+        'abaInicio': 'Apresentação Geral',
+        'abaEquipe': 'Equipe & Organograma',
+        'abaAgenda': 'Agenda & Atividades',
+        'abaProjetosProcessos': 'Projetos e Processos Ativos',
+        'abaDocumentos': 'Gestão do Conhecimento & Documentos',
+        'abaApps': 'Ferramentas & Serviços',
+        'abaTesouraria': 'Envio para Tesouraria'
+    };
+
+    const topbarTitleCont = document.getElementById('topbarTabTitleContainer');
+    const topbarTitleText = document.getElementById('topbarTabTitle');
+    if (topbarTitleCont && topbarTitleText) {
+        if (titles[abaId]) {
+            topbarTitleCont.style.display = 'flex';
+            topbarTitleText.textContent = titles[abaId];
+        } else {
+            topbarTitleCont.style.display = 'none';
+        }
     }
 }
 
