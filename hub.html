@@ -135,16 +135,17 @@
                 
                 <!-- Aba Início (Apresentação Geral) -->
                 <div class="tab-content active" id="abaInicio">
-                    <div style="display: flex; justify-content: flex-end; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 16px;">
-                        <button class="btn btn-secondary" id="btnEditarHome" onclick="abrirModalEditarHome()" style="display: none; padding: 6px 12px; font-size: 13px;">✏️ Editar Informações</button>
-                    </div>
+
 
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; flex-wrap: wrap;" id="homeLayoutGrid">
                         <!-- Coluna Principal (Apresentação, Vinculos, Apps) -->
                         <div style="display: flex; flex-direction: column; gap: 24px;">
                             <!-- Apresentação text card -->
                             <div class="card-agenda" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 24px;">
-                                <h3 style="margin-top: 0; color: var(--primary); font-size: 15px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">📝 Sobre</h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <h3 style="margin: 0; color: var(--primary); font-size: 15px; text-transform: uppercase; letter-spacing: 1px;">📝 Sobre</h3>
+                                    <button class="btn btn-secondary" id="btnEditarHome" onclick="abrirModalEditarHome()" style="display: none; padding: 6px 12px; font-size: 12px;">✏️ Editar</button>
+                                </div>
                                 <div id="homeDescricaoText" style="color: var(--text-main); font-size: 14px; line-height: 1.6; white-space: pre-line;">Nenhuma descrição cadastrada ainda.</div>
                             </div>
 
