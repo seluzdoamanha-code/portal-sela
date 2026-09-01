@@ -13,7 +13,8 @@ window.carregarModuloEvangelizacao = async function() {
                     <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Gestão de Turmas e Aulas</p>
                 </div>
                 <div style="padding: 12px; display: flex; flex-direction: column; gap: 4px;">
-                    <button onclick="mudarAbaEvang('turmas')" id="btnAbaEvangTurmas" class="btn" style="text-align: left; background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border); justify-content: flex-start;">🏫 Turmas e Matrículas</button>
+                    <button onclick="mudarAbaEvang('inicio')" id="btnAbaEvangInicio" class="btn" style="text-align: left; background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border); justify-content: flex-start;">🏠 Início</button>
+                    <button onclick="mudarAbaEvang('turmas')" id="btnAbaEvangTurmas" class="btn" style="text-align: left; background: transparent; color: var(--text-muted); border: 1px solid transparent; justify-content: flex-start;">🏫 Turmas e Matrículas</button>
                     <button onclick="mudarAbaEvang('aulas')" id="btnAbaEvangAulas" class="btn" style="text-align: left; background: transparent; color: var(--text-muted); border: 1px solid transparent; justify-content: flex-start;">📅 Planejamento Anual</button>
                     <button onclick="mudarAbaEvang('diario')" id="btnAbaEvangDiario" class="btn" style="text-align: left; background: transparent; color: var(--text-muted); border: 1px solid transparent; justify-content: flex-start;">📝 Diário de Classe</button>
                     <button onclick="mudarAbaEvang('boletim')" id="btnAbaEvangBoletim" class="btn" style="text-align: left; background: transparent; color: var(--text-muted); border: 1px solid transparent; justify-content: flex-start;">📊 Boletim Final</button>
@@ -29,12 +30,12 @@ window.carregarModuloEvangelizacao = async function() {
         </div>
     `;
     
-    // Inicia na aba Turmas
-    mudarAbaEvang('turmas');
+    // Inicia na aba Inicio
+    mudarAbaEvang('inicio');
 };
 
 window.mudarAbaEvang = function(aba) {
-    const ids = ['Turmas', 'Aulas', 'Diario', 'Boletim'];
+    const ids = ['Inicio', 'Turmas', 'Aulas', 'Diario', 'Boletim'];
     ids.forEach(id => {
         const btn = document.getElementById('btnAbaEvang' + id);
         if (btn) {
@@ -54,7 +55,9 @@ window.mudarAbaEvang = function(aba) {
     const content = document.getElementById('evangContent');
     content.innerHTML = '<div style="color:var(--text-muted);">Carregando...</div>';
 
-    if (aba === 'turmas') {
+    if (aba === 'inicio') {
+        carregarEvangInicio();
+    } else if (aba === 'turmas') {
         carregarEvangTurmas();
     } else if (aba === 'aulas') {
         carregarEvangAulas();
@@ -65,6 +68,26 @@ window.mudarAbaEvang = function(aba) {
     }
 };
 
+window.carregarEvangInicio = function() {
+    const content = document.getElementById('evangContent');
+    content.innerHTML = `
+        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 48px 24px; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🌱</div>
+            <h3 style="color: #10b981; margin: 0 0 8px 0; font-size: 24px;">Evangelização Infantil e Juvenil</h3>
+            <p style="color: var(--text-muted); font-size: 15px; max-width: 450px; margin: 0 auto 32px auto; line-height: 1.5;">
+                Bem-vindo ao módulo de gestão da Evangelização. Aqui você pode gerenciar turmas, matricular evangelizandos, planejar aulas e registrar o diário de classe.
+            </p>
+            <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn" style="background: #10b981; color: white; border: none; padding: 12px 24px; font-weight: 500; font-size: 15px;" onclick="mudarAbaEvang('turmas')">Gerenciar Turmas e Matrículas</button>
+                <button class="btn" style="background: transparent; color: var(--text-main); border: 1px solid var(--border); padding: 12px 24px; font-weight: 500; font-size: 15px;" onclick="mudarAbaEvang('aulas')">Planejamento de Aulas</button>
+            </div>
+        </div>
+    `;
+};
+
+// ==========================================
+// GESTÃO DE TURMAS
+// ==========================================
 window.carregarEvangTurmas = async function() {
     const content = document.getElementById('evangContent');
     try {
@@ -149,15 +172,15 @@ window.gerenciarMatriculas = async function(turmaId, turmaNome) {
     try {
         // Carregar matrículas da turma
         const { data: matriculas, error } = await db.from('app_evang_matriculas')
-            .select('*, pessoas(nome, celular)')
+            .select('*, pessoas(nome_completo, celular)')
             .eq('turma_id', turmaId);
             
         if (error) throw error;
         
         // Pessoas cadastradas que tem perfil de Evangelizando ou Evangelizador
         const { data: todasPessoas, error: errP } = await db.from('pessoas')
-            .select('id, nome, perfis')
-            .order('nome');
+            .select('id, nome_completo, perfis')
+            .order('nome_completo');
             
         if (errP) throw errP;
         
@@ -187,7 +210,7 @@ window.gerenciarMatriculas = async function(turmaId, turmaNome) {
             matriculas.sort((a,b) => {
                 if (a.papel === 'Evangelizador' && b.papel !== 'Evangelizador') return -1;
                 if (a.papel !== 'Evangelizador' && b.papel === 'Evangelizador') return 1;
-                return (a.pessoas?.nome || '').localeCompare(b.pessoas?.nome || '');
+                return (a.pessoas?.nome_completo || '').localeCompare(b.pessoas?.nome_completo || '');
             });
             
             matriculas.forEach(m => {
@@ -197,7 +220,7 @@ window.gerenciarMatriculas = async function(turmaId, turmaNome) {
                 html += `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border);">
                         <div>
-                            <div style="font-size: 14px; color: var(--text-main); font-weight: 500;">${m.pessoas?.nome || 'Desconhecido'}</div>
+                            <div style="font-size: 14px; color: var(--text-main); font-weight: 500;">${m.pessoas?.nome_completo || 'Desconhecido'}</div>
                             <span style="font-size: 10px; padding: 2px 6px; border-radius: 12px; ${badgeStyle}">${m.papel}</span>
                         </div>
                         <button onclick="removerMatriculaEvang('${m.id}', '${turmaId}', '${turmaNome}')" style="background: none; border: none; color: #ef4444; cursor: pointer;" title="Remover da Turma">✕</button>
@@ -213,22 +236,26 @@ window.gerenciarMatriculas = async function(turmaId, turmaNome) {
                 <div style="flex: 1; min-width: 300px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
                     <h4 style="margin: 0 0 16px 0; color: var(--text-main);">Vincular Pessoa</h4>
                     
-                    <label style="font-size: 12px; color: var(--text-muted);">Evangelizadores Disponíveis</label>
-                    <div style="display: flex; gap: 8px; margin-bottom: 16px; margin-top: 4px;">
-                        <select id="selEvangelizador" class="input" style="flex: 1;">
-                            <option value="">Selecione...</option>
-                            ${dispoEvangelizadores.map(p => `<option value="${p.id}">${p.nome}</option>`).join('')}
-                        </select>
-                        <button class="btn btn-primary" onclick="addMatriculaEvang('${turmaId}', '${turmaNome}', 'selEvangelizador', 'Evangelizador')">Vincular</button>
+                    <div style="flex: 1; margin-bottom: 16px;">
+                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Vincular Evangelizador</label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="selEvangelizador" class="input" style="flex: 1;">
+                                <option value="">-- Selecione a pessoa --</option>
+                                ${dispoEvangelizadores.map(p => `<option value="${p.id}">${p.nome_completo}</option>`).join('')}
+                            </select>
+                            <button class="btn btn-primary" onclick="addMatriculaEvang('${turmaId}', '${turmaNome}', 'selEvangelizador', 'Evangelizador')">Vincular</button>
+                        </div>
                     </div>
                     
-                    <label style="font-size: 12px; color: var(--text-muted);">Evangelizandos (Alunos) Disponíveis</label>
-                    <div style="display: flex; gap: 8px; margin-top: 4px;">
-                        <select id="selEvangelizando" class="input" style="flex: 1;">
-                            <option value="">Selecione...</option>
-                            ${dispoEvangelizandos.map(p => `<option value="${p.id}">${p.nome}</option>`).join('')}
-                        </select>
-                        <button class="btn btn-primary" onclick="addMatriculaEvang('${turmaId}', '${turmaNome}', 'selEvangelizando', 'Evangelizando')">Vincular</button>
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Vincular Evangelizando</label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="selEvangelizando" class="input" style="flex: 1;">
+                                <option value="">-- Selecione a pessoa --</option>
+                                ${dispoEvangelizandos.map(p => `<option value="${p.id}">${p.nome_completo}</option>`).join('')}
+                            </select>
+                            <button class="btn btn-primary" onclick="addMatriculaEvang('${turmaId}', '${turmaNome}', 'selEvangelizando', 'Evangelizando')">Vincular</button>
+                        </div>
                     </div>
                     
                     <p style="font-size: 11px; color: var(--text-muted); margin-top: 16px;">A lista acima exibe apenas pessoas que possuam o Perfil de 'Evangelizando' ou 'Evangelizador' no seu cadastro global. Se alguém não aparece aqui, verifique o perfil na tela de Gestão de Pessoas.</p>
@@ -535,7 +562,7 @@ window.carregarListaChamada = async function() {
     try {
         // 1. Buscar alunos matriculados na turma
         const { data: matriculas, error: errMat } = await db.from('app_evang_matriculas')
-            .select('pessoa_id, papel, pessoas(nome)')
+            .select('pessoa_id, papel, pessoas(nome_completo)')
             .eq('turma_id', turmaId)
             .eq('papel', 'Evangelizando');
             
@@ -561,7 +588,7 @@ window.carregarListaChamada = async function() {
         }
         
         // Ordenar alunos alfabeticamente
-        matriculas.sort((a,b) => a.pessoas.nome.localeCompare(b.pessoas.nome));
+        matriculas.sort((a,b) => (a.pessoas?.nome_completo || '').localeCompare(b.pessoas?.nome_completo || ''));
         
         let html = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -591,7 +618,7 @@ window.carregarListaChamada = async function() {
             html += `
                 <tr style="border-bottom: 1px solid var(--border);">
                     <td style="padding: 12px; color: var(--text-main); font-weight: 500;">
-                        ${m.pessoas.nome}
+                        ${m.pessoas?.nome_completo || 'Desconhecido'}
                     </td>
                     <td style="padding: 12px; text-align: center;">
                         <label style="display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
