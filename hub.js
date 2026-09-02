@@ -7278,13 +7278,13 @@ async function carregarResumoEvangelizacao(container) {
         const { data: frequencias, error: errFreq } = await db.from('app_evang_frequencia')
             .select('*')
             .in('aula_id', aulaIds)
-            .eq('situacao', 'P');
+            .eq('presente', true);
 
         const { data: matriculas, error: errMat } = await db.from('app_evang_matriculas')
-            .select('pessoa_id, turma_id, papel')
+            .select('id, pessoa_id, turma_id, papel')
             .in('turma_id', turmasIds);
 
-        if (errFreq || errMat) throw new Error("Erro ao carregar matrículas ou frequências.");
+        if (errFreq || errMat) throw new Error(errFreq?.message || errMat?.message || "Erro ao carregar dados.");
 
         const { data: turmasData } = await db.from('app_evang_turmas').select('id, nome').in('id', turmasIds);
         const nomesTurmas = {};
@@ -7292,10 +7292,9 @@ async function carregarResumoEvangelizacao(container) {
             turmasData.forEach(t => nomesTurmas[t.id] = t.nome);
         }
 
-        const papelPorTurmaPessoa = {};
+        const matriculaPorId = {};
         matriculas.forEach(m => {
-            if (!papelPorTurmaPessoa[m.turma_id]) papelPorTurmaPessoa[m.turma_id] = {};
-            papelPorTurmaPessoa[m.turma_id][m.pessoa_id] = m.papel;
+            matriculaPorId[m.id] = m;
         });
 
         let totalEvangelizadores = 0;
@@ -7307,7 +7306,9 @@ async function carregarResumoEvangelizacao(container) {
             let alunos = 0;
             const freqAula = frequencias.filter(f => f.aula_id === aula.id);
             freqAula.forEach(f => {
-                const papel = (papelPorTurmaPessoa[aula.turma_id] && papelPorTurmaPessoa[aula.turma_id][f.pessoa_id]) || 'Evangelizando';
+                const mat = matriculaPorId[f.matricula_id];
+                const papel = mat ? mat.papel : 'Evangelizando';
+                
                 if (papel === 'Evangelizador') {
                     profs++;
                     totalEvangelizadores++;
@@ -7324,10 +7325,10 @@ async function carregarResumoEvangelizacao(container) {
         });
 
         let cardsHtml = `
-            <h3 style="color: var(--text-main); font-size: 15px; margin-bottom: 16px;">📊 Frequência da Evangelização (Hoje: ${dataHoje})</h3>
-            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <h3 style="color: var(--text-main); font-size: 15px; margin-bottom: 16px;">📊 Frequência da Evangelização (Hoje: ${dataHoje.split('-').reverse().join('/')})</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
                 <!-- CARD TOTAL -->
-                <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 20px; min-width: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                     <h4 style="margin: 0 0 12px 0; color: #10b981; font-size: 14px;">🌟 Total Presentes</h4>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
                         <span style="color: var(--text-main); font-size: 13px;">Evangelizadores:</span>
@@ -7343,7 +7344,7 @@ async function carregarResumoEvangelizacao(container) {
         turmasResumo.forEach(t => {
             cardsHtml += `
                 <!-- CARD TURMA -->
-                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; min-width: 250px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
                     <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 13px;">📖 ${t.nome}</h4>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
                         <span style="color: var(--text-muted); font-size: 12px;">Evangelizadores:</span>
@@ -7361,7 +7362,14 @@ async function carregarResumoEvangelizacao(container) {
         container.innerHTML = cardsHtml;
 
     } catch (e) {
-        container.innerHTML = '<div style="color: #ef4444; font-size: 12px;">Não foi possível carregar o resumo de presenças de hoje.</div>';
+        container.innerHTML = `<div style="color: #ef4444; font-size: 13px; padding: 16px; border: 1px dashed #ef4444; background: rgba(239,68,68,0.1); border-radius: 8px;">
+            <strong>Erro ao carregar presenças:</strong><br>
+            ${e.message || e}
+        </div>`;
+        console.error(e);
+    }
+}
+        </div>`;
         console.error(e);
     }
 }
