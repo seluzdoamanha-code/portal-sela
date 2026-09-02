@@ -67,21 +67,130 @@ window.mudarAbaEvang = function(aba) {
     }
 };
 
-window.carregarEvangInicio = function() {
+window.carregarEvangInicio = async function() {
     const content = document.getElementById('evangContent');
-    content.innerHTML = `
-        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 48px 24px; text-align: center;">
-            <div style="font-size: 48px; margin-bottom: 16px;">🌱</div>
-            <h3 style="color: #10b981; margin: 0 0 8px 0; font-size: 24px;">Evangelização Infantil e Juvenil</h3>
-            <p style="color: var(--text-muted); font-size: 15px; max-width: 450px; margin: 0 auto 32px auto; line-height: 1.5;">
-                Bem-vindo ao módulo de gestão da Evangelização. Aqui você pode gerenciar turmas, matricular evangelizandos, planejar aulas e registrar o diário de classe.
-            </p>
-            <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-                <button class="btn" style="background: #10b981; color: white; border: none; padding: 12px 24px; font-weight: 500; font-size: 15px;" onclick="mudarAbaEvang('turmas')">Gerenciar Turmas e Matrículas</button>
-                <button class="btn" style="background: transparent; color: var(--text-main); border: 1px solid var(--border); padding: 12px 24px; font-weight: 500; font-size: 15px;" onclick="mudarAbaEvang('aulas')">Planejamento de Aulas</button>
+    content.innerHTML = '<div style="color:var(--text-muted); padding: 24px; text-align: center;">Carregando painel...</div>';
+
+    try {
+        const dataHoje = new Date().toISOString().split('T')[0];
+
+        // Buscar aulas de hoje
+        const { data: aulasHoje, error: errAulas } = await db.from('app_evang_aulas')
+            .select('*, app_evang_turmas(nome)')
+            .eq('data_aula', dataHoje);
+
+        if (errAulas) throw errAulas;
+
+        let totalEvangelizadores = 0;
+        let totalEvangelizandos = 0;
+        const turmasResumo = [];
+
+        if (aulasHoje && aulasHoje.length > 0) {
+            const aulaIds = aulasHoje.map(a => a.id);
+            const turmasIds = aulasHoje.map(a => a.turma_id);
+
+            // Frequencia das aulas de hoje (presenças marcadas como 'P')
+            const { data: frequencias, error: errFreq } = await db.from('app_evang_frequencia')
+                .select('*')
+                .in('aula_id', aulaIds)
+                .eq('situacao', 'P'); // Presente
+
+            // Buscar papéis nas matrículas
+            const { data: matriculas, error: errMat } = await db.from('app_evang_matriculas')
+                .select('pessoa_id, turma_id, papel')
+                .in('turma_id', turmasIds);
+
+            if (!errFreq && !errMat) {
+                // Montar dicionário pessoa_id -> papel por turma
+                const papelPorTurmaPessoa = {};
+                matriculas.forEach(m => {
+                    if (!papelPorTurmaPessoa[m.turma_id]) papelPorTurmaPessoa[m.turma_id] = {};
+                    papelPorTurmaPessoa[m.turma_id][m.pessoa_id] = m.papel;
+                });
+
+                aulasHoje.forEach(aula => {
+                    let profs = 0;
+                    let alunos = 0;
+
+                    const freqAula = frequencias.filter(f => f.aula_id === aula.id);
+                    freqAula.forEach(f => {
+                        const papel = (papelPorTurmaPessoa[aula.turma_id] && papelPorTurmaPessoa[aula.turma_id][f.pessoa_id]) || 'Evangelizando';
+                        if (papel === 'Evangelizador') {
+                            profs++;
+                            totalEvangelizadores++;
+                        } else {
+                            alunos++;
+                            totalEvangelizandos++;
+                        }
+                    });
+
+                    turmasResumo.push({
+                        nome: aula.app_evang_turmas?.nome || 'Turma Desconhecida',
+                        profs,
+                        alunos
+                    });
+                });
+            }
+        }
+
+        let cardsHtml = '';
+        if (turmasResumo.length > 0) {
+            cardsHtml += `
+                <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 24px; justify-content: center;">
+                    <!-- CARD TOTAL -->
+                    <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 20px; min-width: 280px; text-align: left; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                        <h4 style="margin: 0 0 12px 0; color: #10b981; font-size: 16px;">🌟 Presentes hoje na Evangelização</h4>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: var(--text-main); font-weight: 500;">Evangelizadores:</span>
+                            <span style="color: var(--text-main); font-weight: bold; font-size: 16px;">${totalEvangelizadores}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-main); font-weight: 500;">Evangelizandos:</span>
+                            <span style="color: var(--text-main); font-weight: bold; font-size: 16px;">${totalEvangelizandos}</span>
+                        </div>
+                    </div>
+            `;
+
+            turmasResumo.forEach(t => {
+                cardsHtml += `
+                    <!-- CARD TURMA -->
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; min-width: 220px; text-align: left; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                        <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 15px;">📖 ${t.nome}</h4>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: var(--text-muted); font-size: 14px;">Evangelizadores:</span>
+                            <span style="color: var(--text-main); font-weight: bold;">${t.profs}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-muted); font-size: 14px;">Evangelizandos:</span>
+                            <span style="color: var(--text-main); font-weight: bold;">${t.alunos}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            cardsHtml += `</div>`;
+        }
+
+        content.innerHTML = `
+            <div style="text-align: center;">
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 48px 24px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🌱</div>
+                    <h3 style="color: #10b981; margin: 0 0 8px 0; font-size: 24px;">Evangelização Infantil e Juvenil</h3>
+                    <p style="color: var(--text-muted); font-size: 15px; max-width: 450px; margin: 0 auto 32px auto; line-height: 1.5;">
+                        Bem-vindo ao módulo de gestão da Evangelização. Aqui você pode gerenciar turmas, matricular evangelizandos, planejar aulas e registrar o diário de classe.
+                    </p>
+                    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn" style="background: #10b981; color: white; border: none; padding: 12px 24px; font-weight: 500; font-size: 15px;" onclick="mudarAbaEvang('turmas')">Gerenciar Turmas e Matrículas</button>
+                        <button class="btn" style="background: transparent; color: var(--text-main); border: 1px solid var(--border); padding: 12px 24px; font-weight: 500; font-size: 15px;" onclick="mudarAbaEvang('aulas')">Planejamento de Aulas</button>
+                    </div>
+                </div>
+                ${cardsHtml}
             </div>
-        </div>
-    `;
+        `;
+    } catch (e) {
+        content.innerHTML = '<div style="color: #ef4444; padding: 24px; text-align: center;">Erro ao carregar painel inicial.</div>';
+        console.error(e);
+    }
 };
 
 // ==========================================
