@@ -197,10 +197,10 @@ window.carregarEvangInicio = async function() {
                 <!-- INFORMAÇÃO DIAGNÓSTICA PARA O WAGNER -->
                 ${turmasResumo.length === 0 ? `
                     <div style="margin-top: 24px; padding: 16px; background: rgba(239,68,68,0.1); border: 1px dashed #ef4444; border-radius: 8px; color: #ef4444; font-size: 13px; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto;">
-                        <strong>Log Diagnóstico:</strong><br>
+                        <strong>Log Diagnóstico Detalhado:</strong><br>
                         - Data buscada: ${dataHoje}<br>
-                        - Quantidade de Aulas de hoje: ${aulasHoje ? aulasHoje.length : 0}<br>
-                        <em>Se aulas = 0, os cards não aparecem porque não há turmas com aulas registradas com a data exata de '${dataHoje}' no Diário de Classe. (Tente registrar uma aula hoje para testar!)</em>
+                        - Aulas encontradas: ${aulasHoje ? aulasHoje.length : 0}<br>
+                        <em>Por favor, copie as 3 linhas acima e cole aqui para mim! Se o número de aulas estiver ZERO, então a tabela do banco realmente não tem nenhuma aula salva na data EXATA informada ali em cima.</em>
                     </div>
                 ` : ''}
             </div>
