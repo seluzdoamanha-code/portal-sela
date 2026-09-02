@@ -316,6 +316,18 @@ async function carregarDadosHome(estData) {
         if (!hasApps) {
             appsGrid.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; font-style: italic; padding: 12px 0;">Este setor não possui ferramentas ativas no momento.</div>';
         }
+
+        if (isEvangelizacao) {
+            const painelEvang = document.createElement('div');
+            painelEvang.id = "painelResumoEvang";
+            painelEvang.style.marginTop = "32px";
+            painelEvang.innerHTML = '<div style="color:var(--text-muted); font-size: 13px;">Carregando resumo de presenças de hoje...</div>';
+            
+            // Insert it after the apps grid block
+            appsGrid.parentElement.appendChild(painelEvang);
+
+            carregarResumoEvangelizacao(painelEvang);
+        }
     }
 
     // 4. Links Úteis
@@ -7237,3 +7249,119 @@ window.salvarEvAcompanhamento = async function(e) {
     }
 };
 
+
+
+async function carregarResumoEvangelizacao(container) {
+    try {
+        const _d = new Date();
+        const dataHoje = new Date(_d.getTime() - (_d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+
+        // Buscar aulas de hoje
+        const { data: aulasHoje, error: errAulas } = await db.from('app_evang_aulas')
+            .select('*')
+            .eq('data_aula', dataHoje);
+
+        if (errAulas) throw errAulas;
+
+        if (!aulasHoje || aulasHoje.length === 0) {
+            container.innerHTML = `
+                <div style="margin-top: 16px; padding: 16px; background: rgba(239,68,68,0.1); border: 1px dashed #ef4444; border-radius: 8px; color: #ef4444; font-size: 13px;">
+                    <strong>Frequência de Hoje:</strong> Nenhuma aula foi encontrada para a data exata de hoje (${dataHoje}) no Diário de Classe. 
+                </div>
+            `;
+            return;
+        }
+
+        const aulaIds = aulasHoje.map(a => a.id);
+        const turmasIds = aulasHoje.map(a => a.turma_id);
+
+        const { data: frequencias, error: errFreq } = await db.from('app_evang_frequencia')
+            .select('*')
+            .in('aula_id', aulaIds)
+            .eq('situacao', 'P');
+
+        const { data: matriculas, error: errMat } = await db.from('app_evang_matriculas')
+            .select('pessoa_id, turma_id, papel')
+            .in('turma_id', turmasIds);
+
+        if (errFreq || errMat) throw new Error("Erro ao carregar matrículas ou frequências.");
+
+        const { data: turmasData } = await db.from('app_evang_turmas').select('id, nome').in('id', turmasIds);
+        const nomesTurmas = {};
+        if (turmasData) {
+            turmasData.forEach(t => nomesTurmas[t.id] = t.nome);
+        }
+
+        const papelPorTurmaPessoa = {};
+        matriculas.forEach(m => {
+            if (!papelPorTurmaPessoa[m.turma_id]) papelPorTurmaPessoa[m.turma_id] = {};
+            papelPorTurmaPessoa[m.turma_id][m.pessoa_id] = m.papel;
+        });
+
+        let totalEvangelizadores = 0;
+        let totalEvangelizandos = 0;
+        const turmasResumo = [];
+
+        aulasHoje.forEach(aula => {
+            let profs = 0;
+            let alunos = 0;
+            const freqAula = frequencias.filter(f => f.aula_id === aula.id);
+            freqAula.forEach(f => {
+                const papel = (papelPorTurmaPessoa[aula.turma_id] && papelPorTurmaPessoa[aula.turma_id][f.pessoa_id]) || 'Evangelizando';
+                if (papel === 'Evangelizador') {
+                    profs++;
+                    totalEvangelizadores++;
+                } else {
+                    alunos++;
+                    totalEvangelizandos++;
+                }
+            });
+            turmasResumo.push({
+                nome: nomesTurmas[aula.turma_id] || 'Turma Desconhecida',
+                profs,
+                alunos
+            });
+        });
+
+        let cardsHtml = `
+            <h3 style="color: var(--text-main); font-size: 15px; margin-bottom: 16px;">📊 Frequência da Evangelização (Hoje: ${dataHoje})</h3>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <!-- CARD TOTAL -->
+                <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 20px; min-width: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <h4 style="margin: 0 0 12px 0; color: #10b981; font-size: 14px;">🌟 Total Presentes</h4>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="color: var(--text-main); font-size: 13px;">Evangelizadores:</span>
+                        <span style="color: var(--text-main); font-weight: bold; font-size: 14px;">${totalEvangelizadores}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-main); font-size: 13px;">Evangelizandos:</span>
+                        <span style="color: var(--text-main); font-weight: bold; font-size: 14px;">${totalEvangelizandos}</span>
+                    </div>
+                </div>
+        `;
+
+        turmasResumo.forEach(t => {
+            cardsHtml += `
+                <!-- CARD TURMA -->
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; min-width: 250px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                    <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 13px;">📖 ${t.nome}</h4>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="color: var(--text-muted); font-size: 12px;">Evangelizadores:</span>
+                        <span style="color: var(--text-main); font-weight: bold; font-size: 13px;">${t.profs}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted); font-size: 12px;">Evangelizandos:</span>
+                        <span style="color: var(--text-main); font-weight: bold; font-size: 13px;">${t.alunos}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        cardsHtml += `</div>`;
+        container.innerHTML = cardsHtml;
+
+    } catch (e) {
+        container.innerHTML = '<div style="color: #ef4444; font-size: 12px;">Não foi possível carregar o resumo de presenças de hoje.</div>';
+        console.error(e);
+    }
+}
