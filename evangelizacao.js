@@ -72,7 +72,8 @@ window.carregarEvangInicio = async function() {
     content.innerHTML = '<div style="color:var(--text-muted); padding: 24px; text-align: center;">Carregando painel...</div>';
 
     try {
-        const dataHoje = new Date().toISOString().split('T')[0];
+        const _d = new Date();
+        const dataHoje = new Date(_d.getTime() - (_d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
 
         // Buscar aulas de hoje
         const { data: aulasHoje, error: errAulas } = await db.from('app_evang_aulas')
