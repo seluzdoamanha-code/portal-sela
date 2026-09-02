@@ -727,7 +727,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                             </label>
                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                                 <input type="checkbox" id="sideChkTratEspiritual" style="width: 18px; height: 18px; accent-color: var(--primary);" onchange="if(this.checked) document.getElementById('sideChkApenasConversa').checked = false;">
-                                <span>Prescrever Tratamento Espiritual</span>
+                                <span>Prescrever Tratamento Energético</span>
                             </label>
                         </div>
 
@@ -948,7 +948,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                     tratsHTML += `
                         <div style="display: flex; flex-direction: column; gap: 8px; background: var(--bg-panel); padding: 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05);">
                             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
-                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${t.tipo}</span>
+                                <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${t.tipo === 'Espiritual' ? 'Energético' : t.tipo}</span>
                                 ${labelHtml}
                                 <span style="font-size: 12px; color: var(--text-muted);">Início: ${dtIniStr}</span>
                             </div>
@@ -1004,7 +1004,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
     window.confirmarSessaoTratamentoMobile = async function(tratamentoId, tipo) {
         if (tipo === 'Espiritual') {
             Swal.fire({
-                title: 'Confirmar Atendimento Espiritual',
+                title: 'Confirmar Atendimento Energético',
                 input: 'textarea',
                 inputLabel: 'Observações da Sessão (Opcional)',
                 inputPlaceholder: 'Relate informações relevantes do atendimento...',
@@ -1197,7 +1197,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                             <div style="font-size: 12px; font-weight: bold; color: var(--text-main); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 ${t.app_atendimento_fraterno?.paciente?.nome_completo?.toUpperCase() || t.app_atendimento_fraterno?.nome_completo?.toUpperCase() || 'DESCONHECIDO'}
                             </div>
-                            <div style="font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; display: inline-block; margin-bottom: 8px; align-self: flex-start;">${t.tipo.toUpperCase()}</div>
+                            <div style="font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; display: inline-block; margin-bottom: 8px; align-self: flex-start;">${t.tipo === 'Espiritual' ? 'ENERGÉTICO' : t.tipo.toUpperCase()}</div>
                             <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between;">
                                 <div style="display: flex; gap: 4px;">
                                     ${boxesHtml}

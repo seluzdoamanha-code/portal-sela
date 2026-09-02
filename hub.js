@@ -246,7 +246,7 @@ async function carregarDadosHome(estData) {
                 <div class="card-agenda" style="background: rgba(245, 158, 11, 0.02); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
                         <div style="font-weight: 600; color: #f59e0b; font-size: 14px; margin-bottom: 6px;">🤝 ATENDIMENTOS ESPIRITUAIS</div>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Gestão de Atendimento Fraterno e Tratamentos Fluídicos e Espiritual.</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Gestão de Atendimento Fraterno e Tratamentos Fluídicos e Energético.</div>
                     </div>
                     <button class="btn" onclick="mudarAbaAtalho('abaApps')" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 12px; padding: 6px 12px;">Abrir Painel ➔</button>
                 </div>
@@ -3509,7 +3509,7 @@ window.carregarPainelGestaoAtendimento = function () {
                 <button onclick="mudarAbaPrincipalAtendimento('triagem')" id="btnMainAtenTriagem" class="btn" style="white-space: nowrap; border-radius: 8px; background: var(--primary); color: white; padding: 10px 20px;">📋 Triagem</button>
                 <button onclick="mudarAbaPrincipalAtendimento('fichario')" id="btnMainAtenFichario" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🗂️ Fichário</button>
                 <button onclick="mudarAbaPrincipalAtendimento('atendimento')" id="btnMainAtenAtendimento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🧑‍🤝‍🧑 Atendimento Fraterno</button>
-                <button onclick="mudarAbaPrincipalAtendimento('acompanhamento')" id="btnMainAtenAcompanhamento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🔎 Tratamentos Fluídico e Espiritual</button>
+                <button onclick="mudarAbaPrincipalAtendimento('acompanhamento')" id="btnMainAtenAcompanhamento" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">🔎 Tratamentos Energético e Fluídico</button>
                 <button onclick="mudarAbaPrincipalAtendimento('historico')" id="btnMainAtenHistorico" class="btn" style="white-space: nowrap; border-radius: 8px; background: transparent; color: var(--text-main); padding: 10px 20px;">📊 Histórico</button>
             </div>
             
@@ -3620,7 +3620,7 @@ window.carregarPainelGestaoAtendimento = function () {
                             <input type="checkbox" id="chkTratFluidico" style="width: 16px; height: 16px; accent-color: var(--primary);"> Indicar <strong>Tratamento Fluídico</strong>
                         </label>
                         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px;">
-                            <input type="checkbox" id="chkTratEspiritual" style="width: 16px; height: 16px; accent-color: var(--primary);"> Indicar <strong>Tratamento Energético/Espiritual</strong>
+                            <input type="checkbox" id="chkTratEspiritual" style="width: 16px; height: 16px; accent-color: var(--primary);"> Indicar <strong>Tratamento Energético</strong>
                         </label>
                     </div>
                     
@@ -4703,7 +4703,7 @@ window.abrirFichaAtendimento = async function (id) {
                         </label>
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                             <input type="checkbox" id="sideChkTratEspiritual" style="width: 18px; height: 18px; accent-color: var(--primary);" onchange="if(this.checked) document.getElementById('sideChkApenasConversa').checked = false;">
-                            <span>Prescrever Tratamento Espiritual</span>
+                            <span>Prescrever Tratamento Energético</span>
                         </label>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
@@ -4948,7 +4948,7 @@ window.carregarTratamentosAtivosDesktop = async function () {
                 tratsHTML += `
                     <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.01); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.03);">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${t.tipo}</span>
+                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${t.tipo === 'Espiritual' ? 'Energético' : t.tipo}</span>
                             ${isListActive ? (attendedToday ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); white-space: nowrap;">✅ Atendido Hoje</span>' : (t.presente ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); white-space: nowrap;">🟢 Presente na Casa</span>' : '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); white-space: nowrap;">🟡 Aguardando Chegada</span>')) : ''}
                             <span style="font-size: 13px; color: var(--text-muted);">${dtText}</span>
                         </div>
@@ -5045,9 +5045,10 @@ window.toggleEvolucaoInline = async function (id) {
                     const dt = p.data ? p.data.split('T')[0].split('-').reverse().join('/') : '';
                     const obs = p.observacoes ? `<div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Obs: ${p.observacoes}</div>` : '';
                     const badgeColor = trat?.tipo === 'Espiritual' ? '#818cf8' : '#10b981';
+                    const tipoLabel = trat?.tipo === 'Espiritual' ? 'Energético' : (trat?.tipo || 'TRAT.');
                     return `
                         <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; font-size: 12px; line-height: 1.4; margin-bottom: 6px;">
-                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${trat?.tipo || 'TRAT.'}</span>
+                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${tipoLabel}</span>
                             <strong style="color: #3b82f6; margin-left: 4px;">${dt}</strong>
                             ${obs}
                         </div>
@@ -5273,7 +5274,7 @@ window.carregarFilaPresencasDesktop = async function () {
         tratamentos.forEach(t => {
             const f = t.app_atendimento_fraterno;
             const badgeColor = t.tipo === 'Fluídico' ? '#3b82f6' : '#8b5cf6';
-            const badgeText = t.tipo.toUpperCase();
+            const badgeText = (t.tipo === 'Espiritual' ? 'Energético' : t.tipo).toUpperCase();
 
             const d = new Date(f.created_at);
             const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -5414,7 +5415,7 @@ window.marcarTratamentoPresente = async function(id, statusPresente) {
 window.confirmarSessaoTratamento = async function(tratamentoId, tipo) {
     if (tipo === 'Espiritual') {
         Swal.fire({
-            title: 'Confirmar Atendimento Espiritual',
+            title: 'Confirmar Atendimento Energético',
             input: 'textarea',
             inputLabel: 'Observações da Sessão (Opcional)',
             inputPlaceholder: 'Relate informações relevantes do atendimento...',

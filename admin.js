@@ -2307,10 +2307,10 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
                     <div style="font-size: 12px; color: var(--text-muted);">Totais</div>
                 </div>
 
-                <!-- 5) Tratamento Espiritual -->
+                <!-- 5) Tratamento Energético -->
                 <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
                     <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">✨</div>
-                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Tratamento Espiritual</div>
+                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Tratamento Energético</div>
                     <div style="font-size: 32px; font-weight: 800; color: #a855f7; margin: 8px 0; line-height: 1;">${tratEspiritual}</div>
                     <div style="font-size: 12px; color: var(--text-muted);">Totais</div>
                 </div>
@@ -2323,10 +2323,10 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
                     <div style="font-size: 12px; color: var(--text-muted);">Totais</div>
                 </div>
 
-                <!-- 7) Procedimento Espiritual -->
+                <!-- 7) Procedimento Energético -->
                 <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden;">
                     <div style="position: absolute; top: -15px; right: -15px; font-size: 80px; opacity: 0.05;">📅</div>
-                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Procedimento Espiritual</div>
+                    <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase;">Procedimento Energético</div>
                     <div style="font-size: 32px; font-weight: 800; color: #d946ef; margin: 8px 0; line-height: 1;">${procEspiritual}</div>
                     <div style="font-size: 12px; color: var(--text-muted);">Totais</div>
                 </div>
@@ -2360,7 +2360,7 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
                         </div>
                         <div>
                             <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
-                                <span style="color: var(--text-muted);">Tratamento Espiritual</span>
+                                <span style="color: var(--text-muted);">Tratamento Energético</span>
                                 <span style="font-weight: 600; color: var(--text-main);">${qtdeTratamento}</span>
                             </div>
                             <div style="width: 100%; background: rgba(255,255,255,0.05); height: 8px; border-radius: 4px; overflow: hidden;">
