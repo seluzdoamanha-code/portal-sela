@@ -739,8 +739,7 @@ window.carregarDadosTurmaDiario = async function() {
         // 2. Matriculas
         const { data: matriculas, error: errMat } = await db.from('app_evang_matriculas')
             .select('id, pessoa_id, papel, pessoas(nome_completo)')
-            .eq('turma_id', turmaId)
-            .eq('papel', 'Evangelizando');
+            .eq('turma_id', turmaId);
         if (errMat) throw errMat;
         window._evangMatriculasData = matriculas || [];
         
