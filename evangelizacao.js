@@ -821,51 +821,69 @@ window.renderizarMapaFrequencia = function() {
     thead += `</tr>`;
     
     let tbody = '';
-    matriculas.forEach(m => {
-        const mId = m.id;
-        
-        tbody += `<tr style="border-bottom: 1px solid var(--border);">
-            <td style="padding: 12px 16px; color: var(--text-main); font-weight: 500; position: sticky; left: 0; background: var(--bg-panel); z-index: 1; border-right: 1px solid var(--border);">
-                ${m.pessoas?.nome_completo || 'Desconhecido'}
-            </td>
-            <td style="padding: 8px 4px; text-align: center;">
-                <button onclick="window.registrarOcorrenciaEvang('${m.pessoa_id}', '${(m.pessoas?.nome_completo || '').replace(/'/g, "\\'")}')" style="background: none; border: none; cursor: pointer; font-size: 14px;" title="Ocorrência Assistencial">⚠️</button>
-            </td>`;
+    
+    const alunos = matriculas.filter(m => m.papel !== 'Evangelizador');
+    const equipe = matriculas.filter(m => m.papel === 'Evangelizador');
+
+    const gerarLinhas = (lista) => {
+        let h = '';
+        lista.forEach(m => {
+            const mId = m.id;
             
-        aulas.forEach(a => {
-            const record = freqMap[mId] && freqMap[mId][a.id];
-            const isPresente = record ? record.presente : true; 
-            const obsValue = record ? record.observacao : '';
-            const hasRecord = !!record;
-            
-            const isFoco = (a.id === aulaFocoId);
-            const isEdit = modoMassa || isFoco;
-            
-            let cellContent = '';
-            
-            if (isEdit) {
-                const checked = (hasRecord && !isPresente) ? '' : 'checked';
-                cellContent = `
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                        <input type="checkbox" class="chamada-checkbox-${a.id}" data-matriculaid="${mId}" ${checked} style="width: 18px; height: 18px; accent-color: #10b981;" title="Presente?">
-                        <input type="text" id="obs-${a.id}-${mId}" value="${obsValue}" placeholder="Motivo/Obs" style="width: 100%; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text-main); font-size: 11px; padding: 2px; text-align: center;">
-                    </div>
-                `;
-            } else {
-                if (!hasRecord) {
-                    cellContent = `<div style="width:12px; height:12px; border-radius:50%; background:rgba(255,255,255,0.2); margin: 0 auto;" title="Não Lançado"></div>`;
-                } else if (isPresente) {
-                    cellContent = `<div style="width:12px; height:12px; border-radius:50%; background:#10b981; margin: 0 auto;" title="Presente"></div>`;
+            h += `<tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px 16px; color: var(--text-main); font-weight: 500; position: sticky; left: 0; background: var(--bg-panel); z-index: 1; border-right: 1px solid var(--border);">
+                    ${m.pessoas?.nome_completo || 'Desconhecido'}
+                </td>
+                <td style="padding: 8px 4px; text-align: center;">
+                    <button onclick="window.registrarOcorrenciaEvang('${m.pessoa_id}', '${(m.pessoas?.nome_completo || '').replace(/'/g, "\'")}')" style="background: none; border: none; cursor: pointer; font-size: 14px;" title="Ocorrência Assistencial">⚠️</button>
+                </td>`;
+                
+            aulas.forEach(a => {
+                const record = freqMap[mId] && freqMap[mId][a.id];
+                const isPresente = record ? record.presente : true; 
+                const obsValue = record ? record.observacao : '';
+                const hasRecord = !!record;
+                
+                const isFoco = (a.id === aulaFocoId);
+                const isEdit = modoMassa || isFoco;
+                
+                let cellContent = '';
+                
+                if (isEdit) {
+                    const checked = (hasRecord && !isPresente) ? '' : 'checked';
+                    cellContent = `
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                            <input type="checkbox" class="chamada-checkbox-${a.id}" data-matriculaid="${mId}" ${checked} style="width: 18px; height: 18px; accent-color: #10b981;" title="Presente?">
+                            <input type="text" id="obs-${a.id}-${mId}" value="${obsValue}" placeholder="Motivo/Obs" style="width: 100%; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text-main); font-size: 11px; padding: 2px; text-align: center;">
+                        </div>
+                    `;
                 } else {
-                    cellContent = `<div style="width:12px; height:12px; border-radius:50%; background:#ef4444; margin: 0 auto;" title="Falta: ${obsValue || 'Sem justificativa'}"></div>`;
+                    if (!hasRecord) {
+                        cellContent = `<div style="width:12px; height:12px; border-radius:50%; background:rgba(255,255,255,0.2); margin: 0 auto;" title="Não Lançado"></div>`;
+                    } else if (isPresente) {
+                        cellContent = `<div style="width:12px; height:12px; border-radius:50%; background:#10b981; margin: 0 auto;" title="Presente"></div>`;
+                    } else {
+                        cellContent = `<div style="width:12px; height:12px; border-radius:50%; background:#ef4444; margin: 0 auto;" title="Falta: ${obsValue || 'Sem justificativa'}"></div>`;
+                    }
                 }
-            }
+                
+                h += `<td style="padding: 8px 4px; text-align: center; ${isFoco ? 'background: rgba(16,185,129,0.05);' : ''}">${cellContent}</td>`;
+            });
             
-            tbody += `<td style="padding: 8px 4px; text-align: center; ${isFoco ? 'background: rgba(16,185,129,0.05);' : ''}">${cellContent}</td>`;
+            h += `</tr>`;
         });
-        
-        tbody += `</tr>`;
-    });
+        return h;
+    };
+
+    if (alunos.length > 0) {
+        tbody += `<tr style="background: rgba(0,0,0,0.02);"><td colspan="${2 + aulas.length}" style="padding: 8px 16px; font-size: 11px; letter-spacing: 1px; font-weight: bold; color: var(--text-muted); position: sticky; left: 0;">👦 ALUNOS / EVANGELIZANDOS</td></tr>`;
+        tbody += gerarLinhas(alunos);
+    }
+    
+    if (equipe.length > 0) {
+        tbody += `<tr style="background: rgba(16,185,129,0.05);"><td colspan="${2 + aulas.length}" style="padding: 8px 16px; font-size: 11px; letter-spacing: 1px; font-weight: bold; color: #10b981; position: sticky; left: 0; border-top: 1px solid rgba(16,185,129,0.2);">🌟 EQUIPE / EVANGELIZADORES</td></tr>`;
+        tbody += gerarLinhas(equipe);
+    }
     
     // Bottom details for focused class
     let footerInfo = '';
