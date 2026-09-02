@@ -7369,7 +7369,3 @@ async function carregarResumoEvangelizacao(container) {
         console.error(e);
     }
 }
-        </div>`;
-        console.error(e);
-    }
-}
