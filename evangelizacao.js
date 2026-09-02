@@ -77,7 +77,7 @@ window.carregarEvangInicio = async function() {
 
         // Buscar aulas de hoje
         const { data: aulasHoje, error: errAulas } = await db.from('app_evang_aulas')
-            .select('*, app_evang_turmas(nome)')
+            .select('*')
             .eq('data_aula', dataHoje);
 
         if (errAulas) throw errAulas;
@@ -109,6 +109,13 @@ window.carregarEvangInicio = async function() {
                     papelPorTurmaPessoa[m.turma_id][m.pessoa_id] = m.papel;
                 });
 
+                // Buscar nomes das turmas manualmente
+                const { data: turmasData } = await db.from('app_evang_turmas').select('id, nome').in('id', turmasIds);
+                const nomesTurmas = {};
+                if (turmasData) {
+                    turmasData.forEach(t => nomesTurmas[t.id] = t.nome);
+                }
+
                 aulasHoje.forEach(aula => {
                     let profs = 0;
                     let alunos = 0;
@@ -126,7 +133,7 @@ window.carregarEvangInicio = async function() {
                     });
 
                     turmasResumo.push({
-                        nome: aula.app_evang_turmas?.nome || 'Turma Desconhecida',
+                        nome: nomesTurmas[aula.turma_id] || 'Turma Desconhecida',
                         profs,
                         alunos
                     });
