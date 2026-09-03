@@ -3967,8 +3967,8 @@ function renderizarCardAtendimentoItem(container, item) {
     }
 
     const btnPresenca = item.presente ?
-        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s; font-weight: 600;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
-        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; transition: all 0.2s; font-weight: 500;">⚪ Confirmar Presença</button>`;
+        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;" onmouseover="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.35)'; this.innerHTML='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.15)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.35)'; this.innerHTML='🟢 Presente';">🟢 Presente</button>` :
+        `<button class="btn" onclick="alternarPresencaAtendimento('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(59, 130, 246, 0.08); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;" onmouseover="this.style.background='rgba(59, 130, 246, 0.18)'; this.style.borderColor='#2563eb';" onmouseout="this.style.background='rgba(59, 130, 246, 0.08)'; this.style.borderColor='rgba(59, 130, 246, 0.3)';">📍 Confirmar Presença</button>`;
 
     // Container for buttons: giving much more space to the left side (data)
     const buttonsContainerStyle = 'display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; min-width: 170px;';
@@ -4016,8 +4016,8 @@ function renderizarCardAtendimentoItem(container, item) {
     if (currentAtendimentoSubTab === 'fila' || currentAtendimentoSubTab === 'espera') {
         if (item.is_tratamento) {
             const btnPresencaTrat = item.presente ?
-                `<button class="btn" onclick="marcarTratamentoPresente('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s; font-weight: 600;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
-                `<button class="btn" onclick="marcarTratamentoPresente('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; transition: all 0.2s; font-weight: 500;">⚪ Confirmar Presença</button>`;
+                `<button class="btn" onclick="marcarTratamentoPresente('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;" onmouseover="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.35)'; this.innerHTML='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.15)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.35)'; this.innerHTML='🟢 Presente';">🟢 Presente</button>` :
+                `<button class="btn" onclick="marcarTratamentoPresente('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(59, 130, 246, 0.08); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;" onmouseover="this.style.background='rgba(59, 130, 246, 0.18)'; this.style.borderColor='#2563eb';" onmouseout="this.style.background='rgba(59, 130, 246, 0.08)'; this.style.borderColor='rgba(59, 130, 246, 0.3)';">📍 Confirmar Presença</button>`;
             
             buttonsHtml = `
                 <div style="${buttonsContainerStyle}">
@@ -4030,7 +4030,7 @@ function renderizarCardAtendimentoItem(container, item) {
                     ${item.status !== 'Atendido' ? btnPresenca : '<div></div>'}
                     
                     ${(item.status === 'Pendente' || item.status === 'Planejado') ? `
-                        <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(146, 96, 52, 0.4); color: #fbbf24; border: 1px solid rgba(146, 96, 52, 0.6); border-radius: 8px; width: 100%; font-weight: 600;">🤝 Triagem</button>
+                        <button class="btn" onclick="abrirTriagemAtendimento('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(245, 158, 11, 0.12); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; width: 100%; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;" onmouseover="this.style.background='rgba(245, 158, 11, 0.22)'; this.style.borderColor='#d97706';" onmouseout="this.style.background='rgba(245, 158, 11, 0.12)'; this.style.borderColor='rgba(245, 158, 11, 0.4)';">🤝 Triagem</button>
                     ` : ''}
 
                     <div style="display: flex; gap: 8px; width: 100%; justify-content: center; margin-top: 2px;">
@@ -5305,7 +5305,7 @@ window.carregarFilaPresencasDesktop = async function () {
                 </div>
             `;
 
-            let btnPresenca = `<button class="btn" onclick="marcarTratamentoPresente('${t.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; grid-column: 1 / 3;">⚪ Confirmar Presença</button>`;
+            let btnPresenca = `<button class="btn" onclick="marcarTratamentoPresente('${t.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(59, 130, 246, 0.08); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; grid-column: 1 / 3;" onmouseover="this.style.background='rgba(59, 130, 246, 0.18)'; this.style.borderColor='#2563eb';" onmouseout="this.style.background='rgba(59, 130, 246, 0.08)'; this.style.borderColor='rgba(59, 130, 246, 0.3)';">📍 Confirmar Presença</button>`;
 
             let rightInfo = `
                 <div style="${buttonsContainerStyle}">

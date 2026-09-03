@@ -491,9 +491,9 @@ function obterDataPrecisa(dataStr, createdAtStr) {
             `;
         }
 
-        const btnPresenca = item.presente ? 
-            `<button class="btn-action" onclick="alternarPresenca('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s; font-weight: 600;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)'; this.textContent='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.textContent='🟢 Presente';">🟢 Presente</button>` :
-            `<button class="btn-action" onclick="alternarPresenca('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(0,0,0,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; transition: all 0.2s; font-weight: 500;">⚪ Confirmar Presença</button>`;
+        const btnPresenca = item.presente ?
+            `<button class="btn-action" onclick="alternarPresenca('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;" onmouseover="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.35)'; this.innerHTML='🔴 Remover Presença';" onmouseout="this.style.background='rgba(16, 185, 129, 0.15)'; this.style.color='#10b981'; this.style.borderColor='rgba(16, 185, 129, 0.35)'; this.innerHTML='🟢 Presente';">🟢 Presente</button>` :
+            `<button class="btn-action" onclick="alternarPresenca('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(59, 130, 246, 0.08); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; transition: all 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">📍 Confirmar Presença</button>`;
 
         const div = document.createElement('div');
         div.style.cssText = 'background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;';
@@ -521,8 +521,8 @@ function obterDataPrecisa(dataStr, createdAtStr) {
         if (subAba === 'fila' || subAba === 'espera') {
             if (item.is_tratamento) {
                 const btnPresencaTrat = item.presente ? 
-                    `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; font-weight: 600;">🟢 Presente</button>` :
-                    `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(0,0,0,0.1); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: 500;">⚪ Confirmar Presença</button>`;
+                    `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', false)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">🟢 Presente</button>` :
+                    `<button class="btn-action" onclick="marcarTratamentoPresenteMobile('${item.id}', true)" style="width: 100%; font-size: 12px; padding: 10px; background: rgba(59, 130, 246, 0.08); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">📍 Confirmar Presença</button>`;
                 buttonsHtml = `<div style="${buttonsContainerStyle}">${btnPresencaTrat}</div>`;
             } else {
                 buttonsHtml = `
@@ -530,7 +530,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                         ${item.status !== 'Atendido' ? btnPresenca : '<div></div>'}
                         
                         ${(item.status === 'Pendente' || item.status === 'Planejado') ? `
-                            <button class="btn-action" onclick="abrirTriagem('${item.id}')" style="font-size: 12px; padding: 8px; background: rgba(146, 96, 52, 0.4); color: #fbbf24; border: 1px solid rgba(146, 96, 52, 0.6); border-radius: 8px; width: 100%; font-weight: 600;">🤝 Triagem</button>
+                            <button class="btn-action" onclick="abrirTriagem('${item.id}')" style="font-size: 12px; padding: 10px; background: rgba(245, 158, 11, 0.12); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; width: 100%; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">🤝 Triagem</button>
                         ` : ''}
 
                         <div style="display: flex; gap: 8px; width: 100%; justify-content: center; margin-top: 2px;">
