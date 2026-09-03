@@ -828,13 +828,13 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                 }
             }
 
-            // 3. Tratar a prescrição dos tratamentos (Espiritual)
+            // 3. Tratar a prescrição dos tratamentos (Energético)
             if (querEspiritual) {
-                const { data: existEsp } = await db.from('app_atendimento_tratamentos').select('id').eq('atendimento_id', pacienteAtualFichaId).eq('tipo', 'Espiritual').eq('status', 'Ativo');
+                const { data: existEsp } = await db.from('app_atendimento_tratamentos').select('id').eq('atendimento_id', pacienteAtualFichaId).in('tipo', ['Energético', 'Espiritual']).eq('status', 'Ativo');
                 if (!existEsp || existEsp.length === 0) {
                     await db.from('app_atendimento_tratamentos').insert([{
                         atendimento_id: pacienteAtualFichaId,
-                        tipo: 'Espiritual',
+                        tipo: 'Energético',
                         status: 'Ativo',
                         data_inicio: new Date().toISOString().split('T')[0]
                     }]);
@@ -1002,7 +1002,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
     };
 
     window.confirmarSessaoTratamentoMobile = async function(tratamentoId, tipo) {
-        if (tipo === 'Espiritual') {
+        if (tipo === 'Energético' || tipo === 'Espiritual') {
             Swal.fire({
                 title: 'Confirmar Atendimento Energético',
                 input: 'textarea',

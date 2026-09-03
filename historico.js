@@ -80,7 +80,7 @@ window.addHistTratRow = function() {
         <input type="date" class="input-field hist-trat-date" style="width: 150px; color:white;" required>
         <select class="input-field hist-trat-tipo" style="width: 150px;">
             <option value="Fluídico">Fluídico</option>
-            <option value="Espiritual">Espiritual</option>
+            <option value="Energético">Energético</option>
         </select>
         <input type="text" class="input-field hist-trat-obs" placeholder="Observações (Opcional)" style="flex:1;">
         <button type="button" class="btn" style="padding: 8px; background: transparent; color: #ef4444;" onclick="this.parentElement.remove()">X</button>

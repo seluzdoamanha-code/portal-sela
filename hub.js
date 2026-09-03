@@ -4800,11 +4800,11 @@ window.salvarFichaAtendimentoSideSheet = async function (btn) {
             if (errTratF) throw errTratF;
         }
 
-        // Registrar Tratamento Espiritual se indicado
+        // Registrar Tratamento Energético se indicado
         if (tratEspiritual) {
             const { error: errTratE } = await db.from('app_atendimento_tratamentos').insert([{
                 atendimento_id: activeFichaAtendimentoId,
-                tipo: 'Espiritual',
+                tipo: 'Energético',
                 status: 'Ativo',
                 data_inicio: localDateStr
             }]);
@@ -4931,7 +4931,7 @@ window.carregarTratamentosAtivosDesktop = async function () {
                     } else if (!t.presente) {
                         btnConfirm = `<button disabled class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px dashed rgba(245, 158, 11, 0.3); border-radius: 4px; cursor: not-allowed;">⏳ Aguarde Presença</button>`;
                     } else {
-                        btnConfirm = `<button onclick="confirmarSessaoTratamento('${t.id}', '${t.tipo}')" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px; background: ${t.tipo === 'Espiritual' ? '#8b5cf6' : '#3b82f6'}; color: white; border: none; border-radius: 4px; cursor: pointer;">Confirmar Atendimento</button>`;
+                        btnConfirm = `<button onclick="confirmarSessaoTratamento('${t.id}', '${t.tipo}')" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px; background: ${(t.tipo === 'Energético' || t.tipo === 'Espiritual') ? '#8b5cf6' : '#3b82f6'}; color: white; border: none; border-radius: 4px; cursor: pointer;">Confirmar Atendimento</button>`;
                     }
                     
                     actionsHTML = `
@@ -4948,7 +4948,7 @@ window.carregarTratamentosAtivosDesktop = async function () {
                 tratsHTML += `
                     <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.01); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.03);">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${t.tipo === 'Espiritual' ? 'Energético' : t.tipo}</span>
+                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; text-transform: uppercase; white-space: nowrap;">${t.tipo}</span>
                             ${isListActive ? (attendedToday ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); white-space: nowrap;">✅ Atendido Hoje</span>' : (t.presente ? '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); white-space: nowrap;">🟢 Presente na Casa</span>' : '<span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); white-space: nowrap;">🟡 Aguardando Chegada</span>')) : ''}
                             <span style="font-size: 13px; color: var(--text-muted);">${dtText}</span>
                         </div>
@@ -5413,7 +5413,7 @@ window.marcarTratamentoPresente = async function(id, statusPresente) {
 };
 
 window.confirmarSessaoTratamento = async function(tratamentoId, tipo) {
-    if (tipo === 'Espiritual') {
+    if (tipo === 'Energético' || tipo === 'Espiritual') {
         Swal.fire({
             title: 'Confirmar Atendimento Energético',
             input: 'textarea',

@@ -2200,7 +2200,7 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
             const tipo = (t.tipo || '').toLowerCase();
             const st = (t.status || '').toLowerCase();
             if (tipo.includes('fluid') || tipo.includes('fluíd')) tratFluidico++;
-            if (tipo.includes('espiritual')) tratEspiritual++;
+            if (tipo.includes('energ') || tipo.includes('espiritual')) tratEspiritual++;
             if (st !== 'concluido' && st !== 'concluído') {
                 if (t.atendimento_id) pacientesEmTratamentoSet.add(t.atendimento_id);
             }
@@ -2214,7 +2214,7 @@ window.carregarEstatisticasMiniAppAtendimento = async function () {
             if (p.app_atendimento_tratamentos) {
                 const tipo = (p.app_atendimento_tratamentos.tipo || '').toLowerCase();
                 if (tipo.includes('fluid') || tipo.includes('fluíd')) procFluidico++;
-                if (tipo.includes('espiritual')) procEspiritual++;
+                if (tipo.includes('energ') || tipo.includes('espiritual')) procEspiritual++;
             }
         });
 
