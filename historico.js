@@ -24,7 +24,7 @@ window.abrirFormularioHistorico = function () {
                 <div style="display: flex; gap: 16px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 200px;">
                         <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Data de Nascimento</label>
-                        <input type="date" id="inHistNasc" class="input-field" style="width: 100%; color: white;">
+                        <input type="date" id="inHistNasc" class="input-field" style="width: 100%; color: var(--text-main);">
                     </div>
                     <div style="flex: 1; min-width: 200px;">
                         <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">WhatsApp / Celular</label>
@@ -66,7 +66,7 @@ window.addHistAtenRow = function() {
     const div = document.createElement('div');
     div.style.cssText = "display:flex; gap:8px; align-items:center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;";
     div.innerHTML = `
-        <input type="date" class="input-field hist-aten-date" style="width: 150px; color:white;" required>
+        <input type="date" class="input-field hist-aten-date" style="width: 150px; color: var(--text-main);" required>
         <input type="text" class="input-field hist-aten-obs" placeholder="Resumo / Sintomas" style="flex:1;">
         <button type="button" class="btn" style="padding: 8px; background: transparent; color: #ef4444;" onclick="this.parentElement.remove()">X</button>
     `;
@@ -77,7 +77,7 @@ window.addHistTratRow = function() {
     const div = document.createElement('div');
     div.style.cssText = "display:flex; gap:8px; align-items:center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;";
     div.innerHTML = `
-        <input type="date" class="input-field hist-trat-date" style="width: 150px; color:white;" required>
+        <input type="date" class="input-field hist-trat-date" style="width: 150px; color: var(--text-main);" required>
         <select class="input-field hist-trat-tipo" style="width: 150px;">
             <option value="Fluídico">Fluídico</option>
             <option value="Energético">Energético</option>

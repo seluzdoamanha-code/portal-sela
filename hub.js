@@ -4398,7 +4398,7 @@ window.abrirFormularioAtendimento = function () {
                 <div style="display: flex; gap: 16px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 200px;">
                         <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Data de Nascimento</label>
-                        <input type="date" id="inAtenNasc" class="input-field" style="width: 100%; color: white;">
+                        <input type="date" id="inAtenNasc" class="input-field" style="width: 100%; color: var(--text-main);">
                     </div>
                     <div style="flex: 1; min-width: 200px;">
                         <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">WhatsApp / Celular</label>
@@ -4424,8 +4424,8 @@ window.abrirFormularioAtendimento = function () {
     const style = document.createElement('style');
     style.innerHTML = `
         #formAtendimentoWeb input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            opacity: 0.7;
+            opacity: 0.6;
+            cursor: pointer;
         }
     `;
     document.head.appendChild(style);
