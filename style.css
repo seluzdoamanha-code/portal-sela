@@ -380,8 +380,10 @@ input[type="date"].form-control {
     color: var(--text-main);
 }
 input[type="date"]::-webkit-calendar-picker-indicator {
-    opacity: 0.6;
+    filter: invert(18%) sepia(50%) saturate(2200%) hue-rotate(195deg) brightness(90%) contrast(100%);
     cursor: pointer;
+    opacity: 0.85;
+    font-size: 16px;
 }
 
 select option, select optgroup {

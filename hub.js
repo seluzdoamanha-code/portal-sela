@@ -4424,8 +4424,10 @@ window.abrirFormularioAtendimento = function () {
     const style = document.createElement('style');
     style.innerHTML = `
         #formAtendimentoWeb input[type="date"]::-webkit-calendar-picker-indicator {
-            opacity: 0.6;
+            filter: invert(18%) sepia(50%) saturate(2200%) hue-rotate(195deg) brightness(90%) contrast(100%);
             cursor: pointer;
+            opacity: 0.9;
+            font-size: 16px;
         }
     `;
     document.head.appendChild(style);
