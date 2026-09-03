@@ -116,7 +116,7 @@ async function carregarDadosEstrutura() {
             const isAtendimento = nomeEstrutura.includes('atendimento');
             const isBiblioteca = nomeEstrutura.includes('biblioteca');
             const isEvangelho = nomeEstrutura.includes('evangelho');
-            const isEvangelizacao = nomeEstrutura.includes('evang') && !isEvangelho || nomeEstrutura.includes('infância') || nomeEstrutura.includes('juventude') || nomeEstrutura.includes('infancia');
+            const isEvangelizacao = nomeEstrutura.includes('evang') && !isEvangelho;
 
             // Lógica de exibir Abas com base na configuração do DB
             let config = data.abas_config || {
@@ -236,7 +236,7 @@ async function carregarDadosHome(estData) {
         const isAtendimento = nomeEstrutura.includes('atendimento');
         const isBiblioteca = nomeEstrutura.includes('biblioteca');
         const isEvangelho = nomeEstrutura.includes('evangelho');
-        const isEvangelizacao = nomeEstrutura.includes('evangeliza') || nomeEstrutura.includes('infância') || nomeEstrutura.includes('infancia');
+        const isEvangelizacao = nomeEstrutura.includes('evang') && !isEvangelho;
 
         let hasApps = false;
 
@@ -1625,7 +1625,7 @@ window.carregarAppMiniApps = async function () {
     const isAtendimento = nomeEstrutura.includes('atendimento');
     const isBiblioteca = nomeEstrutura.includes('biblioteca');
     const isEvangelho = nomeEstrutura.includes('evangelho');
-    const isEvangelizacao = nomeEstrutura.includes('evang') && !isEvangelho || nomeEstrutura.includes('infância') || nomeEstrutura.includes('juventude') || nomeEstrutura.includes('infancia');
+    const isEvangelizacao = nomeEstrutura.includes('evang') && !isEvangelho;
 
     let cards = '';
 
