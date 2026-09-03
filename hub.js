@@ -433,9 +433,40 @@ window.salvarInformacoesHome = async function (event) {
     const lines = textLinks.split('\n');
     const links = [];
     lines.forEach(l => {
-        const parts = l.split('|');
-        if (parts.length >= 2) {
-            links.push({ rotulo: parts[0].trim(), url: parts[1].trim() });
+        let raw = l.trim();
+        if (!raw) return;
+
+        let rotulo = '';
+        let url = '';
+
+        if (raw.includes('|')) {
+            const parts = raw.split('|');
+            rotulo = parts[0].trim();
+            url = parts.slice(1).join('|').trim();
+        } else if (raw.includes(' - ')) {
+            const parts = raw.split(' - ');
+            rotulo = parts[0].trim();
+            url = parts.slice(1).join(' - ').trim();
+        } else if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('www.')) {
+            url = raw;
+            rotulo = raw.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0] || 'Acessar Link';
+        } else {
+            // Caso tenha digitado "Nome http..." sem delimitador
+            const urlMatch = raw.match(/(https?:\/\/[^\s]+|www\.[^\s]+)/i);
+            if (urlMatch) {
+                url = urlMatch[0];
+                rotulo = raw.replace(url, '').trim() || url;
+            }
+        }
+
+        if (url) {
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+            links.push({
+                rotulo: rotulo || 'Acessar Link',
+                url: url
+            });
         }
     });
 
@@ -450,12 +481,24 @@ window.salvarInformacoesHome = async function (event) {
 
         fecharModalEditarHome();
         await carregarDadosEstrutura();
+
+        if (window.Swal) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Informações salvas!',
+                text: 'A página foi atualizada com sucesso.',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
     } catch (e) {
         console.error("Erro ao salvar informacoes da Home:", e);
         alert("Erro ao salvar informacoes da Home: " + e.message);
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Salvar Informacoes';
+        btn.textContent = 'Salvar Informações';
     }
 };
 

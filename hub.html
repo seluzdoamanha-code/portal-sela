@@ -168,7 +168,10 @@
                         <div style="display: flex; flex-direction: column; gap: 24px;">
                             <!-- Links Rápidos -->
                             <div class="card-agenda" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
-                                <h3 style="margin-top: 0; color: var(--text-main); font-size: 14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">🔗 Links & Recursos Úteis</h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                                    <h3 style="margin: 0; color: var(--text-main); font-size: 14px;">🔗 Links & Recursos Úteis</h3>
+                                    <button class="btn btn-secondary" onclick="abrirModalEditarHome()" style="padding: 3px 8px; font-size: 11px;" title="Adicionar ou editar links">✏️ Editar</button>
+                                </div>
                                 <div id="homeLinksRapidosList" style="display: flex; flex-direction: column; gap: 10px;">
                                     <!-- Dinâmico via JS -->
                                 </div>
@@ -176,7 +179,10 @@
 
                             <!-- Próximos Eventos/Atividades -->
                             <div class="card-agenda" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
-                                <h3 style="margin-top: 0; color: var(--text-main); font-size: 14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">⏰ Atividades & Funcionamento</h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                                    <h3 style="margin: 0; color: var(--text-main); font-size: 14px;">⏰ Atividades & Funcionamento</h3>
+                                    <button class="btn btn-primary" onclick="abrirModalAtividadeRegular()" style="padding: 3px 8px; font-size: 11px;" title="Adicionar novo dia/horário de funcionamento">+ Nova Rotina</button>
+                                </div>
                                 <div id="homeAtividadesPrincipaisList" style="display: flex; flex-direction: column; gap: 10px;">
                                     <!-- Dinâmico via JS -->
                                 </div>
@@ -492,8 +498,13 @@
                     </select>
                 </div>
                 <div class="form-group" style="margin-bottom: 24px;">
-                    <label style="display: block; margin-bottom: 6px; color: var(--text-main); font-weight: 600; font-size: 13px;">Links & Recursos Úteis (Um por linha no formato: Rótulo | URL)</label>
-                    <textarea id="editHomeLinksText" placeholder="Ex: Canal do YouTube | https://youtube.com/sela&#10;Planilha de Escalas | https://docs.google.com/..." rows="4" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-main); font-weight: 600; font-size: 13px;">
+                        🔗 Links & Recursos Úteis
+                        <span style="font-size: 11px; font-weight: normal; color: var(--text-muted); display: block; margin-top: 2px;">
+                            Insira um por linha. Formatos aceitos: <code>Nome | https://link.com</code> ou <code>Nome - https://link.com</code> ou apenas <code>https://link.com</code>
+                        </span>
+                    </label>
+                    <textarea id="editHomeLinksText" placeholder="Exemplos:&#10;Canal do YouTube | https://youtube.com/sela&#10;Pasta de Escalas - https://drive.google.com/...&#10;https://luzdoamanha.org.br" rows="5" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
                 </div>
                 <div style="display: flex; gap: 12px; justify-content: flex-end;">
                     <button type="button" class="btn btn-secondary" onclick="fecharModalEditarHome()">Cancelar</button>
