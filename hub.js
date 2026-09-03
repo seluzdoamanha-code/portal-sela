@@ -5380,7 +5380,7 @@ window.carregarEsperaTratamentoDesktop = async function () {
                     <div>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <strong style="font-size: 16px; color: var(--text-main); margin-bottom: 2px;">${f.nome_completo.toUpperCase()}</strong>
-                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; white-space: nowrap;">${t.tipo.toUpperCase()}</span>
+                            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; white-space: nowrap;">${t.tipo === 'Espiritual' ? 'ENERGÉTICO' : t.tipo.toUpperCase()}</span>
                         </div>
                         <div style="font-size: 13px; color: var(--text-muted);">📍 ${f.endereco_completo || 'Sem endereço'}</div>
                         <div style="font-size: 13px; color: var(--text-muted);">🎂 Nascimento: ${f.data_nascimento ? f.data_nascimento.split('-').reverse().join('/') : 'Não informada'}${ageInfo}</div>
@@ -5577,7 +5577,7 @@ window.carregarPainelSemanalDesktop = async function () {
                             <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(239,68,68,0.1); border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <strong style="color: var(--text-main); font-size: 14px;">${a.nome.toUpperCase()}</strong>
-                                    <span style="font-size: 10px; margin-left: 8px; padding: 2px 6px; border-radius: 12px; background: rgba(255,255,255,0.1); color: var(--text-muted); white-space: nowrap;">${a.tipo}</span>
+                                    <span style="font-size: 10px; margin-left: 8px; padding: 2px 6px; border-radius: 12px; background: rgba(255,255,255,0.1); color: var(--text-muted); white-space: nowrap;">${a.tipo === 'Espiritual' ? 'Energético' : a.tipo}</span>
                                     <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Faltas: ${a.faltasConsecutivas} semanas | Última vez: ${a.lastDate}</div>
                                 </div>
                                 ${a.telefone ? `
@@ -5631,7 +5631,7 @@ window.carregarPainelSemanalDesktop = async function () {
                         <div style="font-size: 13px; font-weight: bold; color: var(--text-main); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                             ${t.app_atendimento_fraterno?.nome_completo.toUpperCase()}
                         </div>
-                        <div style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; display: inline-block; margin-bottom: 12px; align-self: flex-start;">${t.tipo.toUpperCase()}</div>
+                        <div style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; display: inline-block; margin-bottom: 12px; align-self: flex-start;">${t.tipo === 'Espiritual' ? 'ENERGÉTICO' : t.tipo.toUpperCase()}</div>
                         <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
                             <div style="display: flex; gap: 4px;">
                                 ${boxesHtml}
