@@ -442,31 +442,31 @@
     
     <!-- Modal Adicionar Atividade Regular -->
     <div class="modal-overlay" id="modalAtividadeRegular">
-        <div class="modal-content" style="max-width: 500px;">
-            <h2 id="modalAtividadeRegularTitle" style="margin-bottom: 16px;">Nova Atividade Regular</h2>
+        <div class="modal-content" style="max-width: 500px; padding: 24px; background: var(--bg-panel); color: var(--text-main);">
+            <h2 id="modalAtividadeRegularTitle" style="margin-bottom: 16px; color: var(--text-main);">Nova Atividade Regular</h2>
             <form id="formAtividadeRegular" onsubmit="salvarAtividadeRegular(event)">
                 <input type="hidden" id="inAtRegId">
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Título da Atividade *</label>
-                    <input type="text" id="inAtRegTitulo" required placeholder="Ex: Plantão de Atendimento Fraterno" style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px;">
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-main); font-weight: 600; font-size: 13px;">Título da Atividade *</label>
+                    <input type="text" id="inAtRegTitulo" required placeholder="Ex: Plantão de Atendimento Fraterno" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px;">
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Dia(s) da Semana *</label>
-                    <input type="text" id="inAtRegDiaSemana" required placeholder="Ex: Terças e Quintas, Sábados, etc." style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px;">
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-main); font-weight: 600; font-size: 13px;">Dia(s) da Semana *</label>
+                    <input type="text" id="inAtRegDiaSemana" required placeholder="Ex: Terças e Quintas, Sábados, etc." style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px;">
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Horário *</label>
-                    <input type="text" id="inAtRegHorario" required placeholder="Ex: 19:30, 17:00, etc." style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px;">
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-main); font-weight: 600; font-size: 13px;">Horário *</label>
+                    <input type="text" id="inAtRegHorario" required placeholder="Ex: 19:30, 17:00, etc." style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px;">
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Vincular ao Hub de outro Departamento/Atividade (Opcional)</label>
-                    <select id="inAtRegLinkEstruturaId" style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px;">
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-main); font-weight: 600; font-size: 13px;">Vincular ao Hub de outro Departamento/Atividade (Opcional)</label>
+                    <select id="inAtRegLinkEstruturaId" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px;">
                         <option value="">-- Nenhum --</option>
                     </select>
                 </div>
                 <div class="form-group" style="margin-bottom: 24px;">
-                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Descrição / Observações</label>
-                    <textarea id="inAtRegDescricao" placeholder="Ex: Entrada por ordem de chegada até as 20h." rows="3" style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-main); font-weight: 600; font-size: 13px;">Descrição / Observações</label>
+                    <textarea id="inAtRegDescricao" placeholder="Ex: Entrada por ordem de chegada até as 20h." rows="3" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
                 </div>
                 <div style="display: flex; gap: 12px; justify-content: flex-end;">
                     <button type="button" class="btn btn-secondary" onclick="fecharModalAtividadeRegular()">Cancelar</button>
@@ -478,22 +478,22 @@
 
     <!-- Modal Editar Informações Gerais da Home -->
     <div class="modal-overlay" id="modalEditarHome">
-        <div class="modal-content" style="max-width: 600px;">
-            <h2 style="margin-bottom: 16px;">✏️ Editar Informações Gerais</h2>
+        <div class="modal-content" style="max-width: 600px; padding: 24px; background: var(--bg-panel); color: var(--text-main);">
+            <h2 style="margin-bottom: 16px; color: var(--text-main);">✏️ Editar Informações Gerais</h2>
             <form id="formEditarHome" onsubmit="salvarInformacoesHome(event)">
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Apresentação / Descrição do Setor *</label>
-                    <textarea id="editHomeDescricao" required placeholder="Apresente brevemente este departamento ou atividade..." rows="5" style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-main); font-weight: 600; font-size: 13px;">Apresentação / Descrição do Setor *</label>
+                    <textarea id="editHomeDescricao" required placeholder="Apresente brevemente este departamento ou atividade..." rows="5" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Pertence ao Departamento/Colegiado (Pai) - Opcional</label>
-                    <select id="editHomeParentId" style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px;">
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-main); font-weight: 600; font-size: 13px;">Pertence ao Departamento/Colegiado (Pai) - Opcional</label>
+                    <select id="editHomeParentId" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px;">
                         <option value="">-- Nenhum --</option>
                     </select>
                 </div>
                 <div class="form-group" style="margin-bottom: 24px;">
-                    <label style="display: block; margin-bottom: 6px; color: var(--text-muted);">Links & Recursos Úteis (Um por linha no formato: Rótulo | URL)</label>
-                    <textarea id="editHomeLinksText" placeholder="Ex: Canal do YouTube | https://youtube.com/sela&#10;Planilha de Escalas | https://docs.google.com/..." rows="4" style="width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
+                    <label style="display: block; margin-bottom: 6px; color: var(--text-main); font-weight: 600; font-size: 13px;">Links & Recursos Úteis (Um por linha no formato: Rótulo | URL)</label>
+                    <textarea id="editHomeLinksText" placeholder="Ex: Canal do YouTube | https://youtube.com/sela&#10;Planilha de Escalas | https://docs.google.com/..." rows="4" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
                 </div>
                 <div style="display: flex; gap: 12px; justify-content: flex-end;">
                     <button type="button" class="btn btn-secondary" onclick="fecharModalEditarHome()">Cancelar</button>

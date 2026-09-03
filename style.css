@@ -454,11 +454,16 @@ body.theme-dark .data-table th {
 .btn-close { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
 
 .modal-body { padding: 24px; }
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 14px; }
-.form-group input, .form-group select {
+.form-group label { display: block; margin-bottom: 8px; color: var(--text-main); font-weight: 600; font-size: 13px; }
+.form-group input, .form-group select, .form-group textarea {
     width: 100%; padding: 10px; border-radius: 6px;
     border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);
+    font-family: inherit; font-size: 14px;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(6, 52, 111, 0.15);
 }
 input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
