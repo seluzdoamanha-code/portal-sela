@@ -6026,7 +6026,7 @@ window.carregarFicharioDesktop = function(allData, allTratamentos) {
                 <button onclick="abrirFichaPacienteFichario('${p.paciente_id}')" class="btn" style="flex: 1; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); font-size: 12px; padding: 10px; cursor:pointer; border-radius: 8px; text-align: center;">
                     👤 Ficha
                 </button>
-                <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="flex: 1; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); font-size: 12px; padding: 10px; cursor:pointer; border-radius: 8px; text-align: center;">
+                <button onclick="abrirModalFicharioCompleto('${safeId}')" class="btn" style="flex: 1; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); font-size: 12px; padding: 10px; cursor: pointer; border-radius: 8px; text-align: center; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px;">
                     📜 Histórico
                 </button>
                 <button onclick="iniciarNovoAtendimentoFichario('${safeId}')" class="btn" style="flex: 1; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-size: 12px; padding: 10px; cursor:pointer; border-radius: 8px; text-align: center;">
