@@ -109,15 +109,18 @@
                 <form id="formEnvioAssinatura">
                     <input type="hidden" id="assinaturaTemplateId">
                     <div class="form-group">
-                        <label style="font-size: 13px;">Documento Original</label>
-                        <button type="button" class="btn btn-secondary" id="btnVerTemplateBase" style="width: 100%; font-size: 13px;">Ler Original / Baixar</button>
+                        <label style="font-size: 13px;">Documento Base / Modelo em Branco</label>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn btn-secondary" id="btnVerTemplateBase" style="flex: 1; font-size: 12px;">📖 Ler Conteúdo</button>
+                            <a id="btnDownloadModeloBrancoMobile" href="#" target="_blank" class="btn btn-secondary" style="flex: 1; font-size: 12px; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center;">📥 Baixar Modelo</a>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label style="font-size: 13px;">Link do Arquivo Assinado</label>
-                        <input type="url" id="assinaturaArquivoUrl" class="input-field" placeholder="https://..." required style="font-size: 14px;">
+                        <label style="font-size: 13px;">Link do Arquivo Assinado (Google Drive / Nuvem)</label>
+                        <input type="url" id="assinaturaArquivoUrl" class="input-field" placeholder="https://drive.google.com/..." required style="font-size: 14px;">
                     </div>
                     <div class="form-group" style="display: flex; gap: 12px; margin-top: 24px;">
-                        <button type="submit" class="btn btn-primary" id="btnSalvarAssinatura" style="flex: 1; font-size: 14px;">Enviar</button>
+                        <button type="submit" class="btn btn-primary" id="btnSalvarAssinatura" style="flex: 1; font-size: 14px;">Registrar Envio</button>
                     </div>
                 </form>
             </div>
