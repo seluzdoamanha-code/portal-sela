@@ -112,6 +112,10 @@
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- D3.js v7 e Sankey para o Organograma -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+    <script src="relacoes_organograma_component.js"></script>
     <script src="auth_guard.js?v=4"></script>
     <link rel="icon" type="image/png" href="logo_sela_color.png">
 </head>
@@ -128,15 +132,15 @@
         </aside>
 
         <main class="content-area">
-            <header class="topbar">
-                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 14px;">
+            <header class="topbar" style="padding: 10px 24px;">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 13px;">
                     <span style="color: var(--primary); font-weight: 500;">Portal SELA</span>
                     <span style="font-size: 10px;">▶</span>
                     <span>Administração Global</span>
                 </div>
             </header>
 
-            <div class="content-body" id="adminContent" style="display: none;">
+            <div class="content-body" id="adminContent" style="display: none; padding: 14px 24px 32px 24px;">
                 
                 <!-- Wrapper com rolagem horizontal -->
                 <div class="admin-tabs-wrapper">
@@ -284,10 +288,12 @@
                 <div id="tab-associados" class="tab-content">
                     <h3 style="color: var(--text-main); margin-bottom: 16px;">🤝 Dashboard de Associados</h3>
 
-                    <div class="admin-subtabs" style="display: flex; gap: 8px; margin-bottom: 24px;">
-                        <button onclick="switchSubTab('associados', 'perfil')" class="btn btn-associados-perfil active" style="flex: 1; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px;">Cards Perfil</button>
-                        <button onclick="switchSubTab('associados', 'dados')" class="btn btn-associados-dados" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Cards Dados</button>
-                        <button onclick="switchSubTab('associados', 'lista')" class="btn btn-associados-lista" style="flex: 1; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Lista</button>
+                    <div class="admin-subtabs" style="display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;">
+                        <button onclick="switchSubTab('associados', 'perfil')" class="btn btn-associados-perfil active" style="flex: 1; min-width: 130px; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px;">Cards Perfil</button>
+                        <button onclick="switchSubTab('associados', 'dados')" class="btn btn-associados-dados" style="flex: 1; min-width: 130px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Cards Dados</button>
+                        <button onclick="switchSubTab('associados', 'lista')" class="btn btn-associados-lista" style="flex: 1; min-width: 130px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">Lista</button>
+                        <button onclick="switchSubTab('associados', 'relacoes')" class="btn btn-associados-relacoes" style="flex: 1; min-width: 170px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">🏛️ Relações & Organograma</button>
+                        <button onclick="switchSubTab('associados', 'documental')" class="btn btn-associados-documental" style="flex: 1; min-width: 170px; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">📁 Gestão Documental</button>
                     </div>
 
                     <!-- Cards Perfil -->
@@ -330,6 +336,47 @@
                                 </thead>
                                 <tbody id="tbodyListaPessoas">
                                     <tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">Carregando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Conteúdo: Relações & Organograma Institucional -->
+                    <div id="subtab-associados-relacoes" class="subtab-content associados-subtab" style="display: none; flex-direction: column;">
+                        <div id="containerRelacoesAdmin"></div>
+                    </div>
+
+                    <!-- Conteúdo: Gestão Documental dos Associados -->
+                    <div id="subtab-associados-documental" class="subtab-content associados-subtab" style="display: none; flex-direction: column;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                            <div>
+                                <h4 style="margin: 0; color: var(--text-main); font-size: 16px;">📁 Gestão Documental dos Associados</h4>
+                                <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 0 0;">Acompanhamento das assinaturas da Ficha Cadastral, Proposta e Termo de Voluntário.</p>
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <select id="filtroStatusGestaoAdmin" class="form-control" style="font-size: 13px; padding: 6px 12px; width: auto;" onchange="filtrarGestaoDocumentalAdmin()">
+                                    <option value="todos">Todos os Associados</option>
+                                    <option value="pendentes">Apenas com Pendências</option>
+                                    <option value="completos">Apenas 100% Assinados</option>
+                                </select>
+                                <input type="text" id="filtroBuscaGestaoAdmin" class="form-control" placeholder="Buscar associado..." style="font-size: 13px; padding: 6px 12px; width: 200px;" oninput="filtrarGestaoDocumentalAdmin()">
+                            </div>
+                        </div>
+
+                        <div style="overflow-x: auto; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); text-align: left;">
+                                        <th style="padding: 12px;">Associado</th>
+                                        <th style="padding: 12px; text-align: center;">1) Ficha Cadastral</th>
+                                        <th style="padding: 12px; text-align: center;">2) Proposta de Admissão</th>
+                                        <th style="padding: 12px; text-align: center;">3) Termo de Voluntário</th>
+                                        <th style="padding: 12px; text-align: center;">Situação Geral</th>
+                                        <th style="padding: 12px; text-align: center;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyGestaoDocumentosAdmin">
+                                    <tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">Carregando controle documental...</td></tr>
                                 </tbody>
                             </table>
                         </div>

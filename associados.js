@@ -86,16 +86,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     await carregarDadosAssociados();
 });
 
+let relacoesInicializado = false;
+
 window.trocarAbaAssociado = function(aba) {
     abaAtiva = aba;
     document.querySelectorAll('.tab-btn-assoc').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content-assoc').forEach(content => content.classList.remove('active'));
 
-    if (aba === 'visao_geral') {
+    if (aba === 'inicio') {
+        const btn = document.getElementById('tabBtnInicio');
+        const content = document.getElementById('tabInicio');
+        if (btn) btn.classList.add('active');
+        if (content) content.classList.add('active');
+    } else if (aba === 'visao_geral') {
         const btn = document.getElementById('tabBtnVisaoGeral');
         const content = document.getElementById('tabVisaoGeral');
         if (btn) btn.classList.add('active');
         if (content) content.classList.add('active');
+    } else if (aba === 'relacoes') {
+        const btn = document.getElementById('tabBtnRelacoes');
+        const content = document.getElementById('tabRelacoes');
+        if (btn) btn.classList.add('active');
+        if (content) content.classList.add('active');
+
+        if (!relacoesInicializado && window.RelacoesOrganograma) {
+            relacoesInicializado = true;
+            window.RelacoesOrganograma.init('containerRelacoesAssociados', db);
+        }
     } else if (aba === 'gestao_documentos') {
         const btn = document.getElementById('tabBtnGestaoDocs');
         const content = document.getElementById('tabGestaoDocs');

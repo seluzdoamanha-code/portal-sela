@@ -227,7 +227,7 @@ window.excluirRecargaCelular = async function(id) {
 // ==========================================
 
 window.switchSubTab = function(target, tabName) {
-    const tabs = ['perfil', 'dados', 'lista', 'cards', 'miniapps', 'irradiacao', 'tabelas', 'usuarios', 'atendimento'];
+    const tabs = ['perfil', 'dados', 'lista', 'cards', 'miniapps', 'irradiacao', 'tabelas', 'usuarios', 'atendimento', 'relacoes', 'documental'];
     tabs.forEach(t => {
         const el = document.getElementById(`subtab-${target}-${t}`) || document.getElementById(`${target}-${t}`);
         if (el) el.style.display = 'none';
@@ -262,7 +262,157 @@ window.switchSubTab = function(target, tabName) {
         } else if (target === 'atividades' && typeof window.carregarTabelaListaAtividades === 'function') {
             window.carregarTabelaListaAtividades();
         }
+    } else if (tabName === 'relacoes' && target === 'associados') {
+        if (!window.adminRelacoesInit && window.RelacoesOrganograma) {
+            window.adminRelacoesInit = true;
+            window.RelacoesOrganograma.init('containerRelacoesAdmin', db);
+        }
+    } else if (tabName === 'documental' && target === 'associados') {
+        window.carregarGestaoDocumentalAdmin();
     }
+};
+
+// ==========================================
+// MÓDULO: GESTÃO DOCUMENTAL DOS ASSOCIADOS (ADMIN)
+// ==========================================
+let adminAssocTemplates = [];
+let adminAssocPessoas = [];
+let adminAssocAssinaturas = [];
+
+function parseDocMeta(raw) {
+    if (!raw) return { situacao: 'Pendente', assinado_associado: false, assinado_luz_amanha: false, emissao_doc: false };
+    if (typeof raw === 'object') return raw;
+    if (typeof raw === 'string' && raw.trim().startsWith('{')) {
+        try { return JSON.parse(raw); } catch(e) {}
+    }
+    return { situacao: raw, assinado_associado: raw === 'Enviado' || raw === 'Aprovado', assinado_luz_amanha: raw === 'Aprovado', emissao_doc: true };
+}
+
+window.carregarGestaoDocumentalAdmin = async function() {
+    const tbody = document.getElementById('tbodyGestaoDocumentosAdmin');
+    if (!tbody) return;
+
+    try {
+        const [resTpl, resPes, resAss] = await Promise.all([
+            db.from('app_assoc_documentos_templates').select('*').order('titulo'),
+            db.from('pessoas').select('*').order('nome_completo'),
+            db.from('app_assoc_documentos_usuarios').select('*')
+        ]);
+
+        adminAssocTemplates = resTpl.data || [];
+        adminAssocAssinaturas = resAss.data || [];
+
+        // Filtra membros associados efetivos ou proponentes
+        adminAssocPessoas = (resPes.data || []).filter(p => {
+            if (!p.perfis) return false;
+            const perfisArr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? p.perfis.split(',').map(s=>s.trim()) : []);
+            return perfisArr.some(pf => {
+                const clean = pf.trim().toLowerCase();
+                return clean === 'associado efetivo' || clean === 'associado proponente';
+            });
+        });
+
+        window.filtrarGestaoDocumentalAdmin();
+    } catch (e) {
+        console.error("Erro ao carregar controle documental no admin:", e);
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#ef4444; padding:20px;">Erro ao carregar dados.</td></tr>';
+    }
+};
+
+window.filtrarGestaoDocumentalAdmin = function() {
+    const tbody = document.getElementById('tbodyGestaoDocumentosAdmin');
+    const filtroStatus = document.getElementById('filtroStatusGestaoAdmin')?.value || 'todos';
+    const termo = (document.getElementById('filtroBuscaGestaoAdmin')?.value || '').trim().toLowerCase();
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    const templatesAssinatura = adminAssocTemplates.filter(t => t.tipo === 'Assinatura');
+
+    let pessoasFiltradas = adminAssocPessoas.filter(p => {
+        if (termo) {
+            const matchNome = (p.nome_completo || '').toLowerCase().includes(termo) || (p.nome_curto || '').toLowerCase().includes(termo);
+            const matchEmail = (p.email || '').toLowerCase().includes(termo);
+            if (!matchNome && !matchEmail) return false;
+        }
+
+        if (filtroStatus !== 'todos') {
+            let todosAssinados = true;
+            for (let tpl of templatesAssinatura) {
+                const reg = adminAssocAssinaturas.find(a => a.pessoa_id === p.id && a.template_id === tpl.id);
+                const meta = parseDocMeta(reg?.status);
+                if (!meta.assinado_associado || !meta.assinado_luz_amanha) {
+                    todosAssinados = false;
+                    break;
+                }
+            }
+            if (filtroStatus === 'completos' && !todosAssinados) return false;
+            if (filtroStatus === 'pendentes' && todosAssinados) return false;
+        }
+
+        return true;
+    });
+
+    if (pessoasFiltradas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:24px;">Nenhum associado encontrado para este filtro.</td></tr>';
+        return;
+    }
+
+    pessoasFiltradas.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+
+        let docsCellsHtml = '';
+        let totalDocsAssinados = 0;
+
+        templatesAssinatura.forEach(tpl => {
+            const reg = adminAssocAssinaturas.find(a => a.pessoa_id === p.id && a.template_id === tpl.id);
+            const meta = parseDocMeta(reg?.status);
+
+            let statusIcon = '⏳';
+            let statusText = 'Pendente';
+            let statusColor = '#f59e0b';
+
+            if (meta.assinado_associado && meta.assinado_luz_amanha) {
+                statusIcon = '✅';
+                statusText = '100% Assinado';
+                statusColor = '#10b981';
+                totalDocsAssinados++;
+            } else if (meta.assinado_associado) {
+                statusIcon = '✍️';
+                statusText = 'Assinado Associado';
+                statusColor = '#3b82f6';
+            }
+
+            docsCellsHtml += `
+                <td style="padding: 10px 8px; text-align: center;">
+                    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,0.04); color: ${statusColor}; border: 1px solid ${statusColor}33;">
+                        ${statusIcon} ${statusText}
+                    </span>
+                </td>
+            `;
+        });
+
+        const regular = totalDocsAssinados === templatesAssinatura.length && templatesAssinatura.length > 0;
+        const statusBadge = regular
+            ? '<span style="color:#10b981; font-weight:600; font-size:11px; background:rgba(16,185,129,0.1); padding:2px 8px; border-radius:6px; border:1px solid rgba(16,185,129,0.3);">Regular</span>'
+            : '<span style="color:#f59e0b; font-weight:600; font-size:11px; background:rgba(245,158,11,0.1); padding:2px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3);">Pendente</span>';
+
+        tr.innerHTML = `
+            <td style="padding: 12px 10px;">
+                <div style="font-weight: 600; color: var(--text-main);">${p.nome_curto || p.nome_completo}</div>
+                <div style="font-size: 11px; color: var(--text-muted);">${p.email || 'Sem e-mail'}</div>
+            </td>
+            ${docsCellsHtml}
+            <td style="padding: 12px; text-align: center;">${statusBadge}</td>
+            <td style="padding: 12px; text-align: center;">
+                <a href="associados.html" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; text-decoration: none; display: inline-block;">
+                    Abrir no Portal
+                </a>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
 };
 
 async function carregarDashboardsPessoas() {
