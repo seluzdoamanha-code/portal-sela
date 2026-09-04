@@ -128,11 +128,14 @@ async function carregarDadosAssociados() {
         const { data: pessoas, error: errPes } = await db.from('pessoas').select('*, vinculos_estrutura(estruturas(nome, tipo))').order('nome_completo', { ascending: true });
         if (errPes) throw errPes;
 
-        // Filtra apenas membros associados (Efetivo, Proponente, Benemérito, etc)
+        // Filtra estritamente apenas membros 'Associado Efetivo' e 'Associado Proponente'
         todasPessoas = (pessoas || []).filter(p => {
             if (!p.perfis) return false;
             const perfisArr = Array.isArray(p.perfis) ? p.perfis : (typeof p.perfis === 'string' ? p.perfis.split(',').map(s=>s.trim()) : []);
-            return perfisArr.some(pf => pf.toLowerCase().includes('associado'));
+            return perfisArr.some(pf => {
+                const pfClean = pf.trim().toLowerCase();
+                return pfClean === 'associado efetivo' || pfClean === 'associado proponente';
+            });
         });
 
         renderizarDiretorio();
