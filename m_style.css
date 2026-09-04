@@ -270,5 +270,11 @@ input:-webkit-autofill:active {
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
+    filter: invert(18%) sepia(50%) saturate(2200%) hue-rotate(195deg) brightness(90%) contrast(100%) !important;
+    cursor: pointer;
+    opacity: 0.85;
+}
+body.theme-dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) !important;
+    opacity: 0.85;
 }
