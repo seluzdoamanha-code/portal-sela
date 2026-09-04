@@ -4694,7 +4694,7 @@ window.abrirFichaAtendimento = async function (id) {
                 const dateStr = ev.data.toLocaleDateString('pt-BR');
                 if (ev.tipo === 'SESSAO') {
                     sessoesHtml += `
-                        <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                        <div style="position:relative; background: var(--bg-panel); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
                             <div style="position:absolute; left:-25px; top:14px; width:10px; height:10px; border-radius:50%; background: #f59e0b; border:2px solid var(--bg-panel);"></div>
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                 <div>
@@ -4703,7 +4703,7 @@ window.abrirFichaAtendimento = async function (id) {
                                 </div>
                                 <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.atendente_nome}</span>
                             </div>
-                            <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
+                            <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.04); padding: 12px; border-radius: 6px; border: 1px solid var(--border);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
                         </div>
                     `;
                 } else if (ev.tipo === 'PRESENCA') {
@@ -4711,14 +4711,14 @@ window.abrirFichaAtendimento = async function (id) {
                     const badgeColor = isEsp ? '#818cf8' : '#3b82f6';
                     const badgeText = isEsp ? '✨ ESPIRITUAL' : '💧 FLUÍDICO';
                     sessoesHtml += `
-                        <div style="position:relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
+                            <div style="font-weight:bold; color:var(--text-main); font-size:13px; margin-bottom:4px;">
                                 <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px; white-space: nowrap;">${badgeText}</span>
                                 Presença Registrada
                             </div>
-                            ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
+                            ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.04); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
                         </div>
                     `;
                 }
@@ -6211,10 +6211,10 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                 if (ev.tipo === 'ATENDIMENTO') {
                     const badgeColor = ev.obj.status === 'Atendido' ? '#10b981' : (ev.obj.status === 'Em Tratamento' ? '#3b82f6' : (ev.obj.status === 'Cancelado' ? '#ef4444' : '#f59e0b'));
                     html += `
-                        <div style="position:relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Solicitação de Atendimento Fraterno</div>
+                            <div style="font-weight:bold; color:var(--text-main); font-size:13px; margin-bottom:4px;">Solicitação de Atendimento Fraterno</div>
                             <div style="font-size:12px; color:var(--text-muted);">Por ${ev.obj.criado_por || 'Sistema'}</div>
                         </div>
                     `;
@@ -6222,7 +6222,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                     const badgeColor = ev.obj.status === 'Concluído' ? '#10b981' : '#ef4444';
                     const icon = ev.obj.status === 'Concluído' ? '✅' : '❌';
                     html += `
-                        <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px dashed ${badgeColor}; padding: 12px; border-radius: 8px; opacity: 0.8;">
+                        <div style="position:relative; background: rgba(0,0,0,0.02); border: 1px dashed ${badgeColor}; padding: 12px; border-radius: 8px; opacity: 0.9;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
                             <div style="font-weight:bold; color:${badgeColor}; font-size:13px;">${icon} Ciclo do Fraterno ${ev.obj.status}</div>
@@ -6230,7 +6230,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                     `;
                 } else if (ev.tipo === 'SESSAO') {
                     html += `
-                        <div style="position:relative; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                        <div style="position:relative; background: var(--bg-panel); border: 1px solid var(--border); padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
                             <div style="position:absolute; left:-25px; top:14px; width:10px; height:10px; border-radius:50%; background: #f59e0b; border:2px solid var(--bg-panel);"></div>
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                                 <div>
@@ -6239,17 +6239,17 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                                 </div>
                                 <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.atendente_nome}</span>
                             </div>
-                            <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
+                            <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.04); padding: 12px; border-radius: 6px; border: 1px solid var(--border);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
                         </div>
                     `;
                 } else if (ev.tipo === 'TRATAMENTO') {
                     const badgeColor = ev.obj.tipo === 'Espiritual' ? '#818cf8' : '#3b82f6';
                     const statusColor = ev.obj.status === 'Ativo' ? '#10b981' : 'var(--text-muted)';
                     html += `
-                        <div style="position:relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">Início Tratamento ${ev.obj.tipo}</div>
+                            <div style="font-weight:bold; color:var(--text-main); font-size:13px; margin-bottom:4px;">Início Tratamento ${ev.obj.tipo}</div>
                             <div style="font-size:12px; color:var(--text-muted);">Status do Ciclo: <span style="color:${statusColor}">${ev.obj.status}</span></div>
                         </div>
                     `;
@@ -6258,14 +6258,14 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                     const badgeColor = isEsp ? '#818cf8' : '#3b82f6';
                     const badgeText = isEsp ? '✨ ESPIRITUAL' : '💧 FLUÍDICO';
                     html += `
-                        <div style="position:relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                        <div style="position:relative; background: var(--bg-panel); box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); padding: 12px; border-radius: 8px;">
                             <div style="position:absolute; left:-23px; top:14px; width:10px; height:10px; border-radius:50%; background: ${badgeColor}; border:2px solid var(--bg-panel);"></div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${dateStr}</div>
-                            <div style="font-weight:bold; color:white; font-size:13px; margin-bottom:4px;">
+                            <div style="font-weight:bold; color:var(--text-main); font-size:13px; margin-bottom:4px;">
                                 <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; background: ${badgeColor}; color: white; margin-right: 6px; white-space: nowrap;">${badgeText}</span>
                                 Presença Registrada
                             </div>
-                            ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
+                            ${ev.obj.observacoes ? `<div style="font-size:12px; color:var(--text-muted); margin-top: 8px; background: rgba(0,0,0,0.04); padding: 8px; border-radius: 4px; border-left: 2px solid ${badgeColor};">Obs: ${ev.obj.observacoes}</div>` : ''}
                         </div>
                     `;
                 }

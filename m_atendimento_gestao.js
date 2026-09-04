@@ -682,7 +682,7 @@ function obterDataPrecisa(dataStr, createdAtStr) {
                                     </div>
                                     <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.atendente_nome}</span>
                                 </div>
-                                <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
+                                <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.04); padding: 12px; border-radius: 6px; border: 1px solid var(--border);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
                             </div>
                         `;
                     } else if (ev.tipo === 'PRESENCA') {
@@ -2048,7 +2048,7 @@ window.abrirModalFicharioCompleto = async function(safeId) {
                                 </div>
                                 <span style="color: var(--text-muted); font-size: 11px; text-align: right;">Atendente:<br>${ev.atendente_nome}</span>
                             </div>
-                            <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.05);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
+                            <div style="color: var(--text-main); font-size: 13px; white-space: pre-wrap; background: rgba(0,0,0,0.04); padding: 12px; border-radius: 6px; border: 1px solid var(--border);">${ev.obj.sintomas_orientacoes || 'Nenhum registro textual preenchido.'}</div>
                         </div>
                     `;
                 } else if (ev.tipo === 'TRATAMENTO') {
