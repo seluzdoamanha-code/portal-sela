@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup Comparativo - Relações & Organograma SELA</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- D3.js v7 -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #090d16;
+            --bg-card: rgba(18, 24, 38, 0.75);
+            --bg-card-hover: rgba(28, 36, 56, 0.85);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(59, 130, 246, 0.4);
+            --accent-primary: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-pink: #ec4899;
+            --text-primary: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: radial-gradient(circle at 50% 0%, #172554 0%, #090d16 65%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header */
+        header.hero {
+            padding: 24px 32px;
+            background: rgba(9, 13, 22, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-glass);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .brand-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #60a5fa;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .title-group h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Mode Selector Tabs */
+        .tabs-container {
+            display: flex;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-glass);
+            padding: 4px;
+            border-radius: 12px;
+            gap: 4px;
+        }
+
+        .tab-btn {
+            padding: 8px 18px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            background: var(--accent-primary);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Layout Grid */
+        .main-layout {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            padding: 24px 32px;
+            gap: 24px;
+            max-width: 1700px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Visualization Box */
+        .vis-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .vis-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-glass);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .vis-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        #chartCanvas {
+            flex: 1;
+            position: relative;
+            min-height: 700px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Control Panel / Sidebar */
+        .sidebar-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .card-panel h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            padding: 14px;
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Detail Box on Hover */
+        .inspector-box {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 16px;
+            min-height: 220px;
+        }
+
+        .inspector-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-badge {
+            display: inline-block;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-right: 4px;
+            margin-bottom: 4px;
+        }
+
+        /* Edge Bundling SVG Styling */
+        .node-eb {
+            font-size: 11px;
+            fill: #94a3b8;
+            cursor: pointer;
+            transition: fill 0.2s, font-weight 0.2s;
+        }
+
+        .node-eb:hover {
+            fill: #60a5fa;
+            font-weight: 700;
+        }
+
+        .node-eb--source {
+            fill: #3b82f6 !important;
+            font-weight: 700 !important;
+        }
+
+        .node-eb--target {
+            fill: #10b981 !important;
+            font-weight: 700 !important;
+        }
+
+        .link-eb {
+            fill: none;
+            stroke: #334155;
+            stroke-opacity: 0.25;
+            stroke-width: 1.2px;
+            pointer-events: none;
+            transition: stroke 0.25s, stroke-opacity 0.25s, stroke-width 0.25s;
+        }
+
+        .link-eb--source {
+            stroke: #3b82f6 !important;
+            stroke-opacity: 0.9 !important;
+            stroke-width: 2.5px !important;
+        }
+
+        .link-eb--target {
+            stroke: #10b981 !important;
+            stroke-opacity: 0.9 !important;
+            stroke-width: 2.5px !important;
+        }
+
+        /* Sankey Styling Anti-flicker e Click-Lock */
+        .sankey-node rect {
+            cursor: pointer;
+            rx: 5;
+            transition: fill-opacity 0.15s ease, stroke-width 0.15s ease;
+        }
+
+        .sankey-node rect:hover {
+            stroke: #fff !important;
+            stroke-width: 1.5px !important;
+        }
+
+        .sankey-node text {
+            font-size: 11px;
+            fill: #f8fafc;
+            font-weight: 600;
+            pointer-events: none; /* ESSENCIAL: impede que o texto roube o ponteiro e cause flicker */
+            user-select: none;
+        }
+
+        .sankey-link {
+            fill: none;
+            cursor: pointer;
+            /* Transição suave sem causar recálculo de reflow */
+            transition: stroke-opacity 0.15s ease;
+        }
+
+        /* Chips de filtro de departamentos */
+        .dept-chip {
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 999px;
+            border: 1px solid var(--border-glass);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+        }
+
+        .dept-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .dept-chip.active {
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .dept-chip.inactive {
+            opacity: 0.35;
+            filter: grayscale(80%);
+        }
+
+        .dept-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Comparison pros/cons banner */
+        .verdict-box {
+            border-left: 4px solid var(--accent-amber);
+            background: rgba(245, 158, 11, 0.08);
+            padding: 14px;
+            border-radius: 0 12px 12px 0;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #fed7aa;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="hero">
+        <div class="title-group">
+            <span class="brand-pill">Laboratório de Visualização • Portal SELA</span>
+            <h1>🏛️ Relações & Organograma Institucional</h1>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab-btn active" id="btnSankey" onclick="switchVisualizer('sankey')">
+                <span>🌊</span> Visão Fluxo Sankey (Recomendada)
+            </button>
+            <button class="tab-btn" id="btnEdge" onclick="switchVisualizer('edge')">
+                <span>🕸️</span> Hierarchical Edge Bundling
+            </button>
+            <button class="tab-btn" id="btnMatrix" onclick="switchVisualizer('matrix')">
+                <span>📊</span> Matriz de Alocação
+            </button>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <!-- Main Visualization Card -->
+        <div class="vis-card">
+            <div class="vis-header">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <h2 id="visTitle" style="font-size: 17px; font-weight: 700; color: #fff;">Diagrama de Alocação Multidisciplinar (Sankey)</h2>
+                        <span id="badgeFiltroAtivo" style="display:none; font-size: 11px; padding: 3px 8px; border-radius: 6px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4);"></span>
+                    </div>
+                    <p class="vis-desc" id="visSubtitle">Filtre ou clique em qualquer departamento/pessoa para focar. Passe o mouse suavemente sem tremores.</p>
+                </div>
+                
+                <!-- Quick Filter / Action Bar -->
+                <div style="display: flex; align-items: center; gap: 10px;" id="sankeyControls">
+                    <input type="text" id="inputBuscaSankey" placeholder="🔎 Buscar pessoa..." 
+                        style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-glass); border-radius: 8px; padding: 6px 12px; color: #fff; font-size: 12px; outline: none; width: 150px;" 
+                        oninput="onBuscarPessoa(this.value)">
+                    <button class="tab-btn" style="padding: 6px 12px; font-size: 12px; background: rgba(255,255,255,0.05);" onclick="resetarFiltros()">
+                        ↺ Ver Todos
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chips de Departamentos Clicáveis para Ocultar/Exibir -->
+            <div id="deptChipsBar" style="display: flex; gap: 8px; padding: 10px 24px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-glass); overflow-x: auto; align-items: center;">
+                <span style="font-size: 12px; color: var(--text-dim); font-weight: 600; white-space: nowrap;">Filtrar Departamentos:</span>
+                <div id="deptChipsList" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
+            </div>
+
+            <div id="chartCanvas">
+                <!-- D3 SVG injected here -->
+            </div>
+        </div>
+
+        <!-- Sidebar / Context Inspector -->
+        <aside class="sidebar-panel">
+            <div class="card-panel">
+                <h3>📊 Dados Reais Carregados</h3>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statPessoas">--</div>
+                        <div class="stat-label">Pessoas com Vínculo</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statDepts">--</div>
+                        <div class="stat-label">Departamentos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statVinculos">--</div>
+                        <div class="stat-label">Vínculos / Alocações</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statMulti">--</div>
+                        <div class="stat-label">Em +1 Departamento</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-panel">
+                <h3>🔍 Detalhes do Elemento</h3>
+                <div class="inspector-box" id="inspectorBox">
+                    <div style="color: var(--text-dim); text-align: center; margin-top: 60px;">
+                        Passe o mouse sobre uma pessoa ou departamento para visualizar suas conexões completas.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-panel">
+                <h3>💡 Comparativo Técnico</h3>
+                <div class="verdict-box" id="verdictNote">
+                    <strong>Por que o Sankey supera o Edge Bundling aqui?</strong><br>
+                    No Sankey, você lê facilmente os nomes das pessoas na vertical, identifica de relance quem atua em múltiplos setores e quem ocupa cargos de liderança.
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        let rawData = [];
+        let currentMode = 'sankey';
+
+        // Carrega os dados reais exportados do Supabase
+        async function loadData() {
+            try {
+                const res = await fetch('mockup_dados_reais.json');
+                rawData = await res.json();
+                processStats();
+                switchVisualizer('sankey');
+            } catch (e) {
+                console.error("Erro ao carregar dados:", e);
+                document.getElementById('chartCanvas').innerHTML = '<div style="color:#ef4444;">Erro ao carregar os dados reais.</div>';
+            }
+        }
+
+        // Estado dos filtros
+        let deptsAtivos = new Set();
+        let termoBusca = '';
+        let noTravado = null; // Quando o usuário clica em um nó para travar
+
+        const deptColors = {
+            'Diretoria': '#f59e0b',
+            'Comunicação': '#3b82f6',
+            'Assistência Social': '#10b981',
+            'Espiritual': '#8b5cf6',
+            'Infância e Juventude': '#ec4899',
+            'Eventos': '#06b6d4',
+            'Doutrinário': '#a855f7'
+        };
+
+        function processStats() {
+            const pessoasMap = new Map();
+            const deptsSet = new Set();
+
+            rawData.forEach(v => {
+                const pId = v.pessoas ? v.pessoas.id : null;
+                const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo || 'Sem Nome';
+                const dNome = v.estruturas?.nome || 'Geral';
+
+                if (pId) {
+                    if (!pessoasMap.has(pId)) pessoasMap.set(pId, { nome: pNome, depts: new Set(), perfis: [] });
+                    pessoasMap.get(pId).depts.add(dNome);
+                    pessoasMap.get(pId).perfis.push(`${dNome}: ${v.perfil}`);
+                }
+                deptsSet.add(dNome);
+            });
+
+            let multiCount = 0;
+            pessoasMap.forEach(p => {
+                if (p.depts.size > 1) multiCount++;
+            });
+
+            document.getElementById('statPessoas').textContent = pessoasMap.size;
+            document.getElementById('statDepts').textContent = deptsSet.size;
+            document.getElementById('statVinculos').textContent = rawData.length;
+            document.getElementById('statMulti').textContent = multiCount;
+
+            // Inicializa todos os departamentos como ativos
+            deptsSet.forEach(d => deptsAtivos.add(d));
+            renderDeptChips(Array.from(deptsSet));
+        }
+
+        function renderDeptChips(todosDepts) {
+            const container = document.getElementById('deptChipsList');
+            container.innerHTML = '';
+
+            todosDepts.sort().forEach(d => {
+                const cor = deptColors[d] || '#64748b';
+                const chip = document.createElement('div');
+                chip.className = `dept-chip ${deptsAtivos.has(d) ? 'active' : 'inactive'}`;
+                chip.id = `chip-dept-${d.replace(/\s+/g, '-')}`;
+                chip.innerHTML = `
+                    <span class="dept-dot" style="background: ${cor}"></span>
+                    <span>${d}</span>
+                `;
+                chip.onclick = () => alternarDepartamento(d);
+                container.appendChild(chip);
+            });
+        }
+
+        function alternarDepartamento(deptNome) {
+            if (deptsAtivos.has(deptNome)) {
+                // Se só tem 1 ativo e clicar nele, reativa todos
+                if (deptsAtivos.size === 1) {
+                    rawData.forEach(v => deptsAtivos.add(v.estruturas?.nome || 'Geral'));
+                } else {
+                    deptsAtivos.delete(deptNome);
+                }
+            } else {
+                deptsAtivos.add(deptNome);
+            }
+            atualizarChipsUI();
+            if (currentMode === 'sankey') renderSankey(document.getElementById('chartCanvas'));
+            if (currentMode === 'matrix') renderMatrix(document.getElementById('chartCanvas'));
+        }
+
+        function atualizarChipsUI() {
+            document.querySelectorAll('.dept-chip').forEach(chip => {
+                const text = chip.textContent.trim();
+                chip.className = `dept-chip ${deptsAtivos.has(text) ? 'active' : 'inactive'}`;
+            });
+
+            const badge = document.getElementById('badgeFiltroAtivo');
+            if (deptsAtivos.size < Object.keys(deptColors).length) {
+                badge.style.display = 'inline-block';
+                badge.textContent = `Filtrando: ${deptsAtivos.size} departamentos ativos`;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function resetarFiltros() {
+            rawData.forEach(v => deptsAtivos.add(v.estruturas?.nome || 'Geral'));
+            termoBusca = '';
+            noTravado = null;
+            document.getElementById('inputBuscaSankey').value = '';
+            atualizarChipsUI();
+            if (currentMode === 'sankey') renderSankey(document.getElementById('chartCanvas'));
+            if (currentMode === 'matrix') renderMatrix(document.getElementById('chartCanvas'));
+        }
+
+        function onBuscarPessoa(termo) {
+            termoBusca = termo.trim().toLowerCase();
+            if (currentMode === 'sankey') renderSankey(document.getElementById('chartCanvas'));
+        }
+
+        function switchVisualizer(mode) {
+            currentMode = mode;
+            document.getElementById('btnSankey').classList.toggle('active', mode === 'sankey');
+            document.getElementById('btnEdge').classList.toggle('active', mode === 'edge');
+            document.getElementById('btnMatrix').classList.toggle('active', mode === 'matrix');
+
+            const deptBar = document.getElementById('deptChipsBar');
+            const sankeyControls = document.getElementById('sankeyControls');
+            
+            if (mode === 'sankey' || mode === 'matrix') {
+                deptBar.style.display = 'flex';
+                sankeyControls.style.display = 'flex';
+            } else {
+                deptBar.style.display = 'none';
+                sankeyControls.style.display = 'none';
+            }
+
+            const container = document.getElementById('chartCanvas');
+            container.innerHTML = '';
+
+            if (mode === 'sankey') {
+                document.getElementById('visTitle').textContent = 'Diagrama de Alocação Multidisciplinar (Sankey)';
+                document.getElementById('visSubtitle').textContent = 'Departamentos (Origem) ➔ Papéis/Cargos (Intermediário) ➔ Pessoas Associadas (Destino).';
+                document.getElementById('verdictNote').innerHTML = `<strong>Controle Interativo Adicionado:</strong><br>• Clique nos chips acima para <strong>ocultar/exibir departamentos</strong> instantaneamente.<br>• <strong>Anti-Tremor ativo:</strong> passe o mouse sem vibração.<br>• <strong>Clique em um card</strong> para travar o foco.`;
+                renderSankey(container);
+            } else if (mode === 'edge') {
+                document.getElementById('visTitle').textContent = 'Hierarchical Edge Bundling (Roda Radial D3)';
+                document.getElementById('visSubtitle').textContent = 'Agrupamento radial de nós com curvas de Bézier tensionadas conectando departamentos e membros.';
+                document.getElementById('verdictNote').innerHTML = `<strong>Limitação do Edge Bundling:</strong><br>Observe como os nomes ficam rotacionados e radiais. Para organogramas com cargos detalhados e hierarquia formal, a leitura se torna cansativa, embora gere um visual atrativo de conexões.`;
+                renderEdgeBundling(container);
+            } else if (mode === 'matrix') {
+                document.getElementById('visTitle').textContent = 'Organograma / Matriz de Alocação por Cartões';
+                document.getElementById('visSubtitle').textContent = 'Visão em cartões modernos por Departamento, destacando líderes e colaboradores.';
+                document.getElementById('verdictNote').innerHTML = `<strong>Vantagem dos Cartões:</strong><br>Excelente para navegação móvel e desktop, permitindo ações rápidas (editar, ver perfil, telefonar) em cada membro.`;
+                renderMatrix(container);
+            }
+        }
+
+        // ==========================================
+        // 1. SANKEY DIAGRAM (Estável, Anti-flicker e com Filtros)
+        // ==========================================
+        function renderSankey(container) {
+            container.innerHTML = '';
+            const width = container.clientWidth || 960;
+            const height = 680;
+
+            // Filtra os dados com base nos departamentos ativos e na busca
+            const dadosFiltrados = rawData.filter(item => {
+                const dNome = item.estruturas?.nome || 'Geral';
+                if (!deptsAtivos.has(dNome)) return false;
+
+                if (termoBusca) {
+                    const pNome = (item.pessoas?.nome_curto || item.pessoas?.nome_completo || '').toLowerCase();
+                    const dNomeLow = dNome.toLowerCase();
+                    const papelLow = (item.perfil || '').toLowerCase();
+                    return pNome.includes(termoBusca) || dNomeLow.includes(termoBusca) || papelLow.includes(termoBusca);
+                }
+                return true;
+            });
+
+            if (dadosFiltrados.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted); padding: 60px;">
+                        <p style="font-size: 16px; margin-bottom: 8px;">Nenhum registro encontrado para este filtro.</p>
+                        <button class="tab-btn active" style="margin: 0 auto;" onclick="resetarFiltros()">Restaurar Departamentos</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const svg = d3.select(container).append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewBox", [0, 0, width, height]);
+
+            // Nós únicos: Departamentos -> Papéis -> Pessoas
+            const nodes = [];
+            const links = [];
+            const nodeMap = new Map();
+
+            function getNode(name, category, color, rawObject = null) {
+                const key = `${category}:${name}`;
+                if (!nodeMap.has(key)) {
+                    const idx = nodes.length;
+                    const obj = { id: key, name, category, color, index: idx, raw: rawObject };
+                    nodes.push(obj);
+                    nodeMap.set(key, obj);
+                }
+                return nodeMap.get(key);
+            }
+
+            dadosFiltrados.forEach(item => {
+                const dNome = item.estruturas?.nome || 'Outros';
+                const papel = item.perfil || 'Membro';
+                const pNome = item.pessoas?.nome_curto || item.pessoas?.nome_completo || 'Sem Nome';
+                const dColor = deptColors[dNome] || '#64748b';
+
+                const deptNode = getNode(dNome, 'Departamento', dColor, item);
+                const roleNode = getNode(`${dNome} - ${papel}`, 'Papel', dColor, item);
+                const persNode = getNode(pNome, 'Pessoa', '#94a3b8', item);
+
+                // Dept -> Role
+                links.push({
+                    source: deptNode.index,
+                    target: roleNode.index,
+                    value: 1,
+                    color: dColor,
+                    dept: dNome
+                });
+
+                // Role -> Person
+                links.push({
+                    source: roleNode.index,
+                    target: persNode.index,
+                    value: 1,
+                    color: dColor,
+                    dept: dNome
+                });
+            });
+
+            // Agrega links repetidos
+            const linkAggr = new Map();
+            links.forEach(l => {
+                const key = `${l.source}->${l.target}`;
+                if (!linkAggr.has(key)) {
+                    linkAggr.set(key, { ...l, value: 0 });
+                }
+                linkAggr.get(key).value += 1;
+            });
+
+            const sankeyData = {
+                nodes: nodes.map(d => Object.assign({}, d)),
+                links: Array.from(linkAggr.values())
+            };
+
+            const sankey = d3.sankey()
+                .nodeWidth(18)
+                .nodePadding(14)
+                .extent([[30, 25], [width - 170, height - 25]]);
+
+            const { nodes: graphNodes, links: graphLinks } = sankey(sankeyData);
+
+            // Links (Caminhos de fluxo)
+            const linkGroup = svg.append("g")
+                .attr("fill", "none")
+                .selectAll("path")
+                .data(graphLinks)
+                .join("path")
+                .attr("class", "sankey-link")
+                .attr("d", d3.sankeyLinkHorizontal())
+                .attr("stroke", d => d.color || "#3b82f6")
+                .attr("stroke-opacity", 0.3)
+                .attr("stroke-width", d => Math.max(2, d.width));
+
+            // Nodes (Blocos retangulares)
+            const nodeGroup = svg.append("g")
+                .selectAll("g")
+                .data(graphNodes)
+                .join("g")
+                .attr("class", "sankey-node")
+                .attr("transform", d => `translate(${d.x0},${d.y0})`);
+
+            // Retângulo do nó com padding generoso para clique fácil
+            nodeGroup.append("rect")
+                .attr("height", d => Math.max(8, d.y1 - d.y0))
+                .attr("width", d => d.x1 - d.x0)
+                .attr("fill", d => d.color)
+                .attr("fill-opacity", 0.9)
+                .attr("stroke", "rgba(255,255,255,0.25)")
+                .attr("stroke-width", 1);
+
+            // Texto do nó (COM pointer-events: none para NÃO tremer)
+            nodeGroup.append("text")
+                .attr("x", d => d.x0 < width / 2 ? (d.x1 - d.x0) + 8 : -8)
+                .attr("y", d => (d.y1 - d.y0) / 2)
+                .attr("dy", "0.35em")
+                .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
+                .text(d => d.name.replace(/^[^-]+ - /, ''))
+                .style("fill", "#fff")
+                .style("font-size", "11px");
+
+            // Função para aplicar iluminação/destaque
+            function aplicarDestaque(alvo) {
+                if (!alvo) {
+                    linkGroup.style("stroke-opacity", 0.3);
+                    nodeGroup.select("rect").style("stroke", "rgba(255,255,255,0.25)").style("stroke-width", 1);
+                    return;
+                }
+
+                // Encontra nós e caminhos conectados direta e indiretamente
+                const linksConectados = new Set();
+                const nosConectados = new Set([alvo]);
+
+                // Propagação simples de conectividade
+                graphLinks.forEach(l => {
+                    if (l.source === alvo || l.target === alvo) {
+                        linksConectados.add(l);
+                        nosConectados.add(l.source);
+                        nosConectados.add(l.target);
+                    }
+                });
+
+                // Se for departamento ou pessoa, estende para o segundo grau (Dept -> Papel -> Pessoa)
+                graphLinks.forEach(l => {
+                    if (nosConectados.has(l.source) || nosConectados.has(l.target)) {
+                        linksConectados.add(l);
+                        nosConectados.add(l.source);
+                        nosConectados.add(l.target);
+                    }
+                });
+
+                linkGroup.style("stroke-opacity", l => linksConectados.has(l) ? 0.9 : 0.05);
+                nodeGroup.select("rect")
+                    .style("stroke", n => nosConectados.has(n) ? "#60a5fa" : "rgba(255,255,255,0.1)")
+                    .style("stroke-width", n => nosConectados.has(n) ? 2 : 0.5);
+            }
+
+            // INTERAÇÕES ROBUSTAS (Sem flicker):
+            nodeGroup
+                .on("mouseenter", (event, d) => {
+                    if (!noTravado) {
+                        aplicarDestaque(d);
+                        updateInspector(d.name, d.category);
+                    }
+                })
+                .on("mouseleave", () => {
+                    if (!noTravado) {
+                        aplicarDestaque(null);
+                    }
+                })
+                .on("click", (event, d) => {
+                    event.stopPropagation();
+                    if (noTravado === d) {
+                        // Destrava
+                        noTravado = null;
+                        aplicarDestaque(null);
+                        updateInspector(d.name, d.category);
+                    } else {
+                        // Trava o nó selecionado
+                        noTravado = d;
+                        aplicarDestaque(d);
+                        updateInspector(d.name, d.category, '🔒 Foco Travado');
+                    }
+                });
+
+            linkGroup
+                .on("mouseenter", (event, l) => {
+                    if (!noTravado) {
+                        linkGroup.style("stroke-opacity", path => path === l ? 0.95 : 0.08);
+                        updateInspectorLink(l);
+                    }
+                })
+                .on("mouseleave", () => {
+                    if (!noTravado) {
+                        aplicarDestaque(null);
+                    }
+                });
+
+            // Clique no fundo do SVG destrava qualquer foco travado
+            svg.on("click", () => {
+                if (noTravado) {
+                    noTravado = null;
+                    aplicarDestaque(null);
+                }
+            });
+        }
+
+        // ==========================================
+        // 2. HIERARCHICAL EDGE BUNDLING (O Modelo Perguntado)
+        // ==========================================
+        function renderEdgeBundling(container) {
+            const width = container.clientWidth || 960;
+            const height = 680;
+            const radius = Math.min(width, height) / 2 - 120;
+
+            const svg = d3.select(container).append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewBox", [-width / 2, -height / 2, width, height]);
+
+            // Monta a hierarquia: root -> Departamento -> Pessoa
+            const rootHierarchy = { name: "SELA", children: [] };
+            const deptMap = new Map();
+            const personDeptConnections = [];
+
+            rawData.forEach(v => {
+                const dNome = v.estruturas?.nome || 'Geral';
+                const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo || 'Sem Nome';
+
+                if (!deptMap.has(dNome)) {
+                    const dNode = { name: dNome, children: [] };
+                    deptMap.set(dNome, dNode);
+                    rootHierarchy.children.push(dNode);
+                }
+
+                const dNode = deptMap.get(dNome);
+                let pChild = dNode.children.find(c => c.name === pNome);
+                if (!pChild) {
+                    pChild = { name: pNome, papel: v.perfil };
+                    dNode.children.push(pChild);
+                }
+
+                // Cria a conexão cruzada entre a pessoa e a estrutura
+                personDeptConnections.push({
+                    source: `SELA.${dNome}.${pNome}`,
+                    target: `SELA.${dNome}`
+                });
+            });
+
+            const cluster = d3.cluster().size([360, radius]);
+            const root = d3.hierarchy(rootHierarchy);
+            cluster(root);
+
+            // Mapeia folhas por id hierárquico
+            const leaves = root.leaves();
+            const map = new Map(leaves.map(d => [d.ancestors().reverse().map(a => a.data.name).join("."), d]));
+
+            // Gera links hierárquicos entre pessoas de departamentos compartilhados
+            // Wagner Costa -> Diretoria & Comunicação gera uma curva suave
+            const crossLinks = [];
+            const personOccurrences = new Map();
+
+            rawData.forEach(v => {
+                const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo;
+                const dNome = v.estruturas?.nome;
+                if (!personOccurrences.has(pNome)) personOccurrences.set(pNome, []);
+                personOccurrences.get(pNome).push(`SELA.${dNome}.${pNome}`);
+            });
+
+            personOccurrences.forEach((paths, pNome) => {
+                if (paths.length > 1) {
+                    for (let i = 0; i < paths.length; i++) {
+                        for (let j = i + 1; j < paths.length; j++) {
+                            const s = map.get(paths[i]);
+                            const t = map.get(paths[j]);
+                            if (s && t) crossLinks.push(s.path(t));
+                        }
+                    }
+                }
+            });
+
+            const line = d3.lineRadial()
+                .curve(d3.curveBundle.beta(0.85))
+                .radius(d => d.y)
+                .angle(d => d.x * Math.PI / 180);
+
+            // Desenha os links de feixe (Edge Bundling)
+            const link = svg.append("g")
+                .selectAll("path")
+                .data(crossLinks)
+                .join("path")
+                .attr("class", "link-eb")
+                .attr("d", d => line(d));
+
+            // Desenha os nós radiais no perímetro
+            const node = svg.append("g")
+                .selectAll("text")
+                .data(leaves)
+                .join("text")
+                .attr("class", "node-eb")
+                .attr("transform", d => `
+                    rotate(${d.x - 90})
+                    translate(${d.y + 12},0)
+                    ${d.x < 180 ? "" : "rotate(180)"}
+                `)
+                .attr("text-anchor", d => d.x < 180 ? "start" : "end")
+                .text(d => `${d.data.name} (${d.parent.data.name.substring(0, 10)})`)
+                .on("mouseover", (event, d) => {
+                    link.classed("link-eb--source", l => l[0] === d)
+                        .classed("link-eb--target", l => l[l.length - 1] === d);
+                    updateInspector(d.data.name, 'Membro Radial', d.parent.data.name);
+                })
+                .on("mouseout", () => {
+                    link.classed("link-eb--source", false).classed("link-eb--target", false);
+                });
+        }
+
+        // ==========================================
+        // 3. MATRIZ / ORGANOGRAMA EM CARDS
+        // ==========================================
+        function renderMatrix(container) {
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; max-height: 680px; overflow-y: auto; width: 100%;';
+
+            const depts = {};
+            rawData.forEach(v => {
+                const dNome = v.estruturas?.nome || 'Geral';
+                if (!depts[dNome]) depts[dNome] = [];
+                depts[dNome].push({
+                    nome: v.pessoas?.nome_curto || v.pessoas?.nome_completo || 'Sem Nome',
+                    papel: v.perfil || 'Membro'
+                });
+            });
+
+            Object.keys(depts).forEach(dNome => {
+                const card = document.createElement('div');
+                card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px;';
+
+                let membersHtml = depts[dNome].map(m => {
+                    const isLeader = m.papel.includes('Diretor') || m.papel.includes('Presidente') || m.papel.includes('Coordenador');
+                    return `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: ${isLeader ? 'rgba(59,130,246,0.1)' : 'rgba(255,255,255,0.02)'}; border-radius: 8px; border: 1px solid ${isLeader ? 'rgba(59,130,246,0.3)' : 'rgba(255,255,255,0.04)'};">
+                            <span style="font-size: 12px; font-weight: ${isLeader ? '600' : '400'}; color: #fff;">${m.nome}</span>
+                            <span style="font-size: 11px; color: ${isLeader ? '#60a5fa' : 'var(--text-muted)'};">${m.papel}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-glass); padding-bottom: 8px;">
+                        <h4 style="font-size: 14px; font-weight: 700; color: #60a5fa;">🏢 ${dNome}</h4>
+                        <span style="font-size: 11px; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 999px;">${depts[dNome].length} pessoas</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        ${membersHtml}
+                    </div>
+                `;
+                wrapper.appendChild(card);
+            });
+
+            container.appendChild(wrapper);
+        }
+
+        function updateInspector(nome, category, extra = '') {
+            const box = document.getElementById('inspectorBox');
+            // Busca vínculos da pessoa
+            const rels = rawData.filter(v => (v.pessoas?.nome_curto === nome || v.pessoas?.nome_completo === nome || v.estruturas?.nome === nome));
+
+            let html = `<div class="inspector-title">👤 ${nome}</div>`;
+            html += `<div style="font-size: 12px; color: var(--accent-primary); margin-bottom: 12px;">Tipo: ${category} ${extra ? `• ${extra}` : ''}</div>`;
+
+            if (rels.length > 0) {
+                html += `<div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Participações identificadas:</div>`;
+                rels.forEach(r => {
+                    const dept = r.estruturas?.nome || 'Geral';
+                    const perfil = r.perfil || 'Membro';
+                    html += `
+                        <div style="margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                            <strong style="color: #fff; font-size: 12px;">${dept}</strong>
+                            <div style="color: #60a5fa; font-size: 11px;">Papel: ${perfil}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += `<div style="font-size: 12px; color: var(--text-dim);">Nenhum detalhe adicional.</div>`;
+            }
+
+            box.innerHTML = html;
+        }
+
+        function updateInspectorLink(link) {
+            const box = document.getElementById('inspectorBox');
+            box.innerHTML = `
+                <div class="inspector-title">🔗 Conexão de Vínculo</div>
+                <div style="font-size: 13px; color: #fff; margin-top: 10px;">
+                    Origem: <strong>${link.source.name}</strong><br>
+                    Destino: <strong>${link.target.name}</strong>
+                </div>
+                <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted);">
+                    Essa aresta representa a atuação ativa nesta estrutura institucional.
+                </div>
+            `;
+        }
+
+        window.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>

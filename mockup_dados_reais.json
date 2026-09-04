@@ -1,0 +1,587 @@
+[
+  {
+    "id": "b2996f33-e26b-489e-9d49-0bfb87d63256",
+    "perfil": "Diretor",
+    "pessoas": {
+      "id": "e13e3ba8-3ce3-440e-b69b-a47099be4d03",
+      "nome_curto": "Wagner Costa",
+      "nome_completo": "Wagner de Paiva Marques da Costa"
+    },
+    "estruturas": {
+      "id": "33c4a71f-1896-4a66-a788-b7ff5b1e0e06",
+      "nome": "Comunicação",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "8939e17b-e1c7-43de-a106-ed5e7f8e73fc",
+    "perfil": "Diretor",
+    "pessoas": {
+      "id": "d7c09540-d6e9-443c-9db0-e428231f4d23",
+      "nome_curto": "Rony Costa",
+      "nome_completo": "Rony Antonio Marques da Costa"
+    },
+    "estruturas": {
+      "id": "6f64f257-23db-4792-8ea9-88183cfe12cd",
+      "nome": "Assistência Social",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "12f64cdf-3cbb-4a0d-a432-8e183d520f5d",
+    "perfil": "Coordenador",
+    "pessoas": {
+      "id": "d7c09540-d6e9-443c-9db0-e428231f4d23",
+      "nome_curto": "Rony Costa",
+      "nome_completo": "Rony Antonio Marques da Costa"
+    },
+    "estruturas": {
+      "id": "33c4a71f-1896-4a66-a788-b7ff5b1e0e06",
+      "nome": "Comunicação",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "46670e73-1e8f-4aab-8073-ae137611092a",
+    "perfil": "Associado Efetivo",
+    "pessoas": {
+      "id": "ed30bfb9-8cbc-4ba3-bdaa-e2ff007444b7",
+      "nome_curto": "Luciana Lelis",
+      "nome_completo": "Luciana da Silva Carvalho Lelis"
+    },
+    "estruturas": {
+      "id": "33c4a71f-1896-4a66-a788-b7ff5b1e0e06",
+      "nome": "Comunicação",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "ea8cd427-c7ba-4173-a62f-57adf1e0ae47",
+    "perfil": "Presidente",
+    "pessoas": {
+      "id": "443b3899-2752-47a1-9d06-e5b341fe8831",
+      "nome_curto": "Oscar Kufner",
+      "nome_completo": "Oscar Luís Kufner"
+    },
+    "estruturas": {
+      "id": "ff9d76d8-03fc-499f-8b26-13780fcc5311",
+      "nome": "Diretoria",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "2ce1f2dd-aac6-4aaf-bbb9-bcf1121f7f02",
+    "perfil": "Diretor",
+    "pessoas": {
+      "id": "e13e3ba8-3ce3-440e-b69b-a47099be4d03",
+      "nome_curto": "Wagner Costa",
+      "nome_completo": "Wagner de Paiva Marques da Costa"
+    },
+    "estruturas": {
+      "id": "ff9d76d8-03fc-499f-8b26-13780fcc5311",
+      "nome": "Diretoria",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "6e3431e1-de9b-4b8b-9a8e-299f10b5c32c",
+    "perfil": "Diretor",
+    "pessoas": {
+      "id": "d7c09540-d6e9-443c-9db0-e428231f4d23",
+      "nome_curto": "Rony Costa",
+      "nome_completo": "Rony Antonio Marques da Costa"
+    },
+    "estruturas": {
+      "id": "ff9d76d8-03fc-499f-8b26-13780fcc5311",
+      "nome": "Diretoria",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "c75e020e-16c1-4c8c-b628-8d66e7d4c191",
+    "perfil": "Associado Efetivo",
+    "pessoas": {
+      "id": "ed30bfb9-8cbc-4ba3-bdaa-e2ff007444b7",
+      "nome_curto": "Luciana Lelis",
+      "nome_completo": "Luciana da Silva Carvalho Lelis"
+    },
+    "estruturas": {
+      "id": "ff9d76d8-03fc-499f-8b26-13780fcc5311",
+      "nome": "Diretoria",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "1f0bdca0-7689-48bf-96bc-0e0d39769d20",
+    "perfil": "Associado Efetivo",
+    "pessoas": {
+      "id": "9c6868be-c822-4ec0-afe3-736b03cfc14c",
+      "nome_curto": "Anderson Lelis",
+      "nome_completo": "Anderson Castro Lelis"
+    },
+    "estruturas": {
+      "id": "ff9d76d8-03fc-499f-8b26-13780fcc5311",
+      "nome": "Diretoria",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "90ac1b52-4be3-41d1-92b6-323470215e2f",
+    "perfil": "Vice-Diretora",
+    "pessoas": {
+      "id": "28b8773c-0cb2-4d5f-bb23-981c063c88dc",
+      "nome_curto": "Janaina Fraga",
+      "nome_completo": "Janaina Mariza Fraga"
+    },
+    "estruturas": {
+      "id": "6f64f257-23db-4792-8ea9-88183cfe12cd",
+      "nome": "Assistência Social",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "439afd5e-1e19-4c65-b42d-e030b171eca8",
+    "perfil": "Colaboradora",
+    "pessoas": {
+      "id": "461e92f0-d02e-4346-989b-aecc4b2519a0",
+      "nome_curto": "Cléia Antom",
+      "nome_completo": "Clea Maria Frantz Anton"
+    },
+    "estruturas": {
+      "id": "6f64f257-23db-4792-8ea9-88183cfe12cd",
+      "nome": "Assistência Social",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "3bf9452c-cc0b-4362-bc64-db0ecb8507ac",
+    "perfil": "Colaboradora",
+    "pessoas": {
+      "id": "24c14b9d-b8de-40e1-bee7-c6b6abdb3ebb",
+      "nome_curto": "Dolori Libera",
+      "nome_completo": "Dolori Ivani Dalla Libera"
+    },
+    "estruturas": {
+      "id": "6f64f257-23db-4792-8ea9-88183cfe12cd",
+      "nome": "Assistência Social",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "89b9c070-8f8c-4c1a-9d71-d2585deb8bd9",
+    "perfil": "Colaborador",
+    "pessoas": {
+      "id": "443b3899-2752-47a1-9d06-e5b341fe8831",
+      "nome_curto": "Oscar Kufner",
+      "nome_completo": "Oscar Luís Kufner"
+    },
+    "estruturas": {
+      "id": "6f64f257-23db-4792-8ea9-88183cfe12cd",
+      "nome": "Assistência Social",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "f3e3c8f5-567b-41ff-ab5d-0b7ca8d9199e",
+    "perfil": "Colaboradora",
+    "pessoas": {
+      "id": "7445280c-9032-4d1f-8ffc-7d0c3b7c0f75",
+      "nome_curto": "Viviani Bortolon",
+      "nome_completo": "Viviani Fátima Bortolon"
+    },
+    "estruturas": {
+      "id": "6f64f257-23db-4792-8ea9-88183cfe12cd",
+      "nome": "Assistência Social",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "0e9ff5a9-08eb-4857-b28f-18d5072621bd",
+    "perfil": "Colaboradora",
+    "pessoas": {
+      "id": "133b8835-78ef-41a0-8483-17502c8a0712",
+      "nome_curto": "Marli Comerlato",
+      "nome_completo": "Marli Teresinha Costa Comerlato"
+    },
+    "estruturas": {
+      "id": "6f64f257-23db-4792-8ea9-88183cfe12cd",
+      "nome": "Assistência Social",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "e90332f2-e886-4635-af7c-c230a9fc0b21",
+    "perfil": "Tesoureira",
+    "pessoas": {
+      "id": "9024ee3e-8b6a-493e-a06f-274167cc274b",
+      "nome_curto": "Luana Kufner",
+      "nome_completo": "Luana Kufner"
+    },
+    "estruturas": {
+      "id": "ff9d76d8-03fc-499f-8b26-13780fcc5311",
+      "nome": "Diretoria",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "01a7cc20-9f69-42f0-8ae2-0747952678e7",
+    "perfil": "Diretor",
+    "pessoas": {
+      "id": "9c6868be-c822-4ec0-afe3-736b03cfc14c",
+      "nome_curto": "Anderson Lelis",
+      "nome_completo": "Anderson Castro Lelis"
+    },
+    "estruturas": {
+      "id": "65b0cb33-aaa8-4130-9b55-ca250ddbb516",
+      "nome": "Infância e Juventude",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "071155c1-2f2f-4c56-adc3-45bba373b5bc",
+    "perfil": "Diretora",
+    "pessoas": {
+      "id": "ed30bfb9-8cbc-4ba3-bdaa-e2ff007444b7",
+      "nome_curto": "Luciana Lelis",
+      "nome_completo": "Luciana da Silva Carvalho Lelis"
+    },
+    "estruturas": {
+      "id": "65b0cb33-aaa8-4130-9b55-ca250ddbb516",
+      "nome": "Infância e Juventude",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "4df14b96-6dc8-40d0-b192-97cb414cec23",
+    "perfil": "Colaborador",
+    "pessoas": {
+      "id": "9c6868be-c822-4ec0-afe3-736b03cfc14c",
+      "nome_curto": "Anderson Lelis",
+      "nome_completo": "Anderson Castro Lelis"
+    },
+    "estruturas": {
+      "id": "6f64f257-23db-4792-8ea9-88183cfe12cd",
+      "nome": "Assistência Social",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "27f1673e-a479-4573-a707-9f0ea6a93596",
+    "perfil": "Colaboradora",
+    "pessoas": {
+      "id": "ed30bfb9-8cbc-4ba3-bdaa-e2ff007444b7",
+      "nome_curto": "Luciana Lelis",
+      "nome_completo": "Luciana da Silva Carvalho Lelis"
+    },
+    "estruturas": {
+      "id": "6f64f257-23db-4792-8ea9-88183cfe12cd",
+      "nome": "Assistência Social",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "ed7e43fd-5872-41ae-bb03-9eafd54c7986",
+    "perfil": "Associado Efetivo",
+    "pessoas": {
+      "id": "044d551b-b3d9-40e2-8fe4-212fafd5def4",
+      "nome_curto": "Marlon Melo",
+      "nome_completo": "Marlon Luís Melo"
+    },
+    "estruturas": {
+      "id": "6f64f257-23db-4792-8ea9-88183cfe12cd",
+      "nome": "Assistência Social",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "0727ff7d-bfdb-4b8c-a26e-45fb686b5e7a",
+    "perfil": "Associado Efetivo",
+    "pessoas": {
+      "id": "53d30c8e-8fa2-4753-a3ac-192e70d4e42b",
+      "nome_curto": "Cristiano Medeiros",
+      "nome_completo": "Cristiano Carlexo Medeiros"
+    },
+    "estruturas": {
+      "id": "6f64f257-23db-4792-8ea9-88183cfe12cd",
+      "nome": "Assistência Social",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "15a1b4b9-1b0e-40b0-bea0-e72aad70d027",
+    "perfil": "Coordenador",
+    "pessoas": {
+      "id": "c3a5e257-a5bb-4c3d-86d2-72026e59a5a0",
+      "nome_curto": "Selma Oliveira",
+      "nome_completo": "Selma Maria de Oliveira"
+    },
+    "estruturas": {
+      "id": "487401a6-8fc9-4bd6-9ad9-eefe891eb14c",
+      "nome": "Atendimentos Espirituais",
+      "tipo": "Atividade",
+      "parent_id": "7c094294-f0cb-4224-8a4a-1abec183776b"
+    }
+  },
+  {
+    "id": "9d420074-4d99-4323-8c00-0dae522f31b1",
+    "perfil": "Atendente Fraterno",
+    "pessoas": {
+      "id": "044d551b-b3d9-40e2-8fe4-212fafd5def4",
+      "nome_curto": "Marlon Melo",
+      "nome_completo": "Marlon Luís Melo"
+    },
+    "estruturas": {
+      "id": "487401a6-8fc9-4bd6-9ad9-eefe891eb14c",
+      "nome": "Atendimentos Espirituais",
+      "tipo": "Atividade",
+      "parent_id": "7c094294-f0cb-4224-8a4a-1abec183776b"
+    }
+  },
+  {
+    "id": "0f384e88-f874-48c6-a095-db608c4e7d02",
+    "perfil": "Atendente Fraterno",
+    "pessoas": {
+      "id": "e13e3ba8-3ce3-440e-b69b-a47099be4d03",
+      "nome_curto": "Wagner Costa",
+      "nome_completo": "Wagner de Paiva Marques da Costa"
+    },
+    "estruturas": {
+      "id": "487401a6-8fc9-4bd6-9ad9-eefe891eb14c",
+      "nome": "Atendimentos Espirituais",
+      "tipo": "Atividade",
+      "parent_id": "7c094294-f0cb-4224-8a4a-1abec183776b"
+    }
+  },
+  {
+    "id": "96b3b77f-7047-4c41-9462-51eaaf62c07b",
+    "perfil": "Atendente Fraterno",
+    "pessoas": {
+      "id": "ed30bfb9-8cbc-4ba3-bdaa-e2ff007444b7",
+      "nome_curto": "Luciana Lelis",
+      "nome_completo": "Luciana da Silva Carvalho Lelis"
+    },
+    "estruturas": {
+      "id": "487401a6-8fc9-4bd6-9ad9-eefe891eb14c",
+      "nome": "Atendimentos Espirituais",
+      "tipo": "Atividade",
+      "parent_id": "7c094294-f0cb-4224-8a4a-1abec183776b"
+    }
+  },
+  {
+    "id": "0e81927d-fd33-444a-ade8-1de6a57b0242",
+    "perfil": "Atendente Fraterno",
+    "pessoas": {
+      "id": "9c6868be-c822-4ec0-afe3-736b03cfc14c",
+      "nome_curto": "Anderson Lelis",
+      "nome_completo": "Anderson Castro Lelis"
+    },
+    "estruturas": {
+      "id": "487401a6-8fc9-4bd6-9ad9-eefe891eb14c",
+      "nome": "Atendimentos Espirituais",
+      "tipo": "Atividade",
+      "parent_id": "7c094294-f0cb-4224-8a4a-1abec183776b"
+    }
+  },
+  {
+    "id": "36c1a3e3-5756-4b5c-84ed-d0c73805a27a",
+    "perfil": "Associado Efetivo",
+    "pessoas": {
+      "id": "24fbbad4-a6f0-4953-8bb1-02e2c848b6c8",
+      "nome_curto": "Julio Assis",
+      "nome_completo": "Julio Assis dos Santos"
+    },
+    "estruturas": {
+      "id": "80a67135-c70e-4721-862d-80c11edc050d",
+      "nome": "Doutrinário",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "ee2d71b8-bd7f-48dd-bc1b-d653a6c2df01",
+    "perfil": "Diretor",
+    "pessoas": {
+      "id": "443b3899-2752-47a1-9d06-e5b341fe8831",
+      "nome_curto": "Oscar Kufner",
+      "nome_completo": "Oscar Luís Kufner"
+    },
+    "estruturas": {
+      "id": "80a67135-c70e-4721-862d-80c11edc050d",
+      "nome": "Doutrinário",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "e3ed4e85-d32a-4f92-93a0-2be94c5c0ce5",
+    "perfil": "Coordenador",
+    "pessoas": {
+      "id": "c3a5e257-a5bb-4c3d-86d2-72026e59a5a0",
+      "nome_curto": "Selma Oliveira",
+      "nome_completo": "Selma Maria de Oliveira"
+    },
+    "estruturas": {
+      "id": "7c094294-f0cb-4224-8a4a-1abec183776b",
+      "nome": "Espiritual",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "40486b0c-7484-479d-afca-164ee1fc5081",
+    "perfil": "Colaborador",
+    "pessoas": {
+      "id": "443b3899-2752-47a1-9d06-e5b341fe8831",
+      "nome_curto": "Oscar Kufner",
+      "nome_completo": "Oscar Luís Kufner"
+    },
+    "estruturas": {
+      "id": "7c094294-f0cb-4224-8a4a-1abec183776b",
+      "nome": "Espiritual",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "283b3efc-3fb1-4513-8c18-efa82110b193",
+    "perfil": "Colaborador",
+    "pessoas": {
+      "id": "e13e3ba8-3ce3-440e-b69b-a47099be4d03",
+      "nome_curto": "Wagner Costa",
+      "nome_completo": "Wagner de Paiva Marques da Costa"
+    },
+    "estruturas": {
+      "id": "7c094294-f0cb-4224-8a4a-1abec183776b",
+      "nome": "Espiritual",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "46bd2945-be48-452a-be8d-295b55fda35b",
+    "perfil": "Colaborador",
+    "pessoas": {
+      "id": "d7c09540-d6e9-443c-9db0-e428231f4d23",
+      "nome_curto": "Rony Costa",
+      "nome_completo": "Rony Antonio Marques da Costa"
+    },
+    "estruturas": {
+      "id": "487401a6-8fc9-4bd6-9ad9-eefe891eb14c",
+      "nome": "Atendimentos Espirituais",
+      "tipo": "Atividade",
+      "parent_id": "7c094294-f0cb-4224-8a4a-1abec183776b"
+    }
+  },
+  {
+    "id": "1244aced-e23d-45dd-abc9-4d44d6bd55ca",
+    "perfil": "Coordenador",
+    "pessoas": {
+      "id": "e13e3ba8-3ce3-440e-b69b-a47099be4d03",
+      "nome_curto": "Wagner Costa",
+      "nome_completo": "Wagner de Paiva Marques da Costa"
+    },
+    "estruturas": {
+      "id": "bfca2c2c-9677-43c7-8274-a8095270f2ae",
+      "nome": "Biblioteca",
+      "tipo": "Atividade",
+      "parent_id": "80a67135-c70e-4721-862d-80c11edc050d"
+    }
+  },
+  {
+    "id": "8c47fb3e-528a-4723-be0e-1ba2b719931a",
+    "perfil": "Colaboradora",
+    "pessoas": {
+      "id": "c2832380-29a9-4439-aae3-d726883674d0",
+      "nome_curto": "Rúbia Caillava",
+      "nome_completo": "Rúbia Gisseli Antunes Caillava"
+    },
+    "estruturas": {
+      "id": "33c4a71f-1896-4a66-a788-b7ff5b1e0e06",
+      "nome": "Comunicação",
+      "tipo": "Departamento",
+      "parent_id": null
+    }
+  },
+  {
+    "id": "ff4ff29f-af7c-46eb-8da1-3281d6bc6eb2",
+    "perfil": "Atendente Fraterno",
+    "pessoas": {
+      "id": "443b3899-2752-47a1-9d06-e5b341fe8831",
+      "nome_curto": "Oscar Kufner",
+      "nome_completo": "Oscar Luís Kufner"
+    },
+    "estruturas": {
+      "id": "487401a6-8fc9-4bd6-9ad9-eefe891eb14c",
+      "nome": "Atendimentos Espirituais",
+      "tipo": "Atividade",
+      "parent_id": "7c094294-f0cb-4224-8a4a-1abec183776b"
+    }
+  },
+  {
+    "id": "0fa6d59e-95dc-47ef-a14b-9fd41eadf923",
+    "perfil": "Coordenador",
+    "pessoas": {
+      "id": "044d551b-b3d9-40e2-8fe4-212fafd5def4",
+      "nome_curto": "Marlon Melo",
+      "nome_completo": "Marlon Luís Melo"
+    },
+    "estruturas": {
+      "id": "37bc28c4-a550-4f12-a327-1f65ca99486b",
+      "nome": "Evangelho no Lar",
+      "tipo": "Atividade",
+      "parent_id": "6f64f257-23db-4792-8ea9-88183cfe12cd"
+    }
+  },
+  {
+    "id": "204defdb-404c-40de-a67f-649c2d304711",
+    "perfil": "Colaborador",
+    "pessoas": {
+      "id": "443b3899-2752-47a1-9d06-e5b341fe8831",
+      "nome_curto": "Oscar Kufner",
+      "nome_completo": "Oscar Luís Kufner"
+    },
+    "estruturas": {
+      "id": "37bc28c4-a550-4f12-a327-1f65ca99486b",
+      "nome": "Evangelho no Lar",
+      "tipo": "Atividade",
+      "parent_id": "6f64f257-23db-4792-8ea9-88183cfe12cd"
+    }
+  },
+  {
+    "id": "26295a4c-8b1f-4859-bc17-e397c6d97440",
+    "perfil": "Colaboradora",
+    "pessoas": {
+      "id": "ed30bfb9-8cbc-4ba3-bdaa-e2ff007444b7",
+      "nome_curto": "Luciana Lelis",
+      "nome_completo": "Luciana da Silva Carvalho Lelis"
+    },
+    "estruturas": {
+      "id": "37bc28c4-a550-4f12-a327-1f65ca99486b",
+      "nome": "Evangelho no Lar",
+      "tipo": "Atividade",
+      "parent_id": "6f64f257-23db-4792-8ea9-88183cfe12cd"
+    }
+  }
+]
