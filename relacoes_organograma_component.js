@@ -5,6 +5,7 @@ window.RelacoesOrganograma = (function() {
     let rawData = [];
     let deptsAtivos = new Set();
     let termoBusca = '';
+    let apenasLideranca = false;
     let noTravado = null;
     let containerEl = null;
     let currentMode = 'sankey';
@@ -90,7 +91,7 @@ window.RelacoesOrganograma = (function() {
 
                             <div style="display: flex; gap: 6px; margin-bottom: 10px;">
                                 <button id="btnMarcarTodosDepts" style="flex: 1; padding: 5px 8px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; color: var(--text-main); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Todos</button>
-                                <button id="btnApenasDiretoriaDepts" style="flex: 1; padding: 5px 8px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; color: var(--text-main); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Diretoria</button>
+                                <button id="btnApenasDiretoriaDepts" title="Filtrar apenas Diretores, Coordenadores e Lideranças" style="flex: 1; padding: 5px 8px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; color: var(--text-main); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;"><span>👑</span><span>Lideranças</span></button>
                             </div>
 
                             <div id="chipsDepartamentosList" class="custom-scrollbar" style="display: flex; flex-direction: column; gap: 6px; max-height: 330px; overflow-y: auto; padding-right: 2px;"></div>
@@ -128,6 +129,8 @@ window.RelacoesOrganograma = (function() {
         });
 
         document.getElementById('btnResetRelacoes').addEventListener('click', () => {
+            apenasLideranca = false;
+            atualizarBtnLiderancaUI();
             deptsAtivos.clear();
             rawData.forEach(v => deptsAtivos.add(v.estruturas?.nome || 'Geral'));
             termoBusca = '';
@@ -140,6 +143,8 @@ window.RelacoesOrganograma = (function() {
         const btnMarcarTodos = document.getElementById('btnMarcarTodosDepts');
         if (btnMarcarTodos) {
             btnMarcarTodos.onclick = () => {
+                apenasLideranca = false;
+                atualizarBtnLiderancaUI();
                 rawData.forEach(v => deptsAtivos.add(v.estruturas?.nome || 'Geral'));
                 atualizarChipsUI();
                 renderAtual();
@@ -149,10 +154,8 @@ window.RelacoesOrganograma = (function() {
         const btnApenasDiretoria = document.getElementById('btnApenasDiretoriaDepts');
         if (btnApenasDiretoria) {
             btnApenasDiretoria.onclick = () => {
-                deptsAtivos.clear();
-                deptsAtivos.add('Diretoria');
-                deptsAtivos.add('Comunicação');
-                atualizarChipsUI();
+                apenasLideranca = !apenasLideranca;
+                atualizarBtnLiderancaUI();
                 renderAtual();
             };
         }
@@ -260,11 +263,22 @@ window.RelacoesOrganograma = (function() {
     function atualizarChipsUI() {
         const container = document.getElementById('chipsDepartamentosList');
         if (!container) return;
+
+        // Calcular contagens atuais considerando apenasLideranca
+        const counts = {};
+        rawData.forEach(r => {
+            if (apenasLideranca && !isCargoLideranca(r.perfil)) return;
+            const d = r.estruturas?.nome || 'Geral';
+            counts[d] = (counts[d] || 0) + 1;
+        });
+
         const chips = container.children;
         for (let chip of chips) {
             const nome = chip.getAttribute('data-dept') || chip.textContent.trim();
             const ativo = deptsAtivos.has(nome);
-            chip.style.opacity = ativo ? '1' : '0.45';
+            const qtd = counts[nome] || 0;
+
+            chip.style.opacity = (ativo && qtd > 0) ? '1' : (ativo ? '0.6' : '0.35');
             chip.style.background = ativo ? 'rgba(6, 52, 111, 0.05)' : '#ffffff';
             chip.style.borderColor = ativo ? 'rgba(6, 52, 111, 0.25)' : 'var(--border)';
             
@@ -274,8 +288,9 @@ window.RelacoesOrganograma = (function() {
             }
             const countBadge = chip.querySelector('span:last-child');
             if (countBadge) {
-                countBadge.style.background = ativo ? 'rgba(6, 52, 111, 0.08)' : '#f1f5f9';
-                countBadge.style.color = ativo ? 'var(--primary)' : 'var(--text-muted)';
+                countBadge.textContent = qtd;
+                countBadge.style.background = ativo ? (qtd > 0 ? 'rgba(6, 52, 111, 0.08)' : '#f1f5f9') : '#f1f5f9';
+                countBadge.style.color = ativo ? (qtd > 0 ? 'var(--primary)' : 'var(--text-muted)') : 'var(--text-muted)';
             }
         }
 
@@ -286,13 +301,36 @@ window.RelacoesOrganograma = (function() {
 
         const badge = document.getElementById('badgeFiltroRelacoes');
         if (badge) {
-            if (deptsAtivos.size < chips.length) {
+            if (deptsAtivos.size < chips.length || apenasLideranca) {
                 badge.style.display = 'inline-block';
-                badge.textContent = `Filtro: ${deptsAtivos.size} ativos`;
+                badge.textContent = apenasLideranca ? `Filtro: Lideranças (${deptsAtivos.size} depts)` : `Filtro: ${deptsAtivos.size} ativos`;
             } else {
                 badge.style.display = 'none';
             }
         }
+    }
+
+    function isCargoLideranca(perfil) {
+        if (!perfil) return false;
+        const p = perfil.toLowerCase();
+        return p.includes('diretor') || p.includes('diretora') || p.includes('presidente') || p.includes('coordenador') || p.includes('tesoureir');
+    }
+
+    function atualizarBtnLiderancaUI() {
+        const btn = document.getElementById('btnApenasDiretoriaDepts');
+        if (!btn) return;
+        if (apenasLideranca) {
+            btn.style.background = 'var(--primary)';
+            btn.style.color = '#ffffff';
+            btn.style.borderColor = 'var(--primary)';
+            btn.style.boxShadow = '0 1px 4px rgba(6,52,111,0.25)';
+        } else {
+            btn.style.background = '#f8fafc';
+            btn.style.color = 'var(--text-main)';
+            btn.style.borderColor = 'var(--border)';
+            btn.style.boxShadow = 'none';
+        }
+        atualizarChipsUI();
     }
 
     function alternarModo(modo) {
@@ -348,6 +386,8 @@ window.RelacoesOrganograma = (function() {
         const height = 800; // Ampliado para 800px aproveitando o espaço do filtro lateral
 
         const filtrados = rawData.filter(item => {
+            if (apenasLideranca && !isCargoLideranca(item.perfil)) return false;
+
             const dNome = item.estruturas?.nome || 'Geral';
             if (!deptsAtivos.has(dNome)) return false;
 
@@ -556,6 +596,8 @@ window.RelacoesOrganograma = (function() {
 
         const depts = {};
         rawData.forEach(v => {
+            if (apenasLideranca && !isCargoLideranca(v.perfil)) return;
+
             const dNome = v.estruturas?.nome || 'Geral';
             if (!deptsAtivos.has(dNome)) return;
 
@@ -631,6 +673,8 @@ window.RelacoesOrganograma = (function() {
         const deptMap = new Map();
 
         rawData.forEach(v => {
+            if (apenasLideranca && !isCargoLideranca(v.perfil)) return;
+
             const dNome = v.estruturas?.nome || 'Geral';
             if (!deptsAtivos.has(dNome)) return;
 
@@ -729,6 +773,7 @@ window.RelacoesOrganograma = (function() {
         const personOccurrences = new Map();
 
         rawData.forEach(v => {
+            if (apenasLideranca && !isCargoLideranca(v.perfil)) return;
             const dNome = v.estruturas?.nome;
             if (!deptsAtivos.has(dNome)) return;
             const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo;
@@ -840,6 +885,7 @@ window.RelacoesOrganograma = (function() {
 
         const pMap = new Map();
         rawData.forEach(v => {
+            if (apenasLideranca && !isCargoLideranca(v.perfil)) return;
             const dNome = v.estruturas?.nome;
             if (!deptsAtivos.has(dNome)) return;
             const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo;
