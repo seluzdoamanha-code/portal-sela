@@ -62,7 +62,8 @@ window.RelacoesOrganograma = (function() {
                         <div style="display: flex; background: #f1f5f9; border: 1px solid var(--border); border-radius: 8px; padding: 2px; gap: 2px;">
                             <button id="btnModoSankey" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: var(--primary); color: #fff; border: none;">🌊 Fluxo (Sankey)</button>
                             <button id="btnModoCards" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: transparent; color: var(--text-muted); border: none;">📊 Departamentos</button>
-                            <button id="btnModoRadial" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: transparent; color: var(--text-muted); border: none;">🕸️ Radial</button>
+                            <button id="btnModoHalo" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: transparent; color: var(--text-muted); border: none;">🎯 Arcos Halo</button>
+                            <button id="btnModoChord" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: transparent; color: var(--text-muted); border: none;">🌈 Chord</button>
                         </div>
 
                         <button id="btnResetRelacoes" class="btn" style="background: #fff; border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; font-size: 12px; border-radius: 8px; cursor: pointer;">↺ Ver Todos</button>
@@ -158,7 +159,8 @@ window.RelacoesOrganograma = (function() {
 
         document.getElementById('btnModoSankey').onclick = () => alternarModo('sankey');
         document.getElementById('btnModoCards').onclick = () => alternarModo('cards');
-        document.getElementById('btnModoRadial').onclick = () => alternarModo('radial');
+        document.getElementById('btnModoHalo').onclick = () => alternarModo('halo');
+        document.getElementById('btnModoChord').onclick = () => alternarModo('chord');
     }
 
     async function carregarDados(supabaseClient) {
@@ -297,7 +299,8 @@ window.RelacoesOrganograma = (function() {
         currentMode = modo;
         const btnSankey = document.getElementById('btnModoSankey');
         const btnCards = document.getElementById('btnModoCards');
-        const btnRadial = document.getElementById('btnModoRadial');
+        const btnHalo = document.getElementById('btnModoHalo');
+        const btnChord = document.getElementById('btnModoChord');
 
         if (btnSankey) {
             btnSankey.style.background = modo === 'sankey' ? 'var(--primary)' : 'transparent';
@@ -307,9 +310,13 @@ window.RelacoesOrganograma = (function() {
             btnCards.style.background = modo === 'cards' ? 'var(--primary)' : 'transparent';
             btnCards.style.color = modo === 'cards' ? '#fff' : 'var(--text-muted)';
         }
-        if (btnRadial) {
-            btnRadial.style.background = modo === 'radial' ? 'var(--primary)' : 'transparent';
-            btnRadial.style.color = modo === 'radial' ? '#fff' : 'var(--text-muted)';
+        if (btnHalo) {
+            btnHalo.style.background = modo === 'halo' ? 'var(--primary)' : 'transparent';
+            btnHalo.style.color = modo === 'halo' ? '#fff' : 'var(--text-muted)';
+        }
+        if (btnChord) {
+            btnChord.style.background = modo === 'chord' ? 'var(--primary)' : 'transparent';
+            btnChord.style.color = modo === 'chord' ? '#fff' : 'var(--text-muted)';
         }
 
         renderAtual();
@@ -323,8 +330,10 @@ window.RelacoesOrganograma = (function() {
             renderSankey(canvas);
         } else if (currentMode === 'cards') {
             renderCards(canvas);
-        } else if (currentMode === 'radial') {
-            renderRadial(canvas);
+        } else if (currentMode === 'halo') {
+            renderHalo(canvas);
+        } else if (currentMode === 'chord') {
+            renderChord(canvas);
         }
     }
 
@@ -603,15 +612,15 @@ window.RelacoesOrganograma = (function() {
     }
 
     // ===============================================
-    // RENDERIZADOR 3: RADIAL (EDGE BUNDLING)
+    // RENDERIZADOR 3: ARCOS HALO (EDGE BUNDLING COM SETORES COLORIDOS)
     // ===============================================
-    function renderRadial(canvas) {
+    function renderHalo(canvas) {
         canvas.innerHTML = '';
         canvas.style.alignItems = 'center';
         canvas.style.justifyContent = 'center';
-        const width = canvas.clientWidth || 800;
+        const width = canvas.clientWidth || 860;
         const height = 800;
-        const radius = Math.min(width, height) / 2 - 110;
+        const radius = Math.min(width, height) / 2 - 130;
 
         const svg = d3.select(canvas).append("svg")
             .attr("width", width)
@@ -624,6 +633,14 @@ window.RelacoesOrganograma = (function() {
         rawData.forEach(v => {
             const dNome = v.estruturas?.nome || 'Geral';
             if (!deptsAtivos.has(dNome)) return;
+
+            if (termoBusca) {
+                const pNome = (v.pessoas?.nome_curto || v.pessoas?.nome_completo || '').toLowerCase();
+                const dNomeLow = dNome.toLowerCase();
+                const papelLow = (v.perfil || '').toLowerCase();
+                if (!pNome.includes(termoBusca) && !dNomeLow.includes(termoBusca) && !papelLow.includes(termoBusca)) return;
+            }
+
             const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo || 'Sem Nome';
 
             if (!deptMap.has(dNome)) {
@@ -639,7 +656,7 @@ window.RelacoesOrganograma = (function() {
         });
 
         if (rootHierarchy.children.length === 0) {
-            canvas.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center;">Nenhum departamento ativo.</div>';
+            canvas.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center;">Nenhum departamento ativo para este filtro.</div>';
             return;
         }
 
@@ -650,24 +667,90 @@ window.RelacoesOrganograma = (function() {
         const leaves = root.leaves();
         const map = new Map(leaves.map(d => [d.ancestors().reverse().map(a => a.data.name).join("."), d]));
 
+        // Grupos de departamentos para os arcos Halo
+        const deptsGroups = root.children.map(d => {
+            const childLeaves = d.leaves();
+            const angles = childLeaves.map(l => l.x);
+            const minAngle = Math.min(...angles) - (360 / Math.max(1, leaves.length) / 2);
+            const maxAngle = Math.max(...angles) + (360 / Math.max(1, leaves.length) / 2);
+            return {
+                name: d.data.name,
+                minAngle: minAngle * Math.PI / 180,
+                maxAngle: maxAngle * Math.PI / 180,
+                color: obterCorDepartamento(d.data.name),
+                count: childLeaves.length
+            };
+        });
+
+        // 1. Arcos Halo Envolventes
+        const arcGen = d3.arc()
+            .innerRadius(radius + 18)
+            .outerRadius(radius + 28)
+            .cornerRadius(5);
+
+        const haloGroup = svg.append("g");
+        haloGroup.selectAll("path")
+            .data(deptsGroups)
+            .join("path")
+            .attr("d", d => arcGen({ startAngle: d.minAngle, endAngle: d.maxAngle }))
+            .attr("fill", d => d.color)
+            .attr("fill-opacity", 0.85)
+            .attr("stroke", d => d.color)
+            .attr("stroke-width", 1.5)
+            .style("cursor", "pointer")
+            .on("mouseover", (event, d) => {
+                svg.selectAll(".link-halo").style("stroke-opacity", l => l.dept === d.name ? 0.95 : 0.05);
+                atualizarInspector(d.name, 'Departamento (Halo)', `${d.count} membros`);
+            })
+            .on("mouseout", () => {
+                svg.selectAll(".link-halo").style("stroke-opacity", 0.35);
+            });
+
+        // Nomes dos departamentos nos arcos Halo
+        haloGroup.selectAll("text")
+            .data(deptsGroups)
+            .join("text")
+            .attr("transform", d => {
+                const mid = (d.minAngle + d.maxAngle) / 2;
+                const r = radius + 46;
+                const x = Math.sin(mid) * r;
+                const y = -Math.cos(mid) * r;
+                return `translate(${x},${y})`;
+            })
+            .attr("text-anchor", "middle")
+            .attr("dy", "0.35em")
+            .text(d => d.name)
+            .style("fill", d => d.color)
+            .style("font-size", "11px")
+            .style("font-weight", "700");
+
+        // 2. Feixes de conexões cruzadas
         const crossLinks = [];
         const personOccurrences = new Map();
 
         rawData.forEach(v => {
-            const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo;
             const dNome = v.estruturas?.nome;
             if (!deptsAtivos.has(dNome)) return;
+            const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo;
             if (!personOccurrences.has(pNome)) personOccurrences.set(pNome, []);
-            personOccurrences.get(pNome).push(`SELA.${dNome}.${pNome}`);
+            personOccurrences.get(pNome).push({ path: `SELA.${dNome}.${pNome}`, dept: dNome });
         });
 
-        personOccurrences.forEach((paths) => {
-            if (paths.length > 1) {
-                for (let i = 0; i < paths.length; i++) {
-                    for (let j = i + 1; j < paths.length; j++) {
-                        const s = map.get(paths[i]);
-                        const t = map.get(paths[j]);
-                        if (s && t) crossLinks.push(s.path(t));
+        personOccurrences.forEach((entries) => {
+            if (entries.length > 1) {
+                for (let i = 0; i < entries.length; i++) {
+                    for (let j = i + 1; j < entries.length; j++) {
+                        const s = map.get(entries[i].path);
+                        const t = map.get(entries[j].path);
+                        if (s && t) {
+                            crossLinks.push({
+                                pathData: s.path(t),
+                                dept: entries[i].dept,
+                                color: obterCorDepartamento(entries[i].dept),
+                                sourceNode: s,
+                                targetNode: t
+                            });
+                        }
                     }
                 }
             }
@@ -678,39 +761,173 @@ window.RelacoesOrganograma = (function() {
             .radius(d => d.y)
             .angle(d => d.x * Math.PI / 180);
 
-        const link = svg.append("g")
+        svg.append("g")
             .selectAll("path")
             .data(crossLinks)
             .join("path")
-            .attr("d", d => line(d))
+            .attr("class", "link-halo")
+            .attr("d", d => line(d.pathData))
             .attr("fill", "none")
-            .attr("stroke", "#475569")
-            .attr("stroke-opacity", 0.3)
-            .attr("stroke-width", 1.5);
+            .attr("stroke", d => d.color)
+            .attr("stroke-opacity", 0.35)
+            .attr("stroke-width", 2);
 
-        svg.append("g")
-            .selectAll("text")
+        // 3. Nós circulares com dot colorido e rótulo
+        const nodeGroup = svg.append("g")
+            .selectAll("g")
             .data(leaves)
-            .join("text")
+            .join("g")
             .attr("transform", d => `
                 rotate(${d.x - 90})
-                translate(${d.y + 10},0)
+                translate(${d.y},0)
+            `)
+            .style("cursor", "pointer");
+
+        nodeGroup.append("circle")
+            .attr("r", 4.5)
+            .attr("fill", d => obterCorDepartamento(d.parent.data.name))
+            .attr("stroke", "#ffffff")
+            .attr("stroke-width", 1.5);
+
+        nodeGroup.append("text")
+            .attr("transform", d => `
+                translate(${d.x < 180 ? 9 : -9}, 0)
                 ${d.x < 180 ? "" : "rotate(180)"}
             `)
             .attr("text-anchor", d => d.x < 180 ? "start" : "end")
-            .text(d => `${d.data.name} (${d.parent.data.name.substring(0, 8)})`)
-            .style("font-size", "10px")
-            .style("fill", "var(--text-muted)")
+            .attr("dy", "0.35em")
+            .text(d => d.data.name)
+            .style("font-size", "10.5px")
+            .style("font-weight", "600")
+            .style("fill", "var(--text-main)")
+            .style("user-select", "none");
+
+        nodeGroup
+            .on("mouseenter", (event, d) => {
+                svg.selectAll(".link-halo").style("stroke-opacity", l => (l.sourceNode === d || l.targetNode === d) ? 0.95 : 0.05);
+                atualizarInspector(d.data.name, 'Membro (Halo)', d.parent.data.name);
+            })
+            .on("mouseleave", () => {
+                svg.selectAll(".link-halo").style("stroke-opacity", 0.35);
+            });
+    }
+
+    // ===============================================
+    // RENDERIZADOR 4: CHORD / CIRCOS (FITAS DE FLUXO RADIAL)
+    // ===============================================
+    function renderChord(canvas) {
+        canvas.innerHTML = '';
+        canvas.style.alignItems = 'center';
+        canvas.style.justifyContent = 'center';
+        const width = canvas.clientWidth || 860;
+        const height = 800;
+        const outerRadius = Math.min(width, height) * 0.5 - 120;
+        const innerRadius = outerRadius - 26;
+
+        const deptsList = Array.from(deptsAtivos).sort();
+        if (deptsList.length === 0) {
+            canvas.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center;">Selecione ao menos um departamento para o Chord.</div>';
+            return;
+        }
+
+        const svg = d3.select(canvas).append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("viewBox", [-width / 2, -height / 2, width, height]);
+
+        const n = deptsList.length;
+        const matrix = Array.from({ length: n }, () => new Array(n).fill(0));
+
+        const pMap = new Map();
+        rawData.forEach(v => {
+            const dNome = v.estruturas?.nome;
+            if (!deptsAtivos.has(dNome)) return;
+            const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo;
+            if (!pMap.has(pNome)) pMap.set(pNome, new Set());
+            pMap.get(pNome).add(dNome);
+        });
+
+        pMap.forEach(dSet => {
+            const arr = Array.from(dSet);
+            if (arr.length === 1) {
+                const i = deptsList.indexOf(arr[0]);
+                if (i >= 0) matrix[i][i] += 1;
+            } else {
+                for (let a = 0; a < arr.length; a++) {
+                    for (let b = a + 1; b < arr.length; b++) {
+                        const i = deptsList.indexOf(arr[a]);
+                        const j = deptsList.indexOf(arr[b]);
+                        if (i >= 0 && j >= 0) {
+                            matrix[i][j] += 1;
+                            matrix[j][i] += 1;
+                        }
+                    }
+                }
+            }
+        });
+
+        const chord = d3.chord()
+            .padAngle(0.06)
+            .sortSubgroups(d3.descending);
+
+        const chords = chord(matrix);
+
+        const arc = d3.arc()
+            .innerRadius(innerRadius)
+            .outerRadius(outerRadius)
+            .cornerRadius(4);
+
+        const ribbon = d3.ribbon()
+            .radius(innerRadius);
+
+        // Anéis dos Departamentos
+        const group = svg.append("g")
+            .selectAll("g")
+            .data(chords.groups)
+            .join("g");
+
+        group.append("path")
+            .attr("fill", d => obterCorDepartamento(deptsList[d.index]))
+            .attr("stroke", "rgba(0,0,0,0.08)")
+            .attr("d", arc)
             .style("cursor", "pointer")
             .on("mouseover", (event, d) => {
-                link.attr("stroke", l => (l[0] === d || l[l.length - 1] === d) ? "#3b82f6" : "#475569")
-                    .attr("stroke-opacity", l => (l[0] === d || l[l.length - 1] === d) ? 0.9 : 0.1)
-                    .attr("stroke-width", l => (l[0] === d || l[l.length - 1] === d) ? 2.5 : 1);
-                atualizarInspector(d.data.name, 'Membro Radial', d.parent.data.name);
+                ribbonsEl.style("opacity", r => (r.source.index === d.index || r.target.index === d.index) ? 0.9 : 0.05);
+                atualizarInspector(deptsList[d.index], 'Departamento (Chord)', `${d.value} conexões`);
             })
-            .on("mouseout", () => {
-                link.attr("stroke", "#475569").attr("stroke-opacity", 0.3).attr("stroke-width", 1.5);
-            });
+            .on("mouseout", () => ribbonsEl.style("opacity", 0.65));
+
+        group.append("text")
+            .each(d => { d.angle = (d.startAngle + d.endAngle) / 2; })
+            .attr("dy", "0.35em")
+            .attr("transform", d => `
+                rotate(${(d.angle * 180 / Math.PI) - 90})
+                translate(${outerRadius + 14})
+                ${d.angle > Math.PI ? "rotate(180)" : ""}
+            `)
+            .attr("text-anchor", d => d.angle > Math.PI ? "end" : "start")
+            .text(d => deptsList[d.index])
+            .style("font-size", "11.5px")
+            .style("font-weight", "700")
+            .style("fill", d => obterCorDepartamento(deptsList[d.index]));
+
+        // Fitas (Ribbons)
+        const ribbonsEl = svg.append("g")
+            .attr("fill-opacity", 0.65)
+            .selectAll("path")
+            .data(chords)
+            .join("path")
+            .attr("d", ribbon)
+            .attr("fill", d => obterCorDepartamento(deptsList[d.source.index]))
+            .attr("stroke", "rgba(0,0,0,0.06)")
+            .style("cursor", "pointer")
+            .on("mouseover", (event, d) => {
+                ribbonsEl.style("opacity", r => r === d ? 1 : 0.1);
+                const d1 = deptsList[d.source.index];
+                const d2 = deptsList[d.target.index];
+                atualizarInspector(`${d1} ⇄ ${d2}`, 'Fita Interdepartamental', `${d.source.value} membros em comum`);
+            })
+            .on("mouseout", () => ribbonsEl.style("opacity", 0.65));
     }
 
     function atualizarInspector(nome, category, extra = '') {
