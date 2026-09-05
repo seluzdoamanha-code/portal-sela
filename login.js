@@ -7,7 +7,6 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 document.addEventListener('DOMContentLoaded', () => {
     const btnGoogle = document.getElementById('btnGoogleLogin');
     const btnMicrosoft = document.getElementById('btnMicrosoftLogin');
-    const btnApple = document.getElementById('btnAppleLogin');
     const errorMsg = document.getElementById('errorMsg');
 
     // Removido o alerta de debug temporário
@@ -79,39 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (btnApple) {
-        btnApple.addEventListener('click', async (e) => {
-            e.preventDefault();
-            try {
-                console.log('Iniciando login com Apple...');
-                btnApple.disabled = true;
-                btnApple.innerHTML = 'Conectando...';
-                
-                let indexUrl = window.location.href.split('?')[0];
-                indexUrl = indexUrl.replace('login.html', 'index.html');
-                
-                const { data, error } = await supabaseClient.auth.signInWithOAuth({
-                    provider: 'apple',
-                    options: {
-                        redirectTo: indexUrl,
-                        scopes: 'name email'
-                    }
-                });
-
-                if (error) {
-                    console.error("Erro do Supabase Apple:", error);
-                    throw error;
-                }
-            } catch (error) {
-                console.error('Erro no login Apple:', error);
-                alert('Erro ao tentar conectar: ' + error.message);
-                mostrarErro('Falha ao conectar com a Apple. Tente novamente.');
-                btnApple.disabled = false;
-                btnApple.innerHTML = `Entrar com a Apple`;
-            }
-        });
-    }
-
     async function verificarStatusAtual() {
         // Pega possíveis mensagens de erro da URL (ex: ?error=nao_autorizado&email=xyz)
         const urlParams = new URLSearchParams(window.location.search);
@@ -123,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await supabaseClient.auth.signOut();
             return;
         } else if (errorType === 'sem_email') {
-            mostrarErro('Falha no Login: O provedor (Apple/Microsoft) não compartilhou o seu endereço de e-mail com o Portal. No caso da Apple, certifique-se de escolher "Compartilhar meu e-mail" para que possamos localizar seu cadastro na SELA.');
+            mostrarErro('Falha no Login: A Microsoft não compartilhou o seu endereço de e-mail com o Portal. Entre nas configurações da sua conta Microsoft e permita o compartilhamento do e-mail.');
             await supabaseClient.auth.signOut();
             return;
         }
