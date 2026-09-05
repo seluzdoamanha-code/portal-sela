@@ -10,14 +10,34 @@ window.RelacoesOrganograma = (function() {
     let currentMode = 'sankey';
 
     const deptColors = {
-        'Diretoria': '#f59e0b',
-        'Comunicação': '#3b82f6',
-        'Assistência Social': '#10b981',
-        'Espiritual': '#8b5cf6',
-        'Infância e Juventude': '#ec4899',
-        'Eventos': '#06b6d4',
-        'Doutrinário': '#a855f7'
+        'Diretoria': '#d97706',               // Amber escurecido e vibrante
+        'Comunicação': '#2563eb',             // Azul royal
+        'Assistência Social': '#059669',       // Esmeralda/Verde
+        'Espiritual': '#7c3aed',               // Roxo
+        'Infância e Juventude': '#db2777',     // Rosa
+        'Eventos': '#0891b2',                  // Ciano escuro
+        'Doutrinário': '#9333ea',              // Púrpura
+        'Biblioteca': '#4f46e5',               // Índigo
+        'Atendimentos Espirituais': '#6d28d9', // Violeta
+        'Estudo Joanna de Ângelis': '#0d9488', // Teal
+        'Estudo Livro dos Espíritos': '#0284c7',// Sky Blue
+        'Estudo Mediúnico': '#475569',         // Ardósia escuro
+        'Evangelho no Lar': '#b45309',         // Âmbar escuro
+        'Tesouraria': '#15803d',               // Verde Floresta
+        'Financeiro': '#047857',               // Esmeralda escuro
+        'Secretaria': '#4338ca'                // Índigo escuro
     };
+
+    // Gera cor consistente para qualquer novo departamento não mapeado
+    function obterCorDepartamento(nome) {
+        if (deptColors[nome]) return deptColors[nome];
+        let hash = 0;
+        for (let i = 0; i < nome.length; i++) {
+            hash = nome.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hue = Math.abs(hash % 360);
+        return `hsl(${hue}, 65%, 45%)`;
+    }
 
     async function init(targetElementId, supabaseClient) {
         containerEl = document.getElementById(targetElementId);
@@ -26,57 +46,57 @@ window.RelacoesOrganograma = (function() {
         containerEl.innerHTML = `
             <div class="rel-organograma-wrapper" style="display: flex; flex-direction: column; gap: 14px; width: 100%;">
                 <!-- Barra Superior de Controle e Modos (compacta sem a faixa horizontal) -->
-                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
                     <div>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <h3 style="margin: 0; font-size: 16px; color: var(--text-main); font-weight: 700;">🏛️ Relações & Organograma Institucional</h3>
-                            <span id="badgeFiltroRelacoes" style="display: none; font-size: 11px; padding: 2px 8px; border-radius: 6px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);"></span>
+                            <span id="badgeFiltroRelacoes" style="display: none; font-size: 11px; padding: 2px 8px; border-radius: 6px; background: rgba(37, 99, 235, 0.1); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.25); font-weight: 600;"></span>
                         </div>
                         <p style="margin: 2px 0 0 0; font-size: 12px; color: var(--text-muted);">Mapeamento visual de membros, cargos e conexões entre departamentos da Casa.</p>
                     </div>
 
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <input type="text" id="buscaRelacoes" placeholder="🔎 Buscar pessoa ou cargo..." 
-                            style="background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; color: var(--text-main); font-size: 12px; outline: none; width: 180px;">
+                            style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; color: var(--text-main); font-size: 12px; outline: none; width: 180px;">
                         
-                        <div style="display: flex; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; padding: 2px; gap: 2px;">
-                            <button id="btnModoSankey" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: var(--primary); color: #fff;">🌊 Fluxo (Sankey)</button>
-                            <button id="btnModoCards" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: transparent; color: var(--text-muted);">📊 Departamentos</button>
-                            <button id="btnModoRadial" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: transparent; color: var(--text-muted);">🕸️ Radial</button>
+                        <div style="display: flex; background: #f1f5f9; border: 1px solid var(--border); border-radius: 8px; padding: 2px; gap: 2px;">
+                            <button id="btnModoSankey" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: var(--primary); color: #fff; border: none;">🌊 Fluxo (Sankey)</button>
+                            <button id="btnModoCards" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: transparent; color: var(--text-muted); border: none;">📊 Departamentos</button>
+                            <button id="btnModoRadial" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: transparent; color: var(--text-muted); border: none;">🕸️ Radial</button>
                         </div>
 
-                        <button id="btnResetRelacoes" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; height: auto;">↺ Ver Todos</button>
+                        <button id="btnResetRelacoes" class="btn" style="background: #fff; border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; font-size: 12px; border-radius: 8px; cursor: pointer;">↺ Ver Todos</button>
                     </div>
                 </div>
 
                 <!-- Grid Principal: Gráfico com Altura Ampliada + Coluna Lateral Direita com Filtros -->
                 <div style="display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start;">
                     <!-- Canvas do Gráfico -->
-                    <div id="canvasRelacoesArea" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; min-height: 800px; height: 800px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                    <div id="canvasRelacoesArea" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; min-height: 800px; height: 800px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
                         <div style="color: var(--text-muted); font-size: 13px;">Carregando visualização institucional...</div>
                     </div>
 
                     <!-- Inspetor e Filtro Lateral Direito -->
                     <div style="display: flex; flex-direction: column; gap: 12px;">
                         <!-- Bloco de Filtro de Departamentos Lateral -->
-                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;">
+                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                 <h4 style="margin: 0; font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 700;">
                                     🏢 Filtrar Departamentos
                                 </h4>
-                                <span id="filtroCountLabel" style="font-size: 11px; color: var(--primary); font-weight: 600;">Todos</span>
+                                <span id="filtroCountLabel" style="font-size: 11px; color: var(--primary); font-weight: 700;">Todos</span>
                             </div>
 
                             <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-                                <button id="btnMarcarTodosDepts" style="flex: 1; padding: 4px 6px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); font-size: 11px; cursor: pointer;">Todos</button>
-                                <button id="btnApenasDiretoriaDepts" style="flex: 1; padding: 4px 6px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); font-size: 11px; cursor: pointer;">Diretoria</button>
+                                <button id="btnMarcarTodosDepts" style="flex: 1; padding: 5px 8px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; color: var(--text-main); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Todos</button>
+                                <button id="btnApenasDiretoriaDepts" style="flex: 1; padding: 5px 8px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; color: var(--text-main); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Diretoria</button>
                             </div>
 
-                            <div id="chipsDepartamentosList" class="custom-scrollbar" style="display: flex; flex-direction: column; gap: 6px; max-height: 310px; overflow-y: auto; padding-right: 2px;"></div>
+                            <div id="chipsDepartamentosList" class="custom-scrollbar" style="display: flex; flex-direction: column; gap: 6px; max-height: 330px; overflow-y: auto; padding-right: 2px;"></div>
                         </div>
 
                         <!-- Bloco de Detalhes da Seleção -->
-                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;">
+                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
                             <h4 style="margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 700;">🔍 Detalhes da Seleção</h4>
                             <div id="relacoesInspectorBox" style="font-size: 13px; color: var(--text-muted); min-height: 180px;">
                                 Passe o cursor ou clique sobre qualquer pessoa, cargo ou departamento para fixar o foco e ver histórico.
@@ -84,7 +104,7 @@ window.RelacoesOrganograma = (function() {
                         </div>
 
                         <!-- Bloco de Dica de Navegação -->
-                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px;">
+                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
                             <h4 style="margin: 0 0 6px 0; font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 700;">📌 Dica de Navegação</h4>
                             <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.5;">
                                 • Clique em uma pessoa para <strong>travar o caminho</strong>.<br>
@@ -196,25 +216,25 @@ window.RelacoesOrganograma = (function() {
         });
 
         todosDepts.sort().forEach(d => {
-            const cor = deptColors[d] || '#64748b';
+            const cor = obterCorDepartamento(d);
             const qtd = counts[d] || 0;
             const chip = document.createElement('div');
             chip.setAttribute('data-dept', d);
             const ativo = deptsAtivos.has(d);
             chip.style.cssText = `
-                padding: 6px 10px; font-size: 11px; font-weight: 600; border-radius: 8px;
-                border: 1px solid ${ativo ? 'rgba(255,255,255,0.15)' : 'var(--border)'}; 
-                background: ${ativo ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.25)'};
-                color: ${ativo ? '#fff' : 'var(--text-muted)'}; cursor: pointer; 
+                padding: 6px 10px; font-size: 11.5px; font-weight: 600; border-radius: 8px;
+                border: 1px solid ${ativo ? 'rgba(6, 52, 111, 0.2)' : 'var(--border)'}; 
+                background: ${ativo ? 'rgba(6, 52, 111, 0.05)' : '#ffffff'};
+                color: ${ativo ? 'var(--text-main)' : 'var(--text-muted)'}; cursor: pointer; 
                 display: flex; align-items: center; justify-content: space-between;
-                opacity: ${ativo ? '1' : '0.35'}; user-select: none; transition: all 0.2s;
+                opacity: ${ativo ? '1' : '0.45'}; user-select: none; transition: all 0.15s ease;
             `;
             chip.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="width: 8px; height: 8px; border-radius: 50%; background: ${cor}; flex-shrink: 0;"></span>
-                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px;">${d}</span>
+                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                    <span style="width: 10px; height: 10px; border-radius: 50%; background: ${cor}; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(0,0,0,0.06);"></span>
+                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 185px; color: ${ativo ? 'var(--text-main)' : 'var(--text-muted)'};">${d}</span>
                 </div>
-                <span style="font-size: 10px; padding: 1px 6px; border-radius: 999px; background: rgba(255,255,255,0.08);">${qtd}</span>
+                <span style="font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: ${ativo ? 'rgba(6, 52, 111, 0.08)' : '#f1f5f9'}; color: ${ativo ? 'var(--primary)' : 'var(--text-muted)'};">${qtd}</span>
             `;
             chip.onclick = () => {
                 if (deptsAtivos.has(d)) {
@@ -242,10 +262,19 @@ window.RelacoesOrganograma = (function() {
         for (let chip of chips) {
             const nome = chip.getAttribute('data-dept') || chip.textContent.trim();
             const ativo = deptsAtivos.has(nome);
-            chip.style.opacity = ativo ? '1' : '0.35';
-            chip.style.background = ativo ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.25)';
-            chip.style.color = ativo ? '#fff' : 'var(--text-muted)';
-            chip.style.borderColor = ativo ? 'rgba(255,255,255,0.15)' : 'var(--border)';
+            chip.style.opacity = ativo ? '1' : '0.45';
+            chip.style.background = ativo ? 'rgba(6, 52, 111, 0.05)' : '#ffffff';
+            chip.style.borderColor = ativo ? 'rgba(6, 52, 111, 0.25)' : 'var(--border)';
+            
+            const labelSpan = chip.querySelector('span:nth-child(2)');
+            if (labelSpan) {
+                labelSpan.style.color = ativo ? 'var(--text-main)' : 'var(--text-muted)';
+            }
+            const countBadge = chip.querySelector('span:last-child');
+            if (countBadge) {
+                countBadge.style.background = ativo ? 'rgba(6, 52, 111, 0.08)' : '#f1f5f9';
+                countBadge.style.color = ativo ? 'var(--primary)' : 'var(--text-muted)';
+            }
         }
 
         const countLabel = document.getElementById('filtroCountLabel');
@@ -349,11 +378,11 @@ window.RelacoesOrganograma = (function() {
             const dNome = item.estruturas?.nome || 'Outros';
             const papel = item.perfil || 'Membro';
             const pNome = item.pessoas?.nome_curto || item.pessoas?.nome_completo || 'Sem Nome';
-            const dColor = deptColors[dNome] || '#64748b';
+            const dColor = obterCorDepartamento(dNome);
 
             const deptNode = getNode(dNome, 'Departamento', dColor);
             const roleNode = getNode(`${dNome} - ${papel}`, 'Papel', dColor);
-            const persNode = getNode(pNome, 'Pessoa', '#94a3b8');
+            const persNode = getNode(pNome, 'Pessoa', '#475569');
 
             links.push({
                 source: deptNode.index,
@@ -412,9 +441,9 @@ window.RelacoesOrganograma = (function() {
             .attr("height", d => Math.max(6, d.y1 - d.y0))
             .attr("width", d => d.x1 - d.x0)
             .attr("fill", d => d.color)
-            .attr("fill-opacity", 0.9)
+            .attr("fill-opacity", 0.95)
             .attr("rx", 4)
-            .attr("stroke", "rgba(255,255,255,0.2)")
+            .attr("stroke", "rgba(0, 0, 0, 0.08)")
             .attr("stroke-width", 1);
 
         nodeGroup.append("text")
@@ -431,8 +460,8 @@ window.RelacoesOrganograma = (function() {
 
         function aplicarDestaque(alvo) {
             if (!alvo) {
-                linkGroup.style("stroke-opacity", 0.3);
-                nodeGroup.select("rect").style("stroke", "rgba(255,255,255,0.2)").style("stroke-width", 1);
+                linkGroup.style("stroke-opacity", 0.35);
+                nodeGroup.select("rect").style("stroke", "rgba(0, 0, 0, 0.08)").style("stroke-width", 1);
                 return;
             }
 
@@ -457,8 +486,8 @@ window.RelacoesOrganograma = (function() {
 
             linkGroup.style("stroke-opacity", l => linksConectados.has(l) ? 0.9 : 0.05);
             nodeGroup.select("rect")
-                .style("stroke", n => nosConectados.has(n) ? "#60a5fa" : "rgba(255,255,255,0.1)")
-                .style("stroke-width", n => nosConectados.has(n) ? 2 : 0.5);
+                .style("stroke", n => nosConectados.has(n) ? "#2563eb" : "rgba(0, 0, 0, 0.05)")
+                .style("stroke-width", n => nosConectados.has(n) ? 2.5 : 1);
         }
 
         nodeGroup
@@ -676,23 +705,38 @@ window.RelacoesOrganograma = (function() {
 
         const rels = rawData.filter(v => (v.pessoas?.nome_curto === nome || v.pessoas?.nome_completo === nome || v.estruturas?.nome === nome));
 
-        let html = `<div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">👤 ${nome}</div>`;
-        html += `<div style="font-size: 12px; color: var(--primary); margin-bottom: 10px;">${category} ${extra ? `• <strong>${extra}</strong>` : ''}</div>`;
+        let html = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <div>
+                    <span style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase;">${category}</span>
+                    <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-top: 2px;">${nome}</div>
+                </div>
+                ${extra ? `<span style="font-size: 10.5px; background: rgba(37,99,235,0.1); color: #2563eb; border: 1px solid rgba(37,99,235,0.25); padding: 2px 7px; border-radius: 4px; font-weight: 600;">${extra}</span>` : ''}
+            </div>
+        `;
 
         if (rels.length > 0) {
-            html += `<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">ALOCAÇÕES REGISTRADAS:</div>`;
+            html += `<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${rels.length} Alocação(ões) Registrada(s):</div>`;
+            html += `<div style="display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto;" class="custom-scrollbar">`;
             rels.forEach(r => {
                 const dept = r.estruturas?.nome || 'Geral';
                 const perfil = r.perfil || 'Membro';
+                const cor = obterCorDepartamento(dept);
                 html += `
-                    <div style="margin-bottom: 6px; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 6px;">
-                        <div style="color: var(--text-main); font-size: 12px; font-weight: 600;">🏢 ${dept}</div>
-                        <div style="color: #60a5fa; font-size: 11px;">Papel: ${perfil}</div>
+                    <div style="padding: 8px 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; font-size: 12px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--text-main);">
+                                <span style="width: 7px; height: 7px; border-radius: 50%; background: ${cor}; display: inline-block;"></span>
+                                <span>${dept}</span>
+                            </div>
+                            <span style="font-size: 11px; font-weight: 600; color: #2563eb; background: rgba(37,99,235,0.08); padding: 1px 6px; border-radius: 4px;">${perfil}</span>
+                        </div>
                     </div>
                 `;
             });
+            html += `</div>`;
         } else {
-            html += `<div style="font-size: 12px; color: var(--text-muted);">Estrutura ou departamento institucional.</div>`;
+            html += `<div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">Estrutura ou departamento institucional.</div>`;
         }
 
         box.innerHTML = html;
