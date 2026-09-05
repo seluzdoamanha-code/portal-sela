@@ -72,8 +72,8 @@ window.RelacoesOrganograma = (function() {
                 <!-- Grid Principal: Gráfico com Altura Ampliada + Coluna Lateral Direita com Filtros -->
                 <div style="display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start;">
                     <!-- Canvas do Gráfico -->
-                    <div id="canvasRelacoesArea" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; min-height: 800px; height: 800px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-                        <div style="color: var(--text-muted); font-size: 13px;">Carregando visualização institucional...</div>
+                    <div id="canvasRelacoesArea" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; min-height: 800px; height: 800px; position: relative; overflow: hidden; display: flex; align-items: flex-start; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                        <div style="color: var(--text-muted); font-size: 13px; margin: auto;">Carregando visualização institucional...</div>
                     </div>
 
                     <!-- Inspetor e Filtro Lateral Direito -->
