@@ -333,6 +333,8 @@ window.RelacoesOrganograma = (function() {
     // ===============================================
     function renderSankey(canvas) {
         canvas.innerHTML = '';
+        canvas.style.alignItems = 'center';
+        canvas.style.justifyContent = 'center';
         const width = canvas.clientWidth || 860;
         const height = 800; // Ampliado para 800px aproveitando o espaço do filtro lateral
 
@@ -536,8 +538,12 @@ window.RelacoesOrganograma = (function() {
     // ===============================================
     function renderCards(canvas) {
         canvas.innerHTML = '';
+        canvas.style.alignItems = 'flex-start';
+        canvas.style.justifyContent = 'flex-start';
+
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; max-height: 600px; overflow-y: auto; width: 100%; box-sizing: border-box;';
+        wrapper.className = 'custom-scrollbar';
+        wrapper.style.cssText = 'padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; max-height: 800px; height: 100%; overflow-y: auto; width: 100%; box-sizing: border-box; align-content: start;';
 
         const depts = {};
         rawData.forEach(v => {
@@ -557,26 +563,30 @@ window.RelacoesOrganograma = (function() {
             });
         });
 
-        Object.keys(depts).forEach(dNome => {
+        Object.keys(depts).sort().forEach(dNome => {
             const card = document.createElement('div');
-            card.style.cssText = 'background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px;';
+            const cor = obterCorDepartamento(dNome);
+            card.style.cssText = 'background: #ffffff; border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); height: fit-content;';
 
             let membersHtml = depts[dNome].map(m => {
                 const isLeader = m.papel.includes('Diretor') || m.papel.includes('Presidente') || m.papel.includes('Coordenador');
                 return `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; background: ${isLeader ? 'rgba(59,130,246,0.1)' : 'rgba(255,255,255,0.02)'}; border-radius: 6px; border: 1px solid ${isLeader ? 'rgba(59,130,246,0.3)' : 'var(--border)'};">
-                        <span style="font-size: 12px; font-weight: ${isLeader ? '600' : '400'}; color: var(--text-main);">${m.nome}</span>
-                        <span style="font-size: 11px; color: ${isLeader ? '#60a5fa' : 'var(--text-muted)'};">${m.papel}</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: ${isLeader ? 'rgba(37,99,235,0.06)' : '#f8fafc'}; border-radius: 6px; border: 1px solid ${isLeader ? 'rgba(37,99,235,0.2)' : 'var(--border)'};">
+                        <span style="font-size: 12px; font-weight: ${isLeader ? '700' : '500'}; color: var(--text-main);">${m.nome}</span>
+                        <span style="font-size: 11px; font-weight: 600; color: ${isLeader ? '#2563eb' : 'var(--text-muted)'};">${m.papel}</span>
                     </div>
                 `;
             }).join('');
 
             card.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
-                    <h5 style="margin: 0; font-size: 13px; font-weight: 700; color: #60a5fa;">🏢 ${dNome}</h5>
-                    <span style="font-size: 11px; background: rgba(255,255,255,0.05); padding: 1px 6px; border-radius: 999px; color: var(--text-muted);">${depts[dNome].length}</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background: ${cor}; display: inline-block;"></span>
+                        <h5 style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-main);">${dNome}</h5>
+                    </div>
+                    <span style="font-size: 11px; font-weight: 700; background: #f1f5f9; padding: 2px 8px; border-radius: 999px; color: var(--primary);">${depts[dNome].length}</span>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; flex-direction: column; gap: 5px; max-height: 280px; overflow-y: auto;" class="custom-scrollbar">
                     ${membersHtml}
                 </div>
             `;
@@ -584,7 +594,9 @@ window.RelacoesOrganograma = (function() {
         });
 
         if (wrapper.children.length === 0) {
-            canvas.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center;">Nenhum membro encontrado.</div>';
+            canvas.style.alignItems = 'center';
+            canvas.style.justifyContent = 'center';
+            canvas.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center;">Nenhum membro encontrado para o filtro selecionado.</div>';
         } else {
             canvas.appendChild(wrapper);
         }
@@ -595,8 +607,10 @@ window.RelacoesOrganograma = (function() {
     // ===============================================
     function renderRadial(canvas) {
         canvas.innerHTML = '';
+        canvas.style.alignItems = 'center';
+        canvas.style.justifyContent = 'center';
         const width = canvas.clientWidth || 800;
-        const height = 620;
+        const height = 800;
         const radius = Math.min(width, height) / 2 - 110;
 
         const svg = d3.select(canvas).append("svg")
