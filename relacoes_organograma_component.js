@@ -237,9 +237,9 @@ window.RelacoesOrganograma = (function() {
             chip.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
                     <span style="width: 10px; height: 10px; border-radius: 50%; background: ${cor}; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(0,0,0,0.06);"></span>
-                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 185px; color: ${ativo ? 'var(--text-main)' : 'var(--text-muted)'};">${d}</span>
+                    <span class="dept-name-label" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 185px; color: ${ativo ? 'var(--text-main)' : 'var(--text-muted)'};">${d}</span>
                 </div>
-                <span style="font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: ${ativo ? 'rgba(6, 52, 111, 0.08)' : '#f1f5f9'}; color: ${ativo ? 'var(--primary)' : 'var(--text-muted)'};">${qtd}</span>
+                <span class="dept-count-badge" style="font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: ${ativo ? 'rgba(6, 52, 111, 0.08)' : '#f1f5f9'}; color: ${ativo ? 'var(--primary)' : 'var(--text-muted)'};">${qtd}</span>
             `;
             chip.onclick = () => {
                 if (deptsAtivos.has(d)) {
@@ -274,7 +274,7 @@ window.RelacoesOrganograma = (function() {
 
         const chips = container.children;
         for (let chip of chips) {
-            const nome = chip.getAttribute('data-dept') || chip.textContent.trim();
+            const nome = chip.getAttribute('data-dept') || '';
             const ativo = deptsAtivos.has(nome);
             const qtd = counts[nome] || 0;
 
@@ -282,11 +282,11 @@ window.RelacoesOrganograma = (function() {
             chip.style.background = ativo ? 'rgba(6, 52, 111, 0.05)' : '#ffffff';
             chip.style.borderColor = ativo ? 'rgba(6, 52, 111, 0.25)' : 'var(--border)';
             
-            const labelSpan = chip.querySelector('span:nth-child(2)');
+            const labelSpan = chip.querySelector('.dept-name-label');
             if (labelSpan) {
                 labelSpan.style.color = ativo ? 'var(--text-main)' : 'var(--text-muted)';
             }
-            const countBadge = chip.querySelector('span:last-child');
+            const countBadge = chip.querySelector('.dept-count-badge');
             if (countBadge) {
                 countBadge.textContent = qtd;
                 countBadge.style.background = ativo ? (qtd > 0 ? 'rgba(6, 52, 111, 0.08)' : '#f1f5f9') : '#f1f5f9';

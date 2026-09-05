@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Componente Relações & Organograma - SELA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+    <style>
+        :root {
+            --primary: #06346f;
+            --primary-hover: #0a4b9c;
+            --bg-body: #f8fafc;
+            --bg-panel: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            padding: 24px;
+        }
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .btn {
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .link-sankey:hover { stroke-opacity: 0.85 !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="containerRelacoes"></div>
+    </div>
+
+    <!-- Script do Componente -->
+    <script src="relacoes_organograma_component.js"></script>
+    <script>
+        // Mock de client Supabase usando mockup_dados_reais.json
+        const mockSupabase = {
+            from: function(table) {
+                return {
+                    select: async function() {
+                        try {
+                            const res = await fetch('mockup_dados_reais.json');
+                            const data = await res.json();
+                            return { data, error: null };
+                        } catch (err) {
+                            return { data: null, error: err };
+                        }
+                    }
+                };
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.RelacoesOrganograma) {
+                window.RelacoesOrganograma.init('containerRelacoes', mockSupabase);
+            }
+        });
+    </script>
+</body>
+</html>
