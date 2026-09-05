@@ -24,15 +24,15 @@ window.RelacoesOrganograma = (function() {
         if (!containerEl) return;
 
         containerEl.innerHTML = `
-            <div class="rel-organograma-wrapper" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
-                <!-- Barra Superior de Controle e Modos -->
-                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div class="rel-organograma-wrapper" style="display: flex; flex-direction: column; gap: 14px; width: 100%;">
+                <!-- Barra Superior de Controle e Modos (compacta sem a faixa horizontal) -->
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <div>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <h3 style="margin: 0; font-size: 16px; color: var(--text-main); font-weight: 700;">🏛️ Relações & Organograma Institucional</h3>
                             <span id="badgeFiltroRelacoes" style="display: none; font-size: 11px; padding: 2px 8px; border-radius: 6px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);"></span>
                         </div>
-                        <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-muted);">Mapeamento visual de membros, cargos e conexões entre departamentos da Casa.</p>
+                        <p style="margin: 2px 0 0 0; font-size: 12px; color: var(--text-muted);">Mapeamento visual de membros, cargos e conexões entre departamentos da Casa.</p>
                     </div>
 
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -49,34 +49,47 @@ window.RelacoesOrganograma = (function() {
                     </div>
                 </div>
 
-                <!-- Barra de Chips de Departamentos -->
-                <div style="background: rgba(0,0,0,0.15); border: 1px solid var(--border); border-radius: 10px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; overflow-x: auto;" class="custom-scrollbar">
-                    <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Filtrar Departamento:</span>
-                    <div id="chipsDepartamentosList" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
-                </div>
-
-                <!-- Grid Principal: Gráfico + Painel Lateral -->
-                <div style="display: grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start;">
+                <!-- Grid Principal: Gráfico com Altura Ampliada + Coluna Lateral Direita com Filtros -->
+                <div style="display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start;">
                     <!-- Canvas do Gráfico -->
-                    <div id="canvasRelacoesArea" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; min-height: 620px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                    <div id="canvasRelacoesArea" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; min-height: 800px; height: 800px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                         <div style="color: var(--text-muted); font-size: 13px;">Carregando visualização institucional...</div>
                     </div>
 
-                    <!-- Inspetor Lateral -->
+                    <!-- Inspetor e Filtro Lateral Direito -->
                     <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
-                            <h4 style="margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">🔍 Detalhes da Seleção</h4>
+                        <!-- Bloco de Filtro de Departamentos Lateral -->
+                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <h4 style="margin: 0; font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 700;">
+                                    🏢 Filtrar Departamentos
+                                </h4>
+                                <span id="filtroCountLabel" style="font-size: 11px; color: var(--primary); font-weight: 600;">Todos</span>
+                            </div>
+
+                            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                                <button id="btnMarcarTodosDepts" style="flex: 1; padding: 4px 6px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); font-size: 11px; cursor: pointer;">Todos</button>
+                                <button id="btnApenasDiretoriaDepts" style="flex: 1; padding: 4px 6px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); font-size: 11px; cursor: pointer;">Diretoria</button>
+                            </div>
+
+                            <div id="chipsDepartamentosList" class="custom-scrollbar" style="display: flex; flex-direction: column; gap: 6px; max-height: 310px; overflow-y: auto; padding-right: 2px;"></div>
+                        </div>
+
+                        <!-- Bloco de Detalhes da Seleção -->
+                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;">
+                            <h4 style="margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 700;">🔍 Detalhes da Seleção</h4>
                             <div id="relacoesInspectorBox" style="font-size: 13px; color: var(--text-muted); min-height: 180px;">
                                 Passe o cursor ou clique sobre qualquer pessoa, cargo ou departamento para fixar o foco e ver histórico.
                             </div>
                         </div>
 
-                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
-                            <h4 style="margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">📌 Dica de Navegação</h4>
-                            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+                        <!-- Bloco de Dica de Navegação -->
+                        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px;">
+                            <h4 style="margin: 0 0 6px 0; font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 700;">📌 Dica de Navegação</h4>
+                            <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.5;">
                                 • Clique em uma pessoa para <strong>travar o caminho</strong>.<br>
                                 • Clique fora para <strong>destravar</strong>.<br>
-                                • Clique nos botões de departamento acima para ocultar/exibir.
+                                • Clique nos departamentos acima para filtrar a visão.
                             </div>
                         </div>
                     </div>
@@ -102,6 +115,26 @@ window.RelacoesOrganograma = (function() {
             atualizarChipsUI();
             renderAtual();
         });
+
+        const btnMarcarTodos = document.getElementById('btnMarcarTodosDepts');
+        if (btnMarcarTodos) {
+            btnMarcarTodos.onclick = () => {
+                rawData.forEach(v => deptsAtivos.add(v.estruturas?.nome || 'Geral'));
+                atualizarChipsUI();
+                renderAtual();
+            };
+        }
+
+        const btnApenasDiretoria = document.getElementById('btnApenasDiretoriaDepts');
+        if (btnApenasDiretoria) {
+            btnApenasDiretoria.onclick = () => {
+                deptsAtivos.clear();
+                deptsAtivos.add('Diretoria');
+                deptsAtivos.add('Comunicação');
+                atualizarChipsUI();
+                renderAtual();
+            };
+        }
 
         document.getElementById('btnModoSankey').onclick = () => alternarModo('sankey');
         document.getElementById('btnModoCards').onclick = () => alternarModo('cards');
@@ -155,16 +188,34 @@ window.RelacoesOrganograma = (function() {
         if (!container) return;
         container.innerHTML = '';
 
+        // Contar quantos membros por departamento
+        const counts = {};
+        rawData.forEach(r => {
+            const d = r.estruturas?.nome || 'Geral';
+            counts[d] = (counts[d] || 0) + 1;
+        });
+
         todosDepts.sort().forEach(d => {
             const cor = deptColors[d] || '#64748b';
+            const qtd = counts[d] || 0;
             const chip = document.createElement('div');
+            chip.setAttribute('data-dept', d);
+            const ativo = deptsAtivos.has(d);
             chip.style.cssText = `
-                padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 999px;
-                border: 1px solid var(--border); background: ${deptsAtivos.has(d) ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.2)'};
-                color: ${deptsAtivos.has(d) ? '#fff' : 'var(--text-muted)'}; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
-                opacity: ${deptsAtivos.has(d) ? '1' : '0.4'}; user-select: none; transition: all 0.2s;
+                padding: 6px 10px; font-size: 11px; font-weight: 600; border-radius: 8px;
+                border: 1px solid ${ativo ? 'rgba(255,255,255,0.15)' : 'var(--border)'}; 
+                background: ${ativo ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.25)'};
+                color: ${ativo ? '#fff' : 'var(--text-muted)'}; cursor: pointer; 
+                display: flex; align-items: center; justify-content: space-between;
+                opacity: ${ativo ? '1' : '0.35'}; user-select: none; transition: all 0.2s;
             `;
-            chip.innerHTML = `<span style="width: 8px; height: 8px; border-radius: 50%; background: ${cor}; display: inline-block;"></span><span>${d}</span>`;
+            chip.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: ${cor}; flex-shrink: 0;"></span>
+                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px;">${d}</span>
+                </div>
+                <span style="font-size: 10px; padding: 1px 6px; border-radius: 999px; background: rgba(255,255,255,0.08);">${qtd}</span>
+            `;
             chip.onclick = () => {
                 if (deptsAtivos.has(d)) {
                     if (deptsAtivos.size === 1) {
@@ -180,6 +231,8 @@ window.RelacoesOrganograma = (function() {
             };
             container.appendChild(chip);
         });
+
+        atualizarChipsUI();
     }
 
     function atualizarChipsUI() {
@@ -187,18 +240,24 @@ window.RelacoesOrganograma = (function() {
         if (!container) return;
         const chips = container.children;
         for (let chip of chips) {
-            const nome = chip.textContent.trim();
+            const nome = chip.getAttribute('data-dept') || chip.textContent.trim();
             const ativo = deptsAtivos.has(nome);
-            chip.style.opacity = ativo ? '1' : '0.4';
-            chip.style.background = ativo ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.2)';
+            chip.style.opacity = ativo ? '1' : '0.35';
+            chip.style.background = ativo ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.25)';
             chip.style.color = ativo ? '#fff' : 'var(--text-muted)';
+            chip.style.borderColor = ativo ? 'rgba(255,255,255,0.15)' : 'var(--border)';
+        }
+
+        const countLabel = document.getElementById('filtroCountLabel');
+        if (countLabel) {
+            countLabel.textContent = `${deptsAtivos.size} de ${chips.length}`;
         }
 
         const badge = document.getElementById('badgeFiltroRelacoes');
         if (badge) {
-            if (deptsAtivos.size < Object.keys(deptColors).length) {
+            if (deptsAtivos.size < chips.length) {
                 badge.style.display = 'inline-block';
-                badge.textContent = `Filtro: ${deptsAtivos.size} depts ativos`;
+                badge.textContent = `Filtro: ${deptsAtivos.size} ativos`;
             } else {
                 badge.style.display = 'none';
             }
@@ -245,8 +304,8 @@ window.RelacoesOrganograma = (function() {
     // ===============================================
     function renderSankey(canvas) {
         canvas.innerHTML = '';
-        const width = canvas.clientWidth || 800;
-        const height = 620;
+        const width = canvas.clientWidth || 860;
+        const height = 800; // Ampliado para 800px aproveitando o espaço do filtro lateral
 
         const filtrados = rawData.filter(item => {
             const dNome = item.estruturas?.nome || 'Geral';
@@ -325,8 +384,8 @@ window.RelacoesOrganograma = (function() {
 
         const sankey = d3.sankey()
             .nodeWidth(16)
-            .nodePadding(12)
-            .extent([[24, 20], [width - 160, height - 20]]);
+            .nodePadding(14)
+            .extent([[18, 20], [width - 110, height - 20]]);
 
         const { nodes: graphNodes, links: graphLinks } = sankey(sankeyData);
 

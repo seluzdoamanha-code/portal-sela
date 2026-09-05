@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulação: Relações & Organograma (Filtro à Direita + Mais Altura)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- D3.js v7 + Sankey -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #090d16;
+            --bg-panel: rgba(18, 24, 38, 0.85);
+            --bg-card: rgba(18, 24, 38, 0.75);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(59, 130, 246, 0.4);
+            --primary: #3b82f6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: radial-gradient(circle at 50% 0%, #172554 0%, #090d16 70%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 16px 24px;
+        }
+
+        .btn {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* Banner de Simulação comparativa */
+        .simulacao-banner {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 10px 18px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .chip-dept {
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+            transition: all 0.2s;
+        }
+        .chip-dept:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(2px);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Banner Explicativo da Simulação -->
+    <div class="simulacao-banner">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 18px;">✨</span>
+            <div>
+                <strong>SIMULAÇÃO DE LAYOUT:</strong>
+                <span style="color: var(--text-muted);">
+                    Filtro de Departamentos transferido para o <strong>lado direito</strong> + Altura ampliada de <strong>620px para 800px</strong> (+30% vertical) + Colunas aproximadas horizontalmente.
+                </span>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <span style="padding: 4px 10px; background: rgba(16, 185, 129, 0.2); color: #34d399; border-radius: 6px; font-weight: 700; font-size: 11px;">
+                +180px de Altura Útil
+            </span>
+        </div>
+    </div>
+
+    <!-- Componente com Layout Otimizado -->
+    <div class="rel-organograma-wrapper" style="display: flex; flex-direction: column; gap: 14px; width: 100%;">
+        
+        <!-- Barra Superior Compacta (Sem a barra horizontal de departamentos abaixo) -->
+        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h3 style="margin: 0; font-size: 16px; color: var(--text-main); font-weight: 700;">🏛️ Relações & Organograma Institucional</h3>
+                    <span id="badgeFiltroRelacoes" style="display: none; font-size: 11px; padding: 2px 8px; border-radius: 6px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);"></span>
+                </div>
+                <p style="margin: 2px 0 0 0; font-size: 12px; color: var(--text-muted);">Mapeamento visual de membros, cargos e conexões entre departamentos da Casa.</p>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <input type="text" id="buscaRelacoes" placeholder="🔎 Buscar pessoa ou cargo..." 
+                    style="background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; color: var(--text-main); font-size: 12px; outline: none; width: 190px;">
+                
+                <div style="display: flex; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; padding: 2px; gap: 2px;">
+                    <button id="btnModoSankey" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: var(--primary); color: #fff;">🌊 Fluxo (Sankey)</button>
+                    <button id="btnModoCards" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: transparent; color: var(--text-muted);">📊 Departamentos</button>
+                    <button id="btnModoRadial" class="btn" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: transparent; color: var(--text-muted);">🕸️ Radial</button>
+                </div>
+
+                <button id="btnResetRelacoes" class="btn" style="background: rgba(255,255,255,0.06); color: var(--text-main); padding: 6px 12px; font-size: 12px;">↺ Ver Todos</button>
+            </div>
+        </div>
+
+        <!-- Grid Principal: Gráfico (com maior altura e colunas mais próximas) + Painel Lateral com Filtro -->
+        <div style="display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start;">
+            
+            <!-- Canvas do Gráfico com 800px de altura (ganho expressivo de espaço vertical!) -->
+            <div id="canvasRelacoesArea" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; min-height: 800px; height: 800px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                <div style="color: var(--text-muted); font-size: 13px;">Carregando visualização...</div>
+            </div>
+
+            <!-- Coluna Lateral Direita: Filtro de Departamentos + Inspetor + Dica -->
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                
+                <!-- 1. BLOCO DE FILTRO LATERAL DOS DEPARTAMENTOS -->
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="margin: 0; font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 700;">
+                            🏢 Filtrar Departamentos
+                        </h4>
+                        <span id="filtroCountLabel" style="font-size: 11px; color: var(--primary); font-weight: 600;">Todos (12)</span>
+                    </div>
+
+                    <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                        <button id="btnMarcarTodos" style="flex: 1; padding: 4px 6px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); font-size: 11px; cursor: pointer;">Marcar todos</button>
+                        <button id="btnLimparFiltros" style="flex: 1; padding: 4px 6px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); font-size: 11px; cursor: pointer;">Apenas Diretorias</button>
+                    </div>
+
+                    <!-- Lista Vertical compacta com scroll suave se necessário -->
+                    <div id="chipsDepartamentosList" class="custom-scrollbar" style="display: flex; flex-direction: column; gap: 6px; max-height: 310px; overflow-y: auto; padding-right: 2px;">
+                        <!-- Injetado via JS -->
+                    </div>
+                </div>
+
+                <!-- 2. DETALHES DA SELEÇÃO -->
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 700;">🔍 Detalhes da Seleção</h4>
+                    <div id="relacoesInspectorBox" style="font-size: 13px; color: var(--text-muted); min-height: 180px;">
+                        Passe o cursor ou clique sobre qualquer pessoa, cargo ou departamento para fixar o foco e ver histórico.
+                    </div>
+                </div>
+
+                <!-- 3. DICA DE NAVEGAÇÃO -->
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px;">
+                    <h4 style="margin: 0 0 6px 0; font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 700;">📌 Dica de Navegação</h4>
+                    <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.5;">
+                        • Clique em uma pessoa para <strong>travar o caminho</strong>.<br>
+                        • Clique fora para <strong>destravar</strong>.<br>
+                        • Clique nos departamentos acima para filtrar a visão.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Simulação com Dados Reais -->
+    <script>
+        const deptColors = {
+            'Diretoria': '#f59e0b',
+            'Comunicação': '#3b82f6',
+            'Financeiro': '#10b981',
+            'Tesouraria': '#059669',
+            'Secretaria': '#6366f1',
+            'Eventos': '#06b6d4',
+            'Estudo Joanna de Ângelis': '#8b5cf6',
+            'Estudo Livro dos Espíritos': '#6366f1',
+            'Estudo Medinúnico': '#475569',
+            'Evangelho no Lar': '#64748b',
+            'Biblioteca': '#64748b',
+            'Atendimentos Espirituais': '#8b5cf6',
+            'Assistência Social': '#10b981',
+            'Espiritual': '#8b5cf6',
+            'Infância e Juventude': '#ec4899',
+            'Doutrinário': '#a855f7'
+        };
+
+        let rawData = [];
+        let deptsAtivos = new Set();
+        let termoBusca = '';
+        let currentMode = 'sankey';
+        let noTravado = null;
+
+        async function initSimulacao() {
+            try {
+                const res = await fetch('mockup_dados_reais.json');
+                rawData = await res.json();
+
+                // Identifica departamentos e frequencias
+                const todosDepts = new Set();
+                rawData.forEach(v => {
+                    const dNome = v.estruturas?.nome || 'Geral';
+                    todosDepts.add(dNome);
+                    deptsAtivos.add(dNome);
+                });
+
+                renderizarFiltrosVerticais(Array.from(todosDepts));
+                renderAtual();
+                setupEventos();
+            } catch (err) {
+                console.error("Erro ao carregar dados:", err);
+                document.getElementById('canvasRelacoesArea').innerHTML = '<div style="color: #ef4444; padding: 20px;">Erro ao carregar dados locais.</div>';
+            }
+        }
+
+        function renderizarFiltrosVerticais(todosDepts) {
+            const container = document.getElementById('chipsDepartamentosList');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // Contar quantos membros por departamento
+            const counts = {};
+            rawData.forEach(r => {
+                const d = r.estruturas?.nome || 'Geral';
+                counts[d] = (counts[d] || 0) + 1;
+            });
+
+            todosDepts.sort().forEach(d => {
+                const cor = deptColors[d] || '#64748b';
+                const qtd = counts[d] || 0;
+                const chip = document.createElement('div');
+                chip.className = 'chip-dept';
+                chip.setAttribute('data-dept', d);
+
+                const ativo = deptsAtivos.has(d);
+                chip.style.background = ativo ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.25)';
+                chip.style.color = ativo ? '#fff' : 'var(--text-muted)';
+                chip.style.opacity = ativo ? '1' : '0.4';
+
+                chip.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background: ${cor}; flex-shrink: 0;"></span>
+                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px;">${d}</span>
+                    </div>
+                    <span style="font-size: 10px; padding: 1px 6px; border-radius: 999px; background: rgba(255,255,255,0.08);">${qtd}</span>
+                `;
+
+                chip.onclick = () => {
+                    if (deptsAtivos.has(d)) {
+                        if (deptsAtivos.size === 1) {
+                            rawData.forEach(v => deptsAtivos.add(v.estruturas?.nome || 'Geral'));
+                        } else {
+                            deptsAtivos.delete(d);
+                        }
+                    } else {
+                        deptsAtivos.add(d);
+                    }
+                    atualizarFiltrosUI();
+                    renderAtual();
+                };
+
+                container.appendChild(chip);
+            });
+
+            atualizarFiltrosUI();
+        }
+
+        function atualizarFiltrosUI() {
+            const container = document.getElementById('chipsDepartamentosList');
+            if (!container) return;
+
+            const chips = container.children;
+            for (let chip of chips) {
+                const nome = chip.getAttribute('data-dept');
+                const ativo = deptsAtivos.has(nome);
+                chip.style.opacity = ativo ? '1' : '0.35';
+                chip.style.background = ativo ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.25)';
+                chip.style.color = ativo ? '#fff' : 'var(--text-muted)';
+                chip.style.borderColor = ativo ? 'rgba(255,255,255,0.15)' : 'var(--border)';
+            }
+
+            const totalDepts = Object.keys(deptColors).length;
+            const countLabel = document.getElementById('filtroCountLabel');
+            if (countLabel) {
+                countLabel.textContent = `${deptsAtivos.size} de ${container.children.length}`;
+            }
+
+            const badge = document.getElementById('badgeFiltroRelacoes');
+            if (badge) {
+                if (deptsAtivos.size < container.children.length) {
+                    badge.style.display = 'inline-block';
+                    badge.textContent = `Filtro: ${deptsAtivos.size} ativos`;
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        function setupEventos() {
+            document.getElementById('buscaRelacoes').addEventListener('input', (e) => {
+                termoBusca = e.target.value.trim().toLowerCase();
+                renderAtual();
+            });
+
+            document.getElementById('btnResetRelacoes').addEventListener('click', () => {
+                deptsAtivos.clear();
+                rawData.forEach(v => deptsAtivos.add(v.estruturas?.nome || 'Geral'));
+                termoBusca = '';
+                noTravado = null;
+                document.getElementById('buscaRelacoes').value = '';
+                atualizarFiltrosUI();
+                renderAtual();
+            });
+
+            document.getElementById('btnMarcarTodos').addEventListener('click', () => {
+                rawData.forEach(v => deptsAtivos.add(v.estruturas?.nome || 'Geral'));
+                atualizarFiltrosUI();
+                renderAtual();
+            });
+
+            document.getElementById('btnLimparFiltros').addEventListener('click', () => {
+                deptsAtivos.clear();
+                deptsAtivos.add('Diretoria');
+                deptsAtivos.add('Comunicação');
+                atualizarFiltrosUI();
+                renderAtual();
+            });
+
+            document.getElementById('btnModoSankey').onclick = () => alternarModo('sankey');
+            document.getElementById('btnModoCards').onclick = () => alternarModo('cards');
+            document.getElementById('btnModoRadial').onclick = () => alternarModo('radial');
+        }
+
+        function alternarModo(modo) {
+            currentMode = modo;
+            document.getElementById('btnModoSankey').style.background = modo === 'sankey' ? 'var(--primary)' : 'transparent';
+            document.getElementById('btnModoSankey').style.color = modo === 'sankey' ? '#fff' : 'var(--text-muted)';
+            document.getElementById('btnModoCards').style.background = modo === 'cards' ? 'var(--primary)' : 'transparent';
+            document.getElementById('btnModoCards').style.color = modo === 'cards' ? '#fff' : 'var(--text-muted)';
+            document.getElementById('btnModoRadial').style.background = modo === 'radial' ? 'var(--primary)' : 'transparent';
+            document.getElementById('btnModoRadial').style.color = modo === 'radial' ? '#fff' : 'var(--text-muted)';
+            renderAtual();
+        }
+
+        function renderAtual() {
+            const canvas = document.getElementById('canvasRelacoesArea');
+            if (!canvas) return;
+
+            if (currentMode === 'sankey') {
+                renderSankey(canvas);
+            } else if (currentMode === 'cards') {
+                renderCards(canvas);
+            } else if (currentMode === 'radial') {
+                renderRadial(canvas);
+            }
+        }
+
+        // ===============================================
+        // RENDERIZADOR SANKEY OTIMIZADO (ALTURA 800px + COLUNAS MAIS PRÓXIMAS)
+        // ===============================================
+        function renderSankey(canvas) {
+            canvas.innerHTML = '';
+            const width = canvas.clientWidth || 860;
+            const height = 800; // Aumento de 620px para 800px!
+
+            const filtrados = rawData.filter(item => {
+                const dNome = item.estruturas?.nome || 'Geral';
+                if (!deptsAtivos.has(dNome)) return false;
+
+                if (termoBusca) {
+                    const pNome = (item.pessoas?.nome_curto || item.pessoas?.nome_completo || '').toLowerCase();
+                    const dNomeLow = dNome.toLowerCase();
+                    const papelLow = (item.perfil || '').toLowerCase();
+                    return pNome.includes(termoBusca) || dNomeLow.includes(termoBusca) || papelLow.includes(termoBusca);
+                }
+                return true;
+            });
+
+            if (filtrados.length === 0) {
+                canvas.innerHTML = '<div style="color: var(--text-muted); padding: 40px; text-align: center;">Nenhum registro encontrado para este filtro.</div>';
+                return;
+            }
+
+            const svg = d3.select(canvas).append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewBox", [0, 0, width, height]);
+
+            const nodes = [];
+            const links = [];
+            const nodeMap = new Map();
+
+            function getNode(name, category, color) {
+                const key = `${category}:${name}`;
+                if (!nodeMap.has(key)) {
+                    const idx = nodes.length;
+                    const obj = { id: key, name, category, color, index: idx };
+                    nodes.push(obj);
+                    nodeMap.set(key, obj);
+                }
+                return nodeMap.get(key);
+            }
+
+            filtrados.forEach(item => {
+                const dNome = item.estruturas?.nome || 'Outros';
+                const papel = item.perfil || 'Membro';
+                const pNome = item.pessoas?.nome_curto || item.pessoas?.nome_completo || 'Sem Nome';
+                const dColor = deptColors[dNome] || '#64748b';
+
+                const deptNode = getNode(dNome, 'Departamento', dColor);
+                const roleNode = getNode(`${dNome} - ${papel}`, 'Papel', dColor);
+                const persNode = getNode(pNome, 'Pessoa', '#94a3b8');
+
+                links.push({
+                    source: deptNode.index,
+                    target: roleNode.index,
+                    value: 1,
+                    color: dColor
+                });
+
+                links.push({
+                    source: roleNode.index,
+                    target: persNode.index,
+                    value: 1,
+                    color: dColor
+                });
+            });
+
+            const linkAggr = new Map();
+            links.forEach(l => {
+                const key = `${l.source}->${l.target}`;
+                if (!linkAggr.has(key)) linkAggr.set(key, { ...l, value: 0 });
+                linkAggr.get(key).value += 1;
+            });
+
+            const sankeyData = {
+                nodes: nodes.map(d => Object.assign({}, d)),
+                links: Array.from(linkAggr.values())
+            };
+
+            /*
+               AQUI APROXIMAMOS AS COLUNAS HORIZONTALMENTE:
+               - Margem esquerda reduzida para 18px
+               - Margem direita reduzida: width - 110px (ao invés de width - 160px)
+               - nodePadding aumentado para 16px (mais respiro vertical por termos 800px)
+            */
+            const sankey = d3.sankey()
+                .nodeWidth(16)
+                .nodePadding(14)
+                .extent([[18, 20], [width - 110, height - 20]]);
+
+            const { nodes: graphNodes, links: graphLinks } = sankey(sankeyData);
+
+            const linkGroup = svg.append("g")
+                .attr("fill", "none")
+                .selectAll("path")
+                .data(graphLinks)
+                .join("path")
+                .attr("d", d3.sankeyLinkHorizontal())
+                .attr("stroke", d => d.color || "var(--primary)")
+                .attr("stroke-opacity", 0.35)
+                .attr("stroke-width", d => Math.max(2, d.width))
+                .style("cursor", "pointer")
+                .style("transition", "stroke-opacity 0.15s ease");
+
+            const nodeGroup = svg.append("g")
+                .selectAll("g")
+                .data(graphNodes)
+                .join("g")
+                .attr("transform", d => `translate(${d.x0},${d.y0})`)
+                .style("cursor", "pointer");
+
+            nodeGroup.append("rect")
+                .attr("height", d => Math.max(6, d.y1 - d.y0))
+                .attr("width", d => d.x1 - d.x0)
+                .attr("fill", d => d.color)
+                .attr("fill-opacity", 0.9)
+                .attr("rx", 4)
+                .attr("stroke", "rgba(255,255,255,0.2)")
+                .attr("stroke-width", 1);
+
+            nodeGroup.append("text")
+                .attr("x", d => d.x0 < width / 2 ? (d.x1 - d.x0) + 8 : -8)
+                .attr("y", d => (d.y1 - d.y0) / 2)
+                .attr("dy", "0.35em")
+                .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
+                .text(d => d.name.replace(/^[^-]+ - /, ''))
+                .style("fill", "var(--text-main)")
+                .style("font-size", "11px")
+                .style("font-weight", "600")
+                .style("pointer-events", "none")
+                .style("user-select", "none");
+
+            function aplicarDestaque(alvo) {
+                if (!alvo) {
+                    linkGroup.style("stroke-opacity", 0.35);
+                    nodeGroup.select("rect").style("stroke", "rgba(255,255,255,0.2)").style("stroke-width", 1);
+                    return;
+                }
+
+                const linksConectados = new Set();
+                const nosConectados = new Set([alvo]);
+
+                graphLinks.forEach(l => {
+                    if (l.source === alvo || l.target === alvo) {
+                        linksConectados.add(l);
+                        nosConectados.add(l.source);
+                        nosConectados.add(l.target);
+                    }
+                });
+
+                graphLinks.forEach(l => {
+                    if (nosConectados.has(l.source) || nosConectados.has(l.target)) {
+                        linksConectados.add(l);
+                        nosConectados.add(l.source);
+                        nosConectados.add(l.target);
+                    }
+                });
+
+                linkGroup.style("stroke-opacity", l => linksConectados.has(l) ? 0.95 : 0.05);
+                nodeGroup.select("rect")
+                    .style("stroke", n => nosConectados.has(n) ? "#60a5fa" : "rgba(255,255,255,0.1)")
+                    .style("stroke-width", n => nosConectados.has(n) ? 2 : 0.5);
+            }
+
+            nodeGroup
+                .on("mouseenter", (event, d) => {
+                    if (!noTravado) {
+                        aplicarDestaque(d);
+                        atualizarInspector(d.name, d.category);
+                    }
+                })
+                .on("mouseleave", () => {
+                    if (!noTravado) aplicarDestaque(null);
+                })
+                .on("click", (event, d) => {
+                    event.stopPropagation();
+                    if (noTravado === d) {
+                        noTravado = null;
+                        aplicarDestaque(null);
+                        atualizarInspector(d.name, d.category);
+                    } else {
+                        noTravado = d;
+                        aplicarDestaque(d);
+                        atualizarInspector(d.name, d.category, '🔒 Foco Travado');
+                    }
+                });
+
+            linkGroup
+                .on("mouseenter", (event, l) => {
+                    if (!noTravado) {
+                        linkGroup.style("stroke-opacity", path => path === l ? 0.95 : 0.08);
+                    }
+                })
+                .on("mouseleave", () => {
+                    if (!noTravado) aplicarDestaque(null);
+                });
+
+            svg.on("click", () => {
+                if (noTravado) {
+                    noTravado = null;
+                    aplicarDestaque(null);
+                }
+            });
+        }
+
+        function atualizarInspector(nomeOriginal, categoria, extraTag = '') {
+            const box = document.getElementById('relacoesInspectorBox');
+            if (!box) return;
+
+            const nomeLimpo = nomeOriginal.replace(/^[^-]+ - /, '');
+            let registros = [];
+
+            if (categoria === 'Departamento') {
+                registros = rawData.filter(r => (r.estruturas?.nome || 'Geral') === nomeLimpo);
+            } else if (categoria === 'Pessoa') {
+                registros = rawData.filter(r => (r.pessoas?.nome_curto || r.pessoas?.nome_completo) === nomeLimpo);
+            } else if (categoria === 'Papel') {
+                registros = rawData.filter(r => {
+                    const fullPapel = `${r.estruturas?.nome || 'Geral'} - ${r.perfil || 'Membro'}`;
+                    return fullPapel === nomeOriginal;
+                });
+            }
+
+            const html = `
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span style="font-size: 11px; text-transform: uppercase; color: var(--primary); font-weight: 700;">${categoria}</span>
+                            <h4 style="margin: 2px 0 0 0; font-size: 15px; color: #fff; font-weight: 700;">${nomeLimpo}</h4>
+                        </div>
+                        ${extraTag ? `<span style="font-size: 10px; background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4); padding: 2px 6px; border-radius: 4px;">${extraTag}</span>` : ''}
+                    </div>
+                    
+                    <div style="font-size: 12px; color: var(--text-muted);">
+                        ${registros.length} vínculo(s) registrado(s)
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px; max-height: 200px; overflow-y: auto;" class="custom-scrollbar">
+                        ${registros.map(r => `
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 11.5px;">
+                                <div style="font-weight: 600; color: #fff;">${r.pessoas?.nome_curto || r.pessoas?.nome_completo || 'Sem Nome'}</div>
+                                <div style="color: var(--text-muted); display: flex; justify-content: space-between; margin-top: 2px;">
+                                    <span>${r.estruturas?.nome || 'Geral'}</span>
+                                    <span style="color: #60a5fa;">${r.perfil || 'Membro'}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            box.innerHTML = html;
+        }
+
+        function renderCards(canvas) {
+            canvas.innerHTML = '<div style="padding: 20px; color: var(--text-muted);">Modo Departamentos disponível.</div>';
+        }
+
+        function renderRadial(canvas) {
+            canvas.innerHTML = '<div style="padding: 20px; color: var(--text-muted);">Modo Radial disponível.</div>';
+        }
+
+        window.addEventListener('DOMContentLoaded', initSimulacao);
+    </script>
+</body>
+</html>
