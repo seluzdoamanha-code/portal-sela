@@ -113,12 +113,6 @@ window.trocarAbaAssociado = function(aba) {
             relacoesInicializado = true;
             window.RelacoesOrganograma.init('containerRelacoesAssociados', db);
         }
-    } else if (aba === 'gestao_documentos') {
-        const btn = document.getElementById('tabBtnGestaoDocs');
-        const content = document.getElementById('tabGestaoDocs');
-        if (btn) btn.classList.add('active');
-        if (content) content.classList.add('active');
-        renderizarGestaoDocumentos();
     }
 };
 

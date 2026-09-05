@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria de Modelos Radiais Coloridos - SELA</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #090d16;
+            --bg-card: rgba(18, 24, 38, 0.85);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #090d16 70%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header.hero {
+            padding: 20px 32px;
+            background: rgba(9, 13, 22, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-glass);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .title-group h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tabs-container {
+            display: flex;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-glass);
+            padding: 4px;
+            border-radius: 12px;
+            gap: 6px;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            background: #6366f1;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+        }
+
+        .main-layout {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            padding: 24px 32px;
+            gap: 24px;
+            max-width: 1750px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .vis-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .vis-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-glass);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        #chartCanvas {
+            flex: 1;
+            position: relative;
+            min-height: 720px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .sidebar-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .card-panel h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .model-feature {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .model-feature strong {
+            color: #818cf8;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .inspector-box {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 16px;
+            min-height: 200px;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="hero">
+        <div class="title-group">
+            <span style="font-size: 12px; padding: 4px 10px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 999px; color: #a5b4fc; font-weight: 700; text-transform: uppercase;">Estudo de Design Radial</span>
+            <h1>🎨 Modelos Radiais com Agrupamento & Cores Vivas</h1>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab-btn active" id="btnM1" onclick="switchModel(1)">
+                <span>🎯</span> 1. Setores Circulares (Arcos Halo)
+            </button>
+            <button class="tab-btn" id="btnM2" onclick="switchModel(2)">
+                <span>🌈</span> 2. Chord / Circos Multicores
+            </button>
+            <button class="tab-btn" id="btnM3" onclick="switchModel(3)">
+                <span>☀️</span> 3. Sunburst Radial Hierárquico
+            </button>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <div class="vis-card">
+            <div class="vis-header">
+                <div>
+                    <h2 id="modelTitle" style="font-size: 16px; font-weight: 700; color: #fff;">1. Edge Bundling com Setores em Arco (Arcos Halo Coloridos)</h2>
+                    <p id="modelDesc" style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Envolve cada departamento com uma faixa curva de cor dedicada, dots coloridos e curvas em degradê.</p>
+                </div>
+                <div style="font-size: 11px; color: #a5b4fc; background: rgba(99,102,241,0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(99,102,241,0.2);">
+                    Interativo • Passe o mouse nos elementos
+                </div>
+            </div>
+
+            <div id="chartCanvas"></div>
+        </div>
+
+        <aside class="sidebar-panel">
+            <div class="card-panel">
+                <h3>💡 Sobre este Modelo Radial</h3>
+                <div id="modelExplanation"></div>
+            </div>
+
+            <div class="card-panel">
+                <h3>🔍 Detalhes da Seleção</h3>
+                <div class="inspector-box" id="inspectorBox">
+                    <div style="color: var(--text-dim); text-align: center; margin-top: 50px; font-size: 13px;">
+                        Passe o mouse sobre um membro, setor ou fita para inspecionar.
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        let rawData = [];
+        let currentModelId = 1;
+
+        const deptColors = {
+            'Diretoria': '#f59e0b',
+            'Comunicação': '#3b82f6',
+            'Assistência Social': '#10b981',
+            'Espiritual': '#8b5cf6',
+            'Infância e Juventude': '#ec4899',
+            'Eventos': '#06b6d4',
+            'Doutrinário': '#eab308'
+        };
+
+        async function loadData() {
+            try {
+                const res = await fetch('mockup_dados_reais.json');
+                rawData = await res.json();
+                switchModel(1);
+            } catch (e) {
+                console.error("Erro:", e);
+            }
+        }
+
+        function switchModel(id) {
+            currentModelId = id;
+            document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', (i + 1) === id));
+
+            const canvas = document.getElementById('chartCanvas');
+            canvas.innerHTML = '';
+
+            if (id === 1) {
+                document.getElementById('modelTitle').textContent = '1. Setores Circulares Envolventes (Arcos Halo)';
+                document.getElementById('modelDesc').textContent = 'Cada departamento ganha um anel de arco luminoso e colorido contornando os membros daquele setor.';
+                document.getElementById('modelExplanation').innerHTML = `
+                    <div class="model-feature">
+                        <strong>Faixas de Arco Envolventes</strong>
+                        Envolve cada departamento com uma cor distinta ao redor do círculo. Acaba com a sensação de texto cinza uniforme.
+                    </div>
+                    <div class="model-feature">
+                        <strong>Nós com Badges e Cores Vivas</strong>
+                        Os nomes e pontos ganham a cor do departamento pertencente, facilitando a identificação imediata dos grupos.
+                    </div>
+                    <div class="model-feature">
+                        <strong>Curvas Coloridas por Origem</strong>
+                        As linhas curvas assumem o tom do departamento de origem, criando feixes luminosos vibrantes.
+                    </div>
+                `;
+                renderModel1_Halo(canvas);
+            } else if (id === 2) {
+                document.getElementById('modelTitle').textContent = '2. Diagrama Chord / Circos (Fitas e Fluxo Radial)';
+                document.getElementById('modelDesc').textContent = 'Diagrama em formato de anel de fita (Chord), onde a espessura das pontes representa a quantidade de membros compartilhados.';
+                document.getElementById('modelExplanation').innerHTML = `
+                    <div class="model-feature">
+                        <strong>Fitas de Conexão Ricas (Ribbons)</strong>
+                        Em vez de linhas finas de cabelo, exibe fitas volumosas coloridas e semi-transparentes entre os departamentos.
+                    </div>
+                    <div class="model-feature">
+                        <strong>Proporção Visual de Força</strong>
+                        O tamanho do arco do departamento é proporcional ao número de pessoas associadas a ele.
+                    </div>
+                    <div class="model-feature">
+                        <strong>Estética Científica / Genômica</strong>
+                        Modelo muito usado pelo *Circos*, excelente para publicações e relatórios anuais institucionais.
+                    </div>
+                `;
+                renderModel2_Chord(canvas);
+            } else if (id === 3) {
+                document.getElementById('modelTitle').textContent = '3. Sunburst Radial Hierárquico Multi-Anéis';
+                document.getElementById('modelDesc').textContent = 'Círculos concêntricos: o centro é a Casa SELA, o anel intermediário os Departamentos, e a coroa externa as Pessoas e seus cargos.';
+                document.getElementById('modelExplanation').innerHTML = `
+                    <div class="model-feature">
+                        <strong>Agrupamento 100% Espacial</strong>
+                        Cada departamento é uma "fatia de pizza" contínua e colorida; as pessoas ficam exatamente dentro da fatia do seu departamento.
+                    </div>
+                    <div class="model-feature">
+                        <strong>Zoom Interativo</strong>
+                        Clique em qualquer departamento para que ele expanda preenchendo a roda inteira e detalhando seus membros.
+                    </div>
+                    <div class="model-feature">
+                        <strong>Zero Cruzamento de Linhas</strong>
+                        É o modelo radial mais limpo de ler, com hierarquia geométrica perfeitamente visual.
+                    </div>
+                `;
+                renderModel3_Sunburst(canvas);
+            }
+        }
+
+        // =========================================================================
+        // MODELO 1: Edge Bundling com Arcos Halo Envolventes e Cores Vivas
+        // =========================================================================
+        function renderModel1_Halo(container) {
+            const width = container.clientWidth || 920;
+            const height = 700;
+            const radius = Math.min(width, height) / 2 - 140;
+
+            const svg = d3.select(container).append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewBox", [-width / 2, -height / 2, width, height]);
+
+            const rootHierarchy = { name: "SELA", children: [] };
+            const deptMap = new Map();
+
+            rawData.forEach(v => {
+                const dNome = v.estruturas?.nome || 'Geral';
+                const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo || 'Sem Nome';
+
+                if (!deptMap.has(dNome)) {
+                    const dNode = { name: dNome, children: [] };
+                    deptMap.set(dNome, dNode);
+                    rootHierarchy.children.push(dNode);
+                }
+
+                const dNode = deptMap.get(dNome);
+                if (!dNode.children.find(c => c.name === pNome)) {
+                    dNode.children.push({ name: pNome, papel: v.perfil });
+                }
+            });
+
+            const cluster = d3.cluster().size([360, radius]);
+            const root = d3.hierarchy(rootHierarchy);
+            cluster(root);
+
+            const leaves = root.leaves();
+            const map = new Map(leaves.map(d => [d.ancestors().reverse().map(a => a.data.name).join("."), d]));
+
+            // Agrupamento dos departamentos para desenhar os arcos externos
+            const deptsGroups = root.children.map(d => {
+                const childLeaves = d.leaves();
+                const angles = childLeaves.map(l => l.x);
+                const minAngle = Math.min(...angles) - (360 / leaves.length / 2);
+                const maxAngle = Math.max(...angles) + (360 / leaves.length / 2);
+                return {
+                    name: d.data.name,
+                    minAngle: minAngle * Math.PI / 180,
+                    maxAngle: maxAngle * Math.PI / 180,
+                    color: deptColors[d.data.name] || '#64748b',
+                    count: childLeaves.length
+                };
+            });
+
+            // 1. Desenha os Arcos Envolventes (Halos)
+            const arcGen = d3.arc()
+                .innerRadius(radius + 18)
+                .outerRadius(radius + 28)
+                .cornerRadius(5);
+
+            const haloGroup = svg.append("g");
+            haloGroup.selectAll("path")
+                .data(deptsGroups)
+                .join("path")
+                .attr("d", d => arcGen({ startAngle: d.minAngle, endAngle: d.maxAngle }))
+                .attr("fill", d => d.color)
+                .attr("fill-opacity", 0.75)
+                .attr("stroke", d => d.color)
+                .attr("stroke-width", 1.5)
+                .style("cursor", "pointer")
+                .on("mouseover", (event, d) => {
+                    svg.selectAll(".link-m1").style("stroke-opacity", l => l.dept === d.name ? 0.95 : 0.05);
+                    updateInspectorBox(d.name, 'Departamento', `${d.count} membros alocados`);
+                })
+                .on("mouseout", () => {
+                    svg.selectAll(".link-m1").style("stroke-opacity", 0.35);
+                });
+
+            // Rótulos dos Departamentos nos arcos
+            haloGroup.selectAll("text")
+                .data(deptsGroups)
+                .join("text")
+                .attr("transform", d => {
+                    const mid = (d.minAngle + d.maxAngle) / 2;
+                    const r = radius + 48;
+                    const x = Math.sin(mid) * r;
+                    const y = -Math.cos(mid) * r;
+                    return `translate(${x},${y})`;
+                })
+                .attr("text-anchor", "middle")
+                .attr("dy", "0.35em")
+                .text(d => d.name)
+                .style("fill", d => d.color)
+                .style("font-size", "11px")
+                .style("font-weight", "700")
+                .style("text-shadow", "0 2px 4px rgba(0,0,0,0.8)");
+
+            // 2. Conexões cruzadas (Links de feixe)
+            const crossLinks = [];
+            const personOccurrences = new Map();
+
+            rawData.forEach(v => {
+                const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo;
+                const dNome = v.estruturas?.nome;
+                if (!personOccurrences.has(pNome)) personOccurrences.set(pNome, []);
+                personOccurrences.get(pNome).push({ path: `SELA.${dNome}.${pNome}`, dept: dNome });
+            });
+
+            personOccurrences.forEach((entries) => {
+                if (entries.length > 1) {
+                    for (let i = 0; i < entries.length; i++) {
+                        for (let j = i + 1; j < entries.length; j++) {
+                            const s = map.get(entries[i].path);
+                            const t = map.get(entries[j].path);
+                            if (s && t) {
+                                crossLinks.push({
+                                    pathData: s.path(t),
+                                    dept: entries[i].dept,
+                                    color: deptColors[entries[i].dept] || '#3b82f6',
+                                    sourceNode: s,
+                                    targetNode: t
+                                });
+                            }
+                        }
+                    }
+                }
+            });
+
+            const line = d3.lineRadial()
+                .curve(d3.curveBundle.beta(0.85))
+                .radius(d => d.y)
+                .angle(d => d.x * Math.PI / 180);
+
+            const links = svg.append("g")
+                .selectAll("path")
+                .data(crossLinks)
+                .join("path")
+                .attr("class", "link-m1")
+                .attr("d", d => line(d.pathData))
+                .attr("fill", "none")
+                .attr("stroke", d => d.color)
+                .attr("stroke-opacity", 0.35)
+                .attr("stroke-width", 2);
+
+            // 3. Nós com Bolinhas Coloridas e Texto
+            const nodeGroup = svg.append("g")
+                .selectAll("g")
+                .data(leaves)
+                .join("g")
+                .attr("transform", d => `
+                    rotate(${d.x - 90})
+                    translate(${d.y},0)
+                `);
+
+            // Dot colorido
+            nodeGroup.append("circle")
+                .attr("r", 4)
+                .attr("fill", d => deptColors[d.parent.data.name] || '#fff')
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 1);
+
+            // Texto do nome
+            nodeGroup.append("text")
+                .attr("transform", d => `
+                    translate(${d.x < 180 ? 10 : -10}, 0)
+                    ${d.x < 180 ? "" : "rotate(180)"}
+                `)
+                .attr("text-anchor", d => d.x < 180 ? "start" : "end")
+                .attr("dy", "0.35em")
+                .text(d => d.data.name)
+                .style("font-size", "11px")
+                .style("font-weight", "600")
+                .style("fill", d => d.x < 180 ? "#f8fafc" : "#f8fafc")
+                .style("cursor", "pointer");
+
+            nodeGroup.on("mouseover", (event, d) => {
+                links.style("stroke-opacity", l => (l.sourceNode === d || l.targetNode === d) ? 1 : 0.05)
+                     .style("stroke-width", l => (l.sourceNode === d || l.targetNode === d) ? 3.5 : 1);
+                updateInspectorBox(d.data.name, 'Membro', d.parent.data.name);
+            }).on("mouseout", () => {
+                links.style("stroke-opacity", 0.35).style("stroke-width", 2);
+            });
+        }
+
+        // =========================================================================
+        // MODELO 2: Diagrama Chord / Circos (Fluxo em Fitas Grossas)
+        // =========================================================================
+        function renderModel2_Chord(container) {
+            const width = container.clientWidth || 920;
+            const height = 700;
+            const outerRadius = Math.min(width, height) * 0.5 - 100;
+            const innerRadius = outerRadius - 28;
+
+            const svg = d3.select(container).append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewBox", [-width / 2, -height / 2, width, height]);
+
+            // Matriz de correlação entre Departamentos baseada em pessoas em comum
+            const deptsList = Array.from(new Set(rawData.map(v => v.estruturas?.nome || 'Geral'))).sort();
+            const n = deptsList.length;
+            const matrix = Array.from({ length: n }, () => new Array(n).fill(0));
+
+            // Pessoas e departamentos
+            const pMap = new Map();
+            rawData.forEach(v => {
+                const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo;
+                const dNome = v.estruturas?.nome;
+                if (!pMap.has(pNome)) pMap.set(pNome, new Set());
+                pMap.get(pNome).add(dNome);
+            });
+
+            // Preenche matriz de intersecção
+            pMap.forEach(dSet => {
+                const arr = Array.from(dSet);
+                if (arr.length === 1) {
+                    const i = deptsList.indexOf(arr[0]);
+                    if (i >= 0) matrix[i][i] += 1;
+                } else {
+                    for (let a = 0; a < arr.length; a++) {
+                        for (let b = a + 1; b < arr.length; b++) {
+                            const i = deptsList.indexOf(arr[a]);
+                            const j = deptsList.indexOf(arr[b]);
+                            if (i >= 0 && j >= 0) {
+                                matrix[i][j] += 1;
+                                matrix[j][i] += 1;
+                            }
+                        }
+                    }
+                }
+            });
+
+            const chord = d3.chord()
+                .padAngle(0.06)
+                .sortSubgroups(d3.descending);
+
+            const chords = chord(matrix);
+
+            const arc = d3.arc()
+                .innerRadius(innerRadius)
+                .outerRadius(outerRadius)
+                .cornerRadius(4);
+
+            const ribbon = d3.ribbon()
+                .radius(innerRadius);
+
+            // Anéis dos Departamentos
+            const group = svg.append("g")
+                .selectAll("g")
+                .data(chords.groups)
+                .join("g");
+
+            group.append("path")
+                .attr("fill", d => deptColors[deptsList[d.index]] || '#64748b')
+                .attr("stroke", "rgba(255,255,255,0.2)")
+                .attr("d", arc)
+                .style("cursor", "pointer")
+                .on("mouseover", (event, d) => {
+                    ribbonsEl.style("opacity", r => (r.source.index === d.index || r.target.index === d.index) ? 0.9 : 0.05);
+                    updateInspectorBox(deptsList[d.index], 'Departamento (Chord)', `Volume de conexões: ${d.value}`);
+                })
+                .on("mouseout", () => ribbonsEl.style("opacity", 0.65));
+
+            group.append("text")
+                .each(d => { d.angle = (d.startAngle + d.endAngle) / 2; })
+                .attr("dy", "0.35em")
+                .attr("transform", d => `
+                    rotate(${(d.angle * 180 / Math.PI) - 90})
+                    translate(${outerRadius + 14})
+                    ${d.angle > Math.PI ? "rotate(180)" : ""}
+                `)
+                .attr("text-anchor", d => d.angle > Math.PI ? "end" : "start")
+                .text(d => deptsList[d.index])
+                .style("font-size", "12px")
+                .style("font-weight", "700")
+                .style("fill", d => deptColors[deptsList[d.index]] || '#fff');
+
+            // Fitas (Ribbons)
+            const ribbonsEl = svg.append("g")
+                .attr("fill-opacity", 0.65)
+                .selectAll("path")
+                .data(chords)
+                .join("path")
+                .attr("d", ribbon)
+                .attr("fill", d => deptColors[deptsList[d.source.index]] || '#6366f1')
+                .attr("stroke", "rgba(255,255,255,0.15)")
+                .style("cursor", "pointer")
+                .on("mouseover", (event, d) => {
+                    ribbonsEl.style("opacity", r => r === d ? 1 : 0.1);
+                    const d1 = deptsList[d.source.index];
+                    const d2 = deptsList[d.target.index];
+                    updateInspectorBox(`${d1} ⇄ ${d2}`, 'Fita Compartilhada', `${d.source.value} membros em comum`);
+                })
+                .on("mouseout", () => ribbonsEl.style("opacity", 0.65));
+        }
+
+        // =========================================================================
+        // MODELO 3: Sunburst Radial (Círculos Concêntricos com Zoom e Agrupamento)
+        // =========================================================================
+        function renderModel3_Sunburst(container) {
+            const width = container.clientWidth || 920;
+            const height = 700;
+            const radius = Math.min(width, height) / 2 - 20;
+
+            const svg = d3.select(container).append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewBox", [-width / 2, -height / 2, width, height]);
+
+            const rootData = { name: "SELA", children: [] };
+            const deptMap = new Map();
+
+            rawData.forEach(v => {
+                const dNome = v.estruturas?.nome || 'Geral';
+                const pNome = v.pessoas?.nome_curto || v.pessoas?.nome_completo || 'Sem Nome';
+                const papel = v.perfil || 'Membro';
+
+                if (!deptMap.has(dNome)) {
+                    const dObj = { name: dNome, children: [] };
+                    deptMap.set(dNome, dObj);
+                    rootData.children.push(dObj);
+                }
+
+                deptMap.get(dNome).children.push({
+                    name: `${pNome} (${papel})`,
+                    value: 1,
+                    dept: dNome,
+                    pessoaNome: pNome,
+                    papel: papel
+                });
+            });
+
+            const hierarchy = d3.hierarchy(rootData)
+                .sum(d => d.value || 0)
+                .sort((a, b) => b.value - a.value);
+
+            const partition = d3.partition()
+                .size([2 * Math.PI, hierarchy.height + 1]);
+
+            const root = partition(hierarchy);
+            root.each(d => d.current = d);
+
+            const arc = d3.arc()
+                .startAngle(d => d.x0)
+                .endAngle(d => d.x1)
+                .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.015))
+                .padRadius(radius / 3)
+                .innerRadius(d => d.y0 * (radius / 3))
+                .outerRadius(d => Math.max(d.y0 * (radius / 3), d.y1 * (radius / 3) - 3))
+                .cornerRadius(4);
+
+            const path = svg.append("g")
+                .selectAll("path")
+                .data(root.descendants().slice(1))
+                .join("path")
+                .attr("fill", d => {
+                    while (d.depth > 1) d = d.parent;
+                    return deptColors[d.data.name] || '#64748b';
+                })
+                .attr("fill-opacity", d => d.depth === 1 ? 0.9 : 0.6)
+                .attr("stroke", "rgba(0,0,0,0.3)")
+                .attr("stroke-width", 1)
+                .attr("d", d => arc(d.current))
+                .style("cursor", "pointer");
+
+            path.on("mouseover", (event, d) => {
+                path.attr("fill-opacity", n => (n === d || n.parent === d || d.parent === n) ? 1 : 0.3);
+                if (d.depth === 1) {
+                    updateInspectorBox(d.data.name, 'Departamento Sunburst', `${d.children?.length || 0} membros`);
+                } else {
+                    updateInspectorBox(d.data.pessoaNome, 'Membro do Setor', `${d.data.dept} • ${d.data.papel}`);
+                }
+            }).on("mouseout", () => {
+                path.attr("fill-opacity", d => d.depth === 1 ? 0.9 : 0.6);
+            });
+
+            // Centro com logo ou título
+            svg.append("circle")
+                .attr("r", radius / 3 - 6)
+                .attr("fill", "rgba(15, 23, 42, 0.95)")
+                .attr("stroke", "var(--border-glass)")
+                .attr("stroke-width", 1.5);
+
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("dy", "-0.2em")
+                .text("🏛️ SELA")
+                .style("fill", "#fff")
+                .style("font-size", "15px")
+                .style("font-weight", "800");
+
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("dy", "1.2em")
+                .text("Sunburst")
+                .style("fill", "var(--text-muted)")
+                .style("font-size", "11px");
+        }
+
+        function updateInspectorBox(title, subtitle, detail) {
+            const box = document.getElementById('inspectorBox');
+            box.innerHTML = `
+                <div style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;">${title}</div>
+                <div style="font-size: 12px; color: #818cf8; font-weight: 600; margin-bottom: 12px;">${subtitle}</div>
+                <div style="font-size: 13px; color: var(--text-muted); background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); padding: 10px; border-radius: 8px;">
+                    ${detail}
+                </div>
+            `;
+        }
+
+        window.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>

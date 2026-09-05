@@ -123,7 +123,6 @@
                     <button class="tab-btn-assoc active" onclick="trocarAbaAssociado('inicio')" id="tabBtnInicio">🏠 Início</button>
                     <button class="tab-btn-assoc" onclick="trocarAbaAssociado('visao_geral')" id="tabBtnVisaoGeral">📋 Meu Portal</button>
                     <button class="tab-btn-assoc" onclick="trocarAbaAssociado('relacoes')" id="tabBtnRelacoes">🏛️ Relações & Organograma</button>
-                    <button class="tab-btn-assoc" onclick="trocarAbaAssociado('gestao_documentos')" id="tabBtnGestaoDocs">📁 Gestão Documental dos Associados</button>
                 </div>
 
                 <!-- ABA 0: INÍCIO (SOBRE + CARDS DE ACESSO RÁPIDO) -->
@@ -240,91 +239,7 @@
                         <!-- Componente RelacoesOrganograma.init() é injetado aqui -->
                     </div>
                 </div>
-
-                <!-- ABA 2: GESTÃO DOCUMENTAL DOS ASSOCIADOS (DIRETORIA) -->
-                <div id="tabGestaoDocs" class="tab-content-assoc">
-                    <!-- KPIs Rápidos -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
-                        <div class="doc-kpi-card">
-                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Total de Associados</span>
-                            <div style="font-size: 24px; font-weight: 700; color: var(--text-main);" id="kpiTotalAssociados">0</div>
-                            <span style="font-size: 11px; color: var(--text-muted);">Efetivos & Proponentes ativos</span>
-                        </div>
-                        <div class="doc-kpi-card">
-                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">100% Regularizados</span>
-                            <div style="font-size: 24px; font-weight: 700; color: #10b981;" id="kpiTotalRegulares">0</div>
-                            <span style="font-size: 11px; color: #10b981;">Todos os 3 documentos assinados</span>
-                        </div>
-                        <div class="doc-kpi-card">
-                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Com Pendências</span>
-                            <div style="font-size: 24px; font-weight: 700; color: #f59e0b;" id="kpiTotalPendentes">0</div>
-                            <span style="font-size: 11px; color: #f59e0b;">Falta assinar 1 ou mais docs</span>
-                        </div>
-                        <div class="doc-kpi-card">
-                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Modelos Cadastrados</span>
-                            <div style="font-size: 24px; font-weight: 700; color: var(--primary);" id="kpiTotalTemplates">3</div>
-                            <span style="font-size: 11px; color: var(--text-muted);">Ficha, Proposta e Termo</span>
-                        </div>
-                    </div>
-
-                    <!-- Card de Gerenciamento de Modelos em Branco -->
-                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
-                            <div>
-                                <h3 style="margin: 0; color: var(--primary); font-size: 16px; display: flex; align-items: center; gap: 8px;">
-                                    <span>📄</span> Modelos em Branco (Download para Impressão e Preenchimento)
-                                </h3>
-                                <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 0 0;">Defina e consulte os links diretos para os arquivos em branco (Google Drive, OneDrive ou PDF) que os associados imprimem.</p>
-                            </div>
-                            <button class="btn btn-secondary" onclick="abrirModalGerenciarTemplates()" style="font-size: 12px; padding: 8px 16px; display: flex; align-items: center; gap: 6px;">
-                                ⚙️ Configurar Links dos Modelos
-                            </button>
-                        </div>
-                        <div id="listaTemplatesEmBrancoCards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
-                            <!-- Injetado via JS -->
-                        </div>
-                    </div>
-
-                    <!-- Tabela de Controle de Assinaturas de Todos os Associados -->
-                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
-                            <div>
-                                <h3 style="margin: 0; color: var(--primary); font-size: 16px;">
-                                    📋 Quadro de Assinaturas por Associado
-                                </h3>
-                                <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 0 0;">Acompanhe em tempo real o que falta para cada membro: assinatura do associado, da Luz do Amanhã, emissão e link do documento original assinado.</p>
-                            </div>
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                <select id="filtroStatusGestao" class="input-field" style="font-size: 13px; padding: 6px 12px; width: auto;" onchange="filtrarTabelaGestaoDocumentos()">
-                                    <option value="todos">Todos os Associados</option>
-                                    <option value="pendentes">Apenas com Pendências</option>
-                                    <option value="completos">Apenas 100% Assinados</option>
-                                </select>
-                                <input type="text" id="filtroBuscaGestao" class="input-field" placeholder="Buscar associado..." style="font-size: 13px; padding: 6px 12px; width: 220px;" oninput="filtrarTabelaGestaoDocumentos()">
-                            </div>
-                        </div>
-
-                        <div style="overflow-x: auto;">
-                            <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
-                                <thead>
-                                    <tr style="text-align: left; border-bottom: 2px solid var(--border);">
-                                        <th style="padding: 12px; font-weight: 600; color: var(--text-muted);">Associado</th>
-                                        <th style="padding: 12px; font-weight: 600; color: var(--text-muted); text-align: center;">1) Ficha Cadastral</th>
-                                        <th style="padding: 12px; font-weight: 600; color: var(--text-muted); text-align: center;">2) Proposta de Admissão</th>
-                                        <th style="padding: 12px; font-weight: 600; color: var(--text-muted); text-align: center;">3) Termo de Voluntário</th>
-                                        <th style="padding: 12px; font-weight: 600; color: var(--text-muted); text-align: center;">Situação Geral</th>
-                                        <th style="padding: 12px; font-weight: 600; color: var(--text-muted); text-align: center;">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbodyGestaoDocumentos">
-                                    <tr>
-                                        <td colspan="6" style="padding: 24px; text-align: center; color: var(--text-muted); font-style: italic;">Carregando controle documental...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+            </div>
         </main>
     </div>
 
