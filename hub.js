@@ -1996,6 +1996,9 @@ window.carregarPainelGestaoIrradiacao = async function () {
                 <button class="btn btn-secondary btn-dia" data-dia="Quinta-feira" onclick="setDiaIrradiacao('Quinta-feira')">Quinta-feira</button>
             </div>
 
+            <div id="filtrosLetrasIrr" style="display: none; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;"></div>
+
+
             <div id="listaIrradiacoes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
                 <div style="color: var(--text-muted); font-size: 13px;">Carregando...</div>
             </div>
@@ -2272,6 +2275,35 @@ async function carregarListaIrradiacao() {
             ? filteredBase
             : (filteredBase || []).filter(item => (item.dias_semana || '').includes(currentIrradiacaoDia));
 
+        // Generate alphabet index
+        const filtrosLetrasContainer = document.getElementById('filtrosLetrasIrr');
+        if (filtrosLetrasContainer) {
+            if (!filteredData || filteredData.length === 0) {
+                filtrosLetrasContainer.style.display = 'none';
+            } else {
+                const letrasPresentes = new Set();
+                filteredData.forEach(item => {
+                    if (item.nome_solicitado) {
+                        const firstChar = item.nome_solicitado.trim().charAt(0).toUpperCase();
+                        const letter = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        if (/[A-Z]/.test(letter)) letrasPresentes.add(letter);
+                    }
+                });
+                
+                if (letrasPresentes.size > 0) {
+                    const letrasArray = Array.from(letrasPresentes).sort();
+                    let letrasHtml = '';
+                    letrasArray.forEach(l => {
+                        letrasHtml += `<button class="btn btn-secondary" style="padding: 4px 10px; font-size: 13px; font-weight: 600; min-width: 32px; border-radius: 4px; background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border);" onclick="scrollToLetraIrr('${l}')">${l}</button>`;
+                    });
+                    filtrosLetrasContainer.innerHTML = letrasHtml;
+                    filtrosLetrasContainer.style.display = 'flex';
+                } else {
+                    filtrosLetrasContainer.style.display = 'none';
+                }
+            }
+        }
+
         if (!filteredData || filteredData.length === 0) {
             lista.innerHTML = '<div style="color: var(--text-muted); font-size: 14px; text-align: center; padding: 24px; background: rgba(255,255,255,0.02); border-radius: 8px;">Nenhum registro encontrado nesta visão.</div>';
             return;
@@ -2280,6 +2312,8 @@ async function carregarListaIrradiacao() {
         let html = '';
         filteredData.forEach(item => {
             const dataPed = new Date(item.criado_em).toLocaleDateString('pt-BR');
+            const firstChar = (item.nome_solicitado || '').trim().charAt(0).toUpperCase();
+            const primeiraLetra = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
             // Botões de Ação
             let actionsHtml = '';
@@ -2387,7 +2421,7 @@ async function carregarListaIrradiacao() {
 
             if (currentIrradiacaoTab === 'ativos' || currentIrradiacaoTab === 'encerra_semana' || currentIrradiacaoTab === 'historico' || currentIrradiacaoTab === 'arquivamento') {
                 html += `
-                    <div id="card_irr_${item.id}" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 24px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div id="card_irr_${item.id}" data-letra="${primeiraLetra}" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 24px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                         <div style="flex: 2; min-width: 250px;">
                             <h4 style="color: var(--primary); margin: 0 0 4px 0; font-size: 16px; font-weight: 700;">${item.nome_solicitado}</h4>
                             <p style="color: var(--text-muted); font-size: 13px; margin: 0;">📍 ${item.endereco || 'Endereço não informado'}</p>
@@ -2403,7 +2437,7 @@ async function carregarListaIrradiacao() {
                 `;
             } else {
                 html += `
-                    <div id="card_irr_${item.id}" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div id="card_irr_${item.id}" data-letra="${primeiraLetra}" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                         <div style="display: flex; justify-content: space-between;">
                             <div style="flex: 1;">
                                 <h4 style="color: var(--primary); margin: 0 0 4px 0; font-size: 16px; font-weight: 700;">${item.nome_solicitado}</h4>
@@ -2424,6 +2458,20 @@ async function carregarListaIrradiacao() {
     } catch (e) {
         console.error(e);
         if (lista) lista.innerHTML = '<div style="color: #ef4444;">Erro ao carregar solicitações.</div>';
+    }
+}
+
+window.scrollToLetraIrr = function(letra) {
+    const card = document.querySelector(`#listaIrradiacoes div[data-letra="${letra}"]`);
+    if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Efeito de destaque rápido
+        const originalBg = card.style.backgroundColor;
+        card.style.transition = 'background-color 0.5s ease';
+        card.style.backgroundColor = 'rgba(56, 189, 248, 0.2)';
+        setTimeout(() => {
+            card.style.backgroundColor = originalBg || 'var(--bg-panel)';
+        }, 1500);
     }
 }
 
