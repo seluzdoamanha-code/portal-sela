@@ -564,6 +564,9 @@ async function inicializarBotaoFavorito() {
 // ==========================================
 async function carregarEquipe() {
     try {
+        const { data: { session } } = await db.auth.getSession();
+        const userEmail = session?.user?.email;
+
         let tagsLideranca = ['diretor', 'diretora', 'diretoria', 'direção', 'direcao', 'líder', 'lider', 'coordenador', 'coordenadora', 'gerente', 'presidente', 'presidenta'];
         try {
             const { data } = await db.from('configuracoes').select('valor').eq('chave', 'tags_lideranca').single();
@@ -617,6 +620,7 @@ async function carregarEquipe() {
         }
 
         if (!data || data.length === 0) {
+            status.style.display = 'block';
             status.textContent = 'Nenhum membro vinculado a este departamento.';
             return;
         }
@@ -681,7 +685,11 @@ async function carregarEquipe() {
 
     } catch (err) {
         console.error("Erro ao carregar equipe:", err);
-        document.getElementById('equipeStatus').textContent = "Erro: " + (err.message || "Falha ao buscar membros no banco de dados.");
+        const status = document.getElementById('equipeStatus');
+        if(status) {
+            status.style.display = 'block';
+            status.textContent = "Erro: " + (err.message || "Falha ao buscar membros no banco de dados.");
+        }
     }
 }
 
