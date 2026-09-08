@@ -2698,7 +2698,7 @@ window.aprovarIrradiacao = function (id, nome, endereco, dias_semana) {
                     <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Duração do Tratamento:</label>
                     <select id="triagemSemanas" style="width: 100%; padding: 8px 12px; border-radius: 8px; background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main);">
                         <option value="4">4 Semanas (Padrão)</option>
-                        <option value="16">16 Semanas (Longo)</option>
+                        <option value="8">8 Semanas (Longo)</option>
                     </select>
                 </div>
 
