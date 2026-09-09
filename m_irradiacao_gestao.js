@@ -156,6 +156,13 @@ window.carregarLista = async function() {
         if (error) throw error;
 
         dataFull = data || [];
+        
+        // Ordena localmente para ignorar emojis e caracteres especiais no início do nome
+        dataFull.sort((a, b) => {
+            const nameA = (a.nome_solicitado || '').replace(/[^a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ0-9]/g, '').trim();
+            const nameB = (b.nome_solicitado || '').replace(/[^a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ0-9]/g, '').trim();
+            return nameA.localeCompare(nameB, 'pt-BR');
+        });
         renderLista();
 
     } catch (err) {

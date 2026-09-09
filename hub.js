@@ -2193,6 +2193,13 @@ async function carregarListaIrradiacao() {
         if (error) throw error;
 
         let filteredBase = data || [];
+        
+        // Ordena localmente para ignorar emojis e caracteres especiais no início do nome
+        filteredBase.sort((a, b) => {
+            const nameA = (a.nome_solicitado || '').replace(/[^a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ0-9]/g, '').trim();
+            const nameB = (b.nome_solicitado || '').replace(/[^a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ0-9]/g, '').trim();
+            return nameA.localeCompare(nameB, 'pt-BR');
+        });
 
         if (currentIrradiacaoTab === 'encerra_semana') {
             filteredBase = filteredBase.filter(item => {
