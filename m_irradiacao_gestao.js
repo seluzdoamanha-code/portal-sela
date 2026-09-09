@@ -422,7 +422,7 @@ function renderLista() {
                     <div>Em: ${dataPed} | Dia: <span style="color: var(--text-main);">${item.dias_semana}</span></div>
                     ${progressHtml}
                 </div>
-                <div class="m-card-actions" style="display: flex; gap: 8px; margin-top: 6px;">
+                <div class="m-card-actions" style="display: flex; gap: 8px;">
                     ${actions}
                 </div>
             </div>
