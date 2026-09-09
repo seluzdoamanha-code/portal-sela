@@ -243,6 +243,35 @@ function renderLista() {
         filtered = filteredBase.filter(item => (item.dias_semana || '').includes(currentDia));
     }
 
+    // Generate alphabet index
+    const filtrosLetrasContainer = document.getElementById('filtrosLetrasIrr');
+    if (filtrosLetrasContainer) {
+        if (!filtered || filtered.length === 0) {
+            filtrosLetrasContainer.style.display = 'none';
+        } else {
+            const letrasPresentes = new Set();
+            filtered.forEach(item => {
+                if (item.nome_solicitado) {
+                    const firstChar = item.nome_solicitado.trim().charAt(0).toUpperCase();
+                    const letter = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    if (/[A-Z]/.test(letter)) letrasPresentes.add(letter);
+                }
+            });
+            
+            if (letrasPresentes.size > 0) {
+                const letrasArray = Array.from(letrasPresentes).sort();
+                let letrasHtml = '';
+                letrasArray.forEach(l => {
+                    letrasHtml += `<button class="m-filter-pill" style="padding: 4px 10px; font-size: 13px; font-weight: 600; min-width: 32px;" onclick="scrollToLetraIrr('${l}')">${l}</button>`;
+                });
+                filtrosLetrasContainer.innerHTML = letrasHtml;
+                filtrosLetrasContainer.style.display = 'flex';
+            } else {
+                filtrosLetrasContainer.style.display = 'none';
+            }
+        }
+    }
+
     if (filtered.length === 0) {
         listaEl.innerHTML = '<div class="empty-state">Nenhum registro encontrado nesta visão.</div>';
         return;
@@ -252,6 +281,9 @@ function renderLista() {
     filtered.forEach(item => {
         const dataPed = new Date(item.criado_em).toLocaleDateString('pt-BR');
         const endStr = item.endereco ? item.endereco : 'Endereço não informado';
+
+        const firstChar = (item.nome_solicitado || '').trim().charAt(0).toUpperCase();
+        const primeiraLetra = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
         // Escape para botões
         const safeNome = (item.nome_solicitado || '').replace(/'/g, "\\'");
@@ -330,9 +362,9 @@ function renderLista() {
             `;
 
             progressHtml = `
-                <div style="margin-top: 4px; font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
                     <div>Atual: <strong style="color:var(--text-main);">${leituras}/${semanas_alvo}</strong> | Total: <strong style="color:var(--text-main);">${arrayLogs.length}</strong> | Última: ${lastDateHtml}</div>
-                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 4px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 2px;">
                         ${checkboxRepetir}
                         <div style="color: var(--border);">|</div>
                         <div style="display: flex; align-items: center; gap: 2px;">${caixinhas}</div>
@@ -341,14 +373,14 @@ function renderLista() {
             `;
 
             actions = `
-                <button id="btn_ler_${item.id}" onclick="marcarLeituraIrrMobile(this, '${item.id}', ${leituras}, ${semanas_alvo})" class="btn-action" style="flex: 1; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 8px 4px; gap:4px; height: auto;">
-                    <span style="font-size: 16px;">✅</span><span style="font-size: 10px;">Registrar</span>
+                <button id="btn_ler_${item.id}" onclick="marcarLeituraIrrMobile(this, '${item.id}', ${leituras}, ${semanas_alvo})" class="btn-action" style="flex: 1; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
+                    <span style="font-size: 12px; font-weight: 600;">Registrar</span>
                 </button>
-                <button class="btn-action" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})" style="flex: 1; background: transparent; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 8px 4px; gap:4px; height: auto;">
-                    <span style="font-size: 16px;">✏️</span><span style="font-size: 10px;">Editar</span>
+                <button class="btn-action" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})" style="flex: 1; background: transparent; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
+                    <span style="font-size: 12px; font-weight: 500;">Editar</span>
                 </button>
-                <button class="btn-action" onclick="arquivar('${item.id}')" style="flex: 1; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 8px 4px; gap:4px; height: auto;">
-                    <span style="font-size: 16px;">🗄️</span><span style="font-size: 10px;">Arquivar</span>
+                <button class="btn-action" onclick="arquivar('${item.id}')" style="flex: 1; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
+                    <span style="font-size: 12px; font-weight: 500;">Arquivar</span>
                 </button>
             `;
         } else if (currentTab === 'historico' || currentTab === 'arquivamento') {
@@ -366,20 +398,20 @@ function renderLista() {
             progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: Histórico${totalLeiturasHtml}${lastDateInfo}</div>`;
 
             actions = `
-                <button class="btn-action" onclick="aprovar('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}')" style="flex: 1; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 8px 4px; gap:4px; height: auto;">
-                    <span style="font-size: 16px;">♻️</span><span style="font-size: 10px;">Reativar</span>
+                <button class="btn-action" onclick="aprovar('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}')" style="flex: 1; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
+                    <span style="font-size: 12px; font-weight: 500;">Reativar</span>
                 </button>
-                <button class="btn-action" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})" style="flex: 1; background: transparent; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 8px 4px; gap:4px; height: auto;">
-                    <span style="font-size: 16px;">✏️</span><span style="font-size: 10px;">Editar</span>
+                <button class="btn-action" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})" style="flex: 1; background: transparent; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
+                    <span style="font-size: 12px; font-weight: 500;">Editar</span>
                 </button>
-                <button class="btn-action" onclick="excluir('${item.id}')" style="flex: 1; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 8px 4px; gap:4px; height: auto;">
-                    <span style="font-size: 16px;">🗑️</span><span style="font-size: 10px;">Excluir</span>
+                <button class="btn-action" onclick="excluir('${item.id}')" style="flex: 1; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
+                    <span style="font-size: 12px; font-weight: 500;">Excluir</span>
                 </button>
             `;
         }
 
         html += `
-            <div class="m-card" id="card_irr_${item.id}">
+            <div class="m-card" id="card_irr_${item.id}" data-letra="${primeiraLetra}">
                 <div class="m-card-header">
                     <div style="width: 100%;">
                         <div class="m-card-title">${item.nome_solicitado}</div>
@@ -390,7 +422,7 @@ function renderLista() {
                     <div>Em: ${dataPed} | Dia: <span style="color: var(--text-main);">${item.dias_semana}</span></div>
                     ${progressHtml}
                 </div>
-                <div class="m-card-actions" style="display: flex; gap: 8px; margin-top: 12px;">
+                <div class="m-card-actions" style="display: flex; gap: 8px; margin-top: 6px;">
                     ${actions}
                 </div>
             </div>
@@ -398,6 +430,20 @@ function renderLista() {
     });
 
     listaEl.innerHTML = html;
+}
+
+window.scrollToLetraIrr = function(letra) {
+    const card = document.querySelector(`#listaGestaoIrradiacoes div[data-letra="${letra}"]`);
+    if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Efeito de destaque rápido
+        const originalBg = card.style.backgroundColor;
+        card.style.transition = 'background-color 0.5s ease';
+        card.style.backgroundColor = 'rgba(56, 189, 248, 0.2)';
+        setTimeout(() => {
+            card.style.backgroundColor = originalBg || 'var(--bg-card)';
+        }, 1500);
+    }
 }
 
 // ----------------------------------------------------
