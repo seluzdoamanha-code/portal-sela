@@ -252,9 +252,12 @@ function renderLista() {
             const letrasPresentes = new Set();
             filtered.forEach(item => {
                 if (item.nome_solicitado) {
-                    const firstChar = item.nome_solicitado.trim().charAt(0).toUpperCase();
-                    const letter = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                    if (/[A-Z]/.test(letter)) letrasPresentes.add(letter);
+                    const match = item.nome_solicitado.match(/[a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ]/);
+                    if (match) {
+                        const firstChar = match[0].toUpperCase();
+                        const letter = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        if (/[A-Z]/.test(letter)) letrasPresentes.add(letter);
+                    }
                 }
             });
             
@@ -282,8 +285,12 @@ function renderLista() {
         const dataPed = new Date(item.criado_em).toLocaleDateString('pt-BR');
         const endStr = item.endereco ? item.endereco : 'Endereço não informado';
 
-        const firstChar = (item.nome_solicitado || '').trim().charAt(0).toUpperCase();
-        const primeiraLetra = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        let primeiraLetra = '';
+        const match = (item.nome_solicitado || '').match(/[a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ]/);
+        if (match) {
+            const firstChar = match[0].toUpperCase();
+            primeiraLetra = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
 
         // Escape para botões
         const safeNome = (item.nome_solicitado || '').replace(/'/g, "\\'");

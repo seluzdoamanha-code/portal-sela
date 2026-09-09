@@ -2284,9 +2284,12 @@ async function carregarListaIrradiacao() {
                 const letrasPresentes = new Set();
                 filteredData.forEach(item => {
                     if (item.nome_solicitado) {
-                        const firstChar = item.nome_solicitado.trim().charAt(0).toUpperCase();
-                        const letter = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                        if (/[A-Z]/.test(letter)) letrasPresentes.add(letter);
+                        const match = item.nome_solicitado.match(/[a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ]/);
+                        if (match) {
+                            const firstChar = match[0].toUpperCase();
+                            const letter = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                            if (/[A-Z]/.test(letter)) letrasPresentes.add(letter);
+                        }
                     }
                 });
                 
@@ -2312,8 +2315,12 @@ async function carregarListaIrradiacao() {
         let html = '';
         filteredData.forEach(item => {
             const dataPed = new Date(item.criado_em).toLocaleDateString('pt-BR');
-            const firstChar = (item.nome_solicitado || '').trim().charAt(0).toUpperCase();
-            const primeiraLetra = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            let primeiraLetra = '';
+            const match = (item.nome_solicitado || '').match(/[a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ]/);
+            if (match) {
+                const firstChar = match[0].toUpperCase();
+                primeiraLetra = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
 
             // Botões de Ação
             let actionsHtml = '';
