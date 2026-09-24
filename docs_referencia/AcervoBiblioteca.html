@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Gráfico do Acervo</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        #main {
+            width: 1000px;
+            height: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="main"></div>
+    <script>
+        var chartDom = document.getElementById('main');
+        var myChart = echarts.init(chartDom);
+        
+        // Dados estruturados para o gráfico
+        var categories = [
+            {name: 'Acervo'},
+            {name: 'Status'},
+            {name: 'Origem'},
+            {name: 'Frequência'},
+            {name: 'Doadores'},
+            {name: 'Comodatários'}
+        ];
+
+        var nodes = [
+            // Nível 1: Acervo
+            {id: '0', name: 'Acervo\n769', symbolSize: 80, category: 0, value: 769},
+            
+            // Nível 2: Status do Acervo
+            {id: '1', name: 'Disponível\n754', category: 1, value: 754},
+            {id: '2', name: 'Emprestado\n15', category: 1, value: 15},
+            
+            // Nível 2: Origem do Acervo
+            {id: '3', name: 'Próprio\n462', category: 2, value: 462},
+            {id: '4', name: 'Doação\n171', category: 2, value: 171},
+            {id: '5', name: 'Comodato\n136', category: 2, value: 136},
+            
+            // Nível 2: Frequência
+            {id: '6', name: 'Únicos\n566', category: 3, value: 566},
+            {id: '7', name: '2 Exemplares\n130', category: 3, value: 130},
+            {id: '8', name: '3 Exemplares\n42', category: 3, value: 42},
+            {id: '9', name: '4 Exemplares\n16', category: 3, value: 16},
+            {id: '10', name: '5+ Exemplares\n15', category: 3, value: 15},
+            
+            // Nível 3: Detalhes Doações
+            {id: '11', name: 'Total Doadores\n15', category: 4, value: 15},
+            
+            // Nível 3: Detalhes Comodatos
+            {id: '12', name: 'Wagner\n82', category: 5, value: 82},
+            {id: '13', name: 'Marlon\n53', category: 5, value: 53}
+        ];
+
+        var links = [
+            // Conexões do Acervo principal
+            {source: '0', target: '1'},
+            {source: '0', target: '2'},
+            {source: '0', target: '3'},
+            {source: '0', target: '4'},
+            {source: '0', target: '5'},
+            {source: '0', target: '6'},
+            {source: '0', target: '7'},
+            {source: '0', target: '8'},
+            {source: '0', target: '9'},
+            {source: '0', target: '10'},
+            
+            // Conexões das Doações
+            {source: '4', target: '11'},
+            
+            // Conexões dos Comodatos
+            {source: '5', target: '12'},
+            {source: '5', target: '13'}
+        ];
+
+        var option = {
+            title: {
+                text: 'Análise do Acervo',
+                subtext: 'Distribuição e Estatísticas',
+                top: 'bottom',
+                left: 'center'
+            },
+            tooltip: {},
+            legend: [{
+                data: categories.map(function (a) {
+                    return a.name;
+                }),
+                left: 'left',
+                orient: 'vertical'
+            }],
+            animationDurationUpdate: 1500,
+            animationEasingUpdate: 'quinticInOut',
+            series: [{
+                name: 'Acervo',
+                type: 'graph',
+                layout: 'circular',
+                circular: {
+                    rotateLabel: true
+                },
+                data: nodes,
+                links: links,
+                categories: categories,
+                roam: true,
+                label: {
+                    show: true,
+                    position: 'right',
+                    formatter: '{b}'
+                },
+                lineStyle: {
+                    color: 'source',
+                    curveness: 0.3
+                },
+                emphasis: {
+                    focus: 'adjacency',
+                    lineStyle: {
+                        width: 10
+                    }
+                }
+            }]
+        };
+
+        myChart.setOption(option);
+    </script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolução do Acervo da Biblioteca</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .chart-container {
+            width: 90%;
+            max-width: 1000px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .chart-title {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .chart-subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        #main-chart {
+            width: 100%;
+            height: 500px;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            background-color: #f1f8ff;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            min-width: 150px;
+            margin: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2980b9;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        .growth-highlight {
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chart-container">
+        <h1 class="chart-title">Evolução do Acervo da Biblioteca</h1>
+        <p class="chart-subtitle">Comparativo entre Janeiro de 2025 e o período atual</p>
+        <div id="main-chart"></div>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-value">769</div>
+                <div class="stat-label">Total Atual</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">463</div>
+                <div class="stat-label">Acervo Próprio</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">171</div>
+                <div class="stat-label">Livros Doados</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">135</div>
+                <div class="stat-label">Comodatos</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value growth-highlight">+306</div>
+                <div class="stat-label">Crescimento</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value growth-highlight">+66%</div>
+                <div class="stat-label">Aumento Percentual</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar o gráfico
+        const chartDom = document.getElementById('main-chart');
+        const myChart = echarts.init(chartDom);
+        
+        // Configurações do gráfico
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                },
+                formatter: function(params) {
+                    let result = params[0].name + '<br/>';
+                    params.forEach(param => {
+                        const marker = `<span style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:${param.color}"></span>`;
+                        result += `${marker} ${param.seriesName}: ${param.value} livros<br/>`;
+                    });
+                    return result;
+                }
+            },
+            legend: {
+                data: ['Acervo Próprio', 'Livros Doados', 'Comodatos'],
+                top: 'bottom'
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '15%',
+                top: '10%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ['Jan/2025', 'Atual'],
+                axisLabel: {
+                    fontSize: 14,
+                    fontWeight: 'bold'
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Quantidade de Livros',
+                nameTextStyle: {
+                    fontSize: 14,
+                    padding: [0, 0, 0, -40]
+                },
+                axisLabel: {
+                    fontSize: 12
+                }
+            },
+            series: [
+                {
+                    name: 'Acervo Próprio',
+                    type: 'bar',
+                    stack: 'total',
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    data: [463, 463],
+                    itemStyle: {
+                        color: '#3498db'
+                    },
+                    label: {
+                        show: true,
+                        position: 'inside'
+                    }
+                },
+                {
+                    name: 'Livros Doados',
+                    type: 'bar',
+                    stack: 'total',
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    data: [0, 171],
+                    itemStyle: {
+                        color: '#2ecc71'
+                    },
+                    label: {
+                        show: true,
+                        position: 'inside'
+                    }
+                },
+                {
+                    name: 'Comodatos',
+                    type: 'bar',
+                    stack: 'total',
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    data: [0, 135],
+                    itemStyle: {
+                        color: '#9b59b6'
+                    },
+                    label: {
+                        show: true,
+                        position: 'inside'
+                    }
+                }
+            ]
+        };
+
+        // Aplicar as configurações e renderizar o gráfico
+        myChart.setOption(option);
+        
+        // Ajustar o gráfico quando a janela for redimensionada
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+    </script>
+</body>
+</html>

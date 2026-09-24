@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Gráfico do Acervo - Estrutura Hierárquica</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        #main {
+            width: 1200px;
+            height: 900px;
+            margin: 0 auto;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="main"></div>
+    <script>
+        var chartDom = document.getElementById('main');
+        var myChart = echarts.init(chartDom);
+        
+        // Categorias para agrupar por nível/cor
+        var categories = [
+            {name: 'Nível 1 - Acervo Principal'},
+            {name: 'Nível 2 - Status'},
+            {name: 'Nível 2 - Origem'},
+            {name: 'Nível 2 - Exemplares'},
+            {name: 'Nível 3 - Comodato'},
+            {name: 'Nível 3 - Doação'}
+        ];
+
+        var nodes = [
+            // ========== NÍVEL 1: ACERVO PRINCIPAL ==========
+            {id: 'acervo', name: 'ACERVO\n769', symbolSize: 100, category: 0, value: 769},
+            
+            // ========== NÍVEL 2: STATUS DO ACERVO ==========
+            {id: 'disponiveis', name: 'Disponíveis\n754', symbolSize: 70, category: 1, value: 754},
+            {id: 'emprestados', name: 'Emprestados\n15', symbolSize: 40, category: 1, value: 15},
+            
+            // ========== NÍVEL 2: ORIGEM DO ACERVO ==========
+            {id: 'comodato', name: 'Comodato\n136', symbolSize: 60, category: 2, value: 136},
+            {id: 'doacao', name: 'Doação\n171', symbolSize: 65, category: 2, value: 171},
+            {id: 'proprio', name: 'Próprio\n462', symbolSize: 80, category: 2, value: 462},
+            
+            // ========== NÍVEL 2: EXEMPLARES DO ACERVO ==========
+            {id: 'unicos', name: 'Únicos\n566', symbolSize: 75, category: 3, value: 566},
+            {id: 'repetidos2x', name: 'Repetidos 2x\n130', symbolSize: 50, category: 3, value: 130},
+            {id: 'repetidos3x', name: 'Repetidos 3x\n42', symbolSize: 35, category: 3, value: 42},
+            {id: 'repetidos4x', name: 'Repetidos 4x\n16', symbolSize: 30, category: 3, value: 16},
+            {id: 'repetidos5x', name: 'Repetidos 5x\n15', symbolSize: 30, category: 3, value: 15},
+            
+            // ========== NÍVEL 3: ORIGEM - COMODATO ==========
+            {id: 'wagner', name: 'Wagner\n82', symbolSize: 45, category: 4, value: 82},
+            {id: 'marlon', name: 'Marlon\n53', symbolSize: 40, category: 4, value: 53},
+            
+            // ========== NÍVEL 3: ORIGEM - DOAÇÃO ==========
+            {id: 'doadores', name: 'Doadores\n15', symbolSize: 40, category: 5, value: 15}
+        ];
+
+        var links = [
+            // ========== CONEXÕES DO ACERVO PRINCIPAL ==========
+            {source: 'acervo', target: 'disponiveis'},
+            {source: 'acervo', target: 'emprestados'},
+            {source: 'acervo', target: 'comodato'},
+            {source: 'acervo', target: 'doacao'},
+            {source: 'acervo', target: 'proprio'},
+            {source: 'acervo', target: 'unicos'},
+            {source: 'acervo', target: 'repetidos2x'},
+            {source: 'acervo', target: 'repetidos3x'},
+            {source: 'acervo', target: 'repetidos4x'},
+            {source: 'acervo', target: 'repetidos5x'},
+            
+            // ========== CONEXÕES DETALHES COMODATO ==========
+            {source: 'comodato', target: 'wagner'},
+            {source: 'comodato', target: 'marlon'},
+            
+            // ========== CONEXÕES DETALHES DOAÇÃO ==========
+            {source: 'doacao', target: 'doadores'}
+        ];
+
+        var option = {
+            title: {
+                text: 'ANÁLISE COMPLETA DO ACERVO',
+                subtext: 'Estrutura Hierárquica - 769 Itens',
+                top: 'top',
+                left: 'center',
+                textStyle: {
+                    fontSize: 20,
+                    fontWeight: 'bold'
+                }
+            },
+            tooltip: {
+                formatter: function(params) {
+                    if (params.dataType === 'node') {
+                        return params.data.name.replace('\n', ': ') + ' itens';
+                    }
+                }
+            },
+            legend: {
+                data: categories.map(function(category) {
+                    return category.name;
+                }),
+                left: 'left',
+                orient: 'vertical',
+                top: 'middle',
+                textStyle: {
+                    fontSize: 12
+                }
+            },
+            animationDurationUpdate: 1500,
+            animationEasingUpdate: 'quinticInOut',
+            series: [{
+                name: 'Acervo',
+                type: 'graph',
+                layout: 'circular',
+                circular: {
+                    rotateLabel: true
+                },
+                data: nodes,
+                links: links,
+                categories: categories,
+                roam: true,
+                label: {
+                    show: true,
+                    position: 'right',
+                    formatter: '{b}',
+                    fontSize: 12,
+                    fontWeight: 'bold'
+                },
+                lineStyle: {
+                    color: 'source',
+                    curveness: 0.2,
+                    width: 2
+                },
+                emphasis: {
+                    focus: 'adjacency',
+                    lineStyle: {
+                        width: 4
+                    }
+                },
+                itemStyle: {
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }
+            }]
+        };
+
+        myChart.setOption(option);
+        
+        // Redimensionar quando a janela mudar de tamanho
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+    </script>
+</body>
+</html>

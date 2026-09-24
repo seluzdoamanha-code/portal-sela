@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolução do Acervo da Biblioteca</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .chart-container {
+            width: 90%;
+            max-width: 1200px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+        }
+        .chart-title {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .chart-subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        #main-chart {
+            width: 100%;
+            height: 600px;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            background-color: #f1f8ff;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            min-width: 150px;
+            margin: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2980b9;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        .growth-highlight {
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .goal-highlight {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .period-comparison {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .period-box {
+            text-align: center;
+            flex: 1;
+            padding: 10px;
+        }
+        .period-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .period-total {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2980b9;
+        }
+        .goal-box {
+            background: linear-gradient(135deg, #ffeaa7, #fab1a0);
+            border: 2px dashed #e74c3c;
+        }
+        .goal-text {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="chart-container">
+        <h1 class="chart-title">Evolução do Acervo da Biblioteca</h1>
+        <p class="chart-subtitle">Comparativo entre Janeiro de 2025, período intermediário, período atual e meta futura</p>
+        <div id="main-chart"></div>
+        
+        <div class="explanation">
+            <strong>Explicação da Meta 1000:</strong> A última barra mostra a composição projetada para atingir 1000 livros. 
+            Mantemos o acervo atual (769 livros) e adicionamos 231 novos livros (representados em laranja) para chegar à meta.
+        </div>
+        
+        <div class="period-comparison">
+            <div class="period-box">
+                <div class="period-title">Janeiro 2025</div>
+                <div class="period-total">463 livros</div>
+                <div>100% Acervo Próprio</div>
+            </div>
+            <div class="period-box">
+                <div class="period-title">Período Intermediário</div>
+                <div class="period-total">634 livros</div>
+                <div>73% Próprio + 27% Doados</div>
+            </div>
+            <div class="period-box">
+                <div class="period-title">Período Atual</div>
+                <div class="period-total">769 livros</div>
+                <div>60% Próprio + 22% Doados + 18% Comodatos</div>
+            </div>
+            <div class="period-box goal-box">
+                <div class="period-title">Meta Futura</div>
+                <div class="period-total goal-text">1.000 livros</div>
+                <div class="goal-text">+231 livros necessários</div>
+            </div>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-value">769</div>
+                <div class="stat-label">Total Atual</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">463</div>
+                <div class="stat-label">Acervo Próprio</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">171</div>
+                <div class="stat-label">Livros Doados</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">135</div>
+                <div class="stat-label">Comodatos</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value growth-highlight">+306</div>
+                <div class="stat-label">Crescimento</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value growth-highlight">+66%</div>
+                <div class="stat-label">Aumento Percentual</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value goal-highlight">231</div>
+                <div class="stat-label">Para Meta 1000</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar o gráfico
+        const chartDom = document.getElementById('main-chart');
+        const myChart = echarts.init(chartDom);
+        
+        // Dados CORRIGIDOS - A meta mostra o acervo atual + os livros necessários
+        const dates = ['Jan/2025', 'Intermediário', 'Atual', 'Meta 1000'];
+        
+        // Para as 3 primeiras barras (histórico)
+        const proprio = [463, 463, 463, 463]; // Mantemos o acervo próprio
+        const doados = [0, 171, 171, 171];    // Mantemos os doados
+        const comodatos = [0, 0, 135, 135];   // Mantemos os comodatos
+        const paraMeta = [0, 0, 0, 231];      // Só na meta mostramos os livros necessários
+        
+        const total = [463, 634, 769, 1000];
+        
+        // Calcular percentuais
+        const proprioPercent = proprio.map((val, idx) => ((val / total[idx]) * 100).toFixed(1));
+        const doadosPercent = doados.map((val, idx) => val > 0 ? ((val / total[idx]) * 100).toFixed(1) : '');
+        const comodatosPercent = comodatos.map((val, idx) => val > 0 ? ((val / total[idx]) * 100).toFixed(1) : '');
+        const paraMetaPercent = paraMeta.map((val, idx) => val > 0 ? ((val / total[idx]) * 100).toFixed(1) : '');
+        
+        // Configurações do gráfico
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                },
+                formatter: function(params) {
+                    let result = `<strong>${params[0].name}</strong><br/>`;
+                    let totalValue = 0;
+                    let isMeta = params[0].name === 'Meta 1000';
+                    
+                    params.forEach(param => {
+                        totalValue += param.value;
+                        const marker = `<span style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:${param.color}"></span>`;
+                        const percent = ((param.value / total[params[0].dataIndex]) * 100).toFixed(1);
+                        
+                        if (param.seriesName === 'Para Meta 1000') {
+                            if (param.value > 0) {
+                                result += `${marker} ${param.seriesName}: ${param.value} (${percent}%)<br/>`;
+                            }
+                        } else {
+                            result += `${marker} ${param.seriesName}: ${param.value} (${percent}%)<br/>`;
+                        }
+                    });
+                    
+                    result += `<hr style="margin:5px 0;border:none;border-top:1px solid #ccc">`;
+                    if (isMeta) {
+                        result += `<strong>Meta Total: 1.000 livros</strong><br/>`;
+                        result += `<span style="color:#e74c3c">Acervo Atual: 769 livros</span><br/>`;
+                        result += `<span style="color:#e74c3c">Necessário: +231 livros</span>`;
+                    } else {
+                        result += `<strong>Total: ${totalValue} livros</strong>`;
+                    }
+                    
+                    return result;
+                }
+            },
+            legend: {
+                data: ['Acervo Próprio', 'Livros Doados', 'Comodatos', 'Para Meta 1000'],
+                top: 'bottom',
+                textStyle: {
+                    fontSize: 14
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '15%',
+                top: '10%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: dates,
+                axisLabel: {
+                    fontSize: 14,
+                    fontWeight: 'bold'
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Quantidade de Livros',
+                nameTextStyle: {
+                    fontSize: 14,
+                    padding: [0, 0, 0, -40]
+                },
+                axisLabel: {
+                    fontSize: 12
+                },
+                max: 1000
+            },
+            series: [
+                {
+                    name: 'Acervo Próprio',
+                    type: 'bar',
+                    stack: 'acervo',
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    data: proprio,
+                    itemStyle: {
+                        color: '#3498db'
+                    },
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        formatter: function(params) {
+                            const idx = params.dataIndex;
+                            return `{a|${proprio[idx]}\n${proprioPercent[idx]}%}`;
+                        },
+                        rich: {
+                            a: {
+                                fontSize: 11,
+                                fontWeight: 'bold',
+                                color: '#fff',
+                                lineHeight: 16,
+                                textAlign: 'center'
+                            }
+                        }
+                    }
+                },
+                {
+                    name: 'Livros Doados',
+                    type: 'bar',
+                    stack: 'acervo',
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    data: doados,
+                    itemStyle: {
+                        color: '#2ecc71'
+                    },
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        formatter: function(params) {
+                            const idx = params.dataIndex;
+                            if (doadosPercent[idx]) {
+                                return `{a|${doados[idx]}\n${doadosPercent[idx]}%}`;
+                            }
+                            return '';
+                        },
+                        rich: {
+                            a: {
+                                fontSize: 11,
+                                fontWeight: 'bold',
+                                color: '#fff',
+                                lineHeight: 16,
+                                textAlign: 'center'
+                            }
+                        }
+                    }
+                },
+                {
+                    name: 'Comodatos',
+                    type: 'bar',
+                    stack: 'acervo',
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    data: comodatos,
+                    itemStyle: {
+                        color: '#9b59b6'
+                    },
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        formatter: function(params) {
+                            const idx = params.dataIndex;
+                            if (comodatosPercent[idx]) {
+                                return `{a|${comodatos[idx]}\n${comodatosPercent[idx]}%}`;
+                            }
+                            return '';
+                        },
+                        rich: {
+                            a: {
+                                fontSize: 11,
+                                fontWeight: 'bold',
+                                color: '#fff',
+                                lineHeight: 16,
+                                textAlign: 'center'
+                            }
+                        }
+                    }
+                },
+                {
+                    name: 'Para Meta 1000',
+                    type: 'bar',
+                    stack: 'acervo',
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    data: paraMeta,
+                    itemStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0,
+                            y: 0,
+                            x2: 0,
+                            y2: 1,
+                            colorStops: [{
+                                offset: 0,
+                                color: 'rgba(230, 126, 34, 0.8)'
+                            }, {
+                                offset: 1,
+                                color: 'rgba(230, 126, 34, 0.4)'
+                            }]
+                        },
+                        borderColor: '#e67e22',
+                        borderWidth: 1,
+                        borderType: 'dashed'
+                    },
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        formatter: function(params) {
+                            const idx = params.dataIndex;
+                            if (paraMetaPercent[idx]) {
+                                return `{a|+${paraMeta[idx]}\n${paraMetaPercent[idx]}%}`;
+                            }
+                            return '';
+                        },
+                        rich: {
+                            a: {
+                                fontSize: 11,
+                                fontWeight: 'bold',
+                                color: '#fff',
+                                lineHeight: 16,
+                                textAlign: 'center'
+                            }
+                        }
+                    }
+                }
+            ]
+        };
+
+        // Aplicar as configurações e renderizar o gráfico
+        myChart.setOption(option);
+        
+        // Ajustar o gráfico quando a janela for redimensionada
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+    </script>
+</body>
+</html>

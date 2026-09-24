@@ -2,6 +2,7 @@ let currentTab = 'pendentes';
 let currentDia = '';
 let dataFull = [];
 let editandoId = null;
+window.cartoesEspeciais = [];
 
 const diasSemanaList = [
     'Todos', 'Segunda-feira', 'Terça-feira',
@@ -163,6 +164,20 @@ window.carregarLista = async function() {
             const nameB = (b.nome_solicitado || '').replace(/[^a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ0-9]/g, '').trim();
             return nameA.localeCompare(nameB, 'pt-BR');
         });
+        // Fetch Special Cards if admin/manager
+        try {
+            const { data: configData, error: configErr } = await db.from('configuracoes').select('valor').eq('chave', 'irradiacao_cards_especiais').single();
+            if (!configErr && configData && configData.valor) {
+                let parsed = [];
+                try {
+                    parsed = typeof configData.valor === 'string' ? JSON.parse(configData.valor) : configData.valor;
+                } catch(e){}
+                if (Array.isArray(parsed)) window.cartoesEspeciais = parsed;
+            }
+        } catch(e) {
+            console.warn("Could not fetch special cards", e);
+        }
+
         renderLista();
 
     } catch (err) {
@@ -250,6 +265,19 @@ function renderLista() {
         filtered = filteredBase.filter(item => (item.dias_semana || '').includes(currentDia));
     }
 
+    // Controle do botão de Especiais
+    const especiaisBtnContainer = document.getElementById('especiaisBtnContainer');
+    if (especiaisBtnContainer) {
+        if (currentTab === 'ativos') {
+            const profStr = localStorage.getItem('sela_user_profile');
+            const prof = profStr ? JSON.parse(profStr) : {};
+            const canManage = (window.isAdmin && window.isAdmin()) || (prof.email === 'wmarques@gmail.com');
+            especiaisBtnContainer.style.display = canManage ? 'block' : 'none';
+        } else {
+            especiaisBtnContainer.style.display = 'none';
+        }
+    }
+
     // Generate alphabet index
     const filtrosLetrasContainer = document.getElementById('filtrosLetrasIrr');
     if (filtrosLetrasContainer) {
@@ -282,12 +310,40 @@ function renderLista() {
         }
     }
 
-    if (filtered.length === 0) {
+    if (filtered.length === 0 && window.cartoesEspeciais.length === 0) {
         listaEl.innerHTML = '<div class="empty-state">Nenhum registro encontrado nesta visão.</div>';
         return;
     }
 
     let html = '';
+
+    // Renderizar Cartões Especiais (só na aba ativos)
+    if (currentTab === 'ativos') {
+        let especiaisFiltrados = window.cartoesEspeciais;
+        if (currentDia !== '') {
+            especiaisFiltrados = especiaisFiltrados.filter(c => c.dia === currentDia);
+        }
+        
+        // Ordenar por ordem
+        especiaisFiltrados.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+
+        especiaisFiltrados.forEach(esp => {
+            html += `
+                <div class="m-card m-card-especial">
+                    <div class="m-card-header">
+                        <div style="width: 100%;">
+                            <div class="m-card-title" style="color: #f59e0b; font-size: 16px;">⭐ ${esp.titulo}</div>
+                            ${esp.subtitulo ? `<div class="m-card-subtitle" style="color: var(--text-main); font-weight: 500; margin-top: 4px;">${esp.subtitulo}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="m-card-meta" style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                        Cartão Especial Fixo • Dia: <span style="color: var(--text-main);">${esp.dia}</span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
     filtered.forEach(item => {
         const dataPed = new Date(item.criado_em).toLocaleDateString('pt-BR');
         const endStr = item.endereco ? item.endereco : 'Endereço não informado';
@@ -902,3 +958,146 @@ window.abrirSideSheetPendente = function(itemDataStr) {
         console.error("Erro ao abrir side-sheet", e);
     }
 };
+
+// ----------------------------------------------------
+// GERENCIAMENTO DE CARTÕES ESPECIAIS
+// ----------------------------------------------------
+window.abrirGerenciadorEspeciais = function() {
+    let html = `
+        <div style="display: flex; flex-direction: column; gap: 16px; min-height: 400px;">
+            <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); padding: 16px; border-radius: 8px;">
+                <h4 style="color: #f59e0b; margin: 0 0 12px 0; font-size: 15px;">Adicionar Novo Cartão</h4>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Título</label>
+                        <input type="text" id="novoEspTitulo" placeholder="ex: Fulano de Tal" class="input-field">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Sub-título (opcional)</label>
+                        <input type="text" id="novoEspSub" placeholder="ex: Equipe de Apoio" class="input-field">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Dia da Semana</label>
+                        <select id="novoEspDia" class="input-field">
+                            <option value="Segunda-feira">Segunda-feira</option>
+                            <option value="Terça-feira">Terça-feira</option>
+                            <option value="Quarta-feira (Desobsessão)">Quarta-feira (Desobsessão)</option>
+                            <option value="Quarta-feira (Desencarnado)">Quarta-feira (Desencarnado)</option>
+                            <option value="Quinta-feira">Quinta-feira</option>
+                        </select>
+                    </div>
+                    <button onclick="salvarNovoCartaoEspecial()" class="btn-action" style="background: #f59e0b; color: white; padding: 12px; border-radius: 8px; font-weight: 600; border: none; margin-top: 4px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <span style="font-size: 16px;">➕</span> Adicionar Cartão
+                    </button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 8px;">
+                <h4 style="color: var(--text-main); margin: 0 0 12px 0; font-size: 16px;">Cartões Atuais</h4>
+                <div id="listaCartoesEspeciais" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+        </div>
+    `;
+    window.abrirSideSheet('Cartões Especiais', html);
+    renderListaGerenciadorEspeciais();
+}
+
+window.renderListaGerenciadorEspeciais = function() {
+    const container = document.getElementById('listaCartoesEspeciais');
+    if (!container) return;
+    
+    if (!window.cartoesEspeciais || window.cartoesEspeciais.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px; border: 1px dashed var(--border); border-radius: 8px;">Nenhum cartão especial configurado.</div>';
+        return;
+    }
+
+    // Ordenar por ordem
+    window.cartoesEspeciais.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+
+    let html = '';
+    window.cartoesEspeciais.forEach((esp, index) => {
+        html += `
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 14px; font-weight: 600; color: #f59e0b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${esp.titulo}</div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${esp.dia}</div>
+                </div>
+                <div style="display: flex; gap: 4px; margin-left: 12px;">
+                    <button onclick="moverCartaoEspecial('${esp.id}', -1)" title="Subir" class="btn-action" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px;">↑</button>
+                    <button onclick="moverCartaoEspecial('${esp.id}', 1)" title="Descer" class="btn-action" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px;">↓</button>
+                    <button onclick="excluirCartaoEspecial('${esp.id}')" title="Excluir" class="btn-action" style="background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); padding: 6px 10px; border-radius: 6px; margin-left: 4px;">🗑️</button>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+window.salvarNovoCartaoEspecial = async function() {
+    const titulo = document.getElementById('novoEspTitulo').value.trim();
+    const subtitulo = document.getElementById('novoEspSub').value.trim();
+    const dia = document.getElementById('novoEspDia').value;
+    
+    if (!titulo) {
+        alert("O Título é obrigatório.");
+        return;
+    }
+
+    const id = 'esp_' + Date.now() + Math.floor(Math.random() * 1000);
+    const ordem = window.cartoesEspeciais.length;
+
+    const novoCartao = { id, titulo, subtitulo, dia, ordem };
+    window.cartoesEspeciais.push(novoCartao);
+
+    await persistirCartoesEspeciais();
+    renderListaGerenciadorEspeciais();
+    
+    // Limpar formulário
+    document.getElementById('novoEspTitulo').value = '';
+    document.getElementById('novoEspSub').value = '';
+}
+
+window.excluirCartaoEspecial = async function(id) {
+    if (!confirm("Deseja realmente remover este cartão especial?")) return;
+    
+    window.cartoesEspeciais = window.cartoesEspeciais.filter(c => c.id !== id);
+    await persistirCartoesEspeciais();
+    renderListaGerenciadorEspeciais();
+}
+
+window.moverCartaoEspecial = async function(id, direction) {
+    const idx = window.cartoesEspeciais.findIndex(c => c.id === id);
+    if (idx < 0) return;
+    
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= window.cartoesEspeciais.length) return;
+    
+    // Swap
+    const temp = window.cartoesEspeciais[idx];
+    window.cartoesEspeciais[idx] = window.cartoesEspeciais[newIdx];
+    window.cartoesEspeciais[newIdx] = temp;
+    
+    // Atualiza campo ordem
+    window.cartoesEspeciais.forEach((c, i) => { c.ordem = i; });
+    
+    await persistirCartoesEspeciais();
+    renderListaGerenciadorEspeciais();
+}
+
+async function persistirCartoesEspeciais() {
+    try {
+        const payload = JSON.stringify(window.cartoesEspeciais);
+        const { error } = await db.from('configuracoes').upsert({ chave: 'irradiacao_cards_especiais', valor: payload }, { onConflict: 'chave' });
+        if (error) throw error;
+        
+        // Atualiza a lista principal de leitura se estiver aberta
+        if (typeof renderLista === 'function') {
+            renderLista();
+        }
+    } catch(e) {
+        console.error("Erro ao salvar cartões especiais:", e);
+        alert("Não foi possível salvar os cartões especiais.");
+    }
+}

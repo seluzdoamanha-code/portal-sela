@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Gráfico Completo do Acervo e Leitores</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        #main {
+            width: 1400px;
+            height: 1000px;
+            margin: 0 auto;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="main"></div>
+    <script>
+        var chartDom = document.getElementById('main');
+        var myChart = echarts.init(chartDom);
+        
+        // Categorias para agrupar por nível/cor
+        var categories = [
+            {name: 'Nível 1 - Principal'},
+            {name: 'Nível 2 - Status'},
+            {name: 'Nível 2 - Origem'},
+            {name: 'Nível 2 - Exemplares'},
+            {name: 'Nível 2 - Conservação'},
+            {name: 'Nível 2 - Leitores'},
+            {name: 'Nível 3 - Comodatários'},
+            {name: 'Nível 3 - Doadores'},
+            {name: 'Nível 3 - Emprestados'},
+            {name: 'Nível 3 - Permutáveis'}
+        ];
+
+        var nodes = [];
+        var links = [];
+
+        // ========== NÍVEL 1: PRINCIPAL ==========
+        nodes.push({id: 'acervo', name: 'ACERVO\n769', symbolSize: 120, category: 0, value: 769});
+        nodes.push({id: 'leitores', name: 'LEITORES\n25', symbolSize: 80, category: 0, value: 25});
+
+        // ========== NÍVEL 2: STATUS DO ACERVO ==========
+        nodes.push({id: 'disponiveis', name: 'Disponíveis\n754', symbolSize: 85, category: 1, value: 754});
+        nodes.push({id: 'emprestados', name: 'Emprestados\n15', symbolSize: 50, category: 1, value: 15});
+        
+        links.push({ source: 'acervo', target: 'disponiveis' });
+        links.push({ source: 'acervo', target: 'emprestados' });
+
+        // ========== NÍVEL 2: ORIGEM DO ACERVO ==========
+        nodes.push({id: 'comodato', name: 'Comodato\n136', symbolSize: 70, category: 2, value: 136});
+        nodes.push({id: 'doacao', name: 'Doação\n171', symbolSize: 75, category: 2, value: 171});
+        nodes.push({id: 'proprio', name: 'Próprio\n462', symbolSize: 90, category: 2, value: 462});
+        
+        links.push({ source: 'acervo', target: 'comodato' });
+        links.push({ source: 'acervo', target: 'doacao' });
+        links.push({ source: 'acervo', target: 'proprio' });
+
+        // ========== NÍVEL 2: EXEMPLARES DO ACERVO ==========
+        nodes.push({id: 'unicos', name: 'Únicos\n652', symbolSize: 90, category: 3, value: 652});
+        nodes.push({id: 'repetidos2x', name: 'Repetidos 2x\n130', symbolSize: 60, category: 3, value: 130});
+        nodes.push({id: 'repetidos3x', name: 'Repetidos 3x\n42', symbolSize: 45, category: 3, value: 42});
+        nodes.push({id: 'repetidos4x', name: 'Repetidos 4x\n16', symbolSize: 35, category: 3, value: 16});
+        nodes.push({id: 'repetidos5x', name: 'Repetidos 5x\n15', symbolSize: 35, category: 3, value: 15});
+        
+        links.push({ source: 'acervo', target: 'unicos' });
+        links.push({ source: 'acervo', target: 'repetidos2x' });
+        links.push({ source: 'acervo', target: 'repetidos3x' });
+        links.push({ source: 'acervo', target: 'repetidos4x' });
+        links.push({ source: 'acervo', target: 'repetidos5x' });
+
+        // ========== NÍVEL 2: CONSERVAÇÃO DO ACERVO ==========
+        nodes.push({id: 'avaliar', name: 'Avaliar\n348', symbolSize: 80, category: 4, value: 348});
+        nodes.push({id: 'novo', name: 'Novo\n166', symbolSize: 65, category: 4, value: 166});
+        nodes.push({id: 'velho', name: 'Velho\n144', symbolSize: 60, category: 4, value: 144});
+        nodes.push({id: 'usado', name: 'Usado\n117', symbolSize: 55, category: 4, value: 117});
+        
+        links.push({ source: 'acervo', target: 'avaliar' });
+        links.push({ source: 'acervo', target: 'novo' });
+        links.push({ source: 'acervo', target: 'velho' });
+        links.push({ source: 'acervo', target: 'usado' });
+
+        // ========== NÍVEL 3: ORIGEM - COMODATO ==========
+        nodes.push({id: 'wagner_comodato', name: 'Wagner\n82', symbolSize: 55, category: 6, value: 82});
+        nodes.push({id: 'marlon', name: 'Marlon\n53', symbolSize: 50, category: 6, value: 53});
+        
+        links.push({ source: 'comodato', target: 'wagner_comodato' });
+        links.push({ source: 'comodato', target: 'marlon' });
+
+        // ========== NÍVEL 3: ORIGEM - DOAÇÃO ==========
+        var doadoresDetalhados = [
+            {nome: 'FEC', quantidade: 39},
+            {nome: 'Malu', quantidade: 39},
+            {nome: 'Luiz', quantidade: 26},
+            {nome: 'Julio', quantidade: 23},
+            {nome: 'Outros', quantidade: 16},
+            {nome: 'Selma', quantidade: 7},
+            {nome: 'Wagner', quantidade: 6},
+            {nome: 'Rui', quantidade: 6},
+            {nome: 'Alessandra', quantidade: 5},
+            {nome: 'Ângela', quantidade: 5}
+        ];
+
+        doadoresDetalhados.forEach(function(doador) {
+            var doadorId = 'doador_' + doador.nome.toLowerCase();
+            nodes.push({
+                id: doadorId,
+                name: doador.nome + '\n' + doador.quantidade,
+                symbolSize: 30 + (doador.quantidade / 2),
+                category: 7,
+                value: doador.quantidade
+            });
+            links.push({ source: 'doacao', target: doadorId });
+        });
+
+        // ========== NÍVEL 3: EMPRESTADOS ==========
+        var leitoresEmprestados = [
+            {nome: 'Alessandra', quantidade: 3},
+            {nome: 'Débora', quantidade: 2},
+            {nome: 'Tafarel', quantidade: 2},
+            {nome: 'Ângela', quantidade: 1},
+            {nome: 'July', quantidade: 1},
+            {nome: 'Ma.Luiza', quantidade: 1},
+            {nome: 'Marli', quantidade: 1},
+            {nome: 'Rafaella', quantidade: 1},
+            {nome: 'Tatiana', quantidade: 1},
+            {nome: 'Wagner', quantidade: 1},
+            {nome: 'Zelita', quantidade: 1}
+        ];
+
+        leitoresEmprestados.forEach(function(leitor) {
+            var leitorId = 'leitor_' + leitor.nome.toLowerCase().replace('.', '_');
+            nodes.push({
+                id: leitorId,
+                name: leitor.nome + '\n' + leitor.quantidade,
+                symbolSize: 25 + (leitor.quantidade * 3),
+                category: 8,
+                value: leitor.quantidade
+            });
+            links.push({ source: 'emprestados', target: leitorId });
+            links.push({ source: 'leitores', target: leitorId });
+        });
+
+        // ========== NÍVEL 3: PERMUTÁVEIS ==========
+        nodes.push({id: 'permutaveis', name: 'Permutáveis\n66', symbolSize: 50, category: 9, value: 66});
+        links.push({ source: 'proprio', target: 'permutaveis' });
+
+        var option = {
+            title: {
+                text: 'ACERVO COMPLETO E LEITORES',
+                subtext: 'Visualização detalhada - Acervo: 769 itens | Leitores: 25 pessoas | Permutáveis: 66 itens',
+                top: 'top',
+                left: 'center',
+                textStyle: {
+                    fontSize: 18,
+                    fontWeight: 'bold'
+                }
+            },
+            tooltip: {
+                formatter: function(params) {
+                    if (params.dataType === 'node') {
+                        return params.data.name.replace('\n', ': ') + ' itens';
+                    }
+                }
+            },
+            legend: {
+                data: categories.map(function(category) {
+                    return category.name;
+                }),
+                left: 'left',
+                orient: 'vertical',
+                top: 'middle',
+                textStyle: {
+                    fontSize: 11
+                }
+            },
+            animationDurationUpdate: 1500,
+            animationEasingUpdate: 'quinticInOut',
+            series: [{
+                name: 'Acervo e Leitores',
+                type: 'graph',
+                layout: 'circular',
+                circular: {
+                    rotateLabel: true
+                },
+                data: nodes,
+                links: links,
+                categories: categories,
+                roam: true,
+                label: {
+                    show: true,
+                    position: 'right',
+                    formatter: '{b}',
+                    fontSize: 10,
+                    fontWeight: 'bold'
+                },
+                lineStyle: {
+                    color: 'source',
+                    curveness: 0.2,
+                    width: 2
+                },
+                emphasis: {
+                    focus: 'adjacency',
+                    lineStyle: {
+                        width: 4
+                    }
+                },
+                itemStyle: {
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }
+            }]
+        };
+
+        myChart.setOption(option);
+        
+        // Redimensionar quando a janela mudar de tamanho
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+
+        console.log('Grágico carregado com todos os dados do acervo e leitores');
+        console.log('Permutáveis (66) adicionados ao Acervo Próprio');
+    </script>
+</body>
+</html>

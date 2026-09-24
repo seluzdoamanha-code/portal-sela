@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Gráfico do Acervo - Detalhamento Completo</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        #main {
+            width: 1400px;
+            height: 1000px;
+            margin: 0 auto;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="main"></div>
+    <script>
+        var chartDom = document.getElementById('main');
+        var myChart = echarts.init(chartDom);
+        
+        // Categorias para agrupar por nível/cor
+        var categories = [
+            {name: 'Nível 1 - Acervo Principal'},
+            {name: 'Nível 2 - Status'},
+            {name: 'Nível 2 - Origem'},
+            {name: 'Nível 2 - Exemplares'},
+            {name: 'Nível 3 - Comodatários'},
+            {name: 'Nível 3 - Doadores'},
+            {name: 'Nível 4 - Itens Individuais'}
+        ];
+
+        var nodes = [];
+        var links = [];
+        var nodeId = 0;
+
+        // Função para criar nós individuais
+        function criarNosIndividuais(prefixo, quantidade, categoria, parentId, tamanhoBase = 20) {
+            var nos = [];
+            for (var i = 1; i <= quantidade; i++) {
+                var node = {
+                    id: prefixo + '_' + i,
+                    name: prefixo + ' ' + i,
+                    symbolSize: tamanhoBase,
+                    category: categoria,
+                    value: 1
+                };
+                nos.push(node);
+                links.push({ source: parentId, target: prefixo + '_' + i });
+            }
+            return nos;
+        }
+
+        // ========== NÍVEL 1: ACERVO PRINCIPAL ==========
+        nodes.push({id: 'acervo', name: 'ACERVO\n769', symbolSize: 120, category: 0, value: 769});
+
+        // ========== NÍVEL 2: STATUS DO ACERVO ==========
+        nodes.push({id: 'disponiveis', name: 'Disponíveis\n754', symbolSize: 80, category: 1, value: 754});
+        nodes.push({id: 'emprestados', name: 'Emprestados\n15', symbolSize: 50, category: 1, value: 15});
+        
+        links.push({ source: 'acervo', target: 'disponiveis' });
+        links.push({ source: 'acervo', target: 'emprestados' });
+
+        // Itens individuais para Status
+        nodes = nodes.concat(criarNosIndividuais('Disponível', 754, 6, 'disponiveis', 5));
+        nodes = nodes.concat(criarNosIndividuais('Emprestado', 15, 6, 'emprestados', 8));
+
+        // ========== NÍVEL 2: ORIGEM DO ACERVO ==========
+        nodes.push({id: 'comodato', name: 'Comodato\n136', symbolSize: 70, category: 2, value: 136});
+        nodes.push({id: 'doacao', name: 'Doação\n171', symbolSize: 75, category: 2, value: 171});
+        nodes.push({id: 'proprio', name: 'Próprio\n462', symbolSize: 90, category: 2, value: 462});
+        
+        links.push({ source: 'acervo', target: 'comodato' });
+        links.push({ source: 'acervo', target: 'doacao' });
+        links.push({ source: 'acervo', target: 'proprio' });
+
+        // Itens individuais para Origem
+        nodes = nodes.concat(criarNosIndividuais('Comodato', 136, 6, 'comodato', 5));
+        nodes = nodes.concat(criarNosIndividuais('Doação', 171, 6, 'doacao', 5));
+        nodes = nodes.concat(criarNosIndividuais('Próprio', 462, 6, 'proprio', 4));
+
+        // ========== NÍVEL 2: EXEMPLARES DO ACERVO ==========
+        nodes.push({id: 'unicos', name: 'Únicos\n566', symbolSize: 85, category: 3, value: 566});
+        nodes.push({id: 'repetidos2x', name: 'Repetidos 2x\n130', symbolSize: 60, category: 3, value: 130});
+        nodes.push({id: 'repetidos3x', name: 'Repetidos 3x\n42', symbolSize: 45, category: 3, value: 42});
+        nodes.push({id: 'repetidos4x', name: 'Repetidos 4x\n16', symbolSize: 35, category: 3, value: 16});
+        nodes.push({id: 'repetidos5x', name: 'Repetidos 5x\n15', symbolSize: 35, category: 3, value: 15});
+        
+        links.push({ source: 'acervo', target: 'unicos' });
+        links.push({ source: 'acervo', target: 'repetidos2x' });
+        links.push({ source: 'acervo', target: 'repetidos3x' });
+        links.push({ source: 'acervo', target: 'repetidos4x' });
+        links.push({ source: 'acervo', target: 'repetidos5x' });
+
+        // Itens individuais para Exemplares
+        nodes = nodes.concat(criarNosIndividuais('Único', 566, 6, 'unicos', 4));
+        nodes = nodes.concat(criarNosIndividuais('Rep2x', 130, 6, 'repetidos2x', 5));
+        nodes = nodes.concat(criarNosIndividuais('Rep3x', 42, 6, 'repetidos3x', 6));
+        nodes = nodes.concat(criarNosIndividuais('Rep4x', 16, 6, 'repetidos4x', 7));
+        nodes = nodes.concat(criarNosIndividuais('Rep5x', 15, 6, 'repetidos5x', 7));
+
+        // ========== NÍVEL 3: ORIGEM - COMODATO ==========
+        nodes.push({id: 'wagner', name: 'Wagner\n82', symbolSize: 55, category: 4, value: 82});
+        nodes.push({id: 'marlon', name: 'Marlon\n53', symbolSize: 50, category: 4, value: 53});
+        
+        links.push({ source: 'comodato', target: 'wagner' });
+        links.push({ source: 'comodato', target: 'marlon' });
+
+        // Itens individuais para Comodatários
+        nodes = nodes.concat(criarNosIndividuais('Wagner', 82, 6, 'wagner', 5));
+        nodes = nodes.concat(criarNosIndividuais('Marlon', 53, 6, 'marlon', 5));
+
+        // ========== NÍVEL 3: ORIGEM - DOAÇÃO ==========
+        nodes.push({id: 'doadores', name: 'Doadores\n15', symbolSize: 50, category: 5, value: 15});
+        links.push({ source: 'doacao', target: 'doadores' });
+
+        // Itens individuais para Doadores
+        nodes = nodes.concat(criarNosIndividuais('Doador', 15, 6, 'doadores', 8));
+
+        var option = {
+            title: {
+                text: 'ACERVO COMPLETO - DETALHAMENTO INDIVIDUAL',
+                subtext: 'Cada item representado individualmente - Total: 769 itens',
+                top: 'top',
+                left: 'center',
+                textStyle: {
+                    fontSize: 18,
+                    fontWeight: 'bold'
+                }
+            },
+            tooltip: {
+                formatter: function(params) {
+                    if (params.dataType === 'node') {
+                        return params.data.name;
+                    }
+                }
+            },
+            legend: {
+                data: categories.map(function(category) {
+                    return category.name;
+                }),
+                left: 'left',
+                orient: 'vertical',
+                top: 'middle',
+                textStyle: {
+                    fontSize: 11
+                }
+            },
+            animationDurationUpdate: 1500,
+            animationEasingUpdate: 'quinticInOut',
+            series: [{
+                name: 'Acervo',
+                type: 'graph',
+                layout: 'force',
+                force: {
+                    repulsion: 1000,
+                    gravity: 0.1,
+                    edgeLength: 50,
+                    layoutAnimation: true
+                },
+                data: nodes,
+                links: links,
+                categories: categories,
+                roam: true,
+                zoom: 0.8,
+                label: {
+                    show: true,
+                    position: 'right',
+                    formatter: function(params) {
+                        // Mostra label completo apenas para nós principais
+                        if (params.data.symbolSize > 30) {
+                            return params.data.name;
+                        }
+                        return ''; // Esconde labels dos nós individuais para não poluir
+                    },
+                    fontSize: 10,
+                    fontWeight: 'bold'
+                },
+                lineStyle: {
+                    color: 'source',
+                    curveness: 0.1,
+                    width: 1,
+                    opacity: 0.6
+                },
+                emphasis: {
+                    focus: 'adjacency',
+                    lineStyle: {
+                        width: 3,
+                        opacity: 1
+                    }
+                },
+                itemStyle: {
+                    borderWidth: 1,
+                    borderColor: '#fff'
+                }
+            }]
+        };
+
+        myChart.setOption(option);
+        
+        // Redimensionar quando a janela mudar de tamanho
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+
+        // Dica para o usuário
+        console.log('Grágico carregado com ' + nodes.length + ' nós e ' + links.length + ' conexões');
+        console.log('Use o zoom e arraste para navegar no gráfico detalhado');
+    </script>
+</body>
+</html>
