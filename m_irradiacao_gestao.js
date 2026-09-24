@@ -975,11 +975,11 @@ window.abrirGerenciadorEspeciais = function() {
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <div>
                         <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Título</label>
-                        <input type="text" id="novoEspTitulo" placeholder="ex: Fulano de Tal" class="input-field">
+                        <input type="text" id="novoEspTitulo" placeholder="ex: Fulano de Tal" class="input-field" style="background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border);">
                     </div>
                     <div>
                         <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Sub-título (opcional)</label>
-                        <input type="text" id="novoEspSub" placeholder="ex: Equipe de Apoio" class="input-field">
+                        <input type="text" id="novoEspSub" placeholder="ex: Equipe de Apoio" class="input-field" style="background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border);">
                     </div>
                     <div>
                         <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Dias da Semana</label>

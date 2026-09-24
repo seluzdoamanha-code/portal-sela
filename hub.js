@@ -7560,11 +7560,11 @@ window.abrirGerenciadorEspeciaisWeb = function() {
                 <div style="display: flex; flex-direction: column; gap: 16px;">
                     <div>
                         <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">Título do Cartão</label>
-                        <input type="text" id="novoEspTituloWeb" placeholder="ex: Fulano de Tal" class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px;">
+                        <input type="text" id="novoEspTituloWeb" placeholder="ex: Fulano de Tal" class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px;">
                     </div>
                     <div>
                         <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">Sub-título (opcional)</label>
-                        <input type="text" id="novoEspSubWeb" placeholder="ex: Equipe de Apoio" class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px;">
+                        <input type="text" id="novoEspSubWeb" placeholder="ex: Equipe de Apoio" class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px;">
                     </div>
                     <div>
                         <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">Dias da Semana</label>
