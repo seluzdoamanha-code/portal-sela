@@ -326,7 +326,7 @@ function renderLista() {
     if (currentTab === 'ativos') {
         let especiaisFiltrados = window.cartoesEspeciais;
         if (currentDia !== '') {
-            especiaisFiltrados = especiaisFiltrados.filter(c => c.dia === currentDia);
+            especiaisFiltrados = especiaisFiltrados.filter(c => (c.dia || '').includes(currentDia));
         }
         
         // Ordenar por ordem
@@ -982,14 +982,14 @@ window.abrirGerenciadorEspeciais = function() {
                         <input type="text" id="novoEspSub" placeholder="ex: Equipe de Apoio" class="input-field">
                     </div>
                     <div>
-                        <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Dia da Semana</label>
-                        <select id="novoEspDia" class="input-field">
-                            <option value="Segunda-feira">Segunda-feira</option>
-                            <option value="Terça-feira">Terça-feira</option>
-                            <option value="Quarta-feira (Desobsessão)">Quarta-feira (Desobsessão)</option>
-                            <option value="Quarta-feira (Desencarnado)">Quarta-feira (Desencarnado)</option>
-                            <option value="Quinta-feira">Quinta-feira</option>
-                        </select>
+                        <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Dias da Semana</label>
+                        <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                            <label style="color: var(--text-main); font-size: 13px; display: flex; align-items: center; gap: 8px;"><input type="checkbox" value="Segunda-feira" class="chk-esp-dia"> Segunda-feira</label>
+                            <label style="color: var(--text-main); font-size: 13px; display: flex; align-items: center; gap: 8px;"><input type="checkbox" value="Terça-feira" class="chk-esp-dia"> Terça-feira</label>
+                            <label style="color: var(--text-main); font-size: 13px; display: flex; align-items: center; gap: 8px;"><input type="checkbox" value="Quarta-feira (Desobsessão)" class="chk-esp-dia"> Quarta-feira (Desobsessão)</label>
+                            <label style="color: var(--text-main); font-size: 13px; display: flex; align-items: center; gap: 8px;"><input type="checkbox" value="Quarta-feira (Desencarnado)" class="chk-esp-dia"> Quarta-feira (Desencarnado)</label>
+                            <label style="color: var(--text-main); font-size: 13px; display: flex; align-items: center; gap: 8px;"><input type="checkbox" value="Quinta-feira" class="chk-esp-dia"> Quinta-feira</label>
+                        </div>
                     </div>
                     <button onclick="salvarNovoCartaoEspecial()" class="btn-action" style="background: #f59e0b; color: white; padding: 12px; border-radius: 8px; font-weight: 600; border: none; margin-top: 4px; display:flex; align-items:center; justify-content:center; gap:8px;">
                         <span style="font-size: 16px;">➕</span> Adicionar Cartão
@@ -1043,13 +1043,20 @@ window.renderListaGerenciadorEspeciais = function() {
 window.salvarNovoCartaoEspecial = async function() {
     const titulo = document.getElementById('novoEspTitulo').value.trim();
     const subtitulo = document.getElementById('novoEspSub').value.trim();
-    const dia = document.getElementById('novoEspDia').value;
+    
+    const checkboxes = document.querySelectorAll('.chk-esp-dia:checked');
+    const diasSelecionados = Array.from(checkboxes).map(cb => cb.value);
     
     if (!titulo) {
         alert("O Título é obrigatório.");
         return;
     }
+    if (diasSelecionados.length === 0) {
+        alert("Selecione pelo menos um dia da semana.");
+        return;
+    }
 
+    const dia = diasSelecionados.join(', ');
     const id = 'esp_' + Date.now() + Math.floor(Math.random() * 1000);
     const ordem = window.cartoesEspeciais.length;
 
