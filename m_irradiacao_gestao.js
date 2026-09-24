@@ -271,7 +271,12 @@ function renderLista() {
         if (currentTab === 'ativos') {
             const profStr = localStorage.getItem('sela_user_profile');
             const prof = profStr ? JSON.parse(profStr) : {};
-            const canManage = (window.isAdmin && window.isAdmin()) || (prof.email === 'wmarques@gmail.com');
+            const email = (prof.email || '').toLowerCase().trim();
+            const isAdmin = (typeof window.isAdmin === 'function' && window.isAdmin()) || 
+                            prof.nivel_acesso === 'admin' || 
+                            prof.nivel_acesso === 'admin_global';
+            
+            const canManage = isAdmin || (email === 'wmarques@gmail.com');
             especiaisBtnContainer.style.display = canManage ? 'block' : 'none';
         } else {
             especiaisBtnContainer.style.display = 'none';
