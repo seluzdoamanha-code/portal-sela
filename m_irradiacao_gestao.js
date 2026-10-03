@@ -157,7 +157,29 @@ window.carregarLista = async function() {
         if (error) throw error;
 
         dataFull = data || [];
-        
+
+        // Auto-arquivamento: ativos com leituras >= semanas_alvo (mín. 3) e sem renovação automática
+        if (targetStatus === 'ativo') {
+            const MAX_IRRADIACOES = 3;
+            const paraArquivar = dataFull.filter(item => {
+                const semanas = item.semanas_alvo || MAX_IRRADIACOES;
+                const leituras = item.leituras || 0;
+                return leituras >= Math.max(semanas, MAX_IRRADIACOES) && !item.renovacao_automatica;
+            });
+            if (paraArquivar.length > 0) {
+                const idsArquivar = paraArquivar.map(i => i.id);
+                try {
+                    await db.from('app_irradiacao_solicitacoes')
+                        .update({ status: 'historico' })
+                        .in('id', idsArquivar);
+                    // Remove do cache local
+                    dataFull = dataFull.filter(i => !idsArquivar.includes(i.id));
+                } catch(archErr) {
+                    console.warn('Auto-arquivamento parcialmente falhou:', archErr);
+                }
+            }
+        }
+
         // Ordena localmente para ignorar emojis e caracteres especiais no início do nome
         dataFull.sort((a, b) => {
             const nameA = (a.nome_solicitado || '').replace(/[^a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ0-9]/g, '').trim();
@@ -220,7 +242,7 @@ function renderLista() {
 
     if (currentTab === 'encerra_semana') {
         filteredBase = filteredBase.filter(item => {
-            const semanas_alvo = item.semanas_alvo || 4;
+            const semanas_alvo = item.semanas_alvo || 3;
             const leituras = item.leituras || 0;
             return (semanas_alvo - leituras) === 1;
         });
@@ -364,7 +386,7 @@ function renderLista() {
         const safeNome = (item.nome_solicitado || '').replace(/'/g, "\\'");
         const safeEnd = (item.endereco || '').replace(/'/g, "\\'");
         const safeDias = (item.dias_semana || '').replace(/'/g, "\\'");
-        const semanasAlvoStr = item.semanas_alvo || 4;
+        const semanasAlvoStr = item.semanas_alvo || 3;
 
         let actions = '';
         let progressHtml = '';
@@ -385,7 +407,7 @@ function renderLista() {
                 nome: item.nome_solicitado,
                 endereco: item.endereco,
                 dias: item.dias_semana,
-                semanasAlvo: item.semanas_alvo || 4,
+                semanasAlvo: item.semanas_alvo || 3,
                 criadoPor: item.criado_por,
                 dataPed: dataPed,
                 totalLeiturasHtml: totalLeiturasHtml
@@ -399,7 +421,7 @@ function renderLista() {
             `;
         } else if (currentTab === 'ativos' || currentTab === 'encerra_semana') {
             const leituras = item.leituras || 0;
-            const semanas_alvo = item.semanas_alvo || 4;
+            const semanas_alvo = item.semanas_alvo || 3;
             let caixinhas = '';
             for (let i = 1; i <= semanas_alvo; i++) {
                 if (i <= leituras) {
@@ -547,7 +569,7 @@ window.abrirEdicao = function(id, nome, end, dias, semanas) {
             </div>
             <div>
                 <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Semanas Alvo</label>
-                <input type="number" id="editIrrSemanasSS" value="${semanas}" required min="1" max="52" class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                <input type="number" id="editIrrSemanasSS" value="${semanas}" required min="1" max="12" class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
             </div>
             <div style="margin-top: 16px;">
                 <button type="submit" class="btn" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; background: #FA9128; border: none; color: white; cursor: pointer;">Salvar Alterações</button>

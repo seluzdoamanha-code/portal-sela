@@ -2213,7 +2213,28 @@ async function carregarListaIrradiacao() {
         }
 
         let filteredBase = data || [];
-        
+
+        // Auto-arquivamento: ativos com leituras >= semanas_alvo (mín. 3) e sem renovação automática
+        if (targetStatus === 'ativo') {
+            const MAX_IRRADIACOES = 3;
+            const paraArquivar = filteredBase.filter(item => {
+                const semanas = item.semanas_alvo || MAX_IRRADIACOES;
+                const leituras = item.leituras || 0;
+                return leituras >= Math.max(semanas, MAX_IRRADIACOES) && !item.renovacao_automatica;
+            });
+            if (paraArquivar.length > 0) {
+                const idsArquivar = paraArquivar.map(i => i.id);
+                try {
+                    await db.from('app_irradiacao_solicitacoes')
+                        .update({ status: 'historico' })
+                        .in('id', idsArquivar);
+                    filteredBase = filteredBase.filter(i => !idsArquivar.includes(i.id));
+                } catch(archErr) {
+                    console.warn('Auto-arquivamento parcialmente falhou:', archErr);
+                }
+            }
+        }
+
         // Ordena localmente para ignorar emojis e caracteres especiais no início do nome
         filteredBase.sort((a, b) => {
             const nameA = (a.nome_solicitado || '').replace(/[^a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ0-9]/g, '').trim();
@@ -2223,7 +2244,7 @@ async function carregarListaIrradiacao() {
 
         if (currentIrradiacaoTab === 'encerra_semana') {
             filteredBase = filteredBase.filter(item => {
-                const semanas_alvo = item.semanas_alvo || 4;
+                const semanas_alvo = item.semanas_alvo || 3;
                 const leituras = item.leituras || 0;
                 return (semanas_alvo - leituras) === 1;
             });
@@ -2398,7 +2419,7 @@ async function carregarListaIrradiacao() {
             const safeNome = item.nome_solicitado.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const safeEndereco = (item.endereco || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const safeDias = (item.dias_semana || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            const semanasAlvoStr = item.semanas_alvo || 4;
+            const semanasAlvoStr = item.semanas_alvo || 3;
 
             let logsGlobal = item.log_datas_leituras;
             if (typeof logsGlobal === 'string') {
@@ -2416,7 +2437,7 @@ async function carregarListaIrradiacao() {
                     nome: item.nome_solicitado,
                     endereco: item.endereco,
                     dias: item.dias_semana,
-                    semanasAlvo: item.semanas_alvo || 4,
+                    semanasAlvo: item.semanas_alvo || 3,
                     criadoPor: item.criado_por,
                     dataPed: dataPed,
                     totalLeiturasHtml: totalLeiturasHtml
@@ -2427,7 +2448,7 @@ async function carregarListaIrradiacao() {
                 `;
             } else if (currentIrradiacaoTab === 'ativos' || currentIrradiacaoTab === 'encerra_semana') {
                 const leituras = item.leituras || 0;
-                const semanas_alvo = item.semanas_alvo || 4; // Fallback se não existir no DB
+                const semanas_alvo = item.semanas_alvo || 3; // Fallback se não existir no DB
                 let caixinhas = '';
                 for (let i = 1; i <= semanas_alvo; i++) {
                     if (i <= leituras) {
@@ -2830,8 +2851,8 @@ window.aprovarIrradiacao = function (id, nome, endereco, dias_semana) {
                 <div style="margin-bottom: 24px;">
                     <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Duração do Tratamento:</label>
                     <select id="triagemSemanas" style="width: 100%; padding: 8px 12px; border-radius: 8px; background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main);">
-                        <option value="4">4 Semanas (Padrão)</option>
-                        <option value="8">8 Semanas (Longo)</option>
+                        <option value="3" selected>3 Semanas (Padrão)</option>
+                        <option value="6">6 Semanas (Longo)</option>
                     </select>
                 </div>
 
@@ -3413,7 +3434,7 @@ window.abrirModalEdicaoIrradiacao = function (id, nome, endereco, dia, semanas) 
             </div>
             <div>
                 <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Semanas Alvo</label>
-                <input type="number" id="editIrrSemanasSS" value="${semanas}" required min="1" max="52" class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                <input type="number" id="editIrrSemanasSS" value="${semanas}" required min="1" max="12" class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
             </div>
             <div style="margin-top: 16px;">
                 <button type="submit" class="btn" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; background: var(--sela-orange); border: none; color: white; cursor: pointer;">Salvar Alterações</button>
