@@ -2153,12 +2153,14 @@ window.mudarAbaIrradiacao = function (aba) {
         estatisticasContainer.style.display = 'none';
         if (limpezaContainer) limpezaContainer.style.display = 'none';
         
-        if (aba === 'ativos' || aba === 'encerra_semana' || aba === 'arquivamento') {
+        if (aba === 'ativos' || aba === 'encerra_semana' || aba === 'historico' || aba === 'arquivamento') {
             listaIrradiacoes.style.display = 'flex';
             listaIrradiacoes.style.flexDirection = 'column';
+            listaIrradiacoes.style.gap = '16px';
         } else {
             listaIrradiacoes.style.display = 'grid';
             listaIrradiacoes.style.gridTemplateColumns = 'repeat(auto-fill, minmax(300px, 1fr))';
+            listaIrradiacoes.style.gap = '16px';
         }
 
         filtrosDias.style.display = 'flex';
