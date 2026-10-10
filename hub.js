@@ -2153,7 +2153,7 @@ window.mudarAbaIrradiacao = function (aba) {
         estatisticasContainer.style.display = 'none';
         if (limpezaContainer) limpezaContainer.style.display = 'none';
         
-        if (aba === 'ativos' || aba === 'encerra_semana' || aba === 'historico' || aba === 'arquivamento') {
+        if (aba === 'ativos' || aba === 'encerra_semana' || aba === 'arquivamento') {
             listaIrradiacoes.style.display = 'flex';
             listaIrradiacoes.style.flexDirection = 'column';
         } else {
@@ -2191,7 +2191,7 @@ async function carregarListaIrradiacao() {
         let targetStatus = currentIrradiacaoTab;
         if (currentIrradiacaoTab === 'ativos' || currentIrradiacaoTab === 'encerra_semana') targetStatus = 'ativo';
         if (currentIrradiacaoTab === 'pendentes') targetStatus = 'pendente';
-        if (currentIrradiacaoTab === 'historico' || currentIrradiacaoTab === 'arquivamento') targetStatus = 'historico';
+        if (currentIrradiacaoTab === 'historico' || currentIrradiacaoTab === 'arquivamento') targetStatus = 'historico'; // keep status as historico
 
         query = query.eq('status', targetStatus).order('nome_solicitado', { ascending: true });
 
@@ -2249,37 +2249,26 @@ async function carregarListaIrradiacao() {
                 return (semanas_alvo - leituras) === 1;
             });
         } else if (currentIrradiacaoTab === 'arquivamento') {
-            filteredBase = filteredBase.filter(item => {
-                let logs = item.log_datas_leituras;
-                if (typeof logs === 'string') {
-                    try { logs = JSON.parse(logs); } catch (e) { logs = []; }
-                }
-                if (Array.isArray(logs) && logs.length > 0) {
-                    const lastLog = new Date(logs[logs.length - 1]);
-                    if (!isNaN(lastLog)) {
-                        const diffTime = Math.abs(new Date() - lastLog);
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                        return diffDays > 30;
+            // Filtro de período: 30 dias ou tudo
+            const filtroPeriodo = window.arquivamentoPeriodo || '30'; // '30' = últimos 30 dias, 'todos' = sem filtro
+            if (filtroPeriodo === '30') {
+                filteredBase = filteredBase.filter(item => {
+                    let logs = item.log_datas_leituras;
+                    if (typeof logs === 'string') {
+                        try { logs = JSON.parse(logs); } catch (e) { logs = []; }
                     }
-                }
-                return false;
-            });
-        } else if (currentIrradiacaoTab === 'historico') {
-            filteredBase = filteredBase.filter(item => {
-                let logs = item.log_datas_leituras;
-                if (typeof logs === 'string') {
-                    try { logs = JSON.parse(logs); } catch (e) { logs = []; }
-                }
-                if (Array.isArray(logs) && logs.length > 0) {
-                    const lastLog = new Date(logs[logs.length - 1]);
-                    if (!isNaN(lastLog)) {
-                        const diffTime = Math.abs(new Date() - lastLog);
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                        return diffDays <= 30;
+                    if (Array.isArray(logs) && logs.length > 0) {
+                        const lastLog = new Date(logs[logs.length - 1]);
+                        if (!isNaN(lastLog)) {
+                            const diffTime = Math.abs(new Date() - lastLog);
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            return diffDays > 30;
+                        }
                     }
-                }
-                return true;
-            });
+                    return false;
+                });
+            } // else 'todos' keeps all historico items (no extra filter)
+        }
         }
 
         // --- Cálculo e atualização dos botões de filtro ---

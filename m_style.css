@@ -2,7 +2,7 @@
 :root {
     --primary: #475569;
     --primary-hover: #334155;
-    --bg-dark: #F1F5F9; /* Slate 100 */
+    --bg-dark: #F0F8FF; /* Light pastel blue (AliceBlue) */
     --bg-panel: #FFFFFF; /* White */
     --bg-card: #FFFFFF;
     --text-main: #1E293B;
