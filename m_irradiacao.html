@@ -102,6 +102,35 @@
             accent-color: #facc15;
             cursor: pointer;
         }
+    .fast-tool-card {
+        background: var(--bg-panel);
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .fast-tool-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .fast-tool-icon {
+        font-size: 24px;
+        color: #fff;
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    .fast-tool-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-main);
+    }
     </style>
 </head>
 <body class="mobile-layout">
@@ -116,9 +145,27 @@
         <!-- Formulário -->
         <div id="formContainer">
             <div style="text-align: center; margin-bottom: 24px;">
-                <div style="font-size: 48px; margin-bottom: 12px;">✨</div>
-                <h2 style="font-size: 20px; color: var(--text-main); margin-bottom: 8px;">App de Irradiação</h2>
+                <div style="font-size: 32px; margin-bottom: 12px; opacity:0.4;">✨</div>
+                <h2 style="font-size: 18px; color: var(--text-main); margin-bottom: 8px; opacity:0.4;">App de Irradiação</h2>
                 <p style="color: var(--text-muted); font-size: 14px;">Preencha os dados abaixo para fazer uma nova solicitação de tratamento espiritual.</p>
+        <!-- Ferramentas Rápidas – destaque principal -->
+        <section id="fastToolsSection" class="m-section">
+            <h3 class="m-section-title">Ferramentas Rápidas</h3>
+            <div class="m-apps-grid" style="grid-template-columns: repeat(3,1fr); gap:12px;">
+                <div class="fast-tool-card" onclick="/* ação 1 */">
+                    <div class="fast-tool-icon" style="background:#06b6d4;">⚡</div>
+                    <div class="fast-tool-label">Ação 1</div>
+                </div>
+                <div class="fast-tool-card" onclick="/* ação 2 */">
+                    <div class="fast-tool-icon" style="background:#f97316;">📅</div>
+                    <div class="fast-tool-label">Ação 2</div>
+                </div>
+                <div class="fast-tool-card" onclick="/* ação 3 */">
+                    <div class="fast-tool-icon" style="background:#a78bfa;">📊</div>
+                    <div class="fast-tool-label">Ação 3</div>
+                </div>
+            </div>
+        </section>
             </div>
             
             <form id="formIrradiacao" style="display: flex; flex-direction: column; gap: 20px;">
