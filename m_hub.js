@@ -9,15 +9,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id');
         if (!id) {
-            // No id provided – show placeholder and stop loading
-            document.getElementById('mHubTitle').innerText = 'Sem ID';
-            document.getElementById('mHubName').innerText = 'Nenhuma atividade selecionada';
-            document.getElementById('mHubDesc').style.display = 'none';
+            window.location.href = 'm_atividades.html';
             return;
         }
-
-
-
 
         // Configurar fechamento do Bottom Sheet ao clicar no backdrop
         const backdrop = document.getElementById('mBottomSheetBackdrop');
@@ -242,12 +236,6 @@
                     </div>
                     <div class="m-app-name">Gestão de Irradiações</div>
                 </a>
-                
-                    
-
-                    
-                    
-                
             `;
             document.getElementById('dynamicActivityIconContainer').innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>';
         } else if (nome.includes('evangelho')) {

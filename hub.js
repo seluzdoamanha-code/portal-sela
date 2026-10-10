@@ -2269,7 +2269,6 @@ async function carregarListaIrradiacao() {
                 });
             } // else 'todos' keeps all historico items (no extra filter)
         }
-        }
 
         // --- Cálculo e atualização dos botões de filtro ---
         let counts = {
