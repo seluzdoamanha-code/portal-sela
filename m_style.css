@@ -164,6 +164,41 @@ input:-webkit-autofill:active {
     gap: 16px;
 }
 
+/* Ferramentas Rápidas – cards grandes */
+.fast-tool-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+}
+.fast-tool-card:active {
+    transform: scale(0.96);
+}
+.fast-tool-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.fast-tool-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #fff;
+}
+.fast-tool-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+}
 .m-input {
     width: 100%;
     padding: 12px;
