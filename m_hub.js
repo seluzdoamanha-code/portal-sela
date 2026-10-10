@@ -8,12 +8,16 @@
     document.addEventListener('DOMContentLoaded', async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id');
-
         if (!id) {
-            alert('ID da estrutura não fornecido.');
-            window.location.href = 'm_atividades.html';
+            // No id provided – show placeholder and stop loading
+            document.getElementById('mHubTitle').innerText = 'Sem ID';
+            document.getElementById('mHubName').innerText = 'Nenhuma atividade selecionada';
+            document.getElementById('mHubDesc').style.display = 'none';
             return;
         }
+
+
+
 
         // Configurar fechamento do Bottom Sheet ao clicar no backdrop
         const backdrop = document.getElementById('mBottomSheetBackdrop');
