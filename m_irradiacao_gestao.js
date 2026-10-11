@@ -311,22 +311,18 @@ function renderLista() {
         filtered = filteredBase.filter(item => (item.dias_semana || '').includes(currentDia));
     }
 
-    // Controle do botão de Especiais
-    const especiaisBtnContainer = document.getElementById('especiaisBtnContainer');
-    if (especiaisBtnContainer) {
-        if (currentTab === 'ativos') {
-            const profStr = localStorage.getItem('sela_user_profile');
-            const prof = profStr ? JSON.parse(profStr) : {};
-            const email = (prof.email || '').toLowerCase().trim();
-            const isAdmin = (typeof window.isAdmin === 'function' && window.isAdmin()) || 
-                            prof.nivel_acesso === 'admin' || 
-                            prof.nivel_acesso === 'admin_global';
-            
-            const canManage = isAdmin || (email === 'wmarques@gmail.com');
-            especiaisBtnContainer.style.display = canManage ? 'block' : 'none';
-        } else {
-            especiaisBtnContainer.style.display = 'none';
-        }
+    // Controle da aba de Especiais
+    const tabEspeciais = document.getElementById('tab_especiais');
+    if (tabEspeciais) {
+        const profStr = localStorage.getItem('sela_user_profile');
+        const prof = profStr ? JSON.parse(profStr) : {};
+        const email = (prof.email || '').toLowerCase().trim();
+        const isAdmin = (typeof window.isAdmin === 'function' && window.isAdmin()) || 
+                        prof.nivel_acesso === 'admin' || 
+                        prof.nivel_acesso === 'admin_global';
+        
+        const canManage = isAdmin || (email === 'wmarques@gmail.com');
+        tabEspeciais.style.display = canManage ? 'inline-block' : 'none';
     }
 
     // Generate alphabet index

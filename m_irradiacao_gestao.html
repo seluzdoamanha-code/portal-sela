@@ -37,10 +37,11 @@
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
-            overflow-x: hidden;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             height: 100vh;
+            height: 100dvh;
         }
 
         .m-topbar {
@@ -129,9 +130,14 @@
             font-weight: 500;
         }
 
-        .m-content {
+        .m-scrollable-container {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .m-content {
             padding: 0 16px 80px 16px;
         }
 
@@ -144,6 +150,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            scroll-margin-top: 16px;
         }
 
         .m-card-header {
@@ -304,65 +311,61 @@
         </button>
     </div>
 
-    <!-- Abas -->
-    <div class="m-tabs-container">
-        <div class="m-tab active" onclick="mudarAba('pendentes')" id="tab_pendentes">📥 Pendentes</div>
-        <div class="m-tab" onclick="mudarAba('ativos')" id="tab_ativos">📋 Leitura</div>
-        <div class="m-tab" onclick="mudarAba('encerra_semana')" id="tab_encerra_semana">⏳ Encerra na Semana</div>
-        <div class="m-tab" onclick="mudarAba('historico')" id="tab_historico">🗄️ Histórico</div>
-        <div class="m-tab" onclick="mudarAba('arquivamento')" id="tab_arquivamento">📦 Arquivamento</div>
-        <div class="m-tab" onclick="mudarAba('estatisticas')" id="tab_estatisticas">📊 Estatísticas</div>
-    </div>
-
-    <!-- Filtros de Dia -->
-    <div class="m-filters-container" id="filtersContainer">
-        <div class="m-filter-pill active" onclick="setDia('')" id="pill_todos">Todos <span id="count_Todos" style="opacity:0.6;font-size:11px;margin-left:4px;">(0)</span></div>
-        <div class="m-filter-pill" onclick="setDia('Segunda-feira')" id="pill_segunda">Segunda <span id="count_Segunda-feira" style="opacity:0.6;font-size:11px;margin-left:4px;">(0)</span></div>
-        <div class="m-filter-pill" onclick="setDia('Terça-feira')" id="pill_terca">Terça <span id="count_Terça-feira" style="opacity:0.6;font-size:11px;margin-left:4px;">(0)</span></div>
-        <div class="m-filter-pill" onclick="setDia('Quarta-feira (Desobsessão)')" id="pill_qua_desob">Qua (Desob) <span id="count_Quarta-feira (Desobsessão)" style="opacity:0.6;font-size:11px;margin-left:4px;">(0)</span></div>
-        <div class="m-filter-pill" onclick="setDia('Quarta-feira (Desencarnado)')" id="pill_qua_desenc">Qua (Desenc) <span id="count_Quarta-feira (Desencarnado)" style="opacity:0.6;font-size:11px;margin-left:4px;">(0)</span></div>
-        <div class="m-filter-pill" onclick="setDia('Quinta-feira')" id="pill_quinta">Quinta <span id="count_Quinta-feira" style="opacity:0.6;font-size:11px;margin-left:4px;">(0)</span></div>
-    </div>
-
-    <!-- Filtros de Letra -->
-    <div id="filtrosLetrasIrr" style="display: none; gap: 8px; padding: 0 16px 12px 16px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;"></div>
-
-    <!-- Gerenciador de Especiais -->
-    <div id="especiaisBtnContainer" style="display: none; padding: 0 16px 12px 16px;">
-        <button onclick="abrirGerenciadorEspeciais()" class="btn-action" style="width: 100%; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.2) 100%); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 10px; gap:8px;">
-            <span style="font-size: 16px;">✨</span>
-            <span style="font-size: 13px; font-weight: 600;">Gerenciar Cartões Especiais</span>
-        </button>
-    </div>
-
-    <!-- Lista de Cards -->
-    <div class="m-content" id="listaGestaoIrradiacoes">
-        <!-- Preenchido via JS -->
-    </div>
-
-    <!-- Estatísticas -->
-    <div class="m-content" id="estatisticasContainer" style="display: none;">
-        <div class="m-card">
-            <div class="m-card-title" style="margin-bottom: 16px;">Evolução de Leituras (Semanas)</div>
-            <div style="height: 250px; width: 100%;">
-                <canvas id="irradiacaoSemanalChart"></canvas>
-            </div>
+    <!-- Conteúdo com rolagem vertical unificada -->
+    <div class="m-scrollable-container" id="mainScrollContainer">
+        <!-- Abas -->
+        <div class="m-tabs-container">
+            <div class="m-tab active" onclick="mudarAba('pendentes')" id="tab_pendentes">📥 Pendentes</div>
+            <div class="m-tab" onclick="mudarAba('ativos')" id="tab_ativos">📋 Leitura</div>
+            <div class="m-tab" onclick="mudarAba('encerra_semana')" id="tab_encerra_semana">⏳ Encerra na Semana</div>
+            <div class="m-tab" onclick="mudarAba('historico')" id="tab_historico">🗄️ Histórico</div>
+            <div class="m-tab" onclick="mudarAba('arquivamento')" id="tab_arquivamento">📦 Arquivamento</div>
+            <div class="m-tab" onclick="mudarAba('estatisticas')" id="tab_estatisticas">📊 Estatísticas</div>
+            <div class="m-tab" onclick="abrirGerenciadorEspeciais()" id="tab_especiais" style="display: none; color: #f59e0b; font-weight: 600;">✨ Cartões Especiais</div>
         </div>
-        
-        <div class="m-card">
-            <div class="m-card-title" style="margin-bottom: 16px;">Total de Leituras por Dia da Semana</div>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
-                <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); padding: 12px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: bold; color: #10b981;" id="statTotalLeituras">0</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">Total Geral (Lidas)</div>
-                </div>
-                <div style="background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); padding: 12px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: bold; color: #38bdf8;" id="statAtivos">0</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">Nomes Ativos</div>
+
+        <!-- Filtros de Dia -->
+        <div class="m-filters-container" id="filtersContainer">
+            <div class="m-filter-pill active" onclick="setDia('')" id="pill_todos">Todos <span id="count_Todos" style="opacity:0.6;font-size:11px;margin-left:4px;">(0)</span></div>
+            <div class="m-filter-pill" onclick="setDia('Segunda-feira')" id="pill_segunda">Segunda <span id="count_Segunda-feira" style="opacity:0.6;font-size:11px;margin-left:4px;">(0)</span></div>
+            <div class="m-filter-pill" onclick="setDia('Terça-feira')" id="pill_terca">Terça <span id="count_Terça-feira" style="opacity:0.6;font-size:11px;margin-left:4px;">(0)</span></div>
+            <div class="m-filter-pill" onclick="setDia('Quarta-feira (Desobsessão)')" id="pill_qua_desob">Qua (Desob) <span id="count_Quarta-feira (Desobsessão)" style="opacity:0.6;font-size:11px;margin-left:4px;">(0)</span></div>
+            <div class="m-filter-pill" onclick="setDia('Quarta-feira (Desencarnado)')" id="pill_qua_desenc">Qua (Desenc) <span id="count_Quarta-feira (Desencarnado)" style="opacity:0.6;font-size:11px;margin-left:4px;">(0)</span></div>
+            <div class="m-filter-pill" onclick="setDia('Quinta-feira')" id="pill_quinta">Quinta <span id="count_Quinta-feira" style="opacity:0.6;font-size:11px;margin-left:4px;">(0)</span></div>
+        </div>
+
+        <!-- Filtros de Letra -->
+        <div id="filtrosLetrasIrr" style="display: none; gap: 8px; padding: 0 16px 12px 16px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;"></div>
+
+        <!-- Lista de Cards -->
+        <div class="m-content" id="listaGestaoIrradiacoes">
+            <!-- Preenchido via JS -->
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="m-content" id="estatisticasContainer" style="display: none;">
+            <div class="m-card">
+                <div class="m-card-title" style="margin-bottom: 16px;">Evolução de Leituras (Semanas)</div>
+                <div style="height: 250px; width: 100%;">
+                    <canvas id="irradiacaoSemanalChart"></canvas>
                 </div>
             </div>
-            <div style="height: 250px; width: 100%;">
-                <canvas id="irradiacaoChart"></canvas>
+            
+            <div class="m-card">
+                <div class="m-card-title" style="margin-bottom: 16px;">Total de Leituras por Dia da Semana</div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
+                    <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #10b981;" id="statTotalLeituras">0</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Total Geral (Lidas)</div>
+                    </div>
+                    <div style="background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #38bdf8;" id="statAtivos">0</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Nomes Ativos</div>
+                    </div>
+                </div>
+                <div style="height: 250px; width: 100%;">
+                    <canvas id="irradiacaoChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
