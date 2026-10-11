@@ -235,6 +235,30 @@ function atualizarContadores(dados) {
     document.getElementById('count_Quinta-feira').innerText = `(${counts['Quinta-feira']})`;
 }
 
+function formatarDiaBadge(diaStr) {
+    if (!diaStr) return '<span style="opacity:0.4;">-</span>';
+    const d = diaStr.toLowerCase();
+    let label = '';
+    let isDesenc = false;
+    
+    if (d.includes('desencarnado')) {
+        label = '4🌟';
+        isDesenc = true;
+    } else if (d.includes('segunda')) {
+        label = '2';
+    } else if (d.includes('terça') || d.includes('terca')) {
+        label = '3';
+    } else if (d.includes('desobsessão') || d.includes('desobsessao') || d.includes('quarta')) {
+        label = '4';
+    } else if (d.includes('quinta')) {
+        label = '5';
+    } else {
+        label = diaStr.trim();
+    }
+
+    return `<span style="display: inline-flex; align-items: center; justify-content: center; background: ${isDesenc ? 'rgba(234, 179, 8, 0.15)' : 'rgba(0, 0, 0, 0.05)'}; border: 1px solid ${isDesenc ? 'rgba(234, 179, 8, 0.4)' : 'var(--border)'}; color: ${isDesenc ? '#eab308' : 'var(--text-main)'}; font-weight: 700; font-size: 11px; padding: 1px 6px; border-radius: 6px; min-width: 20px; height: 20px; line-height: 1;">${label}</span>`;
+}
+
 function renderLista() {
     const listaEl = document.getElementById('listaGestaoIrradiacoes');
 
@@ -399,7 +423,20 @@ function renderLista() {
         const totalLeiturasHtml = arrayLogs.length > 0 ? ` | Irradiações:&nbsp;<strong style="color: var(--text-main);">${arrayLogs.length}</strong>` : '';
 
         if (currentTab === 'pendentes') {
-            progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: <strong style="color: var(--warning);">Pendente</strong>${totalLeiturasHtml}</div>`;
+            progressHtml = `
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; font-size: 11px; color: var(--text-muted); line-height: 1; padding: 2px 0;">
+                    <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                        <span>Dia:</span>
+                        ${formatarDiaBadge(item.dias_semana)}
+                    </div>
+                    <span style="color: var(--border); opacity: 0.5; user-select: none;">|</span>
+                    <span style="flex-shrink: 0;">Status: <strong style="color: var(--warning);">Pendente</strong></span>
+                    ${arrayLogs.length > 0 ? `
+                        <span style="color: var(--border); opacity: 0.5; user-select: none;">|</span>
+                        <span style="color: var(--text-main); font-weight: 600; flex-shrink: 0;">∑ ${arrayLogs.length}</span>
+                    ` : ''}
+                </div>
+            `;
             
             // Encode data for Side-Sheet
             const itemDataStr = encodeURIComponent(JSON.stringify({
@@ -425,13 +462,13 @@ function renderLista() {
             let caixinhas = '';
             for (let i = 1; i <= semanas_alvo; i++) {
                 if (i <= leituras) {
-                    caixinhas += `<span class="bola-irradiacao preenchida" style="display:inline-block; width:16px; height:16px; background:#10b981; border-radius:50%; margin-right:4px; margin-bottom:4px; transition: all 0.3s ease;"></span>`;
+                    caixinhas += `<span class="bola-irradiacao preenchida" style="display:inline-block; width:12px; height:12px; background:#10b981; border-radius:50%; transition: all 0.3s ease;"></span>`;
                 } else {
-                    caixinhas += `<span class="bola-irradiacao vazia" style="display:inline-block; width:16px; height:16px; border:2px solid #334155; border-radius:50%; margin-right:4px; margin-bottom:4px; transition: all 0.3s ease;"></span>`;
+                    caixinhas += `<span class="bola-irradiacao vazia" style="display:inline-block; width:12px; height:12px; border:2px solid #64748b; border-radius:50%; transition: all 0.3s ease;"></span>`;
                 }
             }
 
-            let lastDateHtml = 'N/A';
+            let lastDateHtml = '<span style="color: var(--text-muted);">-</span>';
             let logs = item.log_datas_leituras;
             if (typeof logs === 'string') {
                 try { logs = JSON.parse(logs); } catch (e) { logs = []; }
@@ -444,28 +481,34 @@ function renderLista() {
                     const today = new Date();
                     const isToday = (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear());
                     if (isToday) {
-                        lastDateHtml = `<strong style="color: #10b981;">Hoje</strong>`;
+                        lastDateHtml = `<strong style="color: #10b981; font-weight: 600;">Hoje</strong>`;
                     } else {
-                        lastDateHtml = lastDateStr;
+                        lastDateHtml = `<span style="color: var(--text-muted);">${lastDateStr}</span>`;
                     }
                 }
             }
 
             let checkboxRepetir = `
-                <label style="font-size: 12px; display: flex; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; margin: 0;">
-                    <input type="checkbox" id="chk_renovar_${item.id}" onchange="toggleRenovacaoAutomaticaMobile('${item.id}', this.checked)" ${item.renovacao_automatica ? 'checked' : ''}>
-                    Repetir
+                <label style="font-size: 11px; display: inline-flex; align-items: center; gap: 3px; color: var(--text-muted); cursor: pointer; margin: 0; line-height: 1;">
+                    <input type="checkbox" id="chk_renovar_${item.id}" onchange="toggleRenovacaoAutomaticaMobile('${item.id}', this.checked)" ${item.renovacao_automatica ? 'checked' : ''} style="margin: 0; width: 13px; height: 13px; accent-color: #10b981;">
+                    <span>Rep</span>
                 </label>
             `;
 
             progressHtml = `
-                <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
-                    <div>Atual: <strong style="color:var(--text-main);">${leituras}/${semanas_alvo}</strong> | Total: <strong style="color:var(--text-main);">${arrayLogs.length}</strong> | Última: ${lastDateHtml}</div>
-                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 2px;">
-                        ${checkboxRepetir}
-                        <div style="color: var(--border);">|</div>
-                        <div style="display: flex; align-items: center; gap: 2px;">${caixinhas}</div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; font-size: 11px; color: var(--text-muted); line-height: 1; padding: 2px 0;">
+                    <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                        <span>Dia:</span>
+                        ${formatarDiaBadge(item.dias_semana)}
                     </div>
+                    <span style="color: var(--border); opacity: 0.5; user-select: none;">|</span>
+                    <div style="display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0;">${caixinhas}</div>
+                    <span style="color: var(--border); opacity: 0.5; user-select: none;">|</span>
+                    <span style="color: var(--text-main); font-weight: 600; flex-shrink: 0;">∑ ${arrayLogs.length}</span>
+                    <span style="color: var(--border); opacity: 0.5; user-select: none;">|</span>
+                    <div style="flex-shrink: 0;">${checkboxRepetir}</div>
+                    <span style="color: var(--border); opacity: 0.5; user-select: none;">|</span>
+                    <div style="flex-shrink: 0;">${lastDateHtml}</div>
                 </div>
             `;
 
@@ -481,7 +524,7 @@ function renderLista() {
                 </button>
             `;
         } else if (currentTab === 'historico' || currentTab === 'arquivamento') {
-            let lastDateInfo = '';
+            let lastDateStr = '';
             let logs = item.log_datas_leituras;
             if (typeof logs === 'string') {
                 try { logs = JSON.parse(logs); } catch (e) { logs = []; }
@@ -489,10 +532,25 @@ function renderLista() {
             if (Array.isArray(logs) && logs.length > 0) {
                 const lastLog = new Date(logs[logs.length - 1]);
                 if (!isNaN(lastLog)) {
-                    lastDateInfo = ` | Última: <strong style="color: #cbd5e1;">${lastLog.toLocaleDateString('pt-BR')}</strong>`;
+                    lastDateStr = lastLog.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
                 }
             }
-            progressHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Status: Histórico${totalLeiturasHtml}${lastDateInfo}</div>`;
+            progressHtml = `
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; font-size: 11px; color: var(--text-muted); line-height: 1; padding: 2px 0;">
+                    <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                        <span>Dia:</span>
+                        ${formatarDiaBadge(item.dias_semana)}
+                    </div>
+                    <span style="color: var(--border); opacity: 0.5; user-select: none;">|</span>
+                    <span style="flex-shrink: 0;">Status: Histórico</span>
+                    <span style="color: var(--border); opacity: 0.5; user-select: none;">|</span>
+                    <span style="color: var(--text-main); font-weight: 600; flex-shrink: 0;">∑ ${arrayLogs.length}</span>
+                    ${lastDateStr ? `
+                        <span style="color: var(--border); opacity: 0.5; user-select: none;">|</span>
+                        <span style="flex-shrink: 0;">Última: ${lastDateStr}</span>
+                    ` : ''}
+                </div>
+            `;
 
             actions = `
                 <button class="btn-action" onclick="aprovar('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}')" style="flex: 1; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
@@ -515,8 +573,7 @@ function renderLista() {
                         <div class="m-card-subtitle">📍 ${endStr}</div>
                     </div>
                 </div>
-                <div class="m-card-meta" style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
-                    <div>Em: ${dataPed} | Dia: <span style="color: var(--text-main);">${item.dias_semana}</span></div>
+                <div class="m-card-meta">
                     ${progressHtml}
                 </div>
                 <div class="m-card-actions" style="display: flex; gap: 8px;">
