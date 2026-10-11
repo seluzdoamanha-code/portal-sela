@@ -102,6 +102,10 @@ window.switchTab = function(tabId) {
         } else if (typeof window.carregarAniversariantes === 'function') {
             window.carregarAniversariantes();
         }
+    } else if (tabId === 'senhas') {
+        if (typeof window.carregarSenhasAdmin === 'function') {
+            window.carregarSenhasAdmin();
+        }
     }
 };
 
@@ -1813,7 +1817,7 @@ window.carregarAgendaGlobal = async function() {
         const { data: eventos, error } = await db
             .from('agenda')
             .select('*, estruturas(nome)')
-            .order('data_hora_inicio', { ascending: true });
+            .order('data_hora_inicio', { ascending: false });
 
         if (error) throw error;
 
@@ -2983,4 +2987,474 @@ window.abrirSideSheetResumoAniv = async function(id) {
 window.fecharSideSheetResumoAniv = function() {
     document.getElementById('sideSheetResumoAniv').classList.remove('show');
     document.getElementById('panelResumoAniv').classList.remove('show');
+};
+
+// ==========================================
+// MÓDULO: COFRE DE SENHAS (LUZ DO AMANHÃ)
+// ==========================================
+
+window._senhasCadastradas = [];
+
+function escapeHtmlSenhas(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+window.carregarSenhasAdmin = async function() {
+    const container = document.getElementById('containerSenhasLista');
+    if (!container) return;
+
+    container.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 40px; grid-column: 1 / -1;">Carregando cofre de senhas...</div>';
+
+    try {
+        const { data, error } = await db
+            .from('configuracoes')
+            .select('valor')
+            .eq('chave', 'admin_senhas_guardadas')
+            .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+            console.error("Erro ao carregar senhas:", error);
+            throw error;
+        }
+
+        let lista = [];
+        if (data && data.valor) {
+            if (typeof data.valor === 'string') {
+                try {
+                    lista = JSON.parse(data.valor);
+                } catch(e) {
+                    console.error("Erro ao converter JSON de senhas:", e);
+                    lista = [];
+                }
+            } else if (Array.isArray(data.valor)) {
+                lista = data.valor;
+            }
+        }
+
+        window._senhasCadastradas = Array.isArray(lista) ? lista : [];
+        window.renderizarListaSenhas();
+
+    } catch (err) {
+        console.error("Falha ao carregar senhas:", err);
+        container.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 40px; grid-column: 1 / -1;">⚠️ Erro ao carregar as senhas. Tente novamente.</div>';
+    }
+};
+
+window.renderizarListaSenhas = function() {
+    const container = document.getElementById('containerSenhasLista');
+    if (!container) return;
+
+    const termoBusca = (document.getElementById('buscaSenhasInput')?.value || '').toLowerCase().trim();
+    const categoriaFiltro = (document.getElementById('filtroCategoriaSenha')?.value || '').trim();
+
+    let itens = [...window._senhasCadastradas];
+
+    // Ordenar alfabeticamente por título
+    itens.sort((a, b) => (a.titulo || '').localeCompare(b.titulo || ''));
+
+    // Filtros
+    if (termoBusca) {
+        itens = itens.filter(item => {
+            const titulo = (item.titulo || '').toLowerCase();
+            const usuario = (item.usuario || '').toLowerCase();
+            const obs = (item.observacoes || '').toLowerCase();
+            const url = (item.url || '').toLowerCase();
+            const cat = (item.categoria || '').toLowerCase();
+            return titulo.includes(termoBusca) || usuario.includes(termoBusca) || obs.includes(termoBusca) || url.includes(termoBusca) || cat.includes(termoBusca);
+        });
+    }
+
+    if (categoriaFiltro) {
+        itens = itens.filter(item => item.categoria === categoriaFiltro);
+    }
+
+    if (itens.length === 0) {
+        if (window._senhasCadastradas.length === 0) {
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: var(--bg-panel); border: 1px dashed var(--border); border-radius: 12px;">
+                    <div style="font-size: 42px; margin-bottom: 12px;">🔐</div>
+                    <h4 style="color: var(--text-main); margin: 0 0 8px 0; font-size: 16px;">Nenhuma senha cadastrada ainda</h4>
+                    <p style="color: var(--text-muted); font-size: 13px; max-width: 450px; margin: 0 auto 16px auto;">
+                        Guarde com segurança os acessos de hospedagem, redes sociais, contas de e-mail e equipamentos da Luz do Amanhã.
+                    </p>
+                    <button onclick="abrirModalSenha()" class="btn btn-primary" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; background: var(--primary); color: #fff; border: none;">
+                        ➕ Cadastrar Primeira Senha
+                    </button>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                    🔍 Nenhuma senha encontrada para os filtros aplicados.
+                </div>
+            `;
+        }
+        return;
+    }
+
+    const badgeCores = {
+        'Sistemas & Hospedagem': { bg: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: 'rgba(56, 189, 248, 0.3)' },
+        'E-mails & Contas': { bg: 'rgba(167, 139, 250, 0.12)', color: '#a78bfa', border: 'rgba(167, 139, 250, 0.3)' },
+        'Redes Sociais & Mídia': { bg: 'rgba(244, 114, 182, 0.12)', color: '#f472b6', border: 'rgba(244, 114, 182, 0.3)' },
+        'Wi-Fi & Equipamentos': { bg: 'rgba(52, 211, 153, 0.12)', color: '#34d399', border: 'rgba(52, 211, 153, 0.3)' },
+        'Financeiro & Bancos': { bg: 'rgba(251, 191, 36, 0.12)', color: '#fbbf24', border: 'rgba(251, 191, 36, 0.3)' },
+        'Outros': { bg: 'rgba(148, 163, 184, 0.12)', color: '#94a3b8', border: 'rgba(148, 163, 184, 0.3)' }
+    };
+
+    let html = '';
+
+    itens.forEach(item => {
+        const catEstilo = badgeCores[item.categoria] || badgeCores['Outros'];
+        const formatadaAtualizacao = item.atualizado_em 
+            ? new Date(item.atualizado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : '-';
+
+        let urlLimpa = item.url ? item.url.trim() : '';
+        if (urlLimpa && !urlLimpa.startsWith('http://') && !urlLimpa.startsWith('https://')) {
+            urlLimpa = 'https://' + urlLimpa;
+        }
+
+        html += `
+            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+                
+                <div>
+                    <!-- Topo: Categoria e Ações -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; background: ${catEstilo.bg}; color: ${catEstilo.color}; border: 1px solid ${catEstilo.border};">
+                            ${escapeHtmlSenhas(item.categoria || 'Geral')}
+                        </span>
+                        <div style="display: flex; gap: 6px;">
+                            <button onclick="abrirModalSenha('${item.id}')" title="Editar" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer;">
+                                ✏️
+                            </button>
+                            <button onclick="excluirSenhaAdmin('${item.id}')" title="Excluir" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer;">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Título do Serviço -->
+                    <div style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; word-break: break-word;">
+                        ${escapeHtmlSenhas(item.titulo)}
+                    </div>
+
+                    <!-- Link opcional -->
+                    ${urlLimpa ? `
+                        <div style="margin-bottom: 12px;">
+                            <a href="${escapeHtmlSenhas(urlLimpa)}" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: var(--primary); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-weight: 500;">
+                                🔗 Acessar Link ↗
+                            </a>
+                        </div>
+                    ` : '<div style="margin-bottom: 6px;"></div>'}
+
+                    <!-- Box Usuário -->
+                    <div style="background: rgba(0,0,0,0.15); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                        <div style="overflow: hidden; flex: 1;">
+                            <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); display: block; font-weight: 600; letter-spacing: 0.5px;">Usuário / Login</span>
+                            <span style="font-size: 13px; color: var(--text-main); font-weight: 500; word-break: break-all;">${item.usuario ? escapeHtmlSenhas(item.usuario) : '<span style="color:var(--text-muted);font-style:italic;">Não informado</span>'}</span>
+                        </div>
+                        ${item.usuario ? `
+                            <button onclick="copiarTextoGenerico('${escapeHtmlSenhas(item.usuario).replace(/'/g, "\\'")}', this)" title="Copiar usuário" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; white-space: nowrap; font-weight: 500;">
+                                📋 Copiar
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <!-- Box Senha -->
+                    <div style="background: rgba(0,0,0,0.15); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                        <div style="overflow: hidden; flex: 1;">
+                            <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); display: block; font-weight: 600; letter-spacing: 0.5px;">Senha</span>
+                            <span id="senhaTexto_${item.id}" data-visivel="0" style="font-size: 14px; font-family: monospace; color: var(--text-main); font-weight: 700; letter-spacing: 2px;">••••••••••••</span>
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <button onclick="toggleVisibilidadeSenhaCard('${item.id}', this)" title="Mostrar / Ocultar" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer;">
+                                👁️
+                            </button>
+                            <button onclick="copiarSenhaCard('${item.id}', this)" title="Copiar senha" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; white-space: nowrap; font-weight: 500;">
+                                📋 Copiar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Observações -->
+                    ${item.observacoes ? `
+                        <div style="background: rgba(255,255,255,0.03); border-left: 3px solid var(--primary); padding: 8px 10px; border-radius: 0 6px 6px 0; margin-bottom: 12px; font-size: 12px; color: var(--text-muted); line-height: 1.4; word-break: break-word;">
+                            <span style="font-weight: 600; color: var(--text-main); display: block; font-size: 11px; margin-bottom: 2px;">📝 Observações / 2FA:</span>
+                            ${escapeHtmlSenhas(item.observacoes)}
+                        </div>
+                    ` : ''}
+                </div>
+
+                <!-- Rodapé -->
+                <div style="padding-top: 10px; border-top: 1px dashed var(--border); font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+                    <span>Modificado em: ${formatadaAtualizacao}</span>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+};
+
+window.filtrarSenhasAdmin = function() {
+    window.renderizarListaSenhas();
+};
+
+window.abrirModalSenha = function(senhaId = null) {
+    const modal = document.getElementById('modalSenhaAdmin');
+    if (!modal) return;
+
+    const tituloModal = document.getElementById('modalSenhaTitulo');
+    const idInput = document.getElementById('senhaIdInput');
+    const nomeInput = document.getElementById('senhaTituloInput');
+    const catInput = document.getElementById('senhaCategoriaInput');
+    const urlInput = document.getElementById('senhaUrlInput');
+    const userInput = document.getElementById('senhaUsuarioInput');
+    const passInput = document.getElementById('senhaValorInput');
+    const obsInput = document.getElementById('senhaObsInput');
+    const btnEye = document.getElementById('btnToggleVerSenhaModal');
+
+    if (senhaId) {
+        const item = window._senhasCadastradas.find(s => s.id === senhaId);
+        if (item) {
+            tituloModal.innerHTML = '✏️ Editar Senha';
+            idInput.value = item.id;
+            nomeInput.value = item.titulo || '';
+            catInput.value = item.categoria || 'Sistemas & Hospedagem';
+            urlInput.value = item.url || '';
+            userInput.value = item.usuario || '';
+            passInput.value = item.senha || '';
+            obsInput.value = item.observacoes || '';
+        }
+    } else {
+        tituloModal.innerHTML = '🔑 Nova Senha';
+        idInput.value = '';
+        nomeInput.value = '';
+        catInput.value = 'Sistemas & Hospedagem';
+        urlInput.value = '';
+        userInput.value = '';
+        passInput.value = '';
+        obsInput.value = '';
+    }
+
+    passInput.type = 'password';
+    if (btnEye) btnEye.textContent = '👁️';
+
+    modal.style.display = 'flex';
+    modal.classList.add('show');
+    nomeInput.focus();
+};
+
+window.fecharModalSenha = function() {
+    const modal = document.getElementById('modalSenhaAdmin');
+    if (!modal) return;
+    modal.style.display = 'none';
+    modal.classList.remove('show');
+};
+
+window.salvarSenhaAdmin = async function(event) {
+    if (event) event.preventDefault();
+
+    const idInput = document.getElementById('senhaIdInput').value.trim();
+    const titulo = document.getElementById('senhaTituloInput').value.trim();
+    const categoria = document.getElementById('senhaCategoriaInput').value.trim();
+    const url = document.getElementById('senhaUrlInput').value.trim();
+    const usuario = document.getElementById('senhaUsuarioInput').value.trim();
+    const senha = document.getElementById('senhaValorInput').value.trim();
+    const observacoes = document.getElementById('senhaObsInput').value.trim();
+
+    if (!titulo) {
+        alert('Por favor, informe o nome ou serviço da credencial.');
+        return;
+    }
+    if (!senha) {
+        alert('Por favor, informe a senha ou chave de acesso.');
+        return;
+    }
+
+    const btnSalvar = document.getElementById('btnSalvarSenha');
+    const textoOriginal = btnSalvar ? btnSalvar.textContent : 'Salvar Senha';
+    if (btnSalvar) {
+        btnSalvar.disabled = true;
+        btnSalvar.textContent = 'Salvando...';
+    }
+
+    try {
+        const agora = new Date().toISOString();
+        let lista = [...window._senhasCadastradas];
+
+        if (idInput) {
+            const idx = lista.findIndex(s => s.id === idInput);
+            if (idx !== -1) {
+                lista[idx] = {
+                    ...lista[idx],
+                    titulo,
+                    categoria,
+                    url,
+                    usuario,
+                    senha,
+                    observacoes,
+                    atualizado_em: agora
+                };
+            }
+        } else {
+            const novoItem = {
+                id: 'pwd_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                titulo,
+                categoria,
+                url,
+                usuario,
+                senha,
+                observacoes,
+                criado_em: agora,
+                atualizado_em: agora
+            };
+            lista.push(novoItem);
+        }
+
+        const payload = JSON.stringify(lista);
+        const { error } = await db
+            .from('configuracoes')
+            .upsert({ chave: 'admin_senhas_guardadas', valor: payload }, { onConflict: 'chave' });
+
+        if (error) throw error;
+
+        window._senhasCadastradas = lista;
+        window.fecharModalSenha();
+        window.renderizarListaSenhas();
+
+    } catch (err) {
+        console.error("Erro ao salvar senha no Supabase:", err);
+        alert('Erro ao salvar credencial: ' + (err.message || 'Falha de comunicação.'));
+    } finally {
+        if (btnSalvar) {
+            btnSalvar.disabled = false;
+            btnSalvar.textContent = textoOriginal;
+        }
+    }
+};
+
+window.excluirSenhaAdmin = async function(id) {
+    const item = window._senhasCadastradas.find(s => s.id === id);
+    if (!item) return;
+
+    if (!confirm(`Deseja realmente excluir a senha de "${item.titulo}"? Esta ação não pode ser desfeita.`)) {
+        return;
+    }
+
+    try {
+        const lista = window._senhasCadastradas.filter(s => s.id !== id);
+        const payload = JSON.stringify(lista);
+        const { error } = await db
+            .from('configuracoes')
+            .upsert({ chave: 'admin_senhas_guardadas', valor: payload }, { onConflict: 'chave' });
+
+        if (error) throw error;
+
+        window._senhasCadastradas = lista;
+        window.renderizarListaSenhas();
+
+    } catch (err) {
+        console.error("Erro ao excluir senha:", err);
+        alert('Erro ao excluir: ' + (err.message || 'Falha de comunicação.'));
+    }
+};
+
+window.toggleVisibilidadeSenhaCard = function(id, btnEl) {
+    const span = document.getElementById('senhaTexto_' + id);
+    if (!span) return;
+    const item = window._senhasCadastradas.find(s => s.id === id);
+    if (!item) return;
+
+    const visivel = span.getAttribute('data-visivel') === '1';
+    if (visivel) {
+        span.textContent = '••••••••••••';
+        span.setAttribute('data-visivel', '0');
+        span.style.letterSpacing = '2px';
+        if (btnEl) btnEl.textContent = '👁️';
+    } else {
+        span.textContent = item.senha;
+        span.setAttribute('data-visivel', '1');
+        span.style.letterSpacing = 'normal';
+        if (btnEl) btnEl.textContent = '🙈';
+    }
+};
+
+window.copiarSenhaCard = function(id, btnEl) {
+    const item = window._senhasCadastradas.find(s => s.id === id);
+    if (item && item.senha) {
+        window.copiarTextoGenerico(item.senha, btnEl);
+    }
+};
+
+window.copiarTextoGenerico = function(texto, btnEl) {
+    if (!texto) return;
+
+    const aplicarFeedback = () => {
+        if (!btnEl) return;
+        const textoOriginal = btnEl.innerHTML;
+        btnEl.innerHTML = '✅ Copiado!';
+        btnEl.style.pointerEvents = 'none';
+        setTimeout(() => {
+            btnEl.innerHTML = textoOriginal;
+            btnEl.style.pointerEvents = 'auto';
+        }, 1800);
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(texto).then(aplicarFeedback).catch(() => fallbackCopiar(texto, aplicarFeedback));
+    } else {
+        fallbackCopiar(texto, aplicarFeedback);
+    }
+};
+
+function fallbackCopiar(texto, callbackSucesso) {
+    const ta = document.createElement('textarea');
+    ta.value = texto;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+        document.execCommand('copy');
+        if (callbackSucesso) callbackSucesso();
+    } catch(e) {
+        alert('Não foi possível copiar automaticamente para a área de transferência.');
+    }
+    document.body.removeChild(ta);
+}
+
+window.toggleVerSenhaModal = function() {
+    const passInput = document.getElementById('senhaValorInput');
+    const btnEye = document.getElementById('btnToggleVerSenhaModal');
+    if (!passInput) return;
+
+    if (passInput.type === 'password') {
+        passInput.type = 'text';
+        if (btnEye) btnEye.textContent = '🙈';
+    } else {
+        passInput.type = 'password';
+        if (btnEye) btnEye.textContent = '👁️';
+    }
+};
+
+window.gerarSenhaForteModal = function() {
+    const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%&*+?';
+    let res = '';
+    for (let i = 0; i < 16; i++) {
+        res += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const passInput = document.getElementById('senhaValorInput');
+    const btnEye = document.getElementById('btnToggleVerSenhaModal');
+    if (passInput) {
+        passInput.value = res;
+        passInput.type = 'text';
+        if (btnEye) btnEye.textContent = '🙈';
+    }
 };

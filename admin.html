@@ -158,6 +158,7 @@
                         <div class="admin-tab" onclick="switchTab('financas')">💰 Finanças</div>
                         <div class="admin-tab" onclick="switchTab('bd')">🗄️ Banco de Dados</div>
                         <div class="admin-tab" onclick="switchTab('aniversarios')">🎂 Aniversários</div>
+                        <div class="admin-tab" onclick="switchTab('senhas')">🔑 Senhas</div>
                     </div>
                 </div>
 
@@ -696,13 +697,55 @@
                     </div>
                 </div>
 
+                <!-- Aba de Senhas -->
+                <div id="tab-senhas" class="tab-content">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+                        <div>
+                            <h3 style="color: var(--text-main); margin: 0; font-size: 20px; display: flex; align-items: center; gap: 8px;">
+                                🔑 Cofre de Senhas da Luz do Amanhã
+                            </h3>
+                            <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 0 0;">
+                                Armazenamento centralizado e seguro das credenciais, acessos e senhas dos sistemas e serviços da instituição.
+                            </p>
+                        </div>
+                        <button onclick="abrirModalSenha()" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; background: var(--primary); color: #fff; border: none; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);">
+                            <span>➕</span> Nova Senha
+                        </button>
+                    </div>
+
+                    <!-- Barra de Filtros e Busca -->
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <input type="text" id="buscaSenhasInput" oninput="filtrarSenhasAdmin()" placeholder="🔍 Buscar por serviço, usuário, e-mail ou anotação..." style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.15); color: var(--text-main); font-size: 13px; box-sizing: border-box;">
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <select id="filtroCategoriaSenha" onchange="filtrarSenhasAdmin()" style="padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-panel); color: var(--text-main); font-size: 13px; cursor: pointer;">
+                                <option value="">Todas as Categorias</option>
+                                <option value="Sistemas & Hospedagem">🌐 Sistemas & Hospedagem</option>
+                                <option value="E-mails & Contas">📧 E-mails & Contas</option>
+                                <option value="Redes Sociais & Mídia">📱 Redes Sociais & Mídia</option>
+                                <option value="Wi-Fi & Equipamentos">📶 Wi-Fi & Equipamentos</option>
+                                <option value="Financeiro & Bancos">💳 Financeiro & Bancos</option>
+                                <option value="Outros">🏷️ Outros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Container de Lista de Senhas -->
+                    <div id="containerSenhasLista" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
+                        <div style="color: var(--text-muted); text-align: center; padding: 40px; grid-column: 1 / -1;">
+                            Carregando senhas...
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
 
     <!-- Scripts Customizados -->
     <script src="auth_guard.js?v=6"></script>
-    <script src="admin.js?v=45"></script>
+    <script src="admin.js?v=46"></script>
     <script src="sidebar.js?v=10"></script>
 
     <!-- Modal Gestão Plana de Equipes -->
@@ -798,6 +841,75 @@
         </div>
         <div class="side-sheet-content" id="conteudoResumoAniv" style="padding: 24px;">
             Carregando...
+        </div>
+    </div>
+
+    <!-- Modal de Senhas -->
+    <div id="modalSenhaAdmin" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 520px; padding: 24px; border-radius: 12px; box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+                <h3 id="modalSenhaTitulo" style="margin: 0; color: var(--text-main); font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                    🔑 Nova Senha
+                </h3>
+                <button type="button" onclick="fecharModalSenha()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 24px; line-height: 1;">&times;</button>
+            </div>
+
+            <form id="formSenhaAdmin" onsubmit="salvarSenhaAdmin(event)">
+                <input type="hidden" id="senhaIdInput" value="">
+                
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Serviço / Nome *</label>
+                    <input type="text" id="senhaTituloInput" required placeholder="Ex: Hostgator CPanel, Instagram Oficial, Wi-Fi Templo..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.15); color: var(--text-main); font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Categoria</label>
+                        <select id="senhaCategoriaInput" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-panel); color: var(--text-main); font-size: 13px; box-sizing: border-box;">
+                            <option value="Sistemas & Hospedagem">🌐 Sistemas & Hospedagem</option>
+                            <option value="E-mails & Contas">📧 E-mails & Contas</option>
+                            <option value="Redes Sociais & Mídia">📱 Redes Sociais & Mídia</option>
+                            <option value="Wi-Fi & Equipamentos">📶 Wi-Fi & Equipamentos</option>
+                            <option value="Financeiro & Bancos">💳 Financeiro & Bancos</option>
+                            <option value="Outros">🏷️ Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Link / URL de Acesso</label>
+                        <input type="text" id="senhaUrlInput" placeholder="Ex: https://..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.15); color: var(--text-main); font-size: 13px; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Usuário / E-mail / Login</label>
+                    <input type="text" id="senhaUsuarioInput" placeholder="Ex: contato@luzdoamanha.org.br ou admin" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.15); color: var(--text-main); font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Senha / Chave *</label>
+                        <button type="button" onclick="gerarSenhaForteModal()" style="background: none; border: none; color: var(--primary); font-size: 11px; cursor: pointer; text-decoration: underline;">
+                            ⚡ Gerar Senha Forte
+                        </button>
+                    </div>
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <input type="password" id="senhaValorInput" required placeholder="Digite ou gere a senha" style="width: 100%; padding: 10px 42px 10px 10px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.15); color: var(--text-main); font-size: 13px; box-sizing: border-box; font-family: monospace;">
+                        <button type="button" onclick="toggleVerSenhaModal()" id="btnToggleVerSenhaModal" style="position: absolute; right: 8px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; padding: 4px;" title="Mostrar / Ocultar">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Observações / Anotações de Recuperação</label>
+                    <textarea id="senhaObsInput" rows="3" placeholder="Ex: Código 2FA no app Authy; Recuperação vinculada ao número (81) 9...." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.15); color: var(--text-main); font-size: 13px; box-sizing: border-box; resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border); padding-top: 16px;">
+                    <button type="button" onclick="fecharModalSenha()" class="btn btn-secondary" style="padding: 8px 16px; border-radius: 6px; cursor: pointer; background: transparent; border: 1px solid var(--border); color: var(--text-main);">Cancelar</button>
+                    <button type="submit" id="btnSalvarSenha" class="btn btn-primary" style="padding: 8px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; background: var(--primary); color: #fff; border: none;">Salvar Senha</button>
+                </div>
+            </form>
         </div>
     </div>
 
