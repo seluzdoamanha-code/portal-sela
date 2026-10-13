@@ -8,6 +8,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (form) {
         form.addEventListener('submit', salvarIrradiacao);
     }
+
+    const inSol = document.getElementById('inIrrSolicitante');
+    if (inSol && !inSol.value) {
+        try {
+            const profStr = localStorage.getItem('sela_user_profile');
+            if (profStr) {
+                const prof = JSON.parse(profStr);
+                inSol.value = (prof.nome_curto || prof.nome || '').toUpperCase();
+            }
+        } catch(e) {}
+    }
 });
 
 let lastInsertedIds = [];
@@ -133,14 +144,17 @@ async function salvarIrradiacao(e) {
     btnSave.textContent = 'Enviando...';
     
     try {
-        let criadoPor = 'Desconhecido';
-        try {
-            const profStr = localStorage.getItem('sela_user_profile');
-            if (profStr) {
-                const prof = JSON.parse(profStr);
-                criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || 'Desconhecido';
-            }
-        } catch(e) {}
+        const solicitanteInput = document.getElementById('inIrrSolicitante')?.value.trim().toUpperCase();
+        let criadoPor = solicitanteInput || 'Desconhecido';
+        if (!solicitanteInput) {
+            try {
+                const profStr = localStorage.getItem('sela_user_profile');
+                if (profStr) {
+                    const prof = JSON.parse(profStr);
+                    criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || 'Desconhecido';
+                }
+            } catch(e) {}
+        }
 
         const semanas = parseInt(document.getElementById('inIrrSemanas')?.value || 3, 10);
 
@@ -177,6 +191,9 @@ async function salvarIrradiacao(e) {
             <div style="font-size: 15px; font-weight: 500; margin-bottom: 12px;">${endereco || 'Não informado'}</div>
             ` : ''}
 
+            <strong style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Solicitante:</strong><br>
+            <div style="font-size: 15px; font-weight: 500; margin-bottom: 12px;">${criadoPor}</div>
+
             <strong style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Semanas Alvo:</strong><br>
             <div style="font-size: 15px; font-weight: 500; margin-bottom: 12px;">${semanas} Semanas</div>
             
@@ -200,6 +217,17 @@ window.novaSolicitacaoIrr = function() {
     document.getElementById('formContainer').style.display = 'block';
     document.getElementById('panelSuccess').style.display = 'none';
     document.getElementById('groupIrrEndereco').style.display = 'block';
+
+    const inSol = document.getElementById('inIrrSolicitante');
+    if (inSol) {
+        try {
+            const profStr = localStorage.getItem('sela_user_profile');
+            if (profStr) {
+                const prof = JSON.parse(profStr);
+                inSol.value = (prof.nome_curto || prof.nome || '').toUpperCase();
+            }
+        } catch(e) {}
+    }
     
     lastInsertedIds = [];
 };

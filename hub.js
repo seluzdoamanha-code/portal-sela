@@ -1774,6 +1774,15 @@ window.carregarAppMiniApps = async function () {
 window.abrirMiniAppIrradiacao = async function () {
     const container = document.getElementById('containerApps');
 
+    let nomeLogado = '';
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (profStr) {
+            const prof = JSON.parse(profStr);
+            nomeLogado = prof.nome_curto || prof.nome || '';
+        }
+    } catch (e) { }
+
     container.innerHTML = `
         <style>
             #formIrradiacao .input-field {
@@ -1824,6 +1833,10 @@ window.abrirMiniAppIrradiacao = async function () {
                 <div id="groupIrrEndereco">
                     <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Endereço Completo</label>
                     <input type="text" id="inIrrEndereco" class="input-field" placeholder="RUA, NÚMERO, BAIRRO, CIDADE" style="width: 100%; text-transform: uppercase;">
+                </div>
+                <div>
+                    <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Solicitante (Responsável pelo Acompanhamento) *</label>
+                    <input type="text" id="inIrrSolicitante" value="${nomeLogado}" required class="input-field" placeholder="Nome do solicitante / responsável" style="width: 100%; text-transform: uppercase;">
                 </div>
                 <div>
                     <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 8px;">Dias para Irradiação *</label>
@@ -1939,6 +1952,18 @@ window.novaSolicitacaoIrr = function () {
     document.getElementById('formIrradiacao').reset();
     document.querySelectorAll('#formIrradiacao .tag-checkbox-ui').forEach(el => el.classList.remove('selected'));
     toggleDesencarnadoIrr(false);
+
+    let nomeLogado = '';
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (profStr) {
+            const prof = JSON.parse(profStr);
+            nomeLogado = prof.nome_curto || prof.nome || '';
+        }
+    } catch (e) { }
+    const solInput = document.getElementById('inIrrSolicitante');
+    if (solInput) solInput.value = nomeLogado;
+
     document.getElementById('formIrradiacao').style.display = 'flex';
     document.getElementById('panelSuccess').style.display = 'none';
     window.lastInsertedIrrIds = [];
@@ -2063,6 +2088,11 @@ window.carregarPainelGestaoIrradiacao = async function () {
                         </div>
 
                         <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Solicitante (Responsável pelo Acompanhamento) *</label>
+                            <input type="text" id="editIrrSolicitante" required class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px; text-transform: uppercase;">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
                             <label style="color: var(--text-muted); font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Dia / Necessidade</label>
                             <select id="editIrrDia" required class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px;">
                                 <option value="Segunda-feira">Segunda-feira</option>
@@ -2101,6 +2131,11 @@ window.carregarPainelGestaoIrradiacao = async function () {
                         <div class="form-group" style="margin-bottom: 12px;">
                             <label style="color: var(--text-muted); font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Endereço Completo</label>
                             <textarea id="diretoHubEndereco" class="input" rows="2" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; text-transform: uppercase; font-size: 14px;"></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Solicitante (Responsável pelo Acompanhamento) *</label>
+                            <input type="text" id="diretoHubSolicitante" required class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; text-transform: uppercase; font-size: 14px;">
                         </div>
 
                         <div class="form-group" style="margin-bottom: 12px;">
@@ -2469,6 +2504,7 @@ async function carregarListaIrradiacao() {
             const safeNome = item.nome_solicitado.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const safeEndereco = (item.endereco || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const safeDias = (item.dias_semana || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeCriadoPor = (item.criado_por || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const semanasAlvoStr = item.semanas_alvo || 3;
 
             let logsGlobal = item.log_datas_leituras;
@@ -2540,7 +2576,7 @@ async function carregarListaIrradiacao() {
                 actionsHtml = `
                     <button id="btn_ler_${item.id}" onclick="marcarLeituraIrr(this, '${item.id}', ${leituras}, ${semanas_alvo})" class="btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; padding: 8px 12px; transition: all 0.3s ease; width: 100%; font-weight: 600;">✅ Registrar Leitura</button>
                     <div style="display: flex; gap: 8px; width: 100%;">
-                        <button onclick="abrirModalEdicaoIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}', ${semanasAlvoStr})" class="btn btn-secondary" style="padding: 6px 12px; flex: 1;">✏️ Editar</button>
+                        <button onclick="abrirModalEdicaoIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}', ${semanasAlvoStr}, '${safeCriadoPor}')" class="btn btn-secondary" style="padding: 6px 12px; flex: 1;">✏️ Editar</button>
                         <button onclick="arquivarIrradiacao('${item.id}')" class="btn btn-secondary" style="padding: 6px 12px; flex: 1;">Arquivar</button>
                     </div>
                 `;
@@ -2561,7 +2597,7 @@ async function carregarListaIrradiacao() {
                 actionsHtml = `
                     <button onclick="aprovarIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}')" class="btn btn-secondary" style="padding: 8px 12px; width: 100%; font-weight: 600;">♻️ Reativar (Triagem)</button>
                     <div style="display: flex; gap: 8px; width: 100%;">
-                        <button onclick="abrirModalEdicaoIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}', ${semanasAlvoStr})" class="btn btn-secondary" style="padding: 6px 12px; flex: 1;">✏️ Editar</button>
+                        <button onclick="abrirModalEdicaoIrradiacao('${item.id}', '${safeNome}', '${safeEndereco}', '${safeDias}', ${semanasAlvoStr}, '${safeCriadoPor}')" class="btn btn-secondary" style="padding: 6px 12px; flex: 1;">✏️ Editar</button>
                         <button onclick="excluirIrradiacaoDefinitivo('${item.id}')" class="btn" style="color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; background: transparent; flex: 1;">Apagar</button>
                     </div>
                 `;
@@ -2573,7 +2609,7 @@ async function carregarListaIrradiacao() {
                         <div style="flex: 2; min-width: 250px;">
                             <h4 style="color: var(--primary); margin: 0 0 4px 0; font-size: 16px; font-weight: 700;">${item.nome_solicitado}</h4>
                             <p style="color: var(--text-muted); font-size: 13px; margin: 0;">📍 ${item.endereco || 'Endereço não informado'}</p>
-                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Criado em: ${dataPed}${item.criado_por ? ' por ' + item.criado_por : ''} | Alvo: <strong style="color: var(--primary);">${item.dias_semana}</strong></div>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Criado em: ${dataPed} | Solicitante: <strong style="color: var(--text-main);">${item.criado_por || 'Não informado'}</strong> | Alvo: <strong style="color: var(--primary);">${item.dias_semana}</strong></div>
                         </div>
                         <div style="flex: 2; display: flex; flex-direction: column; justify-content: center; border-left: 1px solid var(--border); padding-left: 24px; min-width: 250px;">
                             ${progressHtml}
@@ -2590,7 +2626,7 @@ async function carregarListaIrradiacao() {
                             <div style="flex: 1;">
                                 <h4 style="color: var(--primary); margin: 0 0 4px 0; font-size: 16px; font-weight: 700;">${item.nome_solicitado}</h4>
                                 <p style="color: var(--text-muted); font-size: 13px; margin: 0;">📍 ${item.endereco || 'Endereço não informado'}</p>
-                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Criado em: ${dataPed}${item.criado_por ? ' por ' + item.criado_por : ''} | Alvo: <strong style="color: var(--primary);">${item.dias_semana}</strong></div>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Criado em: ${dataPed} | Solicitante: <strong style="color: var(--text-main);">${item.criado_por || 'Não informado'}</strong> | Alvo: <strong style="color: var(--primary);">${item.dias_semana}</strong></div>
                                 ${progressHtml}
                             </div>
                         </div>
@@ -2649,13 +2685,18 @@ async function salvarIrradiacao(e) {
 
     try {
         let criadoPor = 'Desconhecido';
-        try {
-            const profStr = localStorage.getItem('sela_user_profile');
-            if (profStr) {
-                const prof = JSON.parse(profStr);
-                criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || 'Desconhecido';
-            }
-        } catch (e) { }
+        const solicitanteInput = document.getElementById('inIrrSolicitante')?.value.trim().toUpperCase();
+        if (solicitanteInput) {
+            criadoPor = solicitanteInput;
+        } else {
+            try {
+                const profStr = localStorage.getItem('sela_user_profile');
+                if (profStr) {
+                    const prof = JSON.parse(profStr);
+                    criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || 'Desconhecido';
+                }
+            } catch (e) { }
+        }
 
         const semanas = parseInt(document.getElementById('inIrrSemanas')?.value || 3, 10);
 
@@ -3069,8 +3110,17 @@ window.renderizarNomesHub = function () {
 window.abrirModalSolicitacaoDiretaHub = function (nome, endereco) {
     const modal = document.getElementById('modalSolicitacaoDiretaHub');
     if (!modal) return;
+    let nomeLogado = '';
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (profStr) {
+            const prof = JSON.parse(profStr);
+            nomeLogado = prof.nome_curto || prof.nome || '';
+        }
+    } catch(e){}
     document.getElementById('diretoHubNome').value = nome || '';
     document.getElementById('diretoHubEndereco').value = endereco || '';
+    document.getElementById('diretoHubSolicitante').value = nomeLogado;
     document.getElementById('diretoHubDia').value = 'Segunda-feira';
     document.getElementById('diretoHubSemanas').value = '3';
     modal.style.display = 'flex';
@@ -3087,6 +3137,7 @@ window.salvarSolicitacaoDiretaHub = async function (event) {
 
     const nome = (document.getElementById('diretoHubNome')?.value || '').trim().toUpperCase();
     const endereco = (document.getElementById('diretoHubEndereco')?.value || '').trim().toUpperCase();
+    const solicitanteInput = (document.getElementById('diretoHubSolicitante')?.value || '').trim().toUpperCase();
     const dia = document.getElementById('diretoHubDia')?.value;
     const semanas = parseInt(document.getElementById('diretoHubSemanas')?.value || 3, 10);
 
@@ -3096,14 +3147,16 @@ window.salvarSolicitacaoDiretaHub = async function (event) {
         return;
     }
 
-    let criadoPor = 'Trabalhador da Irradiação';
-    try {
-        const profStr = localStorage.getItem('sela_user_profile');
-        if (profStr) {
-            const prof = JSON.parse(profStr);
-            criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || criadoPor;
-        }
-    } catch(e){}
+    let criadoPor = solicitanteInput || 'Trabalhador da Irradiação';
+    if (!solicitanteInput) {
+        try {
+            const profStr = localStorage.getItem('sela_user_profile');
+            if (profStr) {
+                const prof = JSON.parse(profStr);
+                criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || criadoPor;
+            }
+        } catch(e){}
+    }
 
     try {
         const payload = {
@@ -3669,16 +3722,30 @@ window.carregarEstatisticasIrradiacao = async function () {
     }
 }
 
-window.abrirModalEdicaoIrradiacao = function (id, nome, endereco, dia, semanas) {
+window.abrirModalEdicaoIrradiacao = function (id, nome, endereco, dia, semanas, criadoPor) {
+    let nomeLogado = '';
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (profStr) {
+            const prof = JSON.parse(profStr);
+            nomeLogado = prof.nome_curto || prof.nome || '';
+        }
+    } catch(e){}
+    const safeCriadoPor = (criadoPor || nomeLogado || '').replace(/"/g, '&quot;');
+
     const html = `
         <form onsubmit="window.salvarEdicaoIrradiacaoSideSheet(event, '${id}')" style="display: flex; flex-direction: column; gap: 16px;">
             <div>
-                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Nome</label>
-                <input type="text" id="editIrrNomeSS" value="${nome}" required class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Nome Solicitado</label>
+                <input type="text" id="editIrrNomeSS" value="${nome}" required class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-transform: uppercase;">
             </div>
             <div>
                 <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Endereço</label>
-                <input type="text" id="editIrrEnderecoSS" value="${endereco}" required class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                <input type="text" id="editIrrEnderecoSS" value="${endereco}" class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-transform: uppercase;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Solicitante (Responsável pelo Acompanhamento) *</label>
+                <input type="text" id="editIrrSolicitanteSS" value="${safeCriadoPor}" required class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-transform: uppercase;">
             </div>
             <div>
                 <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Dia da Semana</label>
@@ -3707,16 +3774,20 @@ window.salvarEdicaoIrradiacaoSideSheet = async function (event, id) {
 
     const nome = document.getElementById('editIrrNomeSS').value.toUpperCase();
     const endereco = document.getElementById('editIrrEnderecoSS').value.toUpperCase();
+    const solicitante = document.getElementById('editIrrSolicitanteSS')?.value.trim().toUpperCase() || '';
     const dia = document.getElementById('editIrrDiaSS').value;
     const semanas = parseInt(document.getElementById('editIrrSemanasSS').value, 10);
 
     try {
-        const { error } = await db.from('app_irradiacao_solicitacoes').update({
+        const payload = {
             nome_solicitado: nome,
             endereco: endereco,
             dias_semana: dia,
             semanas_alvo: semanas
-        }).eq('id', id);
+        };
+        if (solicitante) payload.criado_por = solicitante;
+
+        const { error } = await db.from('app_irradiacao_solicitacoes').update(payload).eq('id', id);
 
         if (error) throw error;
 
@@ -6138,13 +6209,13 @@ window.abrirSideSheetPendenteHub = function(itemDataStr) {
 
                 <div style="font-size: 12px; color: var(--text-muted); background: var(--bg-dark); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
                     <div><strong>Data do Pedido:</strong> ${item.dataPed}</div>
-                    ${item.criadoPor ? `<div style="margin-top: 4px;"><strong>Criado por:</strong> ${item.criadoPor}</div>` : ''}
+                    <div style="margin-top: 4px;"><strong>Solicitante:</strong> <span style="color: var(--text-main); font-weight: 600;">${item.criadoPor || 'Não informado'}</span></div>
                 </div>
 
                 <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px;">
                     <button class="btn" style="background: var(--success); color: white; width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); aprovarIrradiacao('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}')">Aprovar p/ Leitura ✔️</button>
                     
-                    <button class="btn" style="background: transparent; color: var(--primary); width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--primary); font-weight: 600; font-size: 15px;" onclick="abrirModalEdicaoIrradiacao('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}', ${item.semanasAlvo})">Editar Solicitação ✏️</button>
+                    <button class="btn" style="background: transparent; color: var(--primary); width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--primary); font-weight: 600; font-size: 15px;" onclick="abrirModalEdicaoIrradiacao('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}', ${item.semanasAlvo}, '${(item.criadoPor || '').replace(/'/g, "\\'")}')">Editar Solicitação ✏️</button>
                     
                     <button class="btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); excluirIrradiacaoDefinitivo('${item.id}')">Excluir Solicitação 🗑️</button>
                 </div>

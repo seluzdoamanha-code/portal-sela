@@ -485,11 +485,17 @@ function renderLista() {
                 </div>
             `;
 
+            const safeNome = (item.nome_solicitado || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeEnd = (item.endereco || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeDias = (item.dias_semana || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeCriadoPor = (item.criado_por || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const semanasAlvoStr = item.semanas_alvo || 3;
+
             actions = `
                 <button id="btn_ler_${item.id}" onclick="marcarLeituraIrrMobile(this, '${item.id}', ${leituras}, ${semanas_alvo})" class="btn-action" style="flex: 1; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
                     <span style="font-size: 12px; font-weight: 600;">Registrar</span>
                 </button>
-                <button class="btn-action" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})" style="flex: 1; background: transparent; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
+                <button class="btn-action" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr}, '${safeCriadoPor}')" style="flex: 1; background: transparent; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
                     <span style="font-size: 12px; font-weight: 500;">Editar</span>
                 </button>
                 <button class="btn-action" onclick="arquivar('${item.id}')" style="flex: 1; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
@@ -529,7 +535,7 @@ function renderLista() {
                 <button class="btn-action" onclick="aprovar('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}')" style="flex: 1; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
                     <span style="font-size: 12px; font-weight: 500;">Reativar</span>
                 </button>
-                <button class="btn-action" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr})" style="flex: 1; background: transparent; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
+                <button class="btn-action" onclick="abrirEdicao('${item.id}', '${safeNome}', '${safeEnd}', '${safeDias}', ${semanasAlvoStr}, '${safeCriadoPor}')" style="flex: 1; background: transparent; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
                     <span style="font-size: 12px; font-weight: 500;">Editar</span>
                 </button>
                 <button class="btn-action" onclick="excluir('${item.id}')" style="flex: 1; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; display:flex; align-items:center; justify-content:center; padding: 6px; height: auto;">
@@ -543,7 +549,10 @@ function renderLista() {
                 <div class="m-card-header">
                     <div style="width: 100%;">
                         <div class="m-card-title">${item.nome_solicitado}</div>
-                        <div class="m-card-subtitle">📍 ${endStr}</div>
+                        <div class="m-card-subtitle" style="display: flex; flex-direction: column; gap: 2px;">
+                            <span>📍 ${endStr}</span>
+                            <span style="font-size: 11px; color: var(--text-muted);">Solicitante: <strong style="color: var(--text-main); font-weight: 600;">${item.criado_por || 'Não informado'}</strong></span>
+                        </div>
                     </div>
                 </div>
                 <div class="m-card-meta">
@@ -576,20 +585,34 @@ window.scrollToLetraIrr = function(letra) {
 // ----------------------------------------------------
 // BOTTOM SHEET (EDICAO)
 // ----------------------------------------------------
-window.abrirEdicao = function(id, nome, end, dias, semanas) {
+window.abrirEdicao = function(id, nome, end, dias, semanas, criadoPor) {
+    let nomeLogado = '';
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (profStr) {
+            const prof = JSON.parse(profStr);
+            nomeLogado = prof.nome_curto || prof.nome || '';
+        }
+    } catch(e){}
+    const safeCriadoPor = (criadoPor || nomeLogado || '').replace(/"/g, '&quot;');
+
     const html = `
         <form onsubmit="window.salvarEdicaoIrradiacaoSideSheet(event, '${id}')" style="display: flex; flex-direction: column; gap: 16px;">
             <div>
-                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Nome</label>
-                <input type="text" id="editIrrNomeSS" value="${nome}" required class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Nome Solicitado</label>
+                <input type="text" id="editIrrNomeSS" value="${nome}" required class="input" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-transform: uppercase;">
             </div>
             <div>
                 <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Endereço</label>
-                <input type="text" id="editIrrEnderecoSS" value="${end}" required class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                <input type="text" id="editIrrEnderecoSS" value="${end}" class="input" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-transform: uppercase;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Solicitante (Responsável pelo Acompanhamento) *</label>
+                <input type="text" id="editIrrSolicitanteSS" value="${safeCriadoPor}" required class="input" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-transform: uppercase;">
             </div>
             <div>
                 <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Dia da Semana</label>
-                <select id="editIrrDiaSS" class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                <select id="editIrrDiaSS" class="input" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
                     <option value="Segunda-feira" ${dias === 'Segunda-feira' ? 'selected' : ''}>Segunda-feira</option>
                     <option value="Terça-feira" ${dias === 'Terça-feira' ? 'selected' : ''}>Terça-feira</option>
                     <option value="Quarta-feira (Desobsessão)" ${dias === 'Quarta-feira (Desobsessão)' ? 'selected' : ''}>Quarta-feira (Desobsessão)</option>
@@ -599,7 +622,7 @@ window.abrirEdicao = function(id, nome, end, dias, semanas) {
             </div>
             <div>
                 <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Semanas Alvo</label>
-                <input type="number" id="editIrrSemanasSS" value="${semanas}" required min="1" max="12" class="input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                <input type="number" id="editIrrSemanasSS" value="${semanas}" required min="1" max="12" class="input" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
             </div>
             <div style="margin-top: 16px;">
                 <button type="submit" class="btn" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; background: #FA9128; border: none; color: white; cursor: pointer;">Salvar Alterações</button>
@@ -614,16 +637,20 @@ window.salvarEdicaoIrradiacaoSideSheet = async function (event, id) {
 
     const nome = document.getElementById('editIrrNomeSS').value.toUpperCase();
     const endereco = document.getElementById('editIrrEnderecoSS').value.toUpperCase();
+    const solicitante = (document.getElementById('editIrrSolicitanteSS')?.value || '').trim().toUpperCase();
     const dia = document.getElementById('editIrrDiaSS').value;
     const semanas = parseInt(document.getElementById('editIrrSemanasSS').value, 10);
 
     try {
-        const { error } = await db.from('app_irradiacao_solicitacoes').update({
+        const payload = {
             nome_solicitado: nome,
             endereco: endereco,
             dias_semana: dia,
             semanas_alvo: semanas
-        }).eq('id', id);
+        };
+        if (solicitante) payload.criado_por = solicitante;
+
+        const { error } = await db.from('app_irradiacao_solicitacoes').update(payload).eq('id', id);
 
         if (error) throw error;
 
@@ -998,13 +1025,13 @@ window.abrirSideSheetPendente = function(itemDataStr) {
 
                 <div style="font-size: 12px; color: var(--text-muted); background: var(--bg-dark); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
                     <div><strong>Data do Pedido:</strong> ${item.dataPed}</div>
-                    ${item.criadoPor ? `<div style="margin-top: 4px;"><strong>Criado por:</strong> ${item.criadoPor}</div>` : ''}
+                    <div style="margin-top: 4px;"><strong>Solicitante:</strong> <span style="color: var(--text-main); font-weight: 600;">${item.criadoPor || 'Não informado'}</span></div>
                 </div>
 
                 <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px;">
                     <button class="btn" style="background: #10b981; color: white; width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); aprovar('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}')">Aprovar p/ Leitura ✔️</button>
                     
-                    <button class="btn" style="background: transparent; color: #3b82f6; width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #3b82f6; font-weight: 600; font-size: 15px;" onclick="abrirEdicao('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}', ${item.semanasAlvo})">Editar Solicitação ✏️</button>
+                    <button class="btn" style="background: transparent; color: #3b82f6; width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #3b82f6; font-weight: 600; font-size: 15px;" onclick="abrirEdicao('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}', ${item.semanasAlvo}, '${(item.criadoPor || '').replace(/'/g, "\\'")}')">Editar Solicitação ✏️</button>
                     
                     <button class="btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); excluir('${item.id}')">Excluir Solicitação 🗑️</button>
                 </div>
@@ -1287,6 +1314,15 @@ window.abrirSolicitacaoDiretaMobile = function(nome, endereco) {
     const safeNome = (nome || '').replace(/"/g, '&quot;');
     const safeEnd = (endereco || '').replace(/"/g, '&quot;');
 
+    let nomeLogado = '';
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (profStr) {
+            const prof = JSON.parse(profStr);
+            nomeLogado = prof.nome_curto || prof.nome || '';
+        }
+    } catch(e){}
+
     const html = `
         <form onsubmit="window.salvarSolicitacaoDiretaMobile(event)" style="display: flex; flex-direction: column; gap: 14px;">
             <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #10b981; line-height: 1.4;">
@@ -1301,6 +1337,11 @@ window.abrirSolicitacaoDiretaMobile = function(nome, endereco) {
             <div>
                 <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Endereço Completo</label>
                 <input type="text" id="diretoIrrEnderecoMob" value="${safeEnd}" class="input" style="width: 100%; box-sizing: border-box; text-transform: uppercase; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Solicitante (Responsável pelo Acompanhamento) *</label>
+                <input type="text" id="diretoIrrSolicitanteMob" value="${nomeLogado}" required class="input" style="width: 100%; box-sizing: border-box; text-transform: uppercase; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
             </div>
 
             <div>
@@ -1346,6 +1387,7 @@ window.salvarSolicitacaoDiretaMobile = async function(event) {
 
     const nome = (document.getElementById('diretoIrrNomeMob')?.value || '').trim().toUpperCase();
     const endereco = (document.getElementById('diretoIrrEnderecoMob')?.value || '').trim().toUpperCase();
+    const solicitanteInput = (document.getElementById('diretoIrrSolicitanteMob')?.value || '').trim().toUpperCase();
     const dia = document.getElementById('diretoIrrDiaMob')?.value;
     const semanas = parseInt(document.getElementById('diretoIrrSemanasMob')?.value || 3, 10);
     const estruturaId = localStorage.getItem('estrutura_atual') || '24c0069b-e161-4a03-8599-c4ae054301e3';
@@ -1356,14 +1398,16 @@ window.salvarSolicitacaoDiretaMobile = async function(event) {
         return;
     }
 
-    let criadoPor = 'Trabalhador da Irradiação';
-    try {
-        const profStr = localStorage.getItem('sela_user_profile');
-        if (profStr) {
-            const prof = JSON.parse(profStr);
-            criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || criadoPor;
-        }
-    } catch(e){}
+    let criadoPor = solicitanteInput || 'Trabalhador da Irradiação';
+    if (!solicitanteInput) {
+        try {
+            const profStr = localStorage.getItem('sela_user_profile');
+            if (profStr) {
+                const prof = JSON.parse(profStr);
+                criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || criadoPor;
+            }
+        } catch(e){}
+    }
 
     try {
         const payload = {
