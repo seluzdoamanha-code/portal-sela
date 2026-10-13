@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual de Treinamento - Gestão de Irradiações | SELA</title>
+    <link rel="icon" type="image/png" href="logo_sela_color.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --primary-light: #a78bfa;
+            --secondary: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-sub: #334155;
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 32px 16px 80px 16px;
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        /* Topbar de Ações */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 24px;
+            margin-bottom: 32px;
+            position: sticky;
+            top: 16px;
+            z-index: 100;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover {
+            color: var(--text-main);
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Capa / Cabeçalho */
+        .doc-header {
+            text-align: center;
+            padding: 48px 24px;
+            background: linear-gradient(180deg, rgba(139, 92, 246, 0.12) 0%, rgba(30, 41, 59, 0.4) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 24px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .doc-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .logo-img {
+            max-width: 130px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+        }
+
+        .badge-tag {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .doc-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+        }
+
+        .doc-subtitle {
+            font-size: 16px;
+            color: var(--text-muted);
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        /* Seções e Cards */
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: var(--primary-light);
+            flex-shrink: 0;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .section-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Caixas de Destaque / Alertas */
+        .callout {
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 20px 0;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            font-size: 14px;
+        }
+
+        .callout-info {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            color: #a5f3fc;
+        }
+
+        .callout-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fde68a;
+        }
+
+        .callout-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #a7f3d0;
+        }
+
+        /* Mockup Visual do Formulário */
+        .ui-mockup {
+            background: #090d16;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+        }
+
+        .ui-mockup-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .mock-field {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .mock-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #cbd5e1;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .mock-input {
+            width: 100%;
+            background: #131b2e;
+            border: 1.5px solid rgba(139, 92, 246, 0.4);
+            border-radius: 8px;
+            padding: 12px 14px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mock-badge-callout {
+            position: absolute;
+            right: 12px;
+            top: 28px;
+            background: #8b5cf6;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .mock-days-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .mock-day-pill {
+            background: #131b2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .mock-day-pill.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: #8b5cf6;
+            color: #c4b5fd;
+            font-weight: 600;
+        }
+
+        /* Tabela de Abas da Gestão */
+        .tabs-nav-preview {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 10px;
+            background: #090d16;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 24px;
+        }
+
+        .tab-chip {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            background: #1e293b;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab-chip.highlight {
+            background: rgba(139, 92, 246, 0.25);
+            color: #ddd6fe;
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+        }
+
+        .step-list {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .step-item {
+            position: relative;
+            padding-left: 52px;
+            margin-bottom: 24px;
+        }
+
+        .step-item::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+        }
+
+        .step-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .step-text {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* SVG Diagrama de Fluxo */
+        .flow-diagram-container {
+            background: #090d16;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            overflow-x: auto;
+            text-align: center;
+        }
+
+        /* Estilos de Impressão */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #0f172a !important;
+                padding: 0 !important;
+            }
+            .action-bar {
+                display: none !important;
+            }
+            .doc-header {
+                background: #f8fafc !important;
+                border: 1px solid #cbd5e1 !important;
+                color: #0f172a !important;
+                padding: 24px !important;
+            }
+            .doc-title {
+                color: #0f172a !important;
+            }
+            .doc-subtitle {
+                color: #475569 !important;
+            }
+            .section-card {
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: none !important;
+                page-break-inside: avoid;
+                margin-bottom: 24px !important;
+                padding: 20px !important;
+            }
+            .section-title {
+                color: #0f172a !important;
+            }
+            .section-desc, .step-text {
+                color: #475569 !important;
+            }
+            .ui-mockup, .flow-diagram-container {
+                background: #f8fafc !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+            .mock-input {
+                background: #ffffff !important;
+                border-color: #94a3b8 !important;
+                color: #0f172a !important;
+            }
+            .mock-label {
+                color: #334155 !important;
+            }
+            .callout-info {
+                background: #eff6ff !important;
+                border-color: #bfdbfe !important;
+                color: #1e3a8a !important;
+            }
+            .callout-warning {
+                background: #fefce8 !important;
+                border-color: #fef08a !important;
+                color: #854d0e !important;
+            }
+            .callout-success {
+                background: #f0fdf4 !important;
+                border-color: #bbf7d0 !important;
+                color: #14532d !important;
+            }
+            .step-title {
+                color: #0f172a !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- Barra de Ações Superior -->
+        <div class="action-bar">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">📘</span>
+                <div>
+                    <strong style="font-size: 14px; color: #fff;">Guia do Trabalhador</strong>
+                    <div style="font-size: 12px; color: var(--text-muted);">Sociedade Espírita Luz do Amanhã</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="window.print()" class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    Imprimir / Salvar em PDF
+                </button>
+                <a href="hub.html" class="btn btn-outline">Ir para o Hub</a>
+            </div>
+        </div>
+
+        <!-- Cabeçalho Principal -->
+        <header class="doc-header">
+            <img src="logo_sela_color.png" alt="SELA" class="logo-img">
+            <div>
+                <span class="badge-tag">Treinamento de Equipe</span>
+                <h1 class="doc-title">Manual de Gestão de Irradiações</h1>
+                <p class="doc-subtitle">
+                    Guia prático e ilustrado para o preenchimento de solicitações, acompanhamento espiritual, 
+                    condução das leituras e reativação de tratamentos.
+                </p>
+            </div>
+        </header>
+
+        <!-- SEÇÃO 1: VISÃO GERAL DO PROCESSO -->
+        <section class="section-card">
+            <div class="section-header">
+                <div class="section-icon">🔄</div>
+                <div>
+                    <h2 class="section-title">1. Visão Geral do Ciclo de Irradiação</h2>
+                    <p class="section-desc">Entenda o caminho de um pedido desde a sua criação até o encerramento das 3 semanas padrão.</p>
+                </div>
+            </div>
+
+            <div class="flow-diagram-container">
+                <svg viewBox="0 0 860 160" width="100%" height="auto" style="max-width: 860px; font-family: inherit;">
+                    <defs>
+                        <linearGradient id="gradPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#8b5cf6" />
+                            <stop offset="100%" stop-color="#6366f1" />
+                        </linearGradient>
+                        <linearGradient id="gradGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#10b981" />
+                            <stop offset="100%" stop-color="#059669" />
+                        </linearGradient>
+                        <linearGradient id="gradAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#f59e0b" />
+                            <stop offset="100%" stop-color="#d97706" />
+                        </linearGradient>
+                        <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#3b82f6" />
+                            <stop offset="100%" stop-color="#2563eb" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Passo 1: Solicitação -->
+                    <rect x="10" y="30" width="170" height="90" rx="12" fill="#1e293b" stroke="#8b5cf6" stroke-width="2"/>
+                    <text x="95" y="60" text-anchor="middle" fill="#c4b5fd" font-size="12" font-weight="700">1. SOLICITAÇÃO</text>
+                    <text x="95" y="80" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="600">Formulário</text>
+                    <text x="95" y="100" text-anchor="middle" fill="#94a3b8" font-size="11">Define Solicitante & Dias</text>
+
+                    <!-- Seta 1 -->
+                    <path d="M 185 75 L 225 75" stroke="#8b5cf6" stroke-width="2.5" marker-end="url(#arrow)" />
+                    <polygon points="225,75 217,70 217,80" fill="#8b5cf6"/>
+
+                    <!-- Passo 2: Pendentes -->
+                    <rect x="230" y="30" width="170" height="90" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+                    <text x="315" y="60" text-anchor="middle" fill="#7dd3fc" font-size="12" font-weight="700">2. PENDENTES</text>
+                    <text x="315" y="80" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="600">Triagem</text>
+                    <text x="315" y="100" text-anchor="middle" fill="#94a3b8" font-size="11">Aprovação / Edição</text>
+
+                    <!-- Seta 2 -->
+                    <polygon points="445,75 437,70 437,80" fill="#10b981"/>
+                    <path d="M 405 75 L 445 75" stroke="#10b981" stroke-width="2.5" />
+
+                    <!-- Passo 3: Leitura Ativa -->
+                    <rect x="450" y="30" width="170" height="90" rx="12" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+                    <text x="535" y="60" text-anchor="middle" fill="#6ee7b7" font-size="12" font-weight="700">3. LEITURAS</text>
+                    <text x="535" y="80" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="600">Painel de Leitura</text>
+                    <text x="535" y="100" text-anchor="middle" fill="#94a3b8" font-size="11">Reuniões nos dias alvo</text>
+
+                    <!-- Seta 3 -->
+                    <polygon points="665,75 657,70 657,80" fill="#f59e0b"/>
+                    <path d="M 625 75 L 665 75" stroke="#f59e0b" stroke-width="2.5" />
+
+                    <!-- Passo 4: Encerramento / Renovação -->
+                    <rect x="670" y="30" width="180" height="90" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="760" y="60" text-anchor="middle" fill="#fde68a" font-size="12" font-weight="700">4. ENCERRAMENTO</text>
+                    <text x="760" y="80" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="600">3 Semanas Alvo</text>
+                    <text x="760" y="100" text-anchor="middle" fill="#94a3b8" font-size="11">Renovação ou Histórico</text>
+                </svg>
+            </div>
+
+            <div class="callout callout-info">
+                <span style="font-size: 20px;">💡</span>
+                <div>
+                    <strong>Ponto Importante:</strong> O tratamento padrão de irradiação dura <strong>3 semanas</strong>. 
+                    Após esse prazo, o sistema direciona automaticamente o registro para análise e renovação.
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO 2: O PAPEL DO SOLICITANTE -->
+        <section class="section-card">
+            <div class="section-header">
+                <div class="section-icon">👤</div>
+                <div>
+                    <h2 class="section-title">2. O Campo "Solicitante" e sua Responsabilidade</h2>
+                    <p class="section-desc">Por que o Solicitante é a peça-chave do acompanhamento no Portal SELA.</p>
+                </div>
+            </div>
+
+            <p style="color: var(--text-muted); margin-bottom: 20px;">
+                O <strong>Solicitante</strong> é o trabalhador ou pessoa responsável direta por aquela solicitação. 
+                Mesmo que o trabalhador logado preencha o formulário, ele pode estar fazendo isso a pedido de outro irmão da casa — e por isso o nome pode ser modificado.
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 18px;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🎯</div>
+                    <strong style="color: #fff; font-size: 15px;">Acompanhamento Contínuo</strong>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-top: 6px;">
+                        É a pessoa de referência para saber o estado do assistido e se o tratamento ainda é necessário.
+                    </p>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 18px;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">📍</div>
+                    <strong style="color: #fff; font-size: 15px;">Atualização de Endereço</strong>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-top: 6px;">
+                        Caso o assistido mude de casa, o solicitante garante a correção no sistema para a equipe espiritual.
+                    </p>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 18px;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🔁</div>
+                    <strong style="color: #fff; font-size: 15px;">Renovação após 3 Semanas</strong>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-top: 6px;">
+                        Quando a irradiação encerra o ciclo de 3 semanas, o solicitante é quem solicita a repetição se necessário.
+                    </p>
+                </div>
+            </div>
+
+            <div class="callout callout-warning">
+                <span style="font-size: 20px;">⚠️</span>
+                <div>
+                    <strong>Atenção:</strong> O sistema preenche o campo automaticamente com o nome do trabalhador logado. 
+                    Se estiver preenchendo por outra pessoa, <strong>apague e digite o nome do trabalhador responsável</strong>!
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO 3: ANATOMIA DO FORMULÁRIO -->
+        <section class="section-card">
+            <div class="section-header">
+                <div class="section-icon">📝</div>
+                <div>
+                    <h2 class="section-title">3. Como Preencher o Formulário de Irradiação</h2>
+                    <p class="section-desc">Guia campo a campo para evitar erros e agilizar a triagem.</p>
+                </div>
+            </div>
+
+            <!-- Mockup do Formulário -->
+            <div class="ui-mockup">
+                <div class="ui-mockup-header">
+                    <span>✨ FORMULÁRIO DE NOVA SOLICITAÇÃO</span>
+                    <span style="color: #10b981;">● Conectado ao SELA</span>
+                </div>
+
+                <div class="mock-field">
+                    <label class="mock-label">Nome Completo do Necessitado *</label>
+                    <div class="mock-input">MARIA APARECIDA DA SILVA</div>
+                </div>
+
+                <div style="background: rgba(250, 204, 21, 0.08); border: 1px solid rgba(250, 204, 21, 0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" checked style="accent-color: #facc15;">
+                    <span style="color: #facc15; font-size: 13px; font-weight: 600;">É desencarnado (falecido)?</span>
+                    <span style="margin-left: auto; font-size: 11px; color: #fde68a;">Oculta endereço e foca em Quarta-feira</span>
+                </div>
+
+                <div class="mock-field">
+                    <label class="mock-label">Endereço Completo (apenas para encarnados)</label>
+                    <div class="mock-input">RUA DAS FLORES, 120 - CENTRO - SÃO PAULO</div>
+                </div>
+
+                <div class="mock-field" style="border: 2px dashed #8b5cf6; border-radius: 10px; padding: 8px; margin-bottom: 18px;">
+                    <label class="mock-label" style="color: #c4b5fd;">Solicitante (Responsável pelo Acompanhamento) *</label>
+                    <div class="mock-input" style="background: rgba(139, 92, 246, 0.15);">
+                        <span>WAGNER COSTA (OU OUTRO TRABALHADOR)</span>
+                        <span class="mock-badge-callout">EDITÁVEL</span>
+                    </div>
+                </div>
+
+                <div class="mock-field">
+                    <label class="mock-label">Dias para Irradiação *</label>
+                    <div class="mock-days-grid">
+                        <div class="mock-day-pill active">Segunda-feira<br><small>Influenciação</small></div>
+                        <div class="mock-day-pill active">Terça-feira<br><small>Saúde física</small></div>
+                        <div class="mock-day-pill">Quarta (Desob)<br><small>Desobsessão</small></div>
+                        <div class="mock-day-pill">Quarta (Desenc)<br><small>Desencarnado</small></div>
+                        <div class="mock-day-pill">Quinta-feira<br><small>Saúde física</small></div>
+                    </div>
+                </div>
+
+                <div class="mock-field">
+                    <label class="mock-label">Semanas Alvo (Duração)</label>
+                    <div class="mock-input" style="color: #10b981;">3 SEMANAS (PADRÃO RECOMENDADO)</div>
+                </div>
+            </div>
+
+            <ol class="step-list">
+                <li class="step-item">
+                    <div class="step-title">Nome do Necessitado</div>
+                    <div class="step-text">Digite o nome completo. Para desencarnados, o sistema adiciona o ícone 🌟 automaticamente.</div>
+                </li>
+                <li class="step-item">
+                    <div class="step-title">Opção "Desencarnado"</div>
+                    <div class="step-text">Ao marcar, o campo de endereço é recolhido automaticamente e a seleção de dia ajusta para Quarta-feira (Desencarnado).</div>
+                </li>
+                <li class="step-item">
+                    <div class="step-title">Definição do Solicitante</div>
+                    <div class="step-text">Confirme se o seu nome está correto ou digite o nome do trabalhador que solicitou o atendimento.</div>
+                </li>
+                <li class="step-item">
+                    <div class="step-title">Escolha dos Dias e Semanas Alvo</div>
+                    <div class="step-text">Selecione os dias da semana conforme o tipo de necessidade espiritual. A meta padrão é de 3 semanas.</div>
+                </li>
+            </ol>
+        </section>
+
+        <!-- SEÇÃO 4: ABAS DA GESTÃO DE IRRADIAÇÕES -->
+        <section class="section-card">
+            <div class="section-header">
+                <div class="section-icon">⚙️</div>
+                <div>
+                    <h2 class="section-title">4. Painel de Gestão: Guia das Abas</h2>
+                    <p class="section-desc">Entenda como navegar e atuar em cada uma das abas do sistema.</p>
+                </div>
+            </div>
+
+            <div class="tabs-nav-preview">
+                <div class="tab-chip">📥 Pendentes</div>
+                <div class="tab-chip">📋 Painel de Leitura</div>
+                <div class="tab-chip highlight">👥 Nomes Cadastrados</div>
+                <div class="tab-chip">⏳ Encerra na Semana</div>
+                <div class="tab-chip">🗄️ Histórico</div>
+                <div class="tab-chip">📊 Estatísticas</div>
+                <div class="tab-chip">🖨️ Imprimir</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                
+                <div style="background: rgba(255,255,255,0.02); border-left: 4px solid #38bdf8; border-radius: 0 12px 12px 0; padding: 16px;">
+                    <strong style="color: #38bdf8; font-size: 16px;">📥 1. Pendentes</strong>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">
+                        Todos os novos pedidos feitos pelo portal ou formulário externo chegam aqui. 
+                        A equipe analisa o nome e endereço, podendo <strong>aprovar para leitura</strong> ou <strong>editar</strong> informações no painel lateral (side-sheet).
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.02); border-left: 4px solid #10b981; border-radius: 0 12px 12px 0; padding: 16px;">
+                    <strong style="color: #10b981; font-size: 16px;">📋 2. Painel de Leitura</strong>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">
+                        Utilizado durante os dias de reunião espiritual. Permite filtrar por dia (Segunda, Terça, Quarta, Quinta), 
+                        filtrar por letra inicial e marcar a leitura realizada com o botão <strong>"Registrar Leitura"</strong>. 
+                        Cada registro atualiza o contador de sessões e a data da última leitura.
+                    </p>
+                </div>
+
+                <div style="background: rgba(139, 92, 246, 0.08); border-left: 4px solid #8b5cf6; border-radius: 0 12px 12px 0; padding: 16px; border: 1px solid rgba(139, 92, 246, 0.2);">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <strong style="color: #c4b5fd; font-size: 16px;">👥 3. Nomes Cadastrados (NOVO RECURSO)</strong>
+                        <span style="background: #8b5cf6; color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px;">DESTAQUE</span>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-top: 6px;">
+                        Reúne todos os assistidos já cadastrados no histórico da casa, trazendo sempre o <strong>endereço mais recente</strong>.
+                        <br>Ao clicar em um nome:
+                    </p>
+                    <ul style="margin: 8px 0 0 20px; font-size: 13px; color: #cbd5e1;">
+                        <li>Abre o formulário de <strong>Solicitação Direta</strong> com nome e endereço já preenchidos.</li>
+                        <li>Permite atualizar o endereço se houver mudança.</li>
+                        <li>Pré-preenche o <strong>Solicitante</strong> com quem está operando.</li>
+                        <li><strong>Entra direto na lista do dia escolhido</strong>, sem precisar passar pela triagem de pendentes!</li>
+                    </ul>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.02); border-left: 4px solid #f59e0b; border-radius: 0 12px 12px 0; padding: 16px;">
+                    <strong style="color: #f59e0b; font-size: 16px;">⏳ 4. Encerra na Semana</strong>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">
+                        Filtra os assistidos que já completaram o prazo previsto de 3 semanas (ou meta definida). 
+                        A equipe e o solicitante avaliam se o caso deve ser <strong>repetido/renovado</strong> para mais um ciclo ou <strong>arquivado no histórico</strong>.
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.02); border-left: 4px solid #64748b; border-radius: 0 12px 12px 0; padding: 16px;">
+                    <strong style="color: #94a3b8; font-size: 16px;">🗄️ 5. Histórico & Relatórios</strong>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">
+                        Consulta de todos os tratamentos já concluídos ou arquivados. Permite reativar qualquer registro passado caso a pessoa volte a necessitar de auxílio.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SEÇÃO 5: RESUMO PRÁTICO PARA O TREINAMENTO -->
+        <section class="section-card" style="background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);">
+            <div class="section-header">
+                <div class="section-icon">🎓</div>
+                <div>
+                    <h2 class="section-title">5. Resumo Prático para o Trabalhador</h2>
+                    <p class="section-desc">Passo a passo rápido para memorizar durante o atendimento.</p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 18px;">
+                    <div style="color: #38bdf8; font-weight: 700; margin-bottom: 8px;">Para Nova Solicitação:</div>
+                    <p style="font-size: 13px; color: var(--text-muted);">
+                        1. Abra o formulário de Irradiação.<br>
+                        2. Digite o Nome e marque Desencarnado se aplicável.<br>
+                        3. Preencha o Endereço.<br>
+                        4. <strong>Confira o Solicitante</strong> (você ou outro trabalhador).<br>
+                        5. Selecione os Dias e envie.
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 18px;">
+                    <div style="color: #c4b5fd; font-weight: 700; margin-bottom: 8px;">Para Renovar Alguém Já Conhecido:</div>
+                    <p style="font-size: 13px; color: var(--text-muted);">
+                        1. Vá na aba <strong>👥 Nomes Cadastrados</strong>.<br>
+                        2. Digite o nome na busca.<br>
+                        3. Clique sobre o nome desejado.<br>
+                        4. Confira o endereço e escolha o novo dia.<br>
+                        5. Clique em <strong>Incluir Direto</strong>!
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 18px;">
+                    <div style="color: #10b981; font-weight: 700; margin-bottom: 8px;">No Dia da Reunião de Irradiação:</div>
+                    <p style="font-size: 13px; color: var(--text-muted);">
+                        1. Acesse o <strong>📋 Painel de Leitura</strong>.<br>
+                        2. Filtre pelo dia atual (ex: Terça-feira).<br>
+                        3. Conforme as leituras ocorrem, clique em <strong>Registrar Leitura</strong>.<br>
+                        4. Ou use o botão <strong>🖨️ Imprimir Lista</strong> se a reunião for em papel.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rodapé do Documento -->
+        <footer style="text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: 40px;">
+            <p style="margin-bottom: 6px;">Sociedade Espírita Luz do Amanhã — SELA &bull; Sistema de Irradiações</p>
+            <p style="opacity: 0.7;">Documento gerado para treinamento e capacitação de trabalhadores da casa espiritual.</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>
