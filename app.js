@@ -34,9 +34,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (input) {
             input.value = '';
             input.focus();
-            if (typeof window.aplicarFiltros === 'function') {
-                window.aplicarFiltros();
-            }
+        }
+        const filterTag = document.getElementById('filterTag');
+        if (filterTag) {
+            filterTag.value = '';
+        }
+        const sortOrder = document.getElementById('sortOrder');
+        if (sortOrder) {
+            sortOrder.value = 'nome_az';
+        }
+        const chkOutros = document.getElementById('hideOutros');
+        if (chkOutros) {
+            chkOutros.checked = false;
+        }
+        if (typeof window.aplicarFiltros === 'function') {
+            window.aplicarFiltros();
         }
     };
     

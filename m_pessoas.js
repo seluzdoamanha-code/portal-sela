@@ -48,6 +48,15 @@
                 searchInput.value = '';
                 searchInput.focus();
             }
+            if (filterTag) {
+                filterTag.value = '';
+            }
+            if (sortOrder) {
+                sortOrder.value = 'nome_az';
+            }
+            if (hideOutros) {
+                hideOutros.checked = false;
+            }
             filtrarLista();
         };
 
