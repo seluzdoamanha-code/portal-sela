@@ -61,7 +61,11 @@ function calcularIdade(dataStr) {
 }
 
 const urlParams = new URLSearchParams(window.location.search);
-const estruturaId = urlParams.get('id');
+let estruturaId = urlParams.get('id') || localStorage.getItem('estrutura_atual');
+if (!estruturaId) {
+    estruturaId = '24c0069b-e161-4a03-8599-c4ae054301e3'; // Default para SELA
+}
+localStorage.setItem('estrutura_atual', estruturaId);
 
 document.addEventListener('DOMContentLoaded', async () => {
     if (!estruturaId) {
@@ -2020,7 +2024,7 @@ window.carregarPainelGestaoIrradiacao = async function () {
                 <button onclick="mudarAbaIrradiacao('estatisticas')" id="btnIrrEstatisticas" class="btn" style="white-space: nowrap; border-radius: 8px;">📊 Estatísticas</button>
                 <button onclick="mudarAbaIrradiacao('limpeza')" id="btnIrrLimpeza" class="btn" style="white-space: nowrap; border-radius: 8px;">🧹 Limpeza</button>
                 <button onclick="window.open('irradiacao_imprimir.html', '_blank')" id="btnIrrImprimir" class="btn" style="white-space: nowrap; border-radius: 8px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">🖨️ Imprimir Lista</button>
-                <button onclick="window.open('manual_irradiacao.html', '_blank')" id="btnIrrManual" class="btn" style="white-space: nowrap; border-radius: 8px; background: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3);">📘 Manual de Treinamento</button>
+                <button onclick="window.open('manual_irradiacao.html?id=' + encodeURIComponent('${estruturaId}'), '_blank')" id="btnIrrManual" class="btn" style="white-space: nowrap; border-radius: 8px; background: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3);">📘 Manual de Treinamento</button>
             </div>
             
             <div id="filtrosDiasIrr" style="display: none; gap: 12px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 8px;">

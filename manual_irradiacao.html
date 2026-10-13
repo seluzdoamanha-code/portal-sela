@@ -488,7 +488,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                     Imprimir / Salvar em PDF
                 </button>
-                <a href="hub.html" class="btn btn-outline">Ir para o Hub</a>
+                <button onclick="voltarAoHub()" class="btn btn-outline" style="cursor: pointer;">← Voltar ao Hub</button>
             </div>
         </div>
 
@@ -836,5 +836,24 @@
 
     </div>
 
+    <script>
+        function voltarAoHub() {
+            // Se foi aberto como popup/nova aba pelo Hub e tem janela pai aberta, apenas fecha
+            if (window.opener && !window.opener.closed) {
+                window.close();
+                return;
+            }
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id') || localStorage.getItem('estrutura_atual') || '24c0069b-e161-4a03-8599-c4ae054301e3';
+            
+            // Se for mobile ou parâmetro mobile=true
+            const isMobile = window.innerWidth <= 768 || urlParams.get('mobile') === 'true';
+            if (isMobile) {
+                window.location.href = `m_hub.html?id=${id}&tipo=irradiacao`;
+            } else {
+                window.location.href = `hub.html?id=${id}`;
+            }
+        }
+    </script>
 </body>
 </html>
