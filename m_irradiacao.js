@@ -142,6 +142,8 @@ async function salvarIrradiacao(e) {
             }
         } catch(e) {}
 
+        const semanas = parseInt(document.getElementById('inIrrSemanas')?.value || 3, 10);
+
         const recordsToInsert = dias.map(dia => ({
             estrutura_id: estruturaId,
             nome_solicitado: nome,
@@ -149,7 +151,8 @@ async function salvarIrradiacao(e) {
             dias_semana: dia,
             status: 'pendente',
             leituras: 0,
-            criado_por: criadoPor
+            criado_por: criadoPor,
+            semanas_alvo: semanas
         }));
         
         const { data, error } = await db
@@ -173,6 +176,9 @@ async function salvarIrradiacao(e) {
             <strong style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Endereço:</strong><br>
             <div style="font-size: 15px; font-weight: 500; margin-bottom: 12px;">${endereco || 'Não informado'}</div>
             ` : ''}
+
+            <strong style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Semanas Alvo:</strong><br>
+            <div style="font-size: 15px; font-weight: 500; margin-bottom: 12px;">${semanas} Semanas</div>
             
             <strong style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Dias:</strong><br>
             <div style="font-size: 15px; font-weight: 500;">${dias.join('<br>')}</div>

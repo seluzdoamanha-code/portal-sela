@@ -312,7 +312,8 @@
                     dias_semana: dia,
                     status: 'pendente',
                     leituras: 0,
-                    criado_por: 'Site Externo'
+                    criado_por: 'Site Externo',
+                    semanas_alvo: 3
                 }));
                 
                 const { data, error } = await db.from('app_irradiacao_solicitacoes').insert(recordsToInsert).select();

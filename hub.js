@@ -1835,6 +1835,16 @@ window.abrirMiniAppIrradiacao = async function () {
                         <label class="tag-checkbox-ui" style="text-align: center; line-height: 1.4;"><input type="checkbox" class="chk-dia" value="Quinta-feira"> Quinta-feira<br><small style="font-weight: normal; font-size: 11px; opacity: 0.8;">(Saúde física/espiritual)</small></label>
                     </div>
                 </div>
+                <div>
+                    <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Semanas Alvo (Duração do Tratamento)</label>
+                    <select id="inIrrSemanas" class="input-field" style="width: 100%;">
+                        <option value="3" selected>3 Semanas (Padrão)</option>
+                        <option value="6">6 Semanas (Longo)</option>
+                        <option value="1">1 Semana</option>
+                        <option value="2">2 Semanas</option>
+                        <option value="4">4 Semanas</option>
+                    </select>
+                </div>
                 <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
                     <button type="submit" class="btn btn-primary" id="btnSaveIrr">Enviar Solicitação</button>
                 </div>
@@ -2597,6 +2607,8 @@ async function salvarIrradiacao(e) {
             }
         } catch (e) { }
 
+        const semanas = parseInt(document.getElementById('inIrrSemanas')?.value || 3, 10);
+
         // Criar N registros independentes, um para cada dia selecionado
         const recordsToInsert = dias.map(dia => ({
             estrutura_id: estruturaId,
@@ -2605,7 +2617,8 @@ async function salvarIrradiacao(e) {
             dias_semana: dia,
             status: 'pendente',
             leituras: 0,
-            criado_por: criadoPor
+            criado_por: criadoPor,
+            semanas_alvo: semanas
         }));
 
         const { data, error } = await db.from('app_irradiacao_solicitacoes').insert(recordsToInsert).select('id');
@@ -2618,6 +2631,7 @@ async function salvarIrradiacao(e) {
         document.getElementById('resumeContent').innerHTML = `
             <strong>Nome:</strong> ${nome}<br>
             <strong>Endereço:</strong> ${endereco || 'Não informado'}<br>
+            <strong>Semanas Alvo:</strong> ${semanas} Semanas<br>
             <strong style="display:block; margin-top:8px;">Dias:</strong> 
             ${dias.join('<br>')}
         `;
