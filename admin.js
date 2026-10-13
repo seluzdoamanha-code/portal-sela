@@ -106,6 +106,10 @@ window.switchTab = function(tabId) {
         if (typeof window.carregarSenhasAdmin === 'function') {
             window.carregarSenhasAdmin();
         }
+    } else if (tabId === 'permissoes') {
+        if (typeof window.carregarPermissoesModulos === 'function') {
+            window.carregarPermissoesModulos();
+        }
     }
 };
 
@@ -3456,5 +3460,308 @@ window.gerarSenhaForteModal = function() {
         passInput.value = res;
         passInput.type = 'text';
         if (btnEye) btnEye.textContent = '🙈';
+    }
+};
+
+// ==========================================
+// GESTÃO DE PERMISSÕES GRANULARES POR MÓDULO & ESTRUTURA
+// ==========================================
+let permissoesModulosCache = [];
+
+window.carregarPermissoesModulos = async function() {
+    try {
+        await Promise.all([
+            popularSelectUsuariosPermissoes(),
+            popularSelectEstruturasPermissoes(),
+            carregarTabelaPermissoes()
+        ]);
+    } catch(err) {
+        console.error("Erro ao inicializar módulo de permissões:", err);
+    }
+};
+
+async function popularSelectUsuariosPermissoes() {
+    const sel = document.getElementById('permUserSelect');
+    if (!sel) return;
+    
+    sel.innerHTML = '<option value="">Carregando usuários...</option>';
+    
+    try {
+        const [resAuth, resPes] = await Promise.all([
+            db.from('usuarios_autorizados').select('email, nome, nivel_acesso').order('nome'),
+            db.from('pessoas').select('id, nome_completo, nome_curto, email').not('email', 'is', null).order('nome_completo')
+        ]);
+        
+        const usuariosMap = new Map();
+        
+        (resAuth.data || []).forEach(u => {
+            if (u.email) {
+                const em = u.email.toLowerCase().trim();
+                usuariosMap.set(em, {
+                    email: em,
+                    nome: u.nome || em
+                });
+            }
+        });
+        
+        (resPes.data || []).forEach(p => {
+            if (p.email) {
+                const em = p.email.toLowerCase().trim();
+                if (!usuariosMap.has(em)) {
+                    usuariosMap.set(em, {
+                        email: em,
+                        nome: p.nome_curto || p.nome_completo || em
+                    });
+                }
+            }
+        });
+        
+        const lista = Array.from(usuariosMap.values()).sort((a,b) => a.nome.localeCompare(b.nome));
+        
+        let html = '<option value="">-- Selecione o Trabalhador / Usuário --</option>';
+        lista.forEach(u => {
+            html += `<option value="${u.email}" data-nome="${(u.nome || '').replace(/"/g, '&quot;')}">${u.nome} (${u.email})</option>`;
+        });
+        
+        sel.innerHTML = html;
+    } catch(err) {
+        console.error("Erro ao popular usuários:", err);
+        sel.innerHTML = '<option value="">Erro ao carregar usuários</option>';
+    }
+}
+
+async function popularSelectEstruturasPermissoes() {
+    const sel = document.getElementById('permEstruturaSelect');
+    if (!sel) return;
+    
+    sel.innerHTML = '<option value="">Carregando estruturas...</option>';
+    
+    try {
+        const { data, error } = await db.from('estruturas').select('id, nome, tipo').order('nome');
+        if (error) throw error;
+        
+        let html = '<option value="">🌐 Todas as Estruturas (Acesso Global ao Módulo)</option>';
+        
+        const depts = (data || []).filter(e => (e.tipo || '').toLowerCase().includes('departamento'));
+        const ativs = (data || []).filter(e => !(e.tipo || '').toLowerCase().includes('departamento'));
+        
+        if (depts.length > 0) {
+            html += '<optgroup label="🏢 Departamentos">';
+            depts.forEach(d => {
+                html += `<option value="${d.id}" data-nome="${d.nome.replace(/"/g, '&quot;')}">${d.nome}</option>`;
+            });
+            html += '</optgroup>';
+        }
+        
+        if (ativs.length > 0) {
+            html += '<optgroup label="🗓️ Atividades & Outros">';
+            ativs.forEach(a => {
+                html += `<option value="${a.id}" data-nome="${a.nome.replace(/"/g, '&quot;')}">${a.nome}</option>`;
+            });
+            html += '</optgroup>';
+        }
+        
+        sel.innerHTML = html;
+    } catch(err) {
+        console.error("Erro ao popular estruturas:", err);
+        sel.innerHTML = '<option value="">Erro ao carregar estruturas</option>';
+    }
+}
+
+async function carregarTabelaPermissoes() {
+    const tbody = document.getElementById('tabelaPermissoesModulos');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="6" style="padding: 24px; text-align: center; color: var(--text-muted);">Carregando permissões...</td></tr>';
+    
+    try {
+        const { data, error } = await db.from('configuracoes').select('valor').eq('chave', 'admin_permissoes_modulos').single();
+        let lista = [];
+        if (data && data.valor) {
+            try {
+                lista = typeof data.valor === 'string' ? JSON.parse(data.valor) : data.valor;
+            } catch(e) { lista = []; }
+        }
+        permissoesModulosCache = Array.isArray(lista) ? lista : [];
+        renderizarTabelaPermissoes();
+    } catch(err) {
+        console.error("Erro ao carregar permissões:", err);
+        tbody.innerHTML = '<tr><td colspan="6" style="padding: 24px; text-align: center; color: #ef4444;">Erro ao carregar permissões.</td></tr>';
+    }
+}
+
+window.renderizarTabelaPermissoes = function() {
+    const tbody = document.getElementById('tabelaPermissoesModulos');
+    const badgeCont = document.getElementById('contagemPermissoes');
+    if (!tbody) return;
+    
+    const termo = (document.getElementById('filtroPermissoesInput')?.value || '').toLowerCase().trim();
+    
+    let dados = permissoesModulosCache;
+    if (termo) {
+        dados = dados.filter(p => {
+            return (p.nome || '').toLowerCase().includes(termo) ||
+                   (p.email || '').toLowerCase().includes(termo) ||
+                   (p.modulo_nome || '').toLowerCase().includes(termo) ||
+                   (p.estrutura_nome || '').toLowerCase().includes(termo);
+        });
+    }
+    
+    if (badgeCont) badgeCont.textContent = dados.length;
+    
+    if (dados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding: 24px; text-align: center; color: var(--text-muted);">Nenhuma permissão cadastrada.</td></tr>';
+        return;
+    }
+    
+    const mapaIcones = {
+        'equipe_organograma': '👥',
+        'ass_ocorrencias': '📋',
+        'irradiacao': '✨',
+        'atendimento_fraterno': '🕊️',
+        'documentos': '📁',
+        'agenda': '📅'
+    };
+    
+    tbody.innerHTML = dados.map(p => {
+        const icon = mapaIcones[p.modulo] || '🔐';
+        const isEdicao = p.nivel === 'edicao';
+        const badgeNivel = isEdicao
+            ? '<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;">✏️ Leitura & Edição</span>'
+            : '<span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;">👁️ Apenas Leitura</span>';
+            
+        const estruturaBadge = p.estrutura_id 
+            ? `<span style="color: var(--text-main); font-weight: 500;">${p.estrutura_nome || 'Estrutura Vinculada'}</span>`
+            : `<span style="color: #c4b5fd; font-weight: 600;">🌐 Todas as Estruturas</span>`;
+            
+        const dataFmt = p.criado_em ? new Date(p.criado_em).toLocaleDateString('pt-BR') : '-';
+        
+        return `
+            <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                <td style="padding: 12px 16px;">
+                    <div style="font-weight: 600; color: var(--text-main);">${p.nome || p.email}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">${p.email}</div>
+                </td>
+                <td style="padding: 12px 16px;">
+                    <div style="display: flex; align-items: center; gap: 6px; font-weight: 500;">
+                        <span>${icon}</span>
+                        <span>${p.modulo_nome || p.modulo}</span>
+                    </div>
+                </td>
+                <td style="padding: 12px 16px;">${estruturaBadge}</td>
+                <td style="padding: 12px 16px;">${badgeNivel}</td>
+                <td style="padding: 12px 16px; color: var(--text-muted); font-size: 12px;">
+                    <div>${dataFmt}</div>
+                    <small style="opacity: 0.7;">por ${p.criado_por || 'Admin'}</small>
+                </td>
+                <td style="padding: 12px 16px; text-align: center;">
+                    <button onclick="excluirPermissaoModulo('${p.id}')" style="background: transparent; border: none; color: #ef4444; cursor: pointer; padding: 6px; border-radius: 6px; font-size: 16px;" title="Revogar permissão">
+                        🗑️
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+};
+
+window.salvarPermissaoModulo = async function() {
+    const selUser = document.getElementById('permUserSelect');
+    const selMod = document.getElementById('permModuloSelect');
+    const selEst = document.getElementById('permEstruturaSelect');
+    const selNiv = document.getElementById('permNivelSelect');
+    
+    const email = (selUser.value || '').toLowerCase().trim();
+    if (!email) {
+        alert("Selecione um trabalhador/usuário.");
+        return;
+    }
+    
+    const optUser = selUser.options[selUser.selectedIndex];
+    const nome = optUser ? (optUser.getAttribute('data-nome') || optUser.text.split(' (')[0]) : email;
+    
+    const modulo = selMod.value;
+    const moduloNome = selMod.options[selMod.selectedIndex].text;
+    
+    const estruturaId = selEst.value || '';
+    const optEst = selEst.options[selEst.selectedIndex];
+    const estruturaNome = estruturaId ? (optEst ? (optEst.getAttribute('data-nome') || optEst.text) : '') : 'Todas as Estruturas';
+    
+    const nivel = selNiv.value;
+    
+    const indexExistente = permissoesModulosCache.findIndex(p => 
+        (p.email || '').toLowerCase().trim() === email &&
+        p.modulo === modulo &&
+        (p.estrutura_id || '') === estruturaId
+    );
+    
+    let adminNome = 'Admin';
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (profStr) {
+            const prof = JSON.parse(profStr);
+            adminNome = prof.nome_curto || prof.nome || 'Admin';
+        }
+    } catch(e) {}
+    
+    const novaPerm = {
+        id: 'perm_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        email: email,
+        nome: nome,
+        modulo: modulo,
+        modulo_nome: moduloNome,
+        estrutura_id: estruturaId,
+        estrutura_nome: estruturaNome,
+        nivel: nivel,
+        criado_em: new Date().toISOString(),
+        criado_por: adminNome
+    };
+    
+    let novaLista = [...permissoesModulosCache];
+    if (indexExistente >= 0) {
+        if (!confirm("Já existe uma permissão para este usuário neste módulo e estrutura. Deseja atualizar o nível de acesso?")) {
+            return;
+        }
+        novaLista[indexExistente] = { ...novaLista[indexExistente], nivel: nivel, criado_em: novaPerm.criado_em, criado_por: novaPerm.criado_por };
+    } else {
+        novaLista.unshift(novaPerm);
+    }
+    
+    try {
+        const { error } = await db
+            .from('configuracoes')
+            .upsert({ chave: 'admin_permissoes_modulos', valor: JSON.stringify(novaLista) }, { onConflict: 'chave' });
+            
+        if (error) throw error;
+        
+        permissoesModulosCache = novaLista;
+        if (window.cachePermissoesModulos) window.cachePermissoesModulos = novaLista;
+        window.cachePermissoesTimestamp = Date.now();
+        renderizarTabelaPermissoes();
+        alert("Permissão salva com sucesso!");
+    } catch(err) {
+        console.error("Erro ao salvar permissão:", err);
+        alert("Erro ao salvar permissão no banco de dados.");
+    }
+};
+
+window.excluirPermissaoModulo = async function(id) {
+    if (!confirm("Deseja realmente revogar esta permissão?")) return;
+    
+    const novaLista = permissoesModulosCache.filter(p => p.id !== id);
+    
+    try {
+        const { error } = await db
+            .from('configuracoes')
+            .upsert({ chave: 'admin_permissoes_modulos', valor: JSON.stringify(novaLista) }, { onConflict: 'chave' });
+            
+        if (error) throw error;
+        
+        permissoesModulosCache = novaLista;
+        if (window.cachePermissoesModulos) window.cachePermissoesModulos = novaLista;
+        window.cachePermissoesTimestamp = Date.now();
+        renderizarTabelaPermissoes();
+    } catch(err) {
+        console.error("Erro ao revogar permissão:", err);
+        alert("Erro ao revogar permissão.");
     }
 };

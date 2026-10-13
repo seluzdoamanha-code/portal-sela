@@ -618,6 +618,14 @@ async function carregarEquipe() {
             });
         }
         
+        // Permissão delegada para gestão da equipe e organograma desta estrutura
+        if (!isLider && window.checarPermissaoModulo) {
+            try {
+                const temPerm = await window.checarPermissaoModulo('equipe_organograma', estruturaId, 'edicao');
+                if (temPerm) isLider = true;
+            } catch(e) { }
+        }
+        
         const btnGerenciar = document.getElementById('btnHubGerenciarEquipe');
         if (btnGerenciar) {
             btnGerenciar.style.display = isLider ? 'block' : 'none';

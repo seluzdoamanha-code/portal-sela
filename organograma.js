@@ -22,6 +22,33 @@ function formatarDocumento(v) {
     return v;
 }
 
+let podeEditarOrganograma = false;
+
+async function checarPermissaoEdicao() {
+    if (window.isAdminGlobal && window.isAdminGlobal()) {
+        podeEditarOrganograma = true;
+        return true;
+    }
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (profStr) {
+            const prof = JSON.parse(profStr);
+            if (prof.nivel_acesso === 'admin_global' || prof.nivel_acesso === 'admin') {
+                podeEditarOrganograma = true;
+                return true;
+            }
+        }
+    } catch(e) {}
+    
+    if (window.checarPermissaoModulo) {
+        try {
+            const temPerm = await window.checarPermissaoModulo('equipe_organograma', estruturaId, 'edicao');
+            if (temPerm) podeEditarOrganograma = true;
+        } catch(e) {}
+    }
+    return podeEditarOrganograma;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     if (!estruturaId) {
         alert("Nenhuma estrutura selecionada!");
@@ -33,6 +60,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnVoltar = document.getElementById('btnVoltar');
     if (btnVoltar) {
         btnVoltar.href = `hub.html?id=${estruturaId}`;
+    }
+
+    await checarPermissaoEdicao();
+    const btnNovo = document.getElementById('btnNovoVinculo');
+    if (btnNovo && !podeEditarOrganograma) {
+        btnNovo.style.display = 'none';
     }
 
     setupModal();
@@ -267,7 +300,7 @@ function renderizarGrafico(vinculos) {
                         const isVirtual = d.data.isVirtual;
                         
                         let deleteBtn = '';
-                        if (!isVirtual) {
+                        if (!isVirtual && podeEditarOrganograma) {
                             deleteBtn = `
                             <div style="width: 100%; display: flex; justify-content: flex-end; padding: 8px 8px 0 0; margin-bottom: -24px; position: relative; z-index: 100;">
                                 <div onclick="event.stopPropagation(); event.preventDefault(); window.excluirVinculo('${d.data.id}');" 

@@ -168,6 +168,79 @@ window.isAdminGlobal = function() {
     }
 };
 
+// --- CHECAGEM DE PERMISSÕES GRANULARES POR MÓDULO & ESTRUTURA ---
+window.cachePermissoesModulos = null;
+window.cachePermissoesTimestamp = 0;
+
+window.obterPermissoesModulos = async function(forcarAtualizacao = false) {
+    const agora = Date.now();
+    if (!forcarAtualizacao && window.cachePermissoesModulos && (agora - window.cachePermissoesTimestamp < 30000)) {
+        return window.cachePermissoesModulos;
+    }
+    try {
+        const client = window.db || authDb;
+        const { data, error } = await client
+            .from('configuracoes')
+            .select('valor')
+            .eq('chave', 'admin_permissoes_modulos')
+            .single();
+            
+        let perms = [];
+        if (data && data.valor) {
+            try {
+                perms = typeof data.valor === 'string' ? JSON.parse(data.valor) : data.valor;
+            } catch(e) { perms = []; }
+        }
+        window.cachePermissoesModulos = Array.isArray(perms) ? perms : [];
+        window.cachePermissoesTimestamp = agora;
+        return window.cachePermissoesModulos;
+    } catch(err) {
+        console.error("Falha ao obter permissões de módulos:", err);
+        return [];
+    }
+};
+
+window.checarPermissaoModulo = async function(modulo, estruturaId = null, nivelRequerido = 'leitura') {
+    // 1. Admin Global ou Admin geral tem acesso total a tudo
+    if (window.isAdminGlobal && window.isAdminGlobal()) {
+        return true;
+    }
+    
+    let userEmail = null;
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (profStr) {
+            const prof = JSON.parse(profStr);
+            if (prof.nivel_acesso === 'admin_global' || prof.nivel_acesso === 'admin') {
+                return true;
+            }
+            userEmail = (prof.email || '').toLowerCase().trim();
+        }
+    } catch(e) {}
+    
+    if (!userEmail) return false;
+    
+    // 2. Consulta tabela de permissões delegadas
+    const permissoes = await window.obterPermissoesModulos();
+    
+    const match = permissoes.find(p => {
+        if (!p || (p.email || '').toLowerCase().trim() !== userEmail) return false;
+        if (p.modulo !== modulo) return false;
+        
+        // Verifica abrangência da estrutura (se vazio, é global para o módulo)
+        const estruturaMatch = !p.estrutura_id || p.estrutura_id === '' || p.estrutura_id === estruturaId;
+        if (!estruturaMatch) return false;
+        
+        // Verifica nível requerido
+        if (nivelRequerido === 'edicao') {
+            return p.nivel === 'edicao';
+        }
+        return true; // para leitura, tanto 'leitura' quanto 'edicao' servem
+    });
+    
+    return !!match;
+};
+
 // --- GLOBAL NOTIFICATIONS SYSTEM ---
 window.initGlobalNotifications = function(pessoaId) {
     // Apenas injeta se não for tela de login

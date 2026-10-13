@@ -159,6 +159,7 @@
                         <div class="admin-tab" onclick="switchTab('bd')">🗄️ Banco de Dados</div>
                         <div class="admin-tab" onclick="switchTab('aniversarios')">🎂 Aniversários</div>
                         <div class="admin-tab" onclick="switchTab('senhas')">🔑 Senhas</div>
+                        <div class="admin-tab" onclick="switchTab('permissoes')">🔐 Permissões</div>
                     </div>
                 </div>
 
@@ -735,6 +736,107 @@
                     <div id="containerSenhasLista" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
                         <div style="color: var(--text-muted); text-align: center; padding: 40px; grid-column: 1 / -1;">
                             Carregando senhas...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba de Permissões de Módulos & Estruturas -->
+                <div id="tab-permissoes" class="tab-content">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
+                        <div>
+                            <h3 style="color: var(--text-main); margin: 0; font-size: 20px; display: flex; align-items: center; gap: 8px;">
+                                🔐 Permissões Granulares por Módulo & Departamento
+                            </h3>
+                            <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 0 0;">
+                                Delegue permissões de leitura ou edição para trabalhadores específicos em Departamentos e Atividades, sem necessidade de atribuir cargos formais de diretoria.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Formulário de Concessão de Permissão -->
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h4 style="margin: 0 0 16px 0; font-size: 15px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                            <span>➕</span> Conceder Nova Permissão
+                        </h4>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500;">
+                                    Trabalhador / Usuário *
+                                </label>
+                                <select id="permUserSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); font-size: 13px;">
+                                    <option value="">Carregando usuários...</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500;">
+                                    Módulo do Sistema *
+                                </label>
+                                <select id="permModuloSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); font-size: 13px;">
+                                    <option value="equipe_organograma">👥 Gestão de Equipes & Organograma</option>
+                                    <option value="ass_ocorrencias">📋 Registro de Ocorrências (Assistência Social)</option>
+                                    <option value="irradiacao">✨ Gestão de Irradiações</option>
+                                    <option value="atendimento_fraterno">🕊️ Atendimento Fraterno</option>
+                                    <option value="documentos">📁 Gestão de Documentos</option>
+                                    <option value="agenda">📅 Agenda & Compromissos</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500;">
+                                    Departamento / Atividade (Abrangência) *
+                                </label>
+                                <select id="permEstruturaSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); font-size: 13px;">
+                                    <option value="">🌐 Todas as Estruturas (Acesso Global ao Módulo)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500;">
+                                    Nível de Acesso *
+                                </label>
+                                <select id="permNivelSelect" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); font-size: 13px;">
+                                    <option value="edicao">✏️ Leitura e Edição (Acesso Completo)</option>
+                                    <option value="leitura">👁️ Apenas Leitura (Somente Consulta)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="salvarPermissaoModulo()" class="btn btn-primary" style="height: 40px; padding: 0 24px; font-size: 14px; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <span>💾</span> Salvar Permissão
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Permissões Ativas -->
+                    <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+                        <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <h4 style="margin: 0; font-size: 15px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                                <span>📋</span> Permissões Concedidas (<span id="contagemPermissoes">0</span>)
+                            </h4>
+                            <div style="flex: 1; max-width: 320px;">
+                                <input type="text" id="filtroPermissoesInput" oninput="renderizarTabelaPermissoes()" placeholder="🔍 Filtrar por nome, e-mail ou módulo..." style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 12px; box-sizing: border-box;">
+                            </div>
+                        </div>
+
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);">
+                                        <th style="padding: 12px 16px; color: var(--text-muted); font-weight: 600;">Trabalhador</th>
+                                        <th style="padding: 12px 16px; color: var(--text-muted); font-weight: 600;">Módulo</th>
+                                        <th style="padding: 12px 16px; color: var(--text-muted); font-weight: 600;">Estrutura / Abrangência</th>
+                                        <th style="padding: 12px 16px; color: var(--text-muted); font-weight: 600;">Nível</th>
+                                        <th style="padding: 12px 16px; color: var(--text-muted); font-weight: 600;">Concedido em</th>
+                                        <th style="padding: 12px 16px; color: var(--text-muted); font-weight: 600; text-align: center;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaPermissoesModulos">
+                                    <tr><td colspan="6" style="padding: 24px; text-align: center; color: var(--text-muted);">Carregando permissões...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
