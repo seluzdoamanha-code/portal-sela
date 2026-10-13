@@ -1991,7 +1991,7 @@ window.carregarPainelGestaoIrradiacao = async function () {
                 <button onclick="mudarAbaIrradiacao('ativos')" id="btnIrrAtivos" class="btn" style="white-space: nowrap; border-radius: 8px;">📋 Painel de Leitura</button>
                 <button onclick="mudarAbaIrradiacao('encerra_semana')" id="btnIrrEncerraSemana" class="btn" style="white-space: nowrap; border-radius: 8px;">⏳ Encerra na Semana</button>
                 <button onclick="mudarAbaIrradiacao('historico')" id="btnIrrHistorico" class="btn" style="white-space: nowrap; border-radius: 8px;">🗄️ Histórico</button>
-                <button onclick="mudarAbaIrradiacao('arquivamento')" id="btnIrrArquivamento" class="btn" style="white-space: nowrap; border-radius: 8px;">📦 Arquivamento</button>
+                <button onclick="mudarAbaIrradiacao('nomes')" id="btnIrrNomes" class="btn" style="white-space: nowrap; border-radius: 8px;">👥 Nomes Cadastrados</button>
                 <button onclick="mudarAbaIrradiacao('estatisticas')" id="btnIrrEstatisticas" class="btn" style="white-space: nowrap; border-radius: 8px;">📊 Estatísticas</button>
                 <button onclick="mudarAbaIrradiacao('limpeza')" id="btnIrrLimpeza" class="btn" style="white-space: nowrap; border-radius: 8px;">🧹 Limpeza</button>
                 <button onclick="window.open('irradiacao_imprimir.html', '_blank')" id="btnIrrImprimir" class="btn" style="white-space: nowrap; border-radius: 8px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">🖨️ Imprimir Lista</button>
@@ -2025,6 +2025,10 @@ window.carregarPainelGestaoIrradiacao = async function () {
 
             <div id="limpezaContainer" style="display: none; flex-direction: column; gap: 24px;">
                 <div style="color: var(--text-muted); font-size: 13px;">Buscando possíveis duplicatas...</div>
+            </div>
+
+            <div id="nomesCadastradosContainer" style="display: none; flex-direction: column; gap: 16px;">
+                <div style="color: var(--text-muted); font-size: 13px;">Carregando solicitantes...</div>
             </div>
 
             <!-- Modal Fim de Leitura -->
@@ -2081,6 +2085,53 @@ window.carregarPainelGestaoIrradiacao = async function () {
                     </form>
                 </div>
             </div>
+
+            <!-- Modal Inclusão Direta de Irradiação (Nomes Cadastrados) -->
+            <div id="modalSolicitacaoDiretaHub" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 450px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                    <h3 style="color: #10b981; margin-top: 0; font-size: 18px; display: flex; align-items: center; gap: 8px;">🚀 Nova Irradiação Direta</h3>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">O registro será incluído diretamente no <strong>Painel de Leitura</strong> sem passar por Pendentes.</p>
+                    
+                    <form id="formSolicitacaoDiretaHub" onsubmit="salvarSolicitacaoDiretaHub(event)">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="color: var(--text-muted); font-size: 13px;">Nome Solicitado *</label>
+                            <input type="text" id="diretoHubNome" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px; text-transform: uppercase;">
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="color: var(--text-muted); font-size: 13px;">Endereço Completo</label>
+                            <textarea id="diretoHubEndereco" class="input" rows="2" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px; text-transform: uppercase;"></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="color: var(--text-muted); font-size: 13px;">Dia da Semana *</label>
+                            <select id="diretoHubDia" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;">
+                                <option value="Segunda-feira">Segunda-feira</option>
+                                <option value="Terça-feira">Terça-feira</option>
+                                <option value="Quarta-feira (Desobsessão)">Quarta-feira (Desob)</option>
+                                <option value="Quarta-feira (Desencarnado)">Quarta-feira (Desenc)</option>
+                                <option value="Quinta-feira">Quinta-feira</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 24px;">
+                            <label style="color: var(--text-muted); font-size: 13px;">Semanas Alvo (Meta)</label>
+                            <select id="diretoHubSemanas" class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;">
+                                <option value="3" selected>3 Semanas (Padrão)</option>
+                                <option value="6">6 Semanas (Longo)</option>
+                                <option value="1">1 Semana</option>
+                                <option value="2">2 Semanas</option>
+                                <option value="4">4 Semanas</option>
+                            </select>
+                        </div>
+
+                        <div style="display: flex; gap: 12px;">
+                            <button type="submit" id="btnSalvarDiretoHub" class="btn btn-primary" style="flex: 1; padding: 10px; background: #10b981; border: none; font-weight: 600;">🚀 Incluir no Painel</button>
+                            <button type="button" onclick="document.getElementById('modalSolicitacaoDiretaHub').style.display='none'" class="btn" style="flex: 1; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-muted);">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     `;
 
@@ -2095,7 +2146,7 @@ window.mudarAbaIrradiacao = function (aba) {
     const btnAtivos = document.getElementById('btnIrrAtivos');
     const btnEncerraSemana = document.getElementById('btnIrrEncerraSemana');
     const btnHistorico = document.getElementById('btnIrrHistorico');
-    const btnArquivamento = document.getElementById('btnIrrArquivamento');
+    const btnNomes = document.getElementById('btnIrrNomes');
     const btnEstatisticas = document.getElementById('btnIrrEstatisticas');
     const btnLimpeza = document.getElementById('btnIrrLimpeza');
 
@@ -2123,10 +2174,10 @@ window.mudarAbaIrradiacao = function (aba) {
         btnHistorico.style.border = aba === 'historico' ? '1px solid rgba(100, 116, 139, 0.4)' : '1px solid transparent';
     }
 
-    if(btnArquivamento) {
-        btnArquivamento.style.background = aba === 'arquivamento' ? 'rgba(168, 85, 247, 0.2)' : 'transparent';
-        btnArquivamento.style.color = aba === 'arquivamento' ? '#a855f7' : 'var(--text-muted)';
-        btnArquivamento.style.border = aba === 'arquivamento' ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid transparent';
+    if(btnNomes) {
+        btnNomes.style.background = aba === 'nomes' ? 'rgba(56, 189, 248, 0.2)' : 'transparent';
+        btnNomes.style.color = aba === 'nomes' ? '#38bdf8' : 'var(--text-muted)';
+        btnNomes.style.border = aba === 'nomes' ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid transparent';
     }
 
     if (btnEstatisticas) {
@@ -2141,29 +2192,48 @@ window.mudarAbaIrradiacao = function (aba) {
         btnLimpeza.style.border = aba === 'limpeza' ? '1px solid rgba(236, 72, 153, 0.4)' : '1px solid transparent';
     }
 
-    // Filtros de dia aparecem no "ativos", "historico" e "pendentes"
+    // Contêineres
     const filtrosDias = document.getElementById('filtrosDiasIrr');
+    const filtrosLetras = document.getElementById('filtrosLetrasIrr');
+    const especiaisBtn = document.getElementById('especiaisBtnContainerWeb');
     const listaIrradiacoes = document.getElementById('listaIrradiacoes');
     const estatisticasContainer = document.getElementById('estatisticasContainer');
     const limpezaContainer = document.getElementById('limpezaContainer');
+    const nomesContainer = document.getElementById('nomesCadastradosContainer');
 
     if (aba === 'estatisticas') {
         filtrosDias.style.display = 'none';
+        if (filtrosLetras) filtrosLetras.style.display = 'none';
+        if (especiaisBtn) especiaisBtn.style.display = 'none';
         listaIrradiacoes.style.display = 'none';
         if (limpezaContainer) limpezaContainer.style.display = 'none';
+        if (nomesContainer) nomesContainer.style.display = 'none';
         estatisticasContainer.style.display = 'flex';
         carregarEstatisticasIrradiacao();
     } else if (aba === 'limpeza') {
         filtrosDias.style.display = 'none';
+        if (filtrosLetras) filtrosLetras.style.display = 'none';
+        if (especiaisBtn) especiaisBtn.style.display = 'none';
         listaIrradiacoes.style.display = 'none';
         estatisticasContainer.style.display = 'none';
+        if (nomesContainer) nomesContainer.style.display = 'none';
         if (limpezaContainer) limpezaContainer.style.display = 'flex';
         carregarLimpezaIrradiacao();
+    } else if (aba === 'nomes') {
+        filtrosDias.style.display = 'none';
+        if (filtrosLetras) filtrosLetras.style.display = 'none';
+        if (especiaisBtn) especiaisBtn.style.display = 'none';
+        listaIrradiacoes.style.display = 'none';
+        estatisticasContainer.style.display = 'none';
+        if (limpezaContainer) limpezaContainer.style.display = 'none';
+        if (nomesContainer) nomesContainer.style.display = 'flex';
+        carregarNomesCadastradosHub();
     } else {
         estatisticasContainer.style.display = 'none';
         if (limpezaContainer) limpezaContainer.style.display = 'none';
+        if (nomesContainer) nomesContainer.style.display = 'none';
         
-        if (aba === 'ativos' || aba === 'encerra_semana' || aba === 'historico' || aba === 'arquivamento') {
+        if (aba === 'ativos' || aba === 'encerra_semana' || aba === 'historico') {
             listaIrradiacoes.style.display = 'flex';
             listaIrradiacoes.style.flexDirection = 'column';
             listaIrradiacoes.style.gap = '16px';
@@ -2203,7 +2273,7 @@ async function carregarListaIrradiacao() {
         let targetStatus = currentIrradiacaoTab;
         if (currentIrradiacaoTab === 'ativos' || currentIrradiacaoTab === 'encerra_semana') targetStatus = 'ativo';
         if (currentIrradiacaoTab === 'pendentes') targetStatus = 'pendente';
-        if (currentIrradiacaoTab === 'historico' || currentIrradiacaoTab === 'arquivamento') targetStatus = 'historico'; // keep status as historico
+        if (currentIrradiacaoTab === 'historico') targetStatus = 'historico'; // unificado historico
 
         query = query.eq('status', targetStatus).order('nome_solicitado', { ascending: true });
 
@@ -2260,26 +2330,6 @@ async function carregarListaIrradiacao() {
                 const leituras = item.leituras || 0;
                 return (semanas_alvo - leituras) === 1;
             });
-        } else if (currentIrradiacaoTab === 'arquivamento') {
-            // Filtro de período: 30 dias ou tudo
-            const filtroPeriodo = window.arquivamentoPeriodo || '30'; // '30' = últimos 30 dias, 'todos' = sem filtro
-            if (filtroPeriodo === '30') {
-                filteredBase = filteredBase.filter(item => {
-                    let logs = item.log_datas_leituras;
-                    if (typeof logs === 'string') {
-                        try { logs = JSON.parse(logs); } catch (e) { logs = []; }
-                    }
-                    if (Array.isArray(logs) && logs.length > 0) {
-                        const lastLog = new Date(logs[logs.length - 1]);
-                        if (!isNaN(lastLog)) {
-                            const diffTime = Math.abs(new Date() - lastLog);
-                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                            return diffDays > 30;
-                        }
-                    }
-                    return false;
-                });
-            } // else 'todos' keeps all historico items (no extra filter)
         }
 
         // --- Cálculo e atualização dos botões de filtro ---
@@ -2494,7 +2544,7 @@ async function carregarListaIrradiacao() {
                         <button onclick="arquivarIrradiacao('${item.id}')" class="btn btn-secondary" style="padding: 6px 12px; flex: 1;">Arquivar</button>
                     </div>
                 `;
-            } else if (currentIrradiacaoTab === 'historico' || currentIrradiacaoTab === 'arquivamento') {
+            } else if (currentIrradiacaoTab === 'historico') {
                 let lastDateInfo = '';
                 let logs = item.log_datas_leituras;
                 if (typeof logs === 'string') {
@@ -2517,7 +2567,7 @@ async function carregarListaIrradiacao() {
                 `;
             }
 
-            if (currentIrradiacaoTab === 'ativos' || currentIrradiacaoTab === 'encerra_semana' || currentIrradiacaoTab === 'historico' || currentIrradiacaoTab === 'arquivamento') {
+            if (currentIrradiacaoTab === 'ativos' || currentIrradiacaoTab === 'encerra_semana' || currentIrradiacaoTab === 'historico') {
                 html += `
                     <div id="card_irr_${item.id}" data-letra="${primeiraLetra}" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 24px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                         <div style="flex: 2; min-width: 250px;">
@@ -2899,6 +2949,210 @@ window.confirmarTriagem = async function (id) {
         btn.textContent = 'Aprovar Pedido';
     }
 }
+
+window.carregarNomesCadastradosHub = async function () {
+    const container = document.getElementById('nomesCadastradosContainer');
+    if (!container) return;
+    container.innerHTML = '<div style="color: var(--text-muted); font-size: 14px; text-align: center; padding: 24px;">Carregando lista de solicitantes...</div>';
+
+    try {
+        let query = db.from('app_irradiacao_solicitacoes')
+            .select('id, nome_solicitado, endereco, dias_semana, status, criado_em')
+            .order('criado_em', { ascending: false });
+
+        if (estruturaId) query = query.eq('estrutura_id', estruturaId);
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        // Agrupar por nome único
+        const mapa = new Map();
+        (data || []).forEach(r => {
+            const rawNome = (r.nome_solicitado || '').trim();
+            if (!rawNome) return;
+            const key = rawNome.toUpperCase();
+
+            if (!mapa.has(key)) {
+                mapa.set(key, {
+                    nome: rawNome,
+                    endereco: (r.endereco || '').trim(),
+                    statusAtivo: r.status === 'ativo' ? r.dias_semana : null,
+                    totalRegistros: 1
+                });
+            } else {
+                const item = mapa.get(key);
+                item.totalRegistros++;
+                if (!item.endereco && (r.endereco || '').trim()) {
+                    item.endereco = (r.endereco || '').trim();
+                }
+                if (r.status === 'ativo' && !item.statusAtivo) {
+                    item.statusAtivo = r.dias_semana;
+                }
+            }
+        });
+
+        window._nomesCadastradosHub = Array.from(mapa.values()).sort((a, b) => {
+            const nameA = a.nome.replace(/[^a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ0-9]/g, '').trim();
+            const nameB = b.nome.replace(/[^a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ0-9]/g, '').trim();
+            return nameA.localeCompare(nameB, 'pt-BR');
+        });
+
+        renderizarNomesHub();
+
+    } catch (err) {
+        console.error("Erro ao carregar nomes cadastrados no Hub:", err);
+        container.innerHTML = `<div style="color: #ef4444; padding: 16px;">Erro ao carregar lista de nomes: ${err.message}</div>`;
+    }
+};
+
+window.renderizarNomesHub = function () {
+    const container = document.getElementById('nomesCadastradosContainer');
+    if (!container) return;
+
+    const termo = (document.getElementById('buscaNomesHubInput')?.value || '').toLowerCase().trim();
+    let lista = window._nomesCadastradosHub || [];
+
+    if (termo) {
+        lista = lista.filter(i => 
+            i.nome.toLowerCase().includes(termo) || 
+            (i.endereco && i.endereco.toLowerCase().includes(termo))
+        );
+    }
+
+    let html = `
+        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div>
+                    <h3 style="margin: 0; font-size: 16px; color: var(--text-main); font-weight: 700;">👥 Solicitantes Cadastrados</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-muted);">Clique em qualquer solicitante para cadastrar uma nova irradiação diretamente para o Painel de Leitura.</p>
+                </div>
+                <span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 12px; border-radius: 16px; font-size: 13px; font-weight:600;">${lista.length} nomes</span>
+            </div>
+            <input type="text" id="buscaNomesHubInput" oninput="window.renderizarNomesHub()" value="${termo}" placeholder="🔍 Digite para filtrar por nome ou endereço..." class="input" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+    `;
+
+    if (lista.length === 0) {
+        html += `<div style="color: var(--text-muted); font-size: 14px; text-align: center; padding: 32px; background: rgba(255,255,255,0.02); border-radius: 8px;">Nenhum solicitante encontrado com o termo pesquisado.</div>`;
+    } else {
+        lista.forEach(item => {
+            const safeNome = item.nome.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeEnd = (item.endereco || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const badgeAtivo = item.statusAtivo 
+                ? `<span style="background: rgba(16,185,129,0.15); color: #10b981; font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 6px;">🟢 Ativo no momento (${item.statusAtivo})</span>`
+                : `<span style="background: rgba(148,163,184,0.1); color: var(--text-muted); font-size: 12px; padding: 3px 8px; border-radius: 6px;">🗄️ Histórico (${item.totalRegistros}x)</span>`;
+
+            html += `
+                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; transition: all 0.2s ease; cursor: pointer;"
+                     onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='var(--border)'"
+                     onclick="window.abrirModalSolicitacaoDiretaHub('${safeNome}', '${safeEnd}')">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+                            <span style="font-weight: 700; color: var(--text-main); font-size: 15px;">${item.nome}</span>
+                            ${badgeAtivo}
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted);">📍 ${item.endereco || '<span style="font-style:italic;">Endereço não informado anteriormente</span>'}</div>
+                    </div>
+                    <button class="btn" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.4); border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
+                        <span>➕ Nova Solicitação</span>
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    html += `</div>`;
+    container.innerHTML = html;
+};
+
+window.abrirModalSolicitacaoDiretaHub = function (nome, endereco) {
+    const modal = document.getElementById('modalSolicitacaoDiretaHub');
+    if (!modal) return;
+    document.getElementById('diretoHubNome').value = nome || '';
+    document.getElementById('diretoHubEndereco').value = endereco || '';
+    document.getElementById('diretoHubDia').value = 'Segunda-feira';
+    document.getElementById('diretoHubSemanas').value = '3';
+    modal.style.display = 'flex';
+};
+
+window.salvarSolicitacaoDiretaHub = async function (event) {
+    if (event) event.preventDefault();
+
+    const btn = document.getElementById('btnSalvarDiretoHub');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Gravando...';
+    }
+
+    const nome = (document.getElementById('diretoHubNome')?.value || '').trim().toUpperCase();
+    const endereco = (document.getElementById('diretoHubEndereco')?.value || '').trim().toUpperCase();
+    const dia = document.getElementById('diretoHubDia')?.value;
+    const semanas = parseInt(document.getElementById('diretoHubSemanas')?.value || 3, 10);
+
+    if (!nome) {
+        alert('Por favor, informe o nome.');
+        if (btn) { btn.disabled = false; btn.textContent = '🚀 Incluir no Painel'; }
+        return;
+    }
+
+    let criadoPor = 'Trabalhador da Irradiação';
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (profStr) {
+            const prof = JSON.parse(profStr);
+            criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || criadoPor;
+        }
+    } catch(e){}
+
+    try {
+        const payload = {
+            estrutura_id: estruturaId,
+            nome_solicitado: nome,
+            endereco: endereco || null,
+            dias_semana: dia,
+            status: 'ativo', // DIRETO PARA ATIVO!
+            leituras: 0,
+            semanas_alvo: semanas,
+            criado_por: criadoPor
+        };
+
+        const { error } = await db.from('app_irradiacao_solicitacoes').insert([payload]);
+        if (error) throw error;
+
+        document.getElementById('modalSolicitacaoDiretaHub').style.display = 'none';
+
+        if (typeof Swal !== 'undefined') {
+            const res = await Swal.fire({
+                title: 'Incluído com Sucesso!',
+                html: `<strong>${nome}</strong> foi adicionado(a) diretamente ao <strong>Painel de Leitura</strong> de <strong>${dia}</strong> com meta de <strong>${semanas} semanas</strong>.`,
+                icon: 'success',
+                showCancelButton: true,
+                confirmButtonText: 'Ver no Painel',
+                cancelButtonText: 'Continuar na Lista de Nomes',
+                confirmButtonColor: '#10b981'
+            });
+
+            if (res.isConfirmed) {
+                window.mudarAbaIrradiacao('ativos');
+                window.setDiaIrradiacao(dia);
+            } else {
+                window.carregarNomesCadastradosHub();
+            }
+        } else {
+            alert(`${nome} incluído(a) com sucesso no Painel de Leitura (${dia})!`);
+            window.carregarNomesCadastradosHub();
+        }
+
+    } catch (err) {
+        console.error("Erro ao incluir solicitação direta no Hub:", err);
+        alert('Não foi possível incluir a solicitação: ' + err.message);
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '🚀 Incluir no Painel';
+        }
+    }
+};
 
 window.marcarLeituraIrr = async function (btnElement, id, leituras_atuais, semanas_alvo) {
     try {

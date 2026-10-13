@@ -89,17 +89,26 @@ window.mudarAba = function(aba) {
 
     // Atualizar UI das abas
     document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(`tab_${aba}`).classList.add('active');
+    const tabEl = document.getElementById(`tab_${aba}`);
+    if (tabEl) tabEl.classList.add('active');
 
     const filters = document.getElementById('filtersContainer');
+    const letras = document.getElementById('filtrosLetrasIrr');
     const lista = document.getElementById('listaGestaoIrradiacoes');
     const estatisticas = document.getElementById('estatisticasContainer');
 
     if (aba === 'estatisticas') {
         if (filters) filters.style.display = 'none';
+        if (letras) letras.style.display = 'none';
         if (lista) lista.style.display = 'none';
         if (estatisticas) estatisticas.style.display = 'block';
         carregarEstatisticasIrradiacaoMobile();
+    } else if (aba === 'nomes') {
+        if (filters) filters.style.display = 'none';
+        if (letras) letras.style.display = 'none';
+        if (estatisticas) estatisticas.style.display = 'none';
+        if (lista) lista.style.display = 'block';
+        carregarNomesCadastradosMobile();
     } else {
         if (filters) filters.style.display = 'flex';
         if (lista) lista.style.display = 'block';
@@ -148,7 +157,7 @@ window.carregarLista = async function() {
         let targetStatus = currentTab;
         if (currentTab === 'ativos' || currentTab === 'encerra_semana') targetStatus = 'ativo';
         if (currentTab === 'pendentes') targetStatus = 'pendente';
-        if (currentTab === 'arquivamento') targetStatus = 'historico';
+        if (currentTab === 'historico') targetStatus = 'historico';
 
         query = query.eq('status', targetStatus).order('nome_solicitado', { ascending: true });
 
@@ -269,38 +278,6 @@ function renderLista() {
             const semanas_alvo = item.semanas_alvo || 3;
             const leituras = item.leituras || 0;
             return (semanas_alvo - leituras) === 1;
-        });
-    } else if (currentTab === 'arquivamento') {
-        filteredBase = filteredBase.filter(item => {
-            let logs = item.log_datas_leituras;
-            if (typeof logs === 'string') {
-                try { logs = JSON.parse(logs); } catch (e) { logs = []; }
-            }
-            if (Array.isArray(logs) && logs.length > 0) {
-                const lastLog = new Date(logs[logs.length - 1]);
-                if (!isNaN(lastLog)) {
-                    const diffTime = Math.abs(new Date() - lastLog);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    return diffDays > 30;
-                }
-            }
-            return false;
-        });
-    } else if (currentTab === 'historico') {
-        filteredBase = filteredBase.filter(item => {
-            let logs = item.log_datas_leituras;
-            if (typeof logs === 'string') {
-                try { logs = JSON.parse(logs); } catch (e) { logs = []; }
-            }
-            if (Array.isArray(logs) && logs.length > 0) {
-                const lastLog = new Date(logs[logs.length - 1]);
-                if (!isNaN(lastLog)) {
-                    const diffTime = Math.abs(new Date() - lastLog);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    return diffDays <= 30;
-                }
-            }
-            return true;
         });
     }
 
@@ -519,7 +496,7 @@ function renderLista() {
                     <span style="font-size: 12px; font-weight: 500;">Arquivar</span>
                 </button>
             `;
-        } else if (currentTab === 'historico' || currentTab === 'arquivamento') {
+        } else if (currentTab === 'historico') {
             let lastDateStr = '';
             let logs = item.log_datas_leituras;
             if (typeof logs === 'string') {
@@ -1188,3 +1165,247 @@ async function persistirCartoesEspeciais() {
         alert("Não foi possível salvar os cartões especiais.");
     }
 }
+
+// ----------------------------------------------------
+// MÓDULO: NOMES CADASTRADOS & SOLICITAÇÃO DIRETA (MOBILE)
+// ----------------------------------------------------
+
+window._nomesCadastradosMobile = [];
+
+window.carregarNomesCadastradosMobile = async function() {
+    const listaEl = document.getElementById('listaGestaoIrradiacoes');
+    if (!listaEl) return;
+    listaEl.innerHTML = '<div class="empty-state">Carregando lista de solicitantes...</div>';
+
+    const estruturaId = localStorage.getItem('estrutura_atual');
+    try {
+        let query = db.from('app_irradiacao_solicitacoes')
+            .select('id, nome_solicitado, endereco, dias_semana, status, criado_em, log_datas_leituras')
+            .order('criado_em', { ascending: false });
+
+        if (estruturaId) query = query.eq('estrutura_id', estruturaId);
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        // Agrupar por nome único
+        const mapa = new Map();
+        (data || []).forEach(r => {
+            const rawNome = (r.nome_solicitado || '').trim();
+            if (!rawNome) return;
+            const key = rawNome.toUpperCase();
+
+            if (!mapa.has(key)) {
+                mapa.set(key, {
+                    nome: rawNome,
+                    endereco: (r.endereco || '').trim(),
+                    statusAtivo: r.status === 'ativo' ? r.dias_semana : null,
+                    totalRegistros: 1
+                });
+            } else {
+                const item = mapa.get(key);
+                item.totalRegistros++;
+                if (!item.endereco && (r.endereco || '').trim()) {
+                    item.endereco = (r.endereco || '').trim();
+                }
+                if (r.status === 'ativo' && !item.statusAtivo) {
+                    item.statusAtivo = r.dias_semana;
+                }
+            }
+        });
+
+        window._nomesCadastradosMobile = Array.from(mapa.values()).sort((a, b) => {
+            const nameA = a.nome.replace(/[^a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ0-9]/g, '').trim();
+            const nameB = b.nome.replace(/[^a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ0-9]/g, '').trim();
+            return nameA.localeCompare(nameB, 'pt-BR');
+        });
+
+        renderizarNomesMobile();
+
+    } catch (err) {
+        console.error("Erro ao carregar nomes cadastrados no mobile:", err);
+        listaEl.innerHTML = `<div class="empty-state" style="color:var(--danger)">Erro ao carregar lista de nomes.<br>${err.message}</div>`;
+    }
+};
+
+window.renderizarNomesMobile = function() {
+    const listaEl = document.getElementById('listaGestaoIrradiacoes');
+    if (!listaEl) return;
+
+    const termo = (document.getElementById('buscaNomesMobileInput')?.value || '').toLowerCase().trim();
+    let lista = window._nomesCadastradosMobile || [];
+
+    if (termo) {
+        lista = lista.filter(i => 
+            i.nome.toLowerCase().includes(termo) || 
+            (i.endereco && i.endereco.toLowerCase().includes(termo))
+        );
+    }
+
+    let html = `
+        <div style="padding: 0 4px 16px 4px;">
+            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <div style="font-weight: 700; color: var(--text-main); font-size: 15px;">👥 Solicitantes Cadastrados</div>
+                    <span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight:600;">${lista.length} nomes</span>
+                </div>
+                <input type="text" id="buscaNomesMobileInput" oninput="window.renderizarNomesMobile()" value="${termo}" placeholder="🔍 Buscar por nome ou endereço..." class="input-field" style="width: 100%; box-sizing: border-box;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+    `;
+
+    if (lista.length === 0) {
+        html += `<div class="empty-state">Nenhum solicitante encontrado.</div>`;
+    } else {
+        lista.forEach(item => {
+            const safeNome = item.nome.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeEnd = (item.endereco || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const badgeAtivo = item.statusAtivo 
+                ? `<span style="background: rgba(16,185,129,0.15); color: #10b981; font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px;">🟢 Ativo: ${item.statusAtivo.split(' ')[0]}</span>`
+                : `<span style="background: rgba(148,163,184,0.1); color: var(--text-muted); font-size: 11px; padding: 2px 6px; border-radius: 4px;">🗄️ Histórico (${item.totalRegistros}x)</span>`;
+
+            html += `
+                <div onclick="window.abrirSolicitacaoDiretaMobile('${safeNome}', '${safeEnd}')" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer;">
+                    <div style="flex: 1; overflow: hidden;">
+                        <div style="font-weight: 600; color: var(--text-main); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.nome}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">📍 ${item.endereco || '<span style="font-style:italic;">Sem endereço</span>'}</div>
+                        <div style="margin-top: 6px;">${badgeAtivo}</div>
+                    </div>
+                    <button class="btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 600; white-space: nowrap;">
+                        ➕ Solicitar
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    html += `</div></div>`;
+    listaEl.innerHTML = html;
+};
+
+window.abrirSolicitacaoDiretaMobile = function(nome, endereco) {
+    const safeNome = (nome || '').replace(/"/g, '&quot;');
+    const safeEnd = (endereco || '').replace(/"/g, '&quot;');
+
+    const html = `
+        <form onsubmit="window.salvarSolicitacaoDiretaMobile(event)" style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #10b981; line-height: 1.4;">
+                ⚡ <strong>Inclusão Direta:</strong> Será adicionado diretamente ao <strong>Painel de Leitura</strong> daquele dia, sem passar por Pendentes.
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Nome Solicitado *</label>
+                <input type="text" id="diretoIrrNomeMob" value="${safeNome}" required class="input" style="width: 100%; box-sizing: border-box; text-transform: uppercase; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Endereço Completo</label>
+                <input type="text" id="diretoIrrEnderecoMob" value="${safeEnd}" class="input" style="width: 100%; box-sizing: border-box; text-transform: uppercase; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Dia da Semana *</label>
+                <select id="diretoIrrDiaMob" required class="input" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                    <option value="Segunda-feira">Segunda-feira</option>
+                    <option value="Terça-feira">Terça-feira</option>
+                    <option value="Quarta-feira (Desobsessão)">Quarta-feira (Desobsessão)</option>
+                    <option value="Quarta-feira (Desencarnado)">Quarta-feira (Desencarnado)</option>
+                    <option value="Quinta-feira">Quinta-feira</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Semanas Alvo</label>
+                <select id="diretoIrrSemanasMob" class="input" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                    <option value="3" selected>3 Semanas (Padrão)</option>
+                    <option value="6">6 Semanas (Longo)</option>
+                    <option value="1">1 Semana</option>
+                    <option value="2">2 Semanas</option>
+                    <option value="4">4 Semanas</option>
+                </select>
+            </div>
+
+            <div style="margin-top: 14px;">
+                <button type="submit" id="btnSalvarDiretoMob" class="btn" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; background: #10b981; border: none; color: white; cursor: pointer;">
+                    🚀 Incluir no Painel de Leitura
+                </button>
+            </div>
+        </form>
+    `;
+    window.abrirSideSheet('Nova Irradiação Direta', html);
+};
+
+window.salvarSolicitacaoDiretaMobile = async function(event) {
+    if (event) event.preventDefault();
+
+    const btn = document.getElementById('btnSalvarDiretoMob');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Gravando...';
+    }
+
+    const nome = (document.getElementById('diretoIrrNomeMob')?.value || '').trim().toUpperCase();
+    const endereco = (document.getElementById('diretoIrrEnderecoMob')?.value || '').trim().toUpperCase();
+    const dia = document.getElementById('diretoIrrDiaMob')?.value;
+    const semanas = parseInt(document.getElementById('diretoIrrSemanasMob')?.value || 3, 10);
+    const estruturaId = localStorage.getItem('estrutura_atual') || '24c0069b-e161-4a03-8599-c4ae054301e3';
+
+    if (!nome) {
+        alert('Por favor, informe o nome.');
+        if (btn) { btn.disabled = false; btn.textContent = '🚀 Incluir no Painel de Leitura'; }
+        return;
+    }
+
+    let criadoPor = 'Trabalhador da Irradiação';
+    try {
+        const profStr = localStorage.getItem('sela_user_profile');
+        if (profStr) {
+            const prof = JSON.parse(profStr);
+            criadoPor = prof.nome_curto || (prof.nome || '').trim().split(' ')[0] || criadoPor;
+        }
+    } catch(e){}
+
+    try {
+        const payload = {
+            estrutura_id: estruturaId,
+            nome_solicitado: nome,
+            endereco: endereco || null,
+            dias_semana: dia,
+            status: 'ativo', // DIRETO PARA ATIVO!
+            leituras: 0,
+            semanas_alvo: semanas,
+            criado_por: criadoPor
+        };
+
+        const { error } = await db.from('app_irradiacao_solicitacoes').insert([payload]);
+        if (error) throw error;
+
+        window.fecharSideSheet();
+
+        const res = await Swal.fire({
+            title: 'Incluído com Sucesso!',
+            html: `<strong>${nome}</strong> foi adicionado(a) diretamente ao <strong>Painel de Leitura</strong> de <strong>${dia}</strong> com meta de <strong>${semanas} semanas</strong>.`,
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonText: 'Ver no Painel',
+            cancelButtonText: 'Continuar na Lista',
+            confirmButtonColor: '#10b981'
+        });
+
+        if (res.isConfirmed) {
+            window.mudarAba('ativos');
+            window.setDia(dia);
+        } else {
+            window.carregarNomesCadastradosMobile();
+        }
+
+    } catch (err) {
+        console.error("Erro ao incluir solicitação direta mobile:", err);
+        Swal.fire('Erro', 'Não foi possível incluir a solicitação: ' + err.message, 'error');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '🚀 Incluir no Painel de Leitura';
+        }
+    }
+};
+
