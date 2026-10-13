@@ -2053,18 +2053,18 @@ window.carregarPainelGestaoIrradiacao = async function () {
                         <input type="hidden" id="editIrrId">
                         
                         <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="color: var(--text-muted); font-size: 13px;">Nome Solicitado (Nomes agrupados)</label>
-                            <input type="text" id="editIrrNome" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;">
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Nome Solicitado (Nomes agrupados)</label>
+                            <input type="text" id="editIrrNome" required class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px;">
                         </div>
                         
                         <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="color: var(--text-muted); font-size: 13px;">Endereço</label>
-                            <textarea id="editIrrEndereco" class="input" rows="2" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;"></textarea>
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Endereço</label>
+                            <textarea id="editIrrEndereco" class="input" rows="2" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px;"></textarea>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="color: var(--text-muted); font-size: 13px;">Dia / Necessidade</label>
-                            <select id="editIrrDia" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;">
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Dia / Necessidade</label>
+                            <select id="editIrrDia" required class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px;">
                                 <option value="Segunda-feira">Segunda-feira</option>
                                 <option value="Terça-feira">Terça-feira</option>
                                 <option value="Quarta-feira (Desobsessão)">Quarta-feira (Desob)</option>
@@ -2074,8 +2074,8 @@ window.carregarPainelGestaoIrradiacao = async function () {
                         </div>
 
                         <div class="form-group" style="margin-bottom: 24px;">
-                            <label style="color: var(--text-muted); font-size: 13px;">Semanas Alvo (Meta)</label>
-                            <input type="number" id="editIrrSemanas" required min="1" max="52" class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;">
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Semanas Alvo (Meta)</label>
+                            <input type="number" id="editIrrSemanas" required min="1" max="52" class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px;">
                         </div>
 
                         <div style="display: flex; gap: 12px;">
@@ -2094,18 +2094,18 @@ window.carregarPainelGestaoIrradiacao = async function () {
                     
                     <form id="formSolicitacaoDiretaHub" onsubmit="salvarSolicitacaoDiretaHub(event)">
                         <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="color: var(--text-muted); font-size: 13px;">Nome Solicitado *</label>
-                            <input type="text" id="diretoHubNome" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px; text-transform: uppercase;">
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Nome Solicitado *</label>
+                            <input type="text" id="diretoHubNome" required class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; text-transform: uppercase; font-size: 14px;">
                         </div>
                         
                         <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="color: var(--text-muted); font-size: 13px;">Endereço Completo</label>
-                            <textarea id="diretoHubEndereco" class="input" rows="2" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px; text-transform: uppercase;"></textarea>
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Endereço Completo</label>
+                            <textarea id="diretoHubEndereco" class="input" rows="2" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; text-transform: uppercase; font-size: 14px;"></textarea>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="color: var(--text-muted); font-size: 13px;">Dia da Semana *</label>
-                            <select id="diretoHubDia" required class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;">
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Dia da Semana *</label>
+                            <select id="diretoHubDia" required class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px;">
                                 <option value="Segunda-feira">Segunda-feira</option>
                                 <option value="Terça-feira">Terça-feira</option>
                                 <option value="Quarta-feira (Desobsessão)">Quarta-feira (Desob)</option>
@@ -2115,8 +2115,8 @@ window.carregarPainelGestaoIrradiacao = async function () {
                         </div>
 
                         <div class="form-group" style="margin-bottom: 24px;">
-                            <label style="color: var(--text-muted); font-size: 13px;">Semanas Alvo (Meta)</label>
-                            <select id="diretoHubSemanas" class="input" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 4px;">
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Semanas Alvo (Meta)</label>
+                            <select id="diretoHubSemanas" class="input" style="width: 100%; box-sizing: border-box; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px;">
                                 <option value="3" selected>3 Semanas (Padrão)</option>
                                 <option value="6">6 Semanas (Longo)</option>
                                 <option value="1">1 Semana</option>
@@ -2126,8 +2126,8 @@ window.carregarPainelGestaoIrradiacao = async function () {
                         </div>
 
                         <div style="display: flex; gap: 12px;">
-                            <button type="submit" id="btnSalvarDiretoHub" class="btn btn-primary" style="flex: 1; padding: 10px; background: #10b981; border: none; font-weight: 600;">🚀 Incluir no Painel</button>
-                            <button type="button" onclick="document.getElementById('modalSolicitacaoDiretaHub').style.display='none'" class="btn" style="flex: 1; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-muted);">Cancelar</button>
+                            <button type="submit" id="btnSalvarDiretoHub" class="btn btn-primary" style="flex: 1; padding: 10px; background: #10b981; border: none; font-weight: 600; cursor: pointer;">🚀 Incluir no Painel</button>
+                            <button type="button" onclick="document.getElementById('modalSolicitacaoDiretaHub').style.display='none'" class="btn" style="flex: 1; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer;">Cancelar</button>
                         </div>
                     </form>
                 </div>
@@ -3028,7 +3028,7 @@ window.renderizarNomesHub = function () {
                 </div>
                 <span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 12px; border-radius: 16px; font-size: 13px; font-weight:600;">${lista.length} nomes</span>
             </div>
-            <input type="text" id="buscaNomesHubInput" oninput="window.renderizarNomesHub()" value="${termo}" placeholder="🔍 Digite para filtrar por nome ou endereço..." class="input" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+            <input type="text" id="buscaNomesHubInput" oninput="window.renderizarNomesHub()" value="${termo}" placeholder="🔍 Digite para filtrar por nome ou endereço..." class="input" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
         </div>
         <div style="display: flex; flex-direction: column; gap: 10px;">
     `;
