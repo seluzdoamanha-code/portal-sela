@@ -42,6 +42,19 @@
         if (filterTag) filterTag.addEventListener('change', filtrarLista);
         if (sortOrder) sortOrder.addEventListener('change', filtrarLista);
         if (hideOutros) hideOutros.addEventListener('change', filtrarLista);
+
+        window.limparBuscaMobile = function() {
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.focus();
+            }
+            filtrarLista();
+        };
+
+        const btnLimpar = document.getElementById('mBtnLimparBusca');
+        if (btnLimpar) {
+            btnLimpar.addEventListener('click', window.limparBuscaMobile);
+        }
     });
 
     function obterIniciais(nome) {

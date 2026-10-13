@@ -28,6 +28,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(sortOrder) sortOrder.addEventListener('change', window.aplicarFiltros);
     
     if(chkOutros) chkOutros.addEventListener('change', window.aplicarFiltros);
+
+    window.limparCampoBusca = function() {
+        const input = document.getElementById('searchInput');
+        if (input) {
+            input.value = '';
+            input.focus();
+            if (typeof window.aplicarFiltros === 'function') {
+                window.aplicarFiltros();
+            }
+        }
+    };
     
     // ==========================================
     // VITRINE DE EVENTOS GLOBAIS

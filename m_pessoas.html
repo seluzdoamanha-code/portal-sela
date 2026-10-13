@@ -80,7 +80,10 @@
                             <option value="recentes">Mais Recentes</option>
                         </select>
                     </div>
-                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; font-size: 13px; color: var(--text-muted); margin-bottom: 12px; margin-top: 4px;">
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; font-size: 13px; color: var(--text-muted); margin-bottom: 12px; margin-top: 4px;">
+                        <button type="button" id="mBtnLimparBusca" onclick="window.limparBuscaMobile && window.limparBuscaMobile()" style="height: 28px; padding: 0 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: var(--bg-panel); color: var(--text-main);" title="Limpar campo Buscar por Nome">
+                            <span>🧹</span> Limpar Busca
+                        </button>
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="checkbox" id="mHideOutros" style="width: 16px; height: 16px; accent-color: var(--primary);"> Ocultar: Outros
                         </label>
