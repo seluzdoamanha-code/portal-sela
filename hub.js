@@ -3051,6 +3051,21 @@ window.carregarNomesCadastradosHub = async function () {
             return nameA.localeCompare(nameB, 'pt-BR');
         });
 
+        container.innerHTML = `
+            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 4px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 16px; color: var(--text-main); font-weight: 700;">👥 Solicitantes Cadastrados</h3>
+                        <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-muted);">Clique em qualquer solicitante para cadastrar uma nova irradiação diretamente para o Painel de Leitura.</p>
+                    </div>
+                    <span id="contadorNomesHub" style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 12px; border-radius: 16px; font-size: 13px; font-weight:600;">${window._nomesCadastradosHub.length} nomes</span>
+                </div>
+                <input type="text" id="buscaNomesHubInput" oninput="window.renderizarNomesHub()" placeholder="🔍 Digite para filtrar por nome ou endereço..." class="input" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+            </div>
+            <div id="filtrosLetrasNomesHub" style="display: none; gap: 8px; flex-wrap: wrap;"></div>
+            <div id="listaNomesHubItems" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        `;
+
         renderizarNomesHub();
 
     } catch (err) {
@@ -3060,8 +3075,8 @@ window.carregarNomesCadastradosHub = async function () {
 };
 
 window.renderizarNomesHub = function () {
-    const container = document.getElementById('nomesCadastradosContainer');
-    if (!container) return;
+    const listContainer = document.getElementById('listaNomesHubItems');
+    if (!listContainer) return;
 
     const termo = (document.getElementById('buscaNomesHubInput')?.value || '').toLowerCase().trim();
     let lista = window._nomesCadastradosHub || [];
@@ -3073,24 +3088,53 @@ window.renderizarNomesHub = function () {
         );
     }
 
-    let html = `
-        <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <div>
-                    <h3 style="margin: 0; font-size: 16px; color: var(--text-main); font-weight: 700;">👥 Solicitantes Cadastrados</h3>
-                    <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-muted);">Clique em qualquer solicitante para cadastrar uma nova irradiação diretamente para o Painel de Leitura.</p>
-                </div>
-                <span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 12px; border-radius: 16px; font-size: 13px; font-weight:600;">${lista.length} nomes</span>
-            </div>
-            <input type="text" id="buscaNomesHubInput" oninput="window.renderizarNomesHub()" value="${termo}" placeholder="🔍 Digite para filtrar por nome ou endereço..." class="input" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-    `;
+    const contadorEl = document.getElementById('contadorNomesHub');
+    if (contadorEl) contadorEl.textContent = `${lista.length} nomes`;
+
+    const filtrosLetrasContainer = document.getElementById('filtrosLetrasNomesHub');
+    if (filtrosLetrasContainer) {
+        if (!lista || lista.length === 0) {
+            filtrosLetrasContainer.style.display = 'none';
+        } else {
+            const letrasPresentes = new Set();
+            lista.forEach(item => {
+                if (item.nome) {
+                    const match = item.nome.match(/[a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ]/);
+                    if (match) {
+                        const firstChar = match[0].toUpperCase();
+                        const letter = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        if (/[A-Z]/.test(letter)) letrasPresentes.add(letter);
+                    }
+                }
+            });
+
+            if (letrasPresentes.size > 0) {
+                const letrasArray = Array.from(letrasPresentes).sort();
+                let letrasHtml = '';
+                letrasArray.forEach(l => {
+                    letrasHtml += `<button class="btn btn-secondary" style="padding: 4px 10px; font-size: 13px; font-weight: 600; min-width: 32px; border-radius: 4px; background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border);" onclick="scrollToLetraNomesHub('${l}')">${l}</button>`;
+                });
+                filtrosLetrasContainer.innerHTML = letrasHtml;
+                filtrosLetrasContainer.style.display = 'flex';
+            } else {
+                filtrosLetrasContainer.style.display = 'none';
+            }
+        }
+    }
+
+    let html = '';
 
     if (lista.length === 0) {
         html += `<div style="color: var(--text-muted); font-size: 14px; text-align: center; padding: 32px; background: rgba(255,255,255,0.02); border-radius: 8px;">Nenhum solicitante encontrado com o termo pesquisado.</div>`;
     } else {
         lista.forEach(item => {
+            let primeiraLetra = '';
+            const match = (item.nome || '').match(/[a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ]/);
+            if (match) {
+                const firstChar = match[0].toUpperCase();
+                primeiraLetra = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+
             const safeNome = item.nome.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const safeEnd = (item.endereco || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const badgeAtivo = item.statusAtivo 
@@ -3098,7 +3142,7 @@ window.renderizarNomesHub = function () {
                 : `<span style="background: rgba(148,163,184,0.1); color: var(--text-muted); font-size: 12px; padding: 3px 8px; border-radius: 6px;">🗄️ Histórico (${item.totalRegistros}x)</span>`;
 
             html += `
-                <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; transition: all 0.2s ease; cursor: pointer;"
+                <div data-letra="${primeiraLetra}" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; transition: all 0.2s ease; cursor: pointer;"
                      onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='var(--border)'"
                      onclick="window.abrirModalSolicitacaoDiretaHub('${safeNome}', '${safeEnd}')">
                     <div style="flex: 1;">
@@ -3116,8 +3160,20 @@ window.renderizarNomesHub = function () {
         });
     }
 
-    html += `</div>`;
-    container.innerHTML = html;
+    listContainer.innerHTML = html;
+};
+
+window.scrollToLetraNomesHub = function(letra) {
+    const card = document.querySelector(`#listaNomesHubItems div[data-letra="${letra}"]`);
+    if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const originalBg = card.style.backgroundColor;
+        card.style.transition = 'background-color 0.5s ease';
+        card.style.backgroundColor = 'rgba(56, 189, 248, 0.2)';
+        setTimeout(() => {
+            card.style.backgroundColor = originalBg || 'var(--bg-panel)';
+        }, 1500);
+    }
 };
 
 window.abrirModalSolicitacaoDiretaHub = function (nome, endereco) {
@@ -6226,9 +6282,9 @@ window.abrirSideSheetPendenteHub = function(itemDataStr) {
                 </div>
 
                 <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px;">
-                    <button class="btn" style="background: var(--success); color: white; width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); aprovarIrradiacao('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}')">Aprovar p/ Leitura ✔️</button>
+                    <button class="btn" style="background: var(--success); color: white; width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); aprovarIrradiacao('${item.id}', '${(item.nome || '').replace(/'/g, "\\'")}', '${(item.endereco || '-').replace(/'/g, "\\'")}', '${(item.dias || '').replace(/'/g, "\\'")}')">Aprovar p/ Leitura ✔️</button>
                     
-                    <button class="btn" style="background: transparent; color: var(--primary); width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--primary); font-weight: 600; font-size: 15px;" onclick="abrirModalEdicaoIrradiacao('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}', ${item.semanasAlvo}, '${(item.criadoPor || '').replace(/'/g, "\\'")}')">Editar Solicitação ✏️</button>
+                    <button class="btn" style="background: transparent; color: var(--primary); width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--primary); font-weight: 600; font-size: 15px;" onclick="abrirModalEdicaoIrradiacao('${item.id}', '${(item.nome || '').replace(/'/g, "\\'")}', '${(item.endereco || '-').replace(/'/g, "\\'")}', '${(item.dias || '').replace(/'/g, "\\'")}', ${item.semanasAlvo}, '${(item.criadoPor || '').replace(/'/g, "\\'")}')">Editar Solicitação ✏️</button>
                     
                     <button class="btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); excluirIrradiacaoDefinitivo('${item.id}')">Excluir Solicitação 🗑️</button>
                 </div>

@@ -1009,7 +1009,7 @@ window.abrirSideSheetPendente = function(itemDataStr) {
                 <div style="background: var(--bg-dark); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
                     <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Beneficiado</div>
                     <div style="font-size: 18px; font-weight: 700; color: var(--text-main);">${item.nome}</div>
-                    <div style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">📍 ${item.endereco}</div>
+                    <div style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">📍 ${item.endereco || '-'}</div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -1029,9 +1029,9 @@ window.abrirSideSheetPendente = function(itemDataStr) {
                 </div>
 
                 <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px;">
-                    <button class="btn" style="background: #10b981; color: white; width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); aprovar('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}')">Aprovar p/ Leitura ✔️</button>
+                    <button class="btn" style="background: #10b981; color: white; width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); aprovar('${item.id}', '${(item.nome || '').replace(/'/g, "\\'")}', '${(item.endereco || '-').replace(/'/g, "\\'")}', '${(item.dias || '').replace(/'/g, "\\'")}')">Aprovar p/ Leitura ✔️</button>
                     
-                    <button class="btn" style="background: transparent; color: #3b82f6; width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #3b82f6; font-weight: 600; font-size: 15px;" onclick="abrirEdicao('${item.id}', '${item.nome.replace(/'/g, "\\'")}', '${item.endereco.replace(/'/g, "\\'")}', '${item.dias.replace(/'/g, "\\'")}', ${item.semanasAlvo}, '${(item.criadoPor || '').replace(/'/g, "\\'")}')">Editar Solicitação ✏️</button>
+                    <button class="btn" style="background: transparent; color: #3b82f6; width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #3b82f6; font-weight: 600; font-size: 15px;" onclick="abrirEdicao('${item.id}', '${(item.nome || '').replace(/'/g, "\\'")}', '${(item.endereco || '-').replace(/'/g, "\\'")}', '${(item.dias || '').replace(/'/g, "\\'")}', ${item.semanasAlvo}, '${(item.criadoPor || '').replace(/'/g, "\\'")}')">Editar Solicitação ✏️</button>
                     
                     <button class="btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); font-weight: 600; font-size: 15px;" onclick="window.fecharSideSheet(); excluir('${item.id}')">Excluir Solicitação 🗑️</button>
                 </div>
@@ -1247,6 +1247,20 @@ window.carregarNomesCadastradosMobile = async function() {
             return nameA.localeCompare(nameB, 'pt-BR');
         });
 
+        listaEl.innerHTML = `
+            <div style="padding: 12px 4px 16px 4px;">
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <div style="font-weight: 700; color: var(--text-main); font-size: 15px;">👥 Solicitantes Cadastrados</div>
+                        <span id="contadorNomesMobile" style="background: rgba(16,185,129,0.1); color: #10b981; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight:600;">${window._nomesCadastradosMobile.length} nomes</span>
+                    </div>
+                    <input type="text" id="buscaNomesMobileInput" oninput="window.renderizarNomesMobile()" placeholder="🔍 Buscar por nome ou endereço..." class="input-field" style="width: 100%; box-sizing: border-box;">
+                </div>
+                <div id="filtrosLetrasNomesMobile" style="display: none; gap: 8px; padding: 0 0 12px 0; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none;"></div>
+                <div id="listaNomesMobileItems" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+        `;
+
         renderizarNomesMobile();
 
     } catch (err) {
@@ -1256,8 +1270,8 @@ window.carregarNomesCadastradosMobile = async function() {
 };
 
 window.renderizarNomesMobile = function() {
-    const listaEl = document.getElementById('listaGestaoIrradiacoes');
-    if (!listaEl) return;
+    const listContainer = document.getElementById('listaNomesMobileItems');
+    if (!listContainer) return;
 
     const termo = (document.getElementById('buscaNomesMobileInput')?.value || '').toLowerCase().trim();
     let lista = window._nomesCadastradosMobile || [];
@@ -1269,22 +1283,53 @@ window.renderizarNomesMobile = function() {
         );
     }
 
-    let html = `
-        <div style="padding: 0 4px 16px 4px;">
-            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <div style="font-weight: 700; color: var(--text-main); font-size: 15px;">👥 Solicitantes Cadastrados</div>
-                    <span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight:600;">${lista.length} nomes</span>
-                </div>
-                <input type="text" id="buscaNomesMobileInput" oninput="window.renderizarNomesMobile()" value="${termo}" placeholder="🔍 Buscar por nome ou endereço..." class="input-field" style="width: 100%; box-sizing: border-box;">
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-    `;
+    const contadorEl = document.getElementById('contadorNomesMobile');
+    if (contadorEl) contadorEl.textContent = `${lista.length} nomes`;
+
+    const filtrosLetrasContainer = document.getElementById('filtrosLetrasNomesMobile');
+    if (filtrosLetrasContainer) {
+        if (!lista || lista.length === 0) {
+            filtrosLetrasContainer.style.display = 'none';
+        } else {
+            const letrasPresentes = new Set();
+            lista.forEach(item => {
+                if (item.nome) {
+                    const match = item.nome.match(/[a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ]/);
+                    if (match) {
+                        const firstChar = match[0].toUpperCase();
+                        const letter = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        if (/[A-Z]/.test(letter)) letrasPresentes.add(letter);
+                    }
+                }
+            });
+
+            if (letrasPresentes.size > 0) {
+                const letrasArray = Array.from(letrasPresentes).sort();
+                let letrasHtml = '';
+                letrasArray.forEach(l => {
+                    letrasHtml += `<button class="m-filter-pill" style="padding: 4px 10px; font-size: 13px; font-weight: 600; min-width: 32px;" onclick="scrollToLetraNomesMobile('${l}')">${l}</button>`;
+                });
+                filtrosLetrasContainer.innerHTML = letrasHtml;
+                filtrosLetrasContainer.style.display = 'flex';
+            } else {
+                filtrosLetrasContainer.style.display = 'none';
+            }
+        }
+    }
+
+    let html = '';
 
     if (lista.length === 0) {
         html += `<div class="empty-state">Nenhum solicitante encontrado.</div>`;
     } else {
         lista.forEach(item => {
+            let primeiraLetra = '';
+            const match = (item.nome || '').match(/[a-zA-ZáéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ]/);
+            if (match) {
+                const firstChar = match[0].toUpperCase();
+                primeiraLetra = firstChar.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+
             const safeNome = item.nome.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const safeEnd = (item.endereco || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const badgeAtivo = item.statusAtivo 
@@ -1292,7 +1337,7 @@ window.renderizarNomesMobile = function() {
                 : `<span style="background: rgba(148,163,184,0.1); color: var(--text-muted); font-size: 11px; padding: 2px 6px; border-radius: 4px;">🗄️ Histórico (${item.totalRegistros}x)</span>`;
 
             html += `
-                <div onclick="window.abrirSolicitacaoDiretaMobile('${safeNome}', '${safeEnd}')" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer;">
+                <div data-letra="${primeiraLetra}" onclick="window.abrirSolicitacaoDiretaMobile('${safeNome}', '${safeEnd}')" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; scroll-margin-top: 16px;">
                     <div style="flex: 1; overflow: hidden;">
                         <div style="font-weight: 600; color: var(--text-main); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.nome}</div>
                         <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">📍 ${item.endereco || '<span style="font-style:italic;">Sem endereço</span>'}</div>
@@ -1306,8 +1351,20 @@ window.renderizarNomesMobile = function() {
         });
     }
 
-    html += `</div></div>`;
-    listaEl.innerHTML = html;
+    listContainer.innerHTML = html;
+};
+
+window.scrollToLetraNomesMobile = function(letra) {
+    const card = document.querySelector(`#listaNomesMobileItems div[data-letra="${letra}"]`);
+    if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const originalBg = card.style.backgroundColor;
+        card.style.transition = 'background-color 0.5s ease';
+        card.style.backgroundColor = 'rgba(56, 189, 248, 0.2)';
+        setTimeout(() => {
+            card.style.backgroundColor = originalBg || 'var(--bg-card)';
+        }, 1500);
+    }
 };
 
 window.abrirSolicitacaoDiretaMobile = function(nome, endereco) {
