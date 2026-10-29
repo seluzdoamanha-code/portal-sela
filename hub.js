@@ -6206,7 +6206,7 @@ window.abrirSideSheetPendenteHub = function(itemDataStr) {
                 <div style="background: var(--bg-dark); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
                     <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Beneficiado</div>
                     <div style="font-size: 18px; font-weight: 700; color: var(--text-main);">${item.nome}</div>
-                    <div style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">📍 ${item.endereco}</div>
+                    <div style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">📍 ${item.endereco || '-'}</div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
